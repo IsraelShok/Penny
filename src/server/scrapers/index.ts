@@ -180,20 +180,19 @@ async function runScrape(
         startDate,
         combineInstallments: false,
         showBrowser,
-        // Verbose logs include URLs and posted payloads (incl. credentials).
-        // Only enable when the user is also showing the browser (= they're debugging).
-        verbose: showBrowser,
+        // Verbose logs include URLs and posted payloads (incl. credentials), so never enable them.
+        verbose: false,
         timeout: 60000,
         args: chromiumArgs,
       }).scrape(credentials as never);
 
   if (!result.success) {
     const errorType = result.errorType ?? "GENERIC";
-    console.error(`[scraper] failed (${errorType}):`, result.errorMessage);
     const friendly = FRIENDLY_ERRORS[errorType];
     const detail = result.errorMessage
       ? sanitizeError(new Error(result.errorMessage))
       : errorType;
+    console.error(`[scraper] failed (${errorType}):`, detail);
     return {
       success: false,
       accounts: [],
