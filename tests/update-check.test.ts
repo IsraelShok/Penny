@@ -26,7 +26,7 @@ describe("checkForUpdate", () => {
 
 describe("createUpdateNotifier", () => {
   it("sends one message per new version, never the same one twice", async () => {
-    const send = vi.fn(async (_text: string) => {});
+    const send = vi.fn<(text: string) => Promise<void>>(async () => {});
     const notify = createUpdateNotifier(send);
     const info = { current: "abc1234", latest: "def5678", url: "https://github.com/x" };
     await notify(info);
