@@ -17,6 +17,8 @@ export interface Series {
   /** Latest charge, or the mean when the price never changed. */
   expectedAmount: number;
   occurrences: number;
+  /** Date of the most recent charge, YYYY-MM-DD. */
+  lastDate: string;
   status: "candidate" | "suggested";
   priceChange?: { from: number; to: number; date: string };
 }
@@ -81,6 +83,7 @@ export function detectRecurring(txns: RecurringTxn[]): Series[] {
       cadence: cadence.name,
       expectedAmount: change ? amounts[amounts.length - 1] : amounts.reduce((a, b) => a + b, 0) / amounts.length,
       occurrences: chain.length,
+      lastDate: chain[chain.length - 1].date,
       status: chain.length >= 3 ? "suggested" : "candidate",
       ...(change ? { priceChange: change } : {}),
     });

@@ -22,7 +22,7 @@ function daysInMonth(year: number, month1: number): number {
   return new Date(Date.UTC(year, month1, 0)).getUTCDate();
 }
 
-function addMonths(date: string, months: number): string {
+export function addMonths(date: string, months: number): string {
   const [y, m, d] = date.split("-").map(Number);
   const idx = y * 12 + (m - 1) + months;
   const year = Math.floor(idx / 12);
