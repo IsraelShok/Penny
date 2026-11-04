@@ -38,16 +38,20 @@ function occurrences(s: Series, after: string, until: string): number {
   return count;
 }
 
+/** The next `count` billing dates on or after `today` for a card billed on `billingDay`. */
+export function upcomingBillingDates(today: string, billingDay: number, count: number): string[] {
+  const [ty, tm] = today.split("-").map(Number);
+  const dates: string[] = [];
+  for (let idx = ty * 12 + (tm - 1); dates.length < count; idx++) {
+    const d = monthDate(Math.floor(idx / 12), (idx % 12) + 1, billingDay);
+    if (d >= today) dates.push(d);
+  }
+  return dates;
+}
+
 /** The next 3 card bills: confirmed recurring charges, remaining installments and typical other spend. */
 export function forecastBill(opts: ForecastOptions): BillForecast[] {
-  const [ty, tm] = opts.today.split("-").map(Number);
-  const dates: string[] = [];
-  let idx = ty * 12 + (tm - 1);
-  while (dates.length < 3) {
-    const d = monthDate(Math.floor(idx / 12), (idx % 12) + 1, opts.billingDay);
-    if (d >= opts.today) dates.push(d);
-    idx++;
-  }
+  const dates = upcomingBillingDates(opts.today, opts.billingDay, 3);
 
   const active = opts.series.filter((s) => s.status === "suggested" && isActive(s, opts.today));
   return dates.map((date, i) => {

@@ -6,7 +6,7 @@ import { israelDay, monthKey } from "../lib/date-utils";
 import { detectRecurring, isActive, type Series } from "./recurring";
 import { projectInstallments, type ProjectedPayment } from "./installments";
 import { findAnomalies, type Anomaly } from "./anomalies";
-import type { CardForecastInput } from "./forecast";
+import { upcomingBillingDates, type CardForecastInput } from "./forecast";
 
 interface Row {
   description: string;
@@ -38,6 +38,21 @@ function loadRows(workspaceId: number): Row[] {
       const row = r as Row;
       return { ...row, date: israelDay(row.date), billingDate: israelDay(row.billingDate) };
     });
+}
+
+/** Pending card charges: not on a statement yet, so they land on each card's next bill. */
+function loadPendingByAccount(workspaceId: number): Map<string, number> {
+  const rows = getDb()
+    .prepare(
+      `SELECT account_number as account, charged_amount as amount
+       FROM transactions
+       WHERE workspace_id = ? AND status = 'pending' AND kind = 'expense' AND is_excluded = 0`
+    )
+    .all(workspaceId) as { account: string; amount: number }[];
+  const byAccount = new Map<string, number>();
+  // Scrapers disagree on the sign of pending charges, so the magnitude is what counts.
+  for (const r of rows) byAccount.set(r.account, (byAccount.get(r.account) ?? 0) + Math.abs(r.amount));
+  return byAccount;
 }
 
 export interface Insights {
@@ -113,11 +128,19 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
     .sort((a, b) => b.total - a.total)
     .slice(0, 5);
 
-  const cards: CardForecastInput[] = [...new Set(rows.map((r) => r.account))].sort().map((account) => {
+  const pending = loadPendingByAccount(workspaceId);
+  const accounts = [...new Set([...rows.map((r) => r.account), ...pending.keys()])].sort();
+  const cards: CardForecastInput[] = accounts.map((account) => {
     const own = rows.filter((r) => r.account === account);
+    const billingDay = billingDayOf(own.map((r) => r.billingDate), fallbackBillingDay);
     const posted: Record<string, number> = {};
     for (const r of own) {
       if (r.billingDate >= today && r.amount < 0) posted[r.billingDate] = (posted[r.billingDate] ?? 0) - r.amount;
+    }
+    const pendingTotal = pending.get(account) ?? 0;
+    if (pendingTotal > 0) {
+      const [next] = upcomingBillingDates(today, billingDay, 1);
+      posted[next] = (posted[next] ?? 0) + pendingTotal;
     }
     // shortcut: discretionary = prior 3-month mean spend minus recurring and next month's installments; refine once forecasts are compared with real bills.
     const priorMean = own.filter((r) => prior.includes(r.date.slice(0, 7))).reduce((s, r) => s + spent(r), 0) / 3;
@@ -129,7 +152,7 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
       .reduce((sum, p) => sum + p.amount, 0);
     return {
       account,
-      billingDay: billingDayOf(own.map((r) => r.billingDate), fallbackBillingDay),
+      billingDay,
       posted,
       avgDiscretionary: Math.max(0, priorMean - recurring - nextInstallments),
     };

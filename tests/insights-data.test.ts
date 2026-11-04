@@ -24,6 +24,10 @@ beforeAll(async () => {
     { ...b, type: "installments" as const, date: "2026-09-10T00:00:00.000Z", processedDate: "2026-10-10T00:00:00.000Z", installmentNumber: 2, installmentTotal: 12 },
     { ...b, type: "installments" as const, date: "2026-10-10T00:00:00.000Z", processedDate: "2026-11-10T00:00:00.000Z", installmentNumber: 3, installmentTotal: 12 },
   ], "isracard", cred, run);
+  // A charge still pending on card "2" (fork style: positive amount, raw date), not yet on any statement.
+  insertTransactions(ws, [
+    { ...b, accountNumber: "2", type: "normal" as const, status: "pending" as const, description: "Aroma", originalAmount: 25, chargedAmount: 25, date: "2026-11-03", processedDate: "2026-11-03" },
+  ], "isracard", cred, run);
   // Israeli midnight on Oct 1 is stored as a UTC instant on Sep 30.
   insertTransactions(ws, [
     { ...b, type: "normal" as const, description: "Cafe", originalAmount: -40, chargedAmount: -40, date: "2026-09-30T21:00:00.000Z", processedDate: "2026-11-09T22:00:00.000Z" },
@@ -41,7 +45,11 @@ describe("loadInsights", () => {
     expect(loadInsights(ws, "2026-10-15").monthTotal).toBe(140);
   });
   it("derives each card's billing day from its own history, not the fallback", () => {
-    expect(loadInsights(ws, "2026-11-04", 2).cards).toEqual([expect.objectContaining({ account: "1", billingDay: 10 })]);
+    expect(loadInsights(ws, "2026-11-04", 2).cards).toContainEqual(expect.objectContaining({ account: "1", billingDay: 10 }));
+  });
+  it("adds pending charges to the card's next bill", () => {
+    const card = loadInsights(ws, "2026-11-04", 15).cards.find((c) => c.account === "2");
+    expect(card?.posted["2026-11-15"]).toBe(25);
   });
   it("projects the remaining installments", () => {
     expect(loadInsights(ws, "2026-11-04").installments.length).toBe(9);

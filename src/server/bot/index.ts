@@ -1,7 +1,7 @@
 import "server-only";
 
 import { Bot } from "grammy";
-import { handleCommand, type BotConfig } from "./commands";
+import { handleCommand, splitMessage, type BotConfig } from "./commands";
 import { listAllWorkspaceIds } from "../lib/workspace-context";
 import { toLocalISODate } from "../lib/date-utils";
 import { getActivitySnapshot } from "../sync/activity";
@@ -34,7 +34,7 @@ export function startBot(): void {
           : `Sync done, ${added} new transactions`;
       },
     });
-    if (reply) await ctx.reply(reply);
+    if (reply) for (const part of splitMessage(reply)) await ctx.reply(part);
   });
 
   bot.catch((err) => console.error("[bot]", err.message));

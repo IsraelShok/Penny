@@ -31,6 +31,20 @@ beforeAll(async () => {
   ], "isracard", cred, run);
 });
 
+describe("splitMessage", () => {
+  it("splits on line breaks under Telegram's limit and loses nothing", () => {
+    const text = Array.from({ length: 100 }, (_, i) => `${i} ${"x".repeat(95)}`).join("\n");
+    const parts = cmd.splitMessage(text);
+    expect(parts.length).toBeGreaterThan(1);
+    expect(parts.every((p) => p.length <= 4000)).toBe(true);
+    expect(parts.join("\n")).toBe(text);
+  });
+  it("hard-splits a single line longer than the limit", () => {
+    const parts = cmd.splitMessage("y".repeat(9000));
+    expect(parts.map((p) => p.length)).toEqual([4000, 4000, 1000]);
+  });
+});
+
 describe("handleCommand", () => {
   it("ignores messages from any other chat", async () => {
     expect(await cmd.handleCommand("/month", 999, cfg, deps())).toBeNull();
