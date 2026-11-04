@@ -10,7 +10,7 @@ let ws: number;
 let run: number;
 
 beforeAll(async () => {
-  process.env.SPENT_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "shekel-rules-"));
+  process.env.SPENT_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "spent-rules-"));
   db = (await import("@/server/db/index")).getDb();
   q = await import("@/server/db/queries/rules");
   const { createSyncRun } = await import("@/server/db/queries/sync-runs");

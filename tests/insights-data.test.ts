@@ -7,7 +7,7 @@ let ws: number;
 let loadInsights: typeof import("@/server/insights/data").loadInsights;
 
 beforeAll(async () => {
-  process.env.SPENT_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "shekel-ins-"));
+  process.env.SPENT_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "spent-ins-"));
   const db = (await import("@/server/db/index")).getDb();
   ({ loadInsights } = await import("@/server/insights/data"));
   const { createSyncRun } = await import("@/server/db/queries/sync-runs");

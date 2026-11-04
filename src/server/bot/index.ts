@@ -5,14 +5,14 @@ import { handleCommand, type BotConfig } from "./commands";
 import { listAllWorkspaceIds } from "../lib/workspace-context";
 
 declare global {
-  var __shekelBot: Bot | undefined;
+  var __spentBot: Bot | undefined;
 }
 
 /** Starts long polling when TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set; otherwise does nothing. */
 export function startBot(): void {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = Number(process.env.TELEGRAM_CHAT_ID);
-  if (!token || !chatId || globalThis.__shekelBot) return;
+  if (!token || !chatId || globalThis.__spentBot) return;
 
   const cfg: BotConfig = { chatId, billingDay: Number(process.env.CARD_BILLING_DAY) || 10 };
   const bot = new Bot(token);
@@ -35,6 +35,6 @@ export function startBot(): void {
   });
 
   bot.catch((err) => console.error("[bot]", err.message));
-  globalThis.__shekelBot = bot;
+  globalThis.__spentBot = bot;
   void bot.start();
 }

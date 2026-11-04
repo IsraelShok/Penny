@@ -10,7 +10,7 @@ const cfg = { chatId: 42, billingDay: 10 };
 const deps = () => ({ workspaceId: ws, today: "2026-11-04", runSync: async () => "synced" });
 
 beforeAll(async () => {
-  process.env.SPENT_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "shekel-bot-"));
+  process.env.SPENT_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "spent-bot-"));
   const db = (await import("@/server/db/index")).getDb();
   cmd = await import("@/server/bot/commands");
   const { createSyncRun } = await import("@/server/db/queries/sync-runs");
