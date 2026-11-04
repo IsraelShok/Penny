@@ -18,9 +18,11 @@ describe("normalizeMerchant", () => {
   it("treats the Hebrew maqaf and a hyphen as the same character", () => {
     expect(normalizeMerchant("תל־אביב")).toBe(normalizeMerchant("תל-אביב"));
   });
-  it("keeps a number that is part of an English product name", () => {
-    expect(normalizeMerchant("Office 365")).toBe("office 365");
-    expect(normalizeMerchant("Office 365")).not.toBe(normalizeMerchant("Office"));
+  it("keeps the original key for a Latin name with a branch number, so learned categories still match", () => {
+    expect(normalizeMerchant("SUPER-PHARM 123")).toBe("super-pharm");
+  });
+  it("keeps a number joined to the name", () => {
+    expect(normalizeMerchant("7-11")).toBe("7-11");
   });
   it("still drops a bare branch number after a Hebrew name", () => {
     expect(normalizeMerchant("שופרסל 123")).toBe("שופרסל");

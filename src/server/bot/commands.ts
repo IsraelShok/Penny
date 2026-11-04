@@ -35,7 +35,11 @@ export function splitMessage(text: string, max = TELEGRAM_LIMIT): string[] {
   const parts: string[] = [];
   let current: string | null = null;
   for (const line of text.split("\n")) {
-    const pieces = line.length > max ? (line.match(new RegExp(`[\\s\\S]{1,${max}}`, "g")) ?? []) : [line];
+    // Split by code point so an emoji is never cut in half.
+    const chars = Array.from(line);
+    const pieces: string[] = [];
+    for (let i = 0; i < chars.length; i += max) pieces.push(chars.slice(i, i + max).join(""));
+    if (pieces.length === 0) pieces.push("");
     for (const piece of pieces) {
       if (current !== null && current.length + 1 + piece.length <= max) {
         current += `\n${piece}`;
@@ -46,7 +50,8 @@ export function splitMessage(text: string, max = TELEGRAM_LIMIT): string[] {
     }
   }
   if (current !== null) parts.push(current);
-  return parts;
+  // Telegram rejects an empty message.
+  return parts.filter((p) => p.trim().length > 0);
 }
 
 /** Returns the reply text, or null when the message is not from the configured chat. */

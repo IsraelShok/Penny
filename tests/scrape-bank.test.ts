@@ -28,4 +28,10 @@ describe("scrapeBank failure handling", () => {
     expect(r.errorMessage).toMatch(/bot protection/i);
     expect(scrape).toHaveBeenCalledTimes(1);
   });
+
+  it("does not retry a timeout, which can mean a second login or SMS", async () => {
+    scrape.mockResolvedValue({ success: false, errorType: "TIMEOUT", errorMessage: "timed out" });
+    await scrapeBank(1, "isracard", {}, new Date("2026-08-01"));
+    expect(scrape).toHaveBeenCalledTimes(1);
+  });
 });

@@ -118,7 +118,8 @@ function classifyError(error: unknown): {
 }
 
 // Failures the scraper reports as a result (not a thrown error) that usually clear on a second attempt.
-const RETRYABLE_ERROR_TYPES = new Set(["NETWORK_ERROR", "TIMEOUT"]);
+// Not TIMEOUT: it also covers login and 2FA waits, and retrying means a second login, maybe a second SMS.
+const RETRYABLE_ERROR_TYPES = new Set(["NETWORK_ERROR"]);
 
 const FRIENDLY_ERRORS: Record<string, string> = {
   WAF_BLOCKED:

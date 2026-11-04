@@ -12,6 +12,8 @@ import { isAllowedHost } from "@/lib/host-guard";
  */
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+// GET routes with side effects: the Ollama model list makes the server fetch a URL (and may start Ollama).
+const ORIGIN_CHECKED_GETS = new Set(["/api/ai/ollama/models"]);
 
 export function proxy(request: NextRequest) {
   // Every request, page or API, must be addressed to localhost (blocks DNS rebinding).
@@ -19,7 +21,7 @@ export function proxy(request: NextRequest) {
     return new NextResponse("Forbidden: unexpected host", { status: 403 });
   }
 
-  if (!MUTATING_METHODS.has(request.method)) {
+  if (!MUTATING_METHODS.has(request.method) && !ORIGIN_CHECKED_GETS.has(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 

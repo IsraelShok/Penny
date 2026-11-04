@@ -45,6 +45,17 @@ describe("splitMessage", () => {
   });
 });
 
+describe("splitMessage edge cases", () => {
+  it("never produces an empty part", () => {
+    expect(cmd.splitMessage("\n" + "z".repeat(4500)).every((p) => p.length > 0)).toBe(true);
+  });
+  it("does not cut an emoji in half", () => {
+    const parts = cmd.splitMessage("a" + "😀".repeat(3000));
+    expect(parts.join("")).toBe("a" + "😀".repeat(3000));
+    expect(parts.every((p) => !/[\uD800-\uDBFF]$/.test(p))).toBe(true);
+  });
+});
+
 describe("handleCommand", () => {
   it("ignores messages from any other chat", async () => {
     expect(await cmd.handleCommand("/month", 999, cfg, deps())).toBeNull();

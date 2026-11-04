@@ -20,7 +20,7 @@ interface ForecastOptions {
   installments: ProjectedPayment[];
   /** Typical non-recurring spend per billing cycle. */
   avgDiscretionary: number;
-  /** Charges already made that will land on an upcoming bill, by billing date. When given, the first bill's remaining spend is scaled to the days left. */
+  /** Charges already made that will land on an upcoming bill, by billing date (net of refunds). When given, the first bill's remaining spend is scaled to the days left. */
   posted?: Record<string, number>;
 }
 
@@ -54,13 +54,24 @@ export function forecastBill(opts: ForecastOptions): BillForecast[] {
   const dates = upcomingBillingDates(opts.today, opts.billingDay, 3);
 
   const active = opts.series.filter((s) => s.status === "suggested" && isActive(s, opts.today));
+  // Issuers shift the processed date off the nominal billing day (weekends, holidays),
+  // so each posted charge goes to the nearest billing date, within half a month.
+  const postedByBill = dates.map(() => 0);
+  for (const [day, amount] of Object.entries(opts.posted ?? {})) {
+    let best = 0;
+    for (let k = 1; k < dates.length; k++) {
+      if (Math.abs(daysBetween(day, dates[k])) < Math.abs(daysBetween(day, dates[best]))) best = k;
+    }
+    if (Math.abs(daysBetween(day, dates[best])) <= 15) postedByBill[best] += amount;
+  }
+
   return dates.map((date, i) => {
     const prev = i === 0 ? opts.today : dates[i - 1];
     const recurring = active.reduce((sum, s) => sum + occurrences(s, prev, date) * s.expectedAmount, 0);
     const installments = opts.installments
       .filter((p) => p.date > prev && p.date <= date)
       .reduce((sum, p) => sum + p.amount, 0);
-    const posted = opts.posted?.[date] ?? 0;
+    const posted = postedByBill[i];
     let discretionary = opts.avgDiscretionary;
     if (i === 0 && opts.posted) {
       const cycleStart = addMonths(date, -1);

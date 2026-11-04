@@ -2,7 +2,9 @@ import "server-only";
 
 import { getDb } from "../db/index";
 import { normalizeMerchant } from "../rules/normalize";
-import { israelDay, monthKey } from "../lib/date-utils";
+import { addDays, israelDay, monthKey } from "../lib/date-utils";
+import { isBankProvider } from "../lib/transfers";
+import { usesScraperFork } from "../scrapers/select";
 import { detectRecurring, isActive, type Series } from "./recurring";
 import { projectInstallments, type ProjectedPayment } from "./installments";
 import { findAnomalies, type Anomaly } from "./anomalies";
@@ -18,6 +20,7 @@ interface Row {
   num: number | null;
   total: number | null;
   category: string | null;
+  provider: string;
 }
 
 function loadRows(workspaceId: number): Row[] {
@@ -27,7 +30,7 @@ function loadRows(workspaceId: number): Row[] {
               COALESCE(t.charged_currency, t.original_currency) as currency,
               t.date as date, t.processed_date as billingDate,
               t.account_number as account, t.installment_number as num, t.installment_total as total,
-              c.name as category
+              c.name as category, t.provider as provider
        FROM transactions t LEFT JOIN categories c ON t.category_id = c.id
        WHERE t.workspace_id = ? AND t.status = 'completed' AND t.kind = 'expense' AND t.is_excluded = 0`
     )
@@ -40,18 +43,22 @@ function loadRows(workspaceId: number): Row[] {
     });
 }
 
-/** Pending card charges: not on a statement yet, so they land on each card's next bill. */
+/** Pending card charges, net of pending refunds: not on a statement yet, so they land on each card's next bill. */
 function loadPendingByAccount(workspaceId: number): Map<string, number> {
   const rows = getDb()
     .prepare(
-      `SELECT account_number as account, charged_amount as amount
+      `SELECT account_number as account, charged_amount as amount, provider
        FROM transactions
        WHERE workspace_id = ? AND status = 'pending' AND kind = 'expense' AND is_excluded = 0`
     )
-    .all(workspaceId) as { account: string; amount: number }[];
+    .all(workspaceId) as { account: string; amount: number; provider: string }[];
   const byAccount = new Map<string, number>();
-  // Scrapers disagree on the sign of pending charges, so the magnitude is what counts.
-  for (const r of rows) byAccount.set(r.account, (byAccount.get(r.account) ?? 0) + Math.abs(r.amount));
+  for (const r of rows) {
+    if (isBankProvider(r.provider)) continue;
+    // The fork reports pending charges unsigned; the default library signs them like completed rows (refunds positive).
+    const charge = usesScraperFork(r.provider) ? Math.abs(r.amount) : -r.amount;
+    byAccount.set(r.account, (byAccount.get(r.account) ?? 0) + charge);
+  }
   return byAccount;
 }
 
@@ -129,17 +136,21 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
     .slice(0, 5);
 
   const pending = loadPendingByAccount(workspaceId);
-  const accounts = [...new Set([...rows.map((r) => r.account), ...pending.keys()])].sort();
+  // Only cards have bills; bank-account debits are spending but not part of a card forecast.
+  const cardRows = rows.filter((r) => !isBankProvider(r.provider));
+  const accounts = [...new Set([...cardRows.map((r) => r.account), ...pending.keys()])].sort();
   const cards: CardForecastInput[] = accounts.map((account) => {
-    const own = rows.filter((r) => r.account === account);
+    const own = cardRows.filter((r) => r.account === account);
     const billingDay = billingDayOf(own.map((r) => r.billingDate), fallbackBillingDay);
     const posted: Record<string, number> = {};
     for (const r of own) {
-      if (r.billingDate >= today && r.amount < 0) posted[r.billingDate] = (posted[r.billingDate] ?? 0) - r.amount;
+      // Charges are negative and refunds positive, so this nets refunds out of the bill.
+      if (r.billingDate >= today) posted[r.billingDate] = (posted[r.billingDate] ?? 0) - r.amount;
     }
     const pendingTotal = pending.get(account) ?? 0;
-    if (pendingTotal > 0) {
-      const [next] = upcomingBillingDates(today, billingDay, 1);
+    if (pendingTotal !== 0) {
+      // A charge still pending on billing day misses today's statement.
+      const [next] = upcomingBillingDates(addDays(today, 1), billingDay, 1);
       posted[next] = (posted[next] ?? 0) + pendingTotal;
     }
     // shortcut: discretionary = prior 3-month mean spend minus recurring and next month's installments; refine once forecasts are compared with real bills.
