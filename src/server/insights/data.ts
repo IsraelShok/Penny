@@ -2,7 +2,7 @@ import "server-only";
 
 import { getDb } from "../db/index";
 import { normalizeMerchant } from "../rules/normalize";
-import { detectRecurring, type Series } from "./recurring";
+import { detectRecurring, isActive, type Series } from "./recurring";
 import { projectInstallments, type ProjectedPayment } from "./installments";
 import { findAnomalies, type Anomaly } from "./anomalies";
 
@@ -35,6 +35,8 @@ function loadRows(workspaceId: number): Row[] {
 export interface Insights {
   series: Series[];
   installments: ProjectedPayment[];
+  /** Charges already made, by the billing date they will land on (upcoming dates only). */
+  posted: Record<string, number>;
   anomalies: Anomaly[];
   avgDiscretionary: number;
   monthTotal: number;
@@ -52,9 +54,17 @@ export function loadInsights(workspaceId: number, today: string): Insights {
   // Scrapers store expenses negative; refunds (positive) are kept so recurring detection can ignore them.
   const norm = rows.map((r) => ({ ...r, merchant: normalizeMerchant(r.description) }));
 
+  // Installment plans are projected separately; as monthly charges they would also look like subscriptions.
   const series = detectRecurring(
-    norm.map((r) => ({ merchant: r.merchant, currency: r.currency, amount: r.amount, date: r.date }))
-  );
+    norm
+      .filter((r) => !(r.total != null && r.total > 1))
+      .map((r) => ({ merchant: r.merchant, currency: r.currency, amount: r.amount, date: r.date }))
+  ).filter((s) => isActive(s, today));
+
+  const posted: Record<string, number> = {};
+  for (const r of rows) {
+    if (r.billingDate >= today && r.amount < 0) posted[r.billingDate] = (posted[r.billingDate] ?? 0) - r.amount;
+  }
   const installments = projectInstallments(
     norm
       .filter((r) => r.num != null && r.total != null)
@@ -89,6 +99,8 @@ export function loadInsights(workspaceId: number, today: string): Insights {
     .sort((a, b) => b.total - a.total)
     .slice(0, 5);
 
+  const nextMonth = monthKey(today, 1);
+  const installmentsNextMonth = installments.filter((p) => p.month === nextMonth).reduce((s, p) => s + p.amount, 0);
   // shortcut: discretionary = prior 3-month mean spend minus monthly-equivalent recurring; refine once forecasts are compared with real bills.
   const priorMean = rows.filter((r) => prior.includes(r.date.slice(0, 7))).reduce((s, r) => s + spent(r), 0) / 3;
   const monthlyRecurring = series
@@ -102,8 +114,9 @@ export function loadInsights(workspaceId: number, today: string): Insights {
   return {
     series,
     installments,
+    posted,
     anomalies,
-    avgDiscretionary: Math.max(0, priorMean - monthlyRecurring),
+    avgDiscretionary: Math.max(0, priorMean - monthlyRecurring - installmentsNextMonth),
     monthTotal,
     topCategories,
   };

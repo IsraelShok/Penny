@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { detectRecurring, type RecurringTxn } from "@/server/insights/recurring";
+import { detectRecurring, isActive, type RecurringTxn } from "@/server/insights/recurring";
 
 const t = (date: string, amount: number, o: Partial<RecurringTxn> = {}): RecurringTxn => ({
   merchant: "netflix",
@@ -57,5 +57,23 @@ describe("detectRecurring", () => {
     const s = detectRecurring([t("2026-01-10", -50), t("2026-02-10", -50), t("2026-06-10", -50), t("2026-07-10", -50)]);
     expect(s[0].occurrences).toBe(2);
     expect(s[0].status).toBe("candidate");
+  });
+
+  it("keeps a series that had two price changes, ending the run at the older change", () => {
+    const s = detectRecurring([t("2026-07-10", -50), t("2026-08-10", -56), t("2026-09-10", -63), t("2026-10-10", -63)]);
+    expect(s).toHaveLength(1);
+    expect(s[0].priceChange).toEqual({ from: 56, to: 63, date: "2026-09-10" });
+    expect(s[0].occurrences).toBe(3);
+  });
+});
+
+describe("isActive", () => {
+  const base = { merchant: "x", currency: "ILS", expectedAmount: 10, occurrences: 3, status: "suggested" as const };
+  it("is true within 1.5 cycles of the last charge", () => {
+    expect(isActive({ ...base, cadence: "monthly", lastDate: "2026-10-05" }, "2026-11-04")).toBe(true);
+  });
+  it("is false once a series has gone quiet", () => {
+    expect(isActive({ ...base, cadence: "monthly", lastDate: "2026-06-05" }, "2026-11-04")).toBe(false);
+    expect(isActive({ ...base, cadence: "weekly", lastDate: "2026-10-01" }, "2026-11-04")).toBe(false);
   });
 });

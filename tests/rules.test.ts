@@ -45,6 +45,10 @@ describe("isSafeRegex", () => {
     expect(isSafeRegex("(a+)+$")).toBe(false);
     expect(isSafeRegex("x".repeat(101))).toBe(false);
   });
+  it("rejects nested groups and quantified alternation", () => {
+    expect(isSafeRegex("((a+))+$")).toBe(false);
+    expect(isSafeRegex("(a|a)*$")).toBe(false);
+  });
   it("accepts ordinary patterns", () => {
     expect(isSafeRegex("^שופרסל|רמי לוי")).toBe(true);
   });

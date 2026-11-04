@@ -59,10 +59,11 @@ export async function handleCommand(
         series: i.series,
         installments: i.installments,
         avgDiscretionary: i.avgDiscretionary,
+        posted: i.posted,
       })
         .map(
           (f) =>
-            `${f.date}: ${money(f.total)} (recurring ${money(f.parts.recurring)}, installments ${money(f.parts.installments)}, other ${money(f.parts.discretionary)})`
+            `${f.date}: ${money(f.total)} (posted ${money(f.parts.posted)}, recurring ${money(f.parts.recurring)}, installments ${money(f.parts.installments)}, other ${money(f.parts.discretionary)})`
         )
         .join("\n");
     }

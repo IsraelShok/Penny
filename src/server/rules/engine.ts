@@ -22,14 +22,30 @@ export interface RuleResult {
   kind?: TxnKind;
 }
 
-// shortcut: heuristic, rejects nested quantifiers and long patterns; upgrade to a linear-time regex engine (re2) if rules get more exotic.
+// shortcut: conservative heuristic, rejects any quantified group that contains a quantifier or alternation (so also `(foo|bar)+`); upgrade to a linear-time regex engine (re2) if rules need more.
 export function isSafeRegex(pattern: string): boolean {
   if (pattern.length > 100) return false;
-  if (/\((?:[^()\\]|\\.)*[+*](?:[^()\\]|\\.)*\)[+*{]/.test(pattern)) return false;
   try {
     new RegExp(pattern);
   } catch {
     return false;
+  }
+  const open: number[] = [];
+  let inClass = false;
+  for (let i = 0; i < pattern.length; i++) {
+    const c = pattern[i];
+    if (c === "\\") {
+      i++;
+    } else if (inClass) {
+      if (c === "]") inClass = false;
+    } else if (c === "[") {
+      inClass = true;
+    } else if (c === "(") {
+      open.push(i);
+    } else if (c === ")") {
+      const from = open.pop() ?? 0;
+      if (/[+*{]/.test(pattern[i + 1] ?? "") && /[+*{|]/.test(pattern.slice(from + 1, i))) return false;
+    }
   }
   return true;
 }

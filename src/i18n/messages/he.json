@@ -790,7 +790,8 @@
     "weekly": "שבועי",
     "monthly": "חודשי",
     "yearly": "שנתי",
-    "couldntLoad": "לא ניתן לטעון תובנות."
+    "couldntLoad": "לא ניתן לטעון תובנות.",
+    "posted": "כבר חויב"
   },
   "rules": {
     "title": "כללים",

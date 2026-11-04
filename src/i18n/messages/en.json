@@ -790,7 +790,8 @@
     "weekly": "weekly",
     "monthly": "monthly",
     "yearly": "yearly",
-    "couldntLoad": "Couldn't load insights."
+    "couldntLoad": "Couldn't load insights.",
+    "posted": "Already charged"
   },
   "rules": {
     "title": "Rules",

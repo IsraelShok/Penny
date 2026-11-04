@@ -26,12 +26,12 @@ describe("toScrapeResult", () => {
     expect(r.accounts[0].transactions[0].description).toBe("שופרסל");
   });
 
-  it("fails the whole result when any account window is unproven", () => {
+  it("fails the whole result when an account with rows has an unproven window", () => {
     const r = toScrapeResult({
       success: true,
       accounts: [
         { accountNumber: "1234", txns: [txn], windowCoverage: covered },
-        { accountNumber: "5678", txns: [], windowCoverage: unproven },
+        { accountNumber: "5678", txns: [txn], windowCoverage: unproven },
       ],
     });
     expect(r.success).toBe(false);
@@ -56,5 +56,34 @@ describe("toScrapeResult", () => {
     expect(t.status).toBe("pending");
     expect(t.type).toBe("installments");
     expect(t.installments).toEqual({ number: 2, total: 6 });
+  });
+
+  it("accepts an unproven window on an account with no rows (quiet or young card)", () => {
+    const r = toScrapeResult({
+      success: true,
+      accounts: [
+        { accountNumber: "1234", txns: [txn], windowCoverage: covered },
+        { accountNumber: "5678", txns: [], windowCoverage: unproven },
+      ],
+    });
+    expect(r.success).toBe(true);
+    expect(r.accounts).toHaveLength(2);
+  });
+
+  it("fails when the fork reports lost rows, but tolerates unavailable audits", () => {
+    const lost = { status: "lowerBoundReached", requestedStart: "2026-08-01", oldest: "2026-08-01", caveats: ["declaredRowShortfall"] };
+    const audit = { status: "lowerBoundReached", requestedStart: "2026-08-01", oldest: "2026-08-01", caveats: ["extractionAuditUnavailable"] };
+    expect(toScrapeResult({ success: true, accounts: [{ accountNumber: "1", txns: [txn], windowCoverage: lost }] }).success).toBe(false);
+    expect(toScrapeResult({ success: true, accounts: [{ accountNumber: "1", txns: [txn], windowCoverage: audit }] }).success).toBe(true);
+  });
+
+  it("converts UTC instants to the Israeli calendar day", () => {
+    const r = toScrapeResult({
+      success: true,
+      accounts: [{ accountNumber: "1", txns: [{ ...txn, date: "2026-09-30T21:00:00.000Z", processedDate: "2026-10-09T21:00:00.000Z" }] }],
+    });
+    const t = r.accounts[0].transactions[0];
+    expect(t.date.slice(0, 10)).toBe("2026-10-01");
+    expect(t.processedDate.slice(0, 10)).toBe("2026-10-10");
   });
 });

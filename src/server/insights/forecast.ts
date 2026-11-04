@@ -1,11 +1,11 @@
 import { addMonths, type ProjectedPayment } from "./installments";
-import type { Series } from "./recurring";
+import { isActive, type Series } from "./recurring";
 
 export interface BillForecast {
   /** Card billing date, YYYY-MM-DD. */
   date: string;
   total: number;
-  parts: { recurring: number; installments: number; discretionary: number };
+  parts: { posted: number; recurring: number; installments: number; discretionary: number };
 }
 
 interface ForecastOptions {
@@ -15,6 +15,8 @@ interface ForecastOptions {
   installments: ProjectedPayment[];
   /** Typical non-recurring spend per billing cycle. */
   avgDiscretionary: number;
+  /** Charges already made that will land on an upcoming bill, by billing date. When given, the first bill's remaining spend is scaled to the days left. */
+  posted?: Record<string, number>;
 }
 
 function monthDate(year: number, month1: number, day: number): string {
@@ -25,6 +27,14 @@ function monthDate(year: number, month1: number, day: number): string {
 function addDays(date: string, days: number): string {
   const [y, m, d] = date.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+function daysBetween(a: string, b: string): number {
+  const ms = (d: string) => {
+    const [y, m, day] = d.split("-").map(Number);
+    return Date.UTC(y, m - 1, day);
+  };
+  return Math.round((ms(b) - ms(a)) / 86_400_000);
 }
 
 /** Dates (strictly after `after`, up to `until`) on which a series is expected to charge. */
@@ -52,14 +62,25 @@ export function forecastBill(opts: ForecastOptions): BillForecast[] {
     idx++;
   }
 
-  const active = opts.series.filter((s) => s.status === "suggested");
+  const active = opts.series.filter((s) => s.status === "suggested" && isActive(s, opts.today));
   return dates.map((date, i) => {
     const prev = i === 0 ? opts.today : dates[i - 1];
     const recurring = active.reduce((sum, s) => sum + occurrences(s, prev, date) * s.expectedAmount, 0);
     const installments = opts.installments
       .filter((p) => p.date > prev && p.date <= date)
       .reduce((sum, p) => sum + p.amount, 0);
-    const discretionary = opts.avgDiscretionary;
-    return { date, total: recurring + installments + discretionary, parts: { recurring, installments, discretionary } };
+    const posted = opts.posted?.[date] ?? 0;
+    let discretionary = opts.avgDiscretionary;
+    if (i === 0 && opts.posted) {
+      const cycleStart = addMonths(date, -1);
+      const left = daysBetween(opts.today, date);
+      const total = daysBetween(cycleStart, date);
+      discretionary = total > 0 ? (opts.avgDiscretionary * Math.min(left, total)) / total : 0;
+    }
+    return {
+      date,
+      total: posted + recurring + installments + discretionary,
+      parts: { posted, recurring, installments, discretionary },
+    };
   });
 }

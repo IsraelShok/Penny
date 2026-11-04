@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     series: i.series,
     installments: i.installments,
     avgDiscretionary: i.avgDiscretionary,
+    posted: i.posted,
   });
   return NextResponse.json({ series: i.series, forecast, anomalies: i.anomalies });
 }

@@ -32,7 +32,7 @@ export function InsightsView() {
                 <span className="tabular-nums" dir="ltr">{f.date}</span>
                 <span className="text-lg font-semibold tabular-nums">{money(f.total)}</span>
                 <span className="w-full text-sm text-muted-foreground">
-                  {t("recurring")} {money(f.parts.recurring)} · {t("installments")} {money(f.parts.installments)} · {t("other")} {money(f.parts.discretionary)}
+                  {t("posted")} {money(f.parts.posted)} · {t("recurring")} {money(f.parts.recurring)} · {t("installments")} {money(f.parts.installments)} · {t("other")} {money(f.parts.discretionary)}
                 </span>
               </li>
             ))}

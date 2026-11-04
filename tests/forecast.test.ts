@@ -17,8 +17,8 @@ describe("forecastBill", () => {
       avgDiscretionary: 1000,
     });
     expect(out.map((f) => f.date)).toEqual(["2026-11-10", "2026-12-10", "2027-01-10"]);
-    expect(out[0].parts).toEqual({ recurring: 50, installments: 100, discretionary: 1000 });
-    for (const f of out) expect(f.total).toBe(f.parts.recurring + f.parts.installments + f.parts.discretionary);
+    expect(out[0].parts).toEqual({ posted: 0, recurring: 50, installments: 100, discretionary: 1000 });
+    for (const f of out) expect(f.total).toBe(f.parts.posted + f.parts.recurring + f.parts.installments + f.parts.discretionary);
   });
   it("starts at the next month once the billing day has passed", () => {
     const out = forecastBill({ billingDay: 10, today: "2026-11-15", series: [], installments: [], avgDiscretionary: 0 });
@@ -41,6 +41,26 @@ describe("forecastBill", () => {
     expect(cand[0].parts.recurring).toBe(0);
     const weekly = forecastBill({ billingDay: 10, today: "2026-11-04", series: [sub({ cadence: "weekly", expectedAmount: 20, lastDate: "2026-10-30" })], installments: [], avgDiscretionary: 0 });
     expect(weekly[1].parts.recurring).toBeGreaterThanOrEqual(60);
+  });
+});
+
+describe("forecastBill with posted charges", () => {
+  it("adds charges already posted to the bill and scales the remaining discretionary spend", () => {
+    const out = forecastBill({
+      billingDay: 10, today: "2026-11-04", series: [], installments: [],
+      avgDiscretionary: 620, posted: { "2026-11-10": 300 },
+    });
+    expect(out[0].parts.posted).toBe(300);
+    expect(out[0].parts.discretionary).toBeGreaterThan(0);
+    expect(out[0].parts.discretionary).toBeLessThan(620);
+    expect(out[1].parts.discretionary).toBe(620);
+    expect(out[0].total).toBeCloseTo(300 + out[0].parts.discretionary);
+  });
+  it("does not forecast a subscription that stopped charging", () => {
+    const out = forecastBill({
+      billingDay: 10, today: "2026-11-04", series: [sub({ lastDate: "2024-01-10" })], installments: [], avgDiscretionary: 0,
+    });
+    expect(out.every((f) => f.parts.recurring === 0)).toBe(true);
   });
 });
 

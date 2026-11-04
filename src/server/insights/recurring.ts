@@ -33,6 +33,12 @@ const SAME_PRICE = 0.075;
 // Bigger jumps than this are a different purchase, not a price change.
 const MAX_PRICE_JUMP = 0.5;
 
+/** A series that has not charged within 1.5 cycles is treated as cancelled. */
+export function isActive(s: Series, today: string): boolean {
+  const cadence = CADENCES.find((c) => c.name === s.cadence)!;
+  return dayNumber(today) - dayNumber(s.lastDate) <= cadence.max * 1.5;
+}
+
 function dayNumber(date: string): number {
   const [y, m, d] = date.split("-").map(Number);
   return Math.round(Date.UTC(y, m - 1, d) / 86_400_000);
@@ -69,12 +75,14 @@ export function detectRecurring(txns: RecurringTxn[]): Series[] {
       const jump = Math.abs(cur - prev) / prev;
       if (jump > MAX_PRICE_JUMP) break;
       if (jump > SAME_PRICE) {
+        // A second, older price change ends the run: the series is what has been stable since.
+        if (jumps >= 1) break;
         jumps++;
         change = { from: prev, to: cur, date: head.date };
       }
       chain.unshift(sorted[i]);
     }
-    if (jumps > 1 || chain.length < 2) continue;
+    if (chain.length < 2) continue;
 
     const amounts = chain.map((c) => Math.abs(c.amount));
     out.push({
