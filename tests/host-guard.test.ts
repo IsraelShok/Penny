@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { NextRequest } from "next/server";
 import { isAllowedHost } from "@/lib/host-guard";
-import { middleware } from "@/middleware";
+import { proxy as middleware } from "@/proxy";
 
 describe("isAllowedHost", () => {
   it("allows loopback names on any port", () => {

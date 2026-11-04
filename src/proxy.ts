@@ -13,7 +13,7 @@ import { isAllowedHost } from "@/lib/host-guard";
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Every request, page or API, must be addressed to localhost (blocks DNS rebinding).
   if (!isAllowedHost(request.headers.get("host"))) {
     return new NextResponse("Forbidden: unexpected host", { status: 403 });
