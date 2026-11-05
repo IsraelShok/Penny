@@ -298,6 +298,10 @@ export function getOverview(period: string, offset: number) {
   return fetchJSON<OverviewPayload>(`/api/overview?period=${period}&offset=${offset}`);
 }
 
+export function getCashAhead() {
+  return fetchJSON<import("./cash-ahead").CashAhead>(`/api/cash-ahead`);
+}
+
 export function getSuggestions() {
   return fetchJSON<{ suggestions: import("./suggestions").Suggestion[] }>(`/api/suggestions`);
 }

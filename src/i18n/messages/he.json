@@ -245,7 +245,8 @@
     "includeToast": "הוחזר לסכומים",
     "paginationRange": "{from} עד {to} מתוך {total}",
     "previous": "הקודם",
-    "next": "הבא"
+    "next": "הבא",
+    "filterLabel": "סוג תנועה"
   },
   "dashboard": {
     "syncing": "מסנכרן…",
@@ -1343,13 +1344,13 @@
     "taxLosses": "הפסדים שאפשר לקזז",
     "taxOffset": "מכירה וקיזוז של הפסדים מול רווחים לפני סוף השנה חוסכת עד {amount} מס.",
     "tax_study_fund": "ניצול תקרת קרן ההשתלמות",
-    "tax_study_fund_hint": "הפקדה עד התקרה פטורה ממס על הרווחים",
+    "tax_study_fund_hint": "הפקדה על משכורת עד ₪{ceiling} בחודש פטורה ממס על הרווחים",
     "tax_pension_credit": "זיכוי ממס על הפקדות לפנסיה",
     "tax_pension_credit_hint": "עצמאים ומי שמפקיד מעבר לחובה: סעיפים 45א ו-47",
     "tax_loss_offset": "קיזוז הפסדי הון",
     "tax_loss_offset_hint": "לפני סוף השנה, מול רווחים שמומשו",
     "tax_credit_points": "נקודות זיכוי מעודכנות",
-    "tax_credit_points_hint": "ילדים, תואר, יישוב מזכה, חייל משוחרר",
+    "tax_credit_points_hint": "כל נקודת זיכוי שווה ₪{point} בחודש: ילדים, תואר, יישוב מזכה, חייל משוחרר",
     "tax_refund": "בדיקת החזר מס",
     "taxNote": "רשימת תזכורות ולא ייעוץ מס. הסימון מתאפס בכל שנה.",
     "insuranceTitle": "ביטוחים",
@@ -1370,7 +1371,7 @@
     "policy_car": "רכב",
     "policy_travel": "נסיעות",
     "policy_other": "אחר",
-    "tax_refund_hint": "אפשר לבקש עד 6 שנים אחורה"
+    "tax_refund_hint": "אפשר לבקש עד {years} שנים אחורה (טופס 135)"
   },
   "suggestions": {
     "title": "זיהינו בשבילך",
@@ -1397,5 +1398,15 @@
     "kind_car": "רכב",
     "kind_travel": "נסיעות",
     "kind_other": "אחר"
+  },
+  "cashAhead": {
+    "title": "פנוי להוצאה",
+    "connect": "חיבור בנק",
+    "noBalance": "חברו חשבון בנק כדי לראות כמה כסף פנוי עד המשכורת הבאה.",
+    "until": "עד {date} ({days} ימים)",
+    "perDay": "{amount} ליום",
+    "inBank": "בבנק עכשיו",
+    "billsDue": "חיובי אשראי עד אז",
+    "salaryOn": "משכורת צפויה ב-{date}"
   }
 }

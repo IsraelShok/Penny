@@ -8,6 +8,7 @@ import { Check, Plus, Trash2 } from "lucide-react";
 import { deletePlanItem, getPlan, savePlan, savePlanItem } from "@/lib/api";
 import { goalMonthly, type FinancialPlan } from "@/lib/plan";
 import { fmt, shekels } from "@/lib/money";
+import { IL } from "@/lib/il-defaults";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
@@ -238,7 +239,7 @@ function Tax({ data, plan }: { data: FiPayload; plan: FinancialPlan }) {
                 <input type="checkbox" className="mt-0.5 size-4 accent-[var(--foreground)]" checked={done} onChange={(e) => toggle(k, e.target.checked)} />
                 <span className={cn(done && "text-muted-foreground line-through")}>
                   <span className="block font-medium">{t(`tax_${k}`)}</span>
-                  <span className="text-caption text-muted-foreground">{t(`tax_${k}_hint`)}</span>
+                  <span className="text-caption text-muted-foreground">{t(`tax_${k}_hint`, { ceiling: fmt(IL.studyFundSalaryCeiling, locale), point: IL.creditPointMonthly, years: IL.taxRefundYears })}</span>
                 </span>
               </label>
             </li>

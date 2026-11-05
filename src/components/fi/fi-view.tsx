@@ -9,6 +9,7 @@ import { translateCategoryName } from "@/lib/i18n-data";
 import { CardShell } from "@/components/home/card-shell";
 import { RotateCw } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
+import { Segmented } from "@/components/ui/segmented";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -127,20 +128,7 @@ function Body({ data }: { data: FiPayload }) {
           <Field id="fi-return" label={t("expectedReturn")} value={plan.returnPct} onChange={(v) => set("returnPct", v)} suffix="%" />
           <fieldset>
             <legend className="mb-1.5 text-sm font-medium">{t("withdrawalRate")}</legend>
-            <div className="inline-flex rounded-xl bg-muted p-1" role="radiogroup">
-              {RATES.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  role="radio"
-                  aria-checked={plan.rate === r}
-                  onClick={() => set("rate", r)}
-                  className={cn("min-h-8 rounded-lg px-3 text-footnote font-medium tabular-nums", plan.rate === r ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-                >
-                  {Math.round(r * 1000) / 10}%
-                </button>
-              ))}
-            </div>
+            <Segmented label={t("withdrawalRate")} value={plan.rate} options={RATES.map((r) => ({ value: r, label: `${Math.round(r * 1000) / 10}%` }))} onChange={(r) => set("rate", r)} />
           </fieldset>
           <p className="text-caption text-pretty text-muted-foreground">
             {t("dataNote", { months: data.monthsOfData })}

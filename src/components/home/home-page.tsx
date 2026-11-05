@@ -15,6 +15,7 @@ import { Greeting } from "./greeting";
 import { MarketStrip } from "@/components/markets/markets-view";
 import { SuggestionsCard } from "./suggestions-card";
 import { NextBillCard, SubscriptionsCard } from "./bills-card";
+import { SafeToSpendCard } from "./safe-to-spend-card";
 import { CategoryScroll } from "./category-scroll";
 import { HistoricalTrendCard } from "./historical-trend-card";
 import { RecentTransactionsCard } from "./recent-transactions-card";
@@ -95,12 +96,15 @@ export function HomePage() {
     queryClient.invalidateQueries({ queryKey: ["settings"] });
     queryClient.invalidateQueries({ queryKey: ["activity"] });
     queryClient.invalidateQueries({ queryKey: ["insights"] });
+    // Balances and patterns change with every sync.
+    ["cash-ahead", "suggestions", "assets"].forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
   }, [queryClient]);
 
   return (
     <>
       <PageHeader
         title={t("pageTitle")}
+        largeTitle={false}
         actions={
           <>
             <SyncStatusPill
@@ -132,6 +136,7 @@ export function HomePage() {
           <div className="col-span-12 grid gap-3 sm:grid-cols-2 md:gap-4 lg:col-span-4 lg:grid-cols-1">
             {insights ? (
               <>
+                <SafeToSpendCard />
                 <NextBillCard data={insights} />
                 <SubscriptionsCard data={insights} />
               </>

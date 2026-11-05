@@ -1,5 +1,7 @@
 "use client";
 
+import { Segmented } from "@/components/ui/segmented";
+
 import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -134,28 +136,17 @@ export function TransactionsPage() {
           loading={summaryInitialLoading}
         />
 
-        <div className="flex flex-wrap items-center gap-1.5 rounded-full bg-card p-1 w-fit">
-          {filterOptions.map((opt) => {
-            const active = kind === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => {
-                  setKind(opt.value);
-                  setPage(0);
-                  setCategoryFilter([]);
-                }}
-                className={
-                  active
-                    ? "rounded-full bg-foreground px-4 py-1.5 text-xs font-medium text-background transition-colors"
-                    : "rounded-full px-4 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                }
-              >
-                {opt.label}
-              </button>
-            );
-          })}
+        <div className="w-fit">
+          <Segmented
+            label={t("filterLabel")}
+            value={kind}
+            options={filterOptions}
+            onChange={(v) => {
+              setKind(v);
+              setPage(0);
+              setCategoryFilter([]);
+            }}
+          />
         </div>
 
         <TransactionsTable

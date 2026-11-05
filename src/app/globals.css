@@ -131,6 +131,9 @@
   --status-over: #d70015;
   --status-plenty-left: #0066cc;
   --radius: 0.875rem;
+  /* iOS segmented control: tertiary fill track, white thumb. */
+  --segmented: #7676801f;
+  --segmented-thumb: #ffffff;
   --sidebar: #f2f2f7;
   --sidebar-foreground: #000000;
   --sidebar-primary: #0066cc;
@@ -171,6 +174,8 @@
   --status-heads-up: #ff9f0a;
   --status-over: #ff453a;
   --status-plenty-left: #0a84ff;
+  --segmented: #7676803d;
+  --segmented-thumb: #636366;
   --sidebar: #000000;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #0a84ff;

@@ -9,6 +9,7 @@ import { ICON_MAP } from "@/components/dashboard/category-card";
 import { CardShell } from "@/components/home/card-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Segmented } from "@/components/ui/segmented";
 import { IconButton } from "@/components/ui/icon-button";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { cn } from "@/lib/utils";
@@ -43,25 +44,15 @@ export function OverviewView() {
         </div>
       )}
       <div className="print-hidden flex flex-wrap items-center justify-between gap-3">
-        <div role="radiogroup" aria-label={t("periodPicker")} className="inline-flex rounded-xl bg-muted p-1">
-          {KINDS.map((k) => (
-            <button
-              key={k}
-              role="radio"
-              aria-checked={kind === k}
-              onClick={() => {
-                setKind(k);
-                setOffset(0);
-              }}
-              className={cn(
-                "min-h-9 rounded-lg px-3 text-footnote font-medium transition-colors",
-                kind === k ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {t(`period_${k}`)}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label={t("periodPicker")}
+          value={kind}
+          options={KINDS.map((k) => ({ value: k, label: t(`period_${k}`) }))}
+          onChange={(k) => {
+            setKind(k);
+            setOffset(0);
+          }}
+        />
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" aria-label={t("prev")} onClick={() => setOffset((o) => o + 1)}>
             <ChevronRight className="size-4 rtl:hidden" aria-hidden />

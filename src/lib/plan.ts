@@ -4,6 +4,7 @@
  * Typical competitive fees in Israel (% a year), used as the "market" comparison. Rough reference points,
  * not quotes: pension from deposit and balance, study and provident funds on balance only.
  */
+// Pension: the level of the default ('kranot bererat mechdal') funds, about 1% / 0.22%. Study/provident: a typical competitive level. Caps are in il-defaults.
 export const BENCHMARK_FEES: Record<string, { deposit: number; balance: number }> = {
   pension: { deposit: 1, balance: 0.22 },
   study_fund: { deposit: 0, balance: 0.6 },
