@@ -21,7 +21,9 @@ export type Suggestion =
   | { key: string; type: "fx"; yearly: number }
   | { key: string; type: "duplicate"; name: string; amount: number; date: string }
   | { key: string; type: "price"; name: string; from: number; to: number }
-  | { key: string; type: "payday"; day: number };
+  | { key: string; type: "payday"; day: number }
+  | { key: string; type: "rule"; merchant: string; categoryId: number; categoryName: string; count: number }
+  | { key: string; type: "fxMarkup"; total: number; avgPct: number; count: number };
 
 export type PolicyGuess = "health" | "life" | "disability" | "long_term_care" | "home" | "car" | "travel" | "other";
 
@@ -74,6 +76,10 @@ export interface SuggestionContext {
   known: string[];
   monthStartDay: number;
   priceChanges: { merchant: string; from: number; to: number }[];
+  /** Merchants the user keeps moving to the same category, with no rule for them yet. */
+  ruleCandidates?: { merchant: string; categoryId: number; categoryName: string; count: number }[];
+  /** Conversion markup over the market rate on foreign card charges, last 12 months. */
+  fxMarkup?: { total: number; avgPct: number; count: number } | null;
 }
 
 export function buildSuggestions(txns: SuggestionTxn[], ctx: SuggestionContext): Suggestion[] {
@@ -118,6 +124,13 @@ export function buildSuggestions(txns: SuggestionTxn[], ctx: SuggestionContext):
 
   for (const p of ctx.priceChanges) {
     out.push({ key: `price:${p.merchant}:${p.to}`, type: "price", name: p.merchant, from: p.from, to: p.to });
+  }
+
+  for (const r of ctx.ruleCandidates ?? []) {
+    if (r.count >= 2) out.push({ key: `rule:${r.merchant}:${r.categoryId}`, type: "rule", ...r });
+  }
+  if (ctx.fxMarkup && ctx.fxMarkup.total >= 20 && ctx.fxMarkup.avgPct >= 0.5) {
+    out.push({ key: `fxMarkup:${year}`, type: "fxMarkup", ...ctx.fxMarkup });
   }
 
   // Salary day: the most common day salary lands, if months still start on the 1st.

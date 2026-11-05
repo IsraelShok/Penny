@@ -10,7 +10,8 @@ export interface AssetRow extends AssetInput {
 
 const COLUMNS = `id, name, type, currency, symbol, quantity, manual_value as manualValue,
   cost_basis as costBasis, liquid, is_liability as isLiability, note, fee_deposit as feeDeposit,
-  fee_balance as feeBalance, monthly_deposit as monthlyDeposit, interest_rate as interestRate, monthly_payment as monthlyPayment`;
+  fee_balance as feeBalance, monthly_deposit as monthlyDeposit, interest_rate as interestRate, monthly_payment as monthlyPayment,
+  fund_id as fundId, fund_source as fundSource`;
 
 const isLiabilityType = (t: AssetType) => (LIABILITY_TYPES as readonly string[]).includes(t);
 
@@ -25,13 +26,13 @@ export function createAssets(workspaceId: number, inputs: AssetInput[]): number 
   const db = getDb();
   const stmt = db.prepare(
     `INSERT INTO assets (workspace_id, name, type, currency, symbol, quantity, manual_value, cost_basis, liquid, is_liability, note,
-       fee_deposit, fee_balance, monthly_deposit, interest_rate, monthly_payment)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       fee_deposit, fee_balance, monthly_deposit, interest_rate, monthly_payment, fund_id, fund_source)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   db.transaction(() => {
     for (const a of inputs) {
       stmt.run(workspaceId, a.name, a.type, a.currency, a.symbol, a.quantity, a.manualValue, a.costBasis, a.liquid ? 1 : 0, isLiabilityType(a.type) ? 1 : 0, a.note,
-        a.feeDeposit, a.feeBalance, a.monthlyDeposit, a.interestRate, a.monthlyPayment);
+        a.feeDeposit, a.feeBalance, a.monthlyDeposit, a.interestRate, a.monthlyPayment, a.fundId ?? null, a.fundSource ?? null);
     }
   })();
   return inputs.length;
@@ -43,11 +44,11 @@ export function updateAsset(workspaceId: number, id: number, a: AssetInput): boo
       .prepare(
         `UPDATE assets SET name = ?, type = ?, currency = ?, symbol = ?, quantity = ?, manual_value = ?,
            cost_basis = ?, liquid = ?, is_liability = ?, note = ?, fee_deposit = ?, fee_balance = ?,
-           monthly_deposit = ?, interest_rate = ?, monthly_payment = ?
+           monthly_deposit = ?, interest_rate = ?, monthly_payment = ?, fund_id = ?, fund_source = ?
          WHERE workspace_id = ? AND id = ?`
       )
       .run(a.name, a.type, a.currency, a.symbol, a.quantity, a.manualValue, a.costBasis, a.liquid ? 1 : 0, isLiabilityType(a.type) ? 1 : 0, a.note,
-        a.feeDeposit, a.feeBalance, a.monthlyDeposit, a.interestRate, a.monthlyPayment, workspaceId, id)
+        a.feeDeposit, a.feeBalance, a.monthlyDeposit, a.interestRate, a.monthlyPayment, a.fundId ?? null, a.fundSource ?? null, workspaceId, id)
       .changes > 0
   );
 }

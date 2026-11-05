@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { projectInstallments } from "@/server/insights/installments";
+import { openInstallments, projectInstallments } from "@/server/insights/installments";
 
 const t = (o: Partial<Parameters<typeof projectInstallments>[0][number]> = {}) => ({
   merchant: "ikea",
@@ -45,5 +45,22 @@ describe("projectInstallments", () => {
   it("keeps different plans from the same merchant apart", () => {
     const out = projectInstallments([t(), t({ amount: 50, total: 4, number: 1 })], "2026-11-04");
     expect(out).toHaveLength(9 + 3);
+  });
+});
+
+describe("openInstallments", () => {
+  it("sums what is still owed per plan and per month", () => {
+    const projected = projectInstallments([t(), t({ merchant: "ace", amount: 50, number: 1, total: 3 })], "2026-11-04");
+    const out = openInstallments(projected, "2026-11-04");
+    expect(out.total).toBe(9 * 100 + 2 * 50);
+    expect(out.plans[0]).toMatchObject({ merchant: "ikea", paid: 3, total: 12, remaining: 900 });
+    expect(out.plans[1]).toMatchObject({ merchant: "ace", paid: 1, total: 3, remaining: 100 });
+    expect(out.months[0]).toEqual({ month: "2026-11", total: 150 });
+    expect(out.months.at(-1)).toEqual({ month: "2027-07", total: 100 });
+  });
+  it("keeps only the next 12 months in the runoff", () => {
+    const out = openInstallments(projectInstallments([t({ number: 1, total: 36 })], "2026-11-04"), "2026-11-04");
+    expect(out.months).toHaveLength(12);
+    expect(out.total).toBe(35 * 100);
   });
 });

@@ -39,4 +39,21 @@ describe("buildSuggestions", () => {
     expect(buildSuggestions(salary, ctx)).toContainEqual({ key: "payday:10", type: "payday", day: 10 });
     expect(buildSuggestions(salary, { ...ctx, monthStartDay: 10 })).toHaveLength(0);
   });
+
+  it("suggests a rule for repeated corrections and an fx markup above the thresholds", () => {
+    const s = buildSuggestions([], {
+      ...ctx,
+      ruleCandidates: [
+        { merchant: "wolt", categoryId: 3, categoryName: "Restaurants", count: 2 },
+        { merchant: "ikea", categoryId: 4, categoryName: "Home", count: 1 },
+      ],
+      fxMarkup: { total: 120, avgPct: 2.1, count: 14 },
+    });
+    expect(s).toEqual([
+      { key: "rule:wolt:3", type: "rule", merchant: "wolt", categoryId: 3, categoryName: "Restaurants", count: 2 },
+      { key: "fxMarkup:2026", type: "fxMarkup", total: 120, avgPct: 2.1, count: 14 },
+    ]);
+    expect(buildSuggestions([], { ...ctx, fxMarkup: { total: 120, avgPct: 0.3, count: 14 } })).toEqual([]);
+    expect(buildSuggestions([], { ...ctx, fxMarkup: { total: 15, avgPct: 3, count: 2 } })).toEqual([]);
+  });
 });

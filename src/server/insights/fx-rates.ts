@@ -1,0 +1,40 @@
+import "server-only";
+
+import type { DailyRates } from "@/lib/fx-markup";
+
+// shortcut: in-memory, per process, refreshed once a day; move to quotes_cache if restarts make it refetch too often.
+const cache = new Map<string, { day: string; closes: DailyRates[string] }>();
+
+async function fetchDaily(currency: string) {
+  const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${currency}ILS=X?range=1y&interval=1d`, {
+    headers: { "User-Agent": "Mozilla/5.0" },
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw new Error(`Yahoo ${res.status}`);
+  const r = (await res.json())?.chart?.result?.[0];
+  const stamps: number[] = r?.timestamp ?? [];
+  const closes: (number | null)[] = r?.indicators?.quote?.[0]?.close ?? [];
+  const offset: number = r?.meta?.gmtoffset ?? 0;
+  // Bars are stamped at the market's local open, so shift by its offset before taking the calendar day.
+  return stamps
+    .map((ts, i) => ({ date: new Date((ts + offset) * 1000).toISOString().slice(0, 10), close: closes[i] ?? 0 }))
+    .filter((c) => c.close > 0);
+}
+
+/** Daily market closes in shekels for each currency; a currency that fails to load is left out. */
+export async function dailyRates(currencies: string[], today: string): Promise<DailyRates> {
+  const out: DailyRates = {};
+  await Promise.all(
+    currencies
+      .filter((c) => /^[A-Z]{3}$/.test(c) && c !== "ILS")
+      .map(async (c) => {
+        const hit = cache.get(c);
+        if (hit?.day === today) return void (out[c] = hit.closes);
+        // A failure is cached for the day too, so an offline host doesn't wait on Yahoo with every request.
+        const closes = await fetchDaily(c).catch(() => hit?.closes ?? []);
+        cache.set(c, { day: today, closes });
+        out[c] = closes;
+      })
+  );
+  return out;
+}

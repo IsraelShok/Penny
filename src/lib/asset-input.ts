@@ -38,5 +38,7 @@ export function parseAssetInput(raw: unknown): AssetInput | string {
     liquid: r.liquid !== false,
     note: typeof r.note === "string" && r.note.trim() ? r.note.trim().slice(0, 200) : null,
     ...extra,
+    fundId: Number.isInteger(Number(r.fundId)) && Number(r.fundId) > 0 ? Number(r.fundId) : null,
+    fundSource: r.fundSource === "gemel" || r.fundSource === "pension" ? r.fundSource : null,
   };
 }

@@ -780,6 +780,8 @@ export interface InsightsPayload {
   series: Series[];
   forecast: BillForecast[];
   anomalies: Anomaly[];
+  /** Open installment plans: total owed, 12-month runoff and each plan. */
+  installments: ReturnType<typeof import("@/server/insights/installments").openInstallments>;
 }
 
 export function getInsights() {
@@ -801,4 +803,8 @@ export function createRule(rule: Omit<Rule, "id">) {
 export async function deleteRule(id: number) {
   const res = await fetch(`${BASE}/api/rules/${id}`, withWorkspaceHeader({ method: "DELETE" }));
   if (!res.ok) throw new Error("Delete failed");
+}
+
+export function searchFunds(source: "gemel" | "pension", q: string) {
+  return fetchJSON<{ funds: import("./types").Fund[] }>(`/api/funds?source=${source}&q=${encodeURIComponent(q)}`);
 }

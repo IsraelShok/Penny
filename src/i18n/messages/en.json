@@ -925,7 +925,11 @@
     "yearly": "yearly",
     "couldntLoad": "Couldn't load insights.",
     "posted": "Already charged",
-    "card": "Card"
+    "card": "Card",
+    "openInstallments": "Open installments",
+    "stillOwed": "Still to pay",
+    "runoff": "Installment payments, next 12 months",
+    "paidOf": "Paid {paid} of {total} · {amount} a month"
   },
   "rules": {
     "title": "Rules",
@@ -1198,7 +1202,14 @@
     "column_feeDeposit": "Fee on deposits",
     "column_deposit": "Monthly deposit",
     "marketsTitle": "Markets",
-    "fromBank": "updated from the bank"
+    "fromBank": "updated from the bank",
+    "fundSearch": "Your fund",
+    "fundSearchPlaceholder": "Fund name, e.g. More study fund general",
+    "fundLinked": "Linked to fund #{id} in the Finance Ministry data",
+    "fundUnlink": "Unlink",
+    "fundLine": "Average fees {fee}% of balance, {deposit}% of deposits · {avg5y}% a year (5 years)",
+    "fundNone": "No fund with that name",
+    "fundHint": "From the Finance Ministry's Gemel-Net and Pensia-Net. Fees are the fund's average; if you have a personal discount, update them."
   },
   "markets": {
     "title": "Markets",
@@ -1371,7 +1382,9 @@
     "policy_car": "Car",
     "policy_travel": "Travel",
     "policy_other": "Other",
-    "tax_refund_hint": "You can claim up to {years} years back (form 135)"
+    "tax_refund_hint": "You can claim up to {years} years back (form 135)",
+    "feesLinePeers": "{balance}% of balance, {deposit}% of deposits · similar funds' median: {bBalance}% / {bDeposit}%",
+    "fundReturns": "{avg5y}% a year over 5 years · median {median}% · rank {rank} of {count}"
   },
   "suggestions": {
     "title": "Spotted for you",
@@ -1397,7 +1410,9 @@
     "kind_home": "home",
     "kind_car": "car",
     "kind_travel": "travel",
-    "kind_other": "other"
+    "kind_other": "other",
+    "rule": "You moved {name} to {category} {count} times. Make it a rule?",
+    "fxMarkup": "Your cards charged {amount} over the market exchange rate on {count} foreign purchases over the last year, {pct}% on average. This compares with Yahoo market rates, not the Bank of Israel rate, so treat it as an estimate."
   },
   "cashAhead": {
     "title": "Free to spend",

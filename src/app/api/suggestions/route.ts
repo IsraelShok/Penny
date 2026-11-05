@@ -5,7 +5,11 @@ import { loadInsights } from "@/server/insights/data";
 import { listPolicies, getPlan } from "@/server/db/queries/plan";
 import { listAssets } from "@/server/db/queries/assets";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
-import { toLocalISODate } from "@/server/lib/date-utils";
+import { israelDay, toLocalISODate } from "@/server/lib/date-utils";
+import { listRules } from "@/server/db/queries/rules";
+import { applyRules } from "@/server/rules/engine";
+import { fxMarkup, type FxCharge } from "@/lib/fx-markup";
+import { dailyRates } from "@/server/insights/fx-rates";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +32,35 @@ export async function GET(request: Request) {
   const priceChanges = loadInsights(ws, today)
     .series.filter((s) => s.status === "suggested" && s.priceChange)
     .map((s) => ({ merchant: s.merchant, from: s.priceChange!.from, to: s.priceChange!.to }));
-  const suggestions: Suggestion[] = buildSuggestions(txns, { today, known, monthStartDay: getPlan(ws).monthStartDay, priceChanges })
+  // Corrections are unique per merchant and wrong category, so 2+ rows means the same fix made from different starting points.
+  const merchantRules = listRules(ws).filter((r) => r.field === "merchant");
+  const ruleCandidates = (
+    db
+      .prepare(
+        `SELECT cc.merchant_key as merchant, MAX(cc.description) as description, cc.user_category_id as categoryId,
+                c.name as categoryName, COUNT(*) as count
+         FROM category_corrections cc JOIN categories c ON c.id = cc.user_category_id
+         WHERE cc.workspace_id = ? GROUP BY cc.merchant_key, cc.user_category_id HAVING COUNT(*) >= 2`
+      )
+      .all(ws) as { merchant: string; description: string; categoryId: number; categoryName: string; count: number }[]
+  )
+    .filter((r) => !applyRules({ description: r.description, chargedAmount: 0, accountNumber: "" }, merchantRules))
+    .map(({ merchant, categoryId, categoryName, count }) => ({ merchant, categoryId, categoryName, count }));
+
+  // Installment rows are excluded: their shekel charge is a slice of the foreign amount.
+  const fxCharges = db
+    .prepare(
+      `SELECT date, original_currency as currency, original_amount as original, charged_amount as charged
+       FROM transactions
+       WHERE workspace_id = ? AND date >= ? AND status = 'completed' AND is_excluded = 0 AND kind = 'expense'
+         AND original_currency IS NOT NULL AND original_currency != 'ILS' AND COALESCE(charged_currency, 'ILS') = 'ILS'
+         AND COALESCE(installment_total, 1) <= 1`
+    )
+    .all(ws, since)
+    .map((r) => ({ ...(r as FxCharge), date: israelDay((r as FxCharge).date) }));
+  const fx = fxCharges.length ? fxMarkup(fxCharges, await dailyRates([...new Set(fxCharges.map((c) => c.currency))], today)) : null;
+
+  const suggestions: Suggestion[] = buildSuggestions(txns, { today, known, monthStartDay: getPlan(ws).monthStartDay, priceChanges, ruleCandidates, fxMarkup: fx })
     .filter((s) => !dismissed.has(s.key));
   return NextResponse.json({ suggestions });
 }

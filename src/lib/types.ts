@@ -819,6 +819,9 @@ export interface AssetInput {
   /** Debts: yearly interest % and monthly payment. */
   interestRate: number | null;
   monthlyPayment: number | null;
+  /** Fund in the Finance Ministry's public data, for pension / study / provident funds. */
+  fundId?: number | null;
+  fundSource?: FundSource | null;
 }
 
 export interface Asset extends AssetInput {
@@ -833,6 +836,7 @@ export interface Asset extends AssetInput {
   /** Unrealised gain in ILS, when a cost basis is set. */
   gainIls: number | null;
   quote: Quote | null;
+  fund?: FundComparison | null;
 }
 
 export interface AssetsPayload {
@@ -894,4 +898,35 @@ export interface PlanPayload {
   plan: import("./plan").FinancialPlan;
   goals: Goal[];
   policies: InsurancePolicy[];
+}
+
+export type FundSource = "gemel" | "pension";
+
+/** One fund from the Finance Ministry's Gemel-Net / Pensia-Net monthly report. Percentages, not fractions. */
+export interface Fund {
+  id: number;
+  source: FundSource;
+  name: string;
+  company: string;
+  classification: string;
+  specialization: string | null;
+  /** YYYYMM of the report. */
+  period: number;
+  /** Average fees actually charged across the fund's members, % a year. */
+  feeBalance: number | null;
+  feeDeposit: number | null;
+  ytd: number | null;
+  avg3y: number | null;
+  avg5y: number | null;
+  sharpe: number | null;
+  /** ₪ millions. */
+  totalAssets: number | null;
+}
+
+export interface FundComparison {
+  fund: Fund;
+  /** Medians across funds of the same kind (and track, for provident/study funds). */
+  peers: { count: number; feeBalance: number | null; feeDeposit: number | null; avg5y: number | null; avg3y: number | null };
+  /** 1 = best 5-year return among peers. */
+  rank5y: number | null;
 }

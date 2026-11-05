@@ -13,7 +13,7 @@ describe("forecastBill", () => {
     const out = forecastBill({
       billingDay: 10, today: "2026-11-04",
       series: [sub()],
-      installments: [{ merchant: "ikea", account: "1", date: "2026-11-10", month: "2026-11", amount: 100 }],
+      installments: [{ merchant: "ikea", account: "1", date: "2026-11-10", month: "2026-11", amount: 100, number: 4, total: 12 }],
       avgDiscretionary: 1000,
     });
     expect(out.map((f) => f.date)).toEqual(["2026-11-10", "2026-12-10", "2027-01-10"]);
@@ -81,7 +81,7 @@ describe("forecastCards", () => {
         { account: "B", billingDay: 10, posted: {}, avgDiscretionary: 0 },
       ],
       series: [sub({ account: "B", lastDate: "2026-10-05" })],
-      installments: [{ merchant: "ikea", account: "A", date: "2026-12-02", month: "2026-12", amount: 100 }],
+      installments: [{ merchant: "ikea", account: "A", date: "2026-12-02", month: "2026-12", amount: 100, number: 4, total: 12 }],
     });
     const a = out.filter((f) => f.account === "A");
     const b = out.filter((f) => f.account === "B");

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { createAssets, updateAsset } from "@/lib/api";
+import { createAssets, searchFunds, updateAsset } from "@/lib/api";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, X } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ASSET_TYPES, LIABILITY_TYPES, type Asset, type AssetInput, type AssetType } from "@/lib/types";
+import { ASSET_TYPES, LIABILITY_TYPES, type Asset, type AssetInput, type AssetType, type Fund, type FundSource } from "@/lib/types";
 
 const CURRENCIES = ["ILS", "USD", "EUR", "GBP"];
 /** Types that usually have a ticker on Yahoo Finance. */
@@ -53,6 +53,8 @@ export function AssetDialog({
     monthlyDeposit: initial?.monthlyDeposit?.toString() ?? "",
     interestRate: initial?.interestRate?.toString() ?? "",
     monthlyPayment: initial?.monthlyPayment?.toString() ?? "",
+    fundId: initial?.fundId ?? null,
+    fundSource: initial?.fundSource ?? null,
   });
   const opt = (s: string) => (s.trim() === "" ? null : Number(s));
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
@@ -78,6 +80,8 @@ export function AssetDialog({
         monthlyDeposit: hasFees ? opt(form.monthlyDeposit) : null,
         interestRate: isLiability ? opt(form.interestRate) : null,
         monthlyPayment: isLiability ? opt(form.monthlyPayment) : null,
+        fundId: hasFees ? form.fundId : null,
+        fundSource: hasFees ? form.fundSource : null,
       };
       return asset !== "new" ? updateAsset(asset.id, input).then(() => undefined) : createAssets([input]).then(() => undefined);
     },
@@ -167,6 +171,23 @@ export function AssetDialog({
           )}
 
           {hasFees && (
+            <FundPicker
+              source={form.type === "pension" ? "pension" : "gemel"}
+              selectedId={form.fundId}
+              onPick={(f) =>
+                setForm((cur) => ({
+                  ...cur,
+                  name: cur.name || f.name,
+                  fundId: f.id,
+                  fundSource: f.source,
+                  feeBalance: f.feeBalance?.toString() ?? cur.feeBalance,
+                  feeDeposit: f.feeDeposit?.toString() ?? cur.feeDeposit,
+                }))
+              }
+              onClear={() => setForm((cur) => ({ ...cur, fundId: null, fundSource: null }))}
+            />
+          )}
+          {hasFees && (
             <div className="grid grid-cols-3 gap-3">
               <NumField id="asset-fee-balance" label={t("fieldFeeBalance")} value={form.feeBalance} onChange={(v) => set("feeBalance", v)} />
               <NumField id="asset-fee-deposit" label={t("fieldFeeDeposit")} value={form.feeDeposit} onChange={(v) => set("feeDeposit", v)} />
@@ -214,6 +235,70 @@ function NumField({ id, label, value, onChange }: { id: string; label: string; v
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
       <Input id={id} type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+/** Find the fund in the Finance Ministry's public data; picking it fills the fund's average fees. */
+function FundPicker({
+  source,
+  selectedId,
+  onPick,
+  onClear,
+}: {
+  source: FundSource;
+  selectedId: number | null;
+  onPick: (f: Fund) => void;
+  onClear: () => void;
+}) {
+  const t = useTranslations("investments");
+  const [q, setQ] = useState("");
+  const query = useQuery({
+    queryKey: ["funds", source, q],
+    queryFn: () => searchFunds(source, q),
+    enabled: q.trim().length >= 2,
+    staleTime: 60 * 60 * 1000,
+  });
+  const results = query.data?.funds ?? [];
+
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor="fund-search">{t("fundSearch")}</Label>
+      {selectedId ? (
+        <div className="flex items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2 text-footnote">
+          <span>{t("fundLinked", { id: selectedId })}</span>
+          <button type="button" className="text-primary hover:underline" onClick={onClear}>{t("fundUnlink")}</button>
+        </div>
+      ) : (
+        <>
+          <Input id="fund-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("fundSearchPlaceholder")} autoComplete="off" />
+          {results.length > 0 && (
+            <ul className="max-h-48 overflow-y-auto overscroll-contain rounded-xl bg-muted p-1" aria-label={t("fundSearch")}>
+              {results.map((f) => (
+                <li key={f.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onPick(f);
+                      setQ("");
+                    }}
+                    className="w-full rounded-lg px-2.5 py-1.5 text-start text-footnote hover:bg-card focus-visible:bg-card"
+                  >
+                    <span className="block truncate font-medium">{f.name}</span>
+                    <span className="block text-caption text-muted-foreground tabular-nums">
+                      {t("fundLine", { fee: f.feeBalance ?? "—", deposit: f.feeDeposit ?? 0, avg5y: f.avg5y ?? "—" })}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {q.trim().length >= 2 && query.isSuccess && results.length === 0 && (
+            <p className="text-caption text-muted-foreground">{t("fundNone")}</p>
+          )}
+        </>
+      )}
+      <p className="text-caption text-pretty text-muted-foreground">{t("fundHint")}</p>
     </div>
   );
 }

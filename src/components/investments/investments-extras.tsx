@@ -31,13 +31,25 @@ export function InvestmentsExtras({ data }: { data: AssetsPayload }) {
   );
 }
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Median fees of similar funds, when the asset is linked to its fund in the public data. */
+function peerFees(a: Asset) {
+  const p = a.fund?.peers;
+  // Study and provident funds report no deposit fee: that's 0, not unknown.
+  return p && p.feeBalance != null ? { balance: p.feeBalance, deposit: p.feeDeposit ?? 0 } : undefined;
+}
+
 function FeesCard({ assets, years }: { assets: Asset[]; years: number | null }) {
   const t = useTranslations("plan");
   const locale = useLocale();
   const funds = assets.filter((a) => a.type in BENCHMARK_FEES);
   const rows = funds.map((a) => ({
     a,
-    result: years && a.valueIls != null ? feeCost(a.type, a.valueIls, a.monthlyDeposit ?? 0, years, a.feeDeposit ?? 0, a.feeBalance ?? 0) : null,
+    result:
+      years && a.valueIls != null
+        ? feeCost(a.type, a.valueIls, a.monthlyDeposit ?? 0, years, a.feeDeposit ?? 0, a.feeBalance ?? 0, 0.05, peerFees(a))
+        : null,
   }));
   const total = rows.reduce((s, r) => s + (r.result?.cost ?? 0), 0);
 
@@ -57,7 +69,7 @@ function FeesCard({ assets, years }: { assets: Asset[]; years: number | null }) 
           )}
           <ul className="mt-4 divide-y divide-border">
             {rows.map(({ a, result }) => {
-              const bench = BENCHMARK_FEES[a.type];
+              const bench = peerFees(a) ?? BENCHMARK_FEES[a.type];
               const missing = a.feeBalance == null && a.feeDeposit == null;
               return (
                 <li key={a.id} className="flex items-baseline justify-between gap-3 py-2.5 text-footnote">
@@ -66,8 +78,18 @@ function FeesCard({ assets, years }: { assets: Asset[]; years: number | null }) 
                     <span className="text-caption text-muted-foreground">
                       {missing
                         ? t("feesMissing")
-                        : t("feesLine", { balance: a.feeBalance ?? 0, deposit: a.feeDeposit ?? 0, bBalance: bench.balance, bDeposit: bench.deposit })}
+                        : t(a.fund ? "feesLinePeers" : "feesLine", { balance: a.feeBalance ?? 0, deposit: a.feeDeposit ?? 0, bBalance: round2(bench.balance), bDeposit: round2(bench.deposit) })}
                     </span>
+                    {a.fund?.fund.avg5y != null && (
+                      <span className="block text-caption text-muted-foreground">
+                        {t("fundReturns", {
+                          avg5y: a.fund.fund.avg5y,
+                          median: a.fund.peers.avg5y != null ? round2(a.fund.peers.avg5y) : "—",
+                          rank: a.fund.rank5y ?? "—",
+                          count: a.fund.peers.count,
+                        })}
+                      </span>
+                    )}
                   </span>
                   {result && !missing && (
                     <span className={cn("shrink-0 font-semibold tabular-nums", result.cost > 0 ? "text-status-over" : "text-status-on-track")}>

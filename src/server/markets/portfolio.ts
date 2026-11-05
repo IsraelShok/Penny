@@ -5,7 +5,9 @@ import { BANK_PROVIDERS } from "@/lib/types";
 import { fxRate, getQuotes } from "./quotes";
 import { BENCHMARKS } from "@/lib/markets";
 import { toLocalISODate } from "../lib/date-utils";
-import type { Asset, AssetsPayload, AssetType } from "@/lib/types";
+import type { Asset, AssetsPayload, AssetType, Fund, FundSource } from "@/lib/types";
+import { loadFunds } from "./funds";
+import { compareFund } from "@/lib/funds";
 
 /** Israeli capital gains tax on realised profit. */
 const CAPITAL_GAINS_TAX = 0.25;
@@ -21,6 +23,15 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
     ...BENCHMARKS,
   ]);
 
+  // Public fund data, only fetched when some asset is linked to a fund.
+  const fundLists = new Map<FundSource, Fund[]>();
+  for (const s of new Set(rows.flatMap((r) => (r.fundId && r.fundSource ? [r.fundSource] : [])))) fundLists.set(s, await loadFunds(s));
+  const fundOf = (r: (typeof rows)[number]) => {
+    const list = r.fundSource ? fundLists.get(r.fundSource) : undefined;
+    const fund = list?.find((f) => f.id === r.fundId);
+    return fund && list ? compareFund(fund, list) : null;
+  };
+
   const assets: Asset[] = rows.map((r) => {
     const quote = r.symbol ? quotes.get(r.symbol.trim().toUpperCase()) ?? null : null;
     // A live price wins; the quote's own currency (e.g. USD for AAPL) overrides the row's.
@@ -31,7 +42,7 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
     const costRate = fxRate(r.currency, quotes);
     const gainIls =
       valueIls != null && r.costBasis != null && costRate != null ? valueIls - r.costBasis * costRate : null;
-    return { ...r, currency, value, valueIls, gainIls, quote };
+    return { ...r, currency, value, valueIls, gainIls, quote, fund: fundOf(r) };
   });
 
   // Synced bank balances, as cash (an overdrawn account counts as a short-term debt).

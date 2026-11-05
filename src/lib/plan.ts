@@ -27,9 +27,11 @@ export function feeCost(
   years: number,
   feeDepositPct: number,
   feeBalancePct: number,
-  grossReturn = 0.05
+  grossReturn = 0.05,
+  /** Peer medians from the fund's public data, when the asset is linked to a fund. */
+  peers?: { deposit: number; balance: number }
 ): { yours: number; benchmark: number; cost: number } | null {
-  const bench = BENCHMARK_FEES[type];
+  const bench = peers ?? BENCHMARK_FEES[type];
   if (!bench || years <= 0) return null;
   const yours = projectBalance(balance, monthlyDeposit, years, grossReturn, feeDepositPct, feeBalancePct);
   const benchmark = projectBalance(balance, monthlyDeposit, years, grossReturn, Math.min(feeDepositPct, bench.deposit), Math.min(feeBalancePct, bench.balance));

@@ -925,7 +925,11 @@
     "yearly": "שנתי",
     "couldntLoad": "לא ניתן לטעון תובנות.",
     "posted": "כבר חויב",
-    "card": "כרטיס"
+    "card": "כרטיס",
+    "openInstallments": "תשלומים פתוחים",
+    "stillOwed": "נשאר לשלם",
+    "runoff": "תשלומים ב-12 החודשים הקרובים",
+    "paidOf": "שולמו {paid} מתוך {total} · {amount} בחודש"
   },
   "rules": {
     "title": "כללים",
@@ -1198,7 +1202,14 @@
     "column_feeDeposit": "דמי ניהול מהפקדה",
     "column_deposit": "הפקדה חודשית",
     "marketsTitle": "שווקים",
-    "fromBank": "מתעדכן מהבנק"
+    "fromBank": "מתעדכן מהבנק",
+    "fundSearch": "הקרן שלך",
+    "fundSearchPlaceholder": "שם הקרן, למשל: מור השתלמות כללי",
+    "fundLinked": "מקושר לקרן מס׳ {id} בנתוני משרד האוצר",
+    "fundUnlink": "ביטול קישור",
+    "fundLine": "דמי ניהול ממוצעים {fee}% מצבירה, {deposit}% מהפקדה · תשואה {avg5y}% בשנה (5 שנים)",
+    "fundNone": "לא נמצאה קרן בשם הזה",
+    "fundHint": "מנתוני גמל-נט ופנסיה-נט של משרד האוצר. דמי הניהול הם הממוצע בקרן, ואם יש לכם הנחה אישית עדכנו אותם."
   },
   "markets": {
     "title": "שווקים",
@@ -1371,7 +1382,9 @@
     "policy_car": "רכב",
     "policy_travel": "נסיעות",
     "policy_other": "אחר",
-    "tax_refund_hint": "אפשר לבקש עד {years} שנים אחורה (טופס 135)"
+    "tax_refund_hint": "אפשר לבקש עד {years} שנים אחורה (טופס 135)",
+    "feesLinePeers": "{balance}% מצבירה, {deposit}% מהפקדה · חציון קרנות דומות: {bBalance}% / {bDeposit}%",
+    "fundReturns": "תשואה {avg5y}% בשנה ב-5 שנים · חציון {median}% · מקום {rank} מתוך {count}"
   },
   "suggestions": {
     "title": "זיהינו בשבילך",
@@ -1397,7 +1410,9 @@
     "kind_home": "דירה",
     "kind_car": "רכב",
     "kind_travel": "נסיעות",
-    "kind_other": "אחר"
+    "kind_other": "אחר",
+    "rule": "העברת את {name} ל{category} {count} פעמים. ליצור כלל?",
+    "fxMarkup": "הכרטיסים חייבו {amount} מעל שער השוק ב-{count} רכישות במט\"ח בשנה האחרונה, {pct}% בממוצע. ההשוואה היא לשער שוק מ-Yahoo ולא לשער היציג של בנק ישראל, אז זו הערכה."
   },
   "cashAhead": {
     "title": "פנוי להוצאה",
