@@ -1,9 +1,9 @@
 "use client";
 
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck } from "lucide-react";
+import { RotateCw, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { BankProviderInfo } from "@/lib/types";
 import { translateProviderName } from "@/lib/i18n-data";
@@ -82,14 +82,14 @@ export function TwoFactorSection({
               {t("twoFaSavedTokenHint")}
             </div>
           </div>
-          <Button
+          <IconButton
+            label={resetPending ? t("twoFaResetting") : t("twoFaResetButton")}
             variant="outline"
-            size="sm"
             onClick={onResetToken}
             disabled={resetPending}
           >
-            {resetPending ? t("twoFaResetting") : t("twoFaResetButton")}
-          </Button>
+            <RotateCw className="size-4" aria-hidden />
+          </IconButton>
         </div>
       ) : null}
     </div>

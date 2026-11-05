@@ -2,9 +2,9 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Download } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -232,12 +232,12 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
       </div>
 
       <footer className="flex items-center justify-between pt-2">
-        <Button variant="outline" onClick={onBack}>
-          {t("aiBackButton")}
-        </Button>
-        <Button onClick={handleSave} disabled={!canContinue || saving}>
-          {saving ? t("aiSavingButton") : t("aiContinueButton")}
-        </Button>
+        <IconButton label={t("aiBackButton")} variant="outline" onClick={onBack}>
+          <ArrowRight className="size-4 ltr:rotate-180" aria-hidden />
+        </IconButton>
+        <IconButton label={saving ? t("aiSavingButton") : t("aiContinueButton")} variant="default" onClick={handleSave} disabled={!canContinue || saving}>
+          <ArrowLeft className="size-4 ltr:rotate-180" aria-hidden />
+        </IconButton>
       </footer>
     </div>
   );
@@ -571,17 +571,18 @@ function OllamaPullCTA({
 
   return (
     <div className="space-y-1">
-      <Button
-        type="button"
-        onClick={onPull}
-        disabled={reachable === false}
-        className="w-full"
-      >
-        {t("aiOllamaDownloadButton", {
+      <IconButton
+        label={t("aiOllamaDownloadButton", {
           model,
           size: info ? `(${info.sizeGb} GB)` : "",
         })}
-      </Button>
+        variant="default"
+        type="button"
+        onClick={onPull}
+        disabled={reachable === false}
+      >
+        <Download className="size-4" aria-hidden />
+      </IconButton>
       {pullError && (
         <p className="text-xs text-destructive">{pullError}</p>
       )}

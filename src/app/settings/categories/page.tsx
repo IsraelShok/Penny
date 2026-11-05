@@ -4,10 +4,10 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { translateCategoryName } from "@/lib/i18n-data";
-import { ChevronRight, Plus, Search } from "lucide-react";
+import { ChevronRight, Plus, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import {
   Dialog,
   DialogContent,
@@ -367,10 +367,9 @@ function NewGroupDialog({ kind }: { kind: CategoryKind }) {
     >
       <DialogTrigger
         render={
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Plus aria-hidden className="h-3.5 w-3.5" />
-            {t("newGroupButton")}
-          </Button>
+          <IconButton label={t("newGroupButton")} variant="outline">
+            <Plus aria-hidden className="size-4" />
+          </IconButton>
         }
       />
       <DialogContent className="sm:max-w-md">
@@ -410,15 +409,17 @@ function NewGroupDialog({ kind }: { kind: CategoryKind }) {
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>
-            {tc("cancel")}
-          </Button>
-          <Button
+          <IconButton label={tc("cancel")} onClick={() => setOpen(false)}>
+            <X aria-hidden className="size-4" />
+          </IconButton>
+          <IconButton
+            label={mutation.isPending ? tc("creating") : t("createButton")}
+            variant="default"
             onClick={() => mutation.mutate()}
             disabled={name.trim().length === 0 || mutation.isPending}
           >
-            {mutation.isPending ? tc("creating") : t("createButton")}
-          </Button>
+            <Plus aria-hidden className="size-4" />
+          </IconButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

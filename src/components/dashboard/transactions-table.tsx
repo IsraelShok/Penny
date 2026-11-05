@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +37,9 @@ import {
   Tags,
   EyeOff,
   Eye,
+  ArrowLeft,
+  ArrowRight,
+  X,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -405,15 +408,15 @@ export function TransactionsTable({
               {renderCategoryFilterOptions(null, 0)}
             </TransactionMultiFilter>
             {hasActiveFilters ? (
-              <Button
+              <IconButton
+                label={t("filterClear")}
                 type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 shrink-0 px-2 text-xs text-muted-foreground"
+                size="icon-sm"
+                className="shrink-0 text-muted-foreground"
                 onClick={handleClearFilters}
               >
-                {t("filterClear")}
-              </Button>
+                <X className="size-4" aria-hidden />
+              </IconButton>
             ) : null}
           </div>
         </div>
@@ -615,22 +618,20 @@ export function TransactionsTable({
                             </DropdownMenuContent>
                           </DropdownMenu>
                           {txn.needsReview && (
-                            <Button
-                              size="sm"
+                            <IconButton
+                              label={t("rowApprove")}
+                              size="icon-xs"
                               variant="outline"
                               onClick={() => handleApprove(txn.id)}
                               disabled={updatingId === txn.id}
-                              className="h-6 gap-1 px-2 text-xs font-medium"
                               style={{
                                 borderColor:
                                   "color-mix(in oklch, var(--status-on-track) 35%, transparent)",
                                 color: "var(--status-on-track)",
                               }}
-                              title={t("rowApproveTooltip")}
                             >
-                              <Check className="h-3 w-3" />
-                              {t("rowApprove")}
-                            </Button>
+                              <Check className="size-3" aria-hidden />
+                            </IconButton>
                           )}
                         </div>
                       </TableCell>
@@ -706,22 +707,24 @@ export function TransactionsTable({
                   })}
                 </span>
                 <div className="flex gap-1">
-                  <Button
+                  <IconButton
+                    label={t("previous")}
                     variant="outline"
-                    size="sm"
+                    size="icon-sm"
                     onClick={() => onPageChange(page - 1)}
                     disabled={page === 0}
                   >
-                    {t("previous")}
-                  </Button>
-                  <Button
+                    <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden />
+                  </IconButton>
+                  <IconButton
+                    label={t("next")}
                     variant="outline"
-                    size="sm"
+                    size="icon-sm"
                     onClick={() => onPageChange(page + 1)}
                     disabled={page >= totalPages - 1}
                   >
-                    {t("next")}
-                  </Button>
+                    <ArrowRight className="size-4 rtl:rotate-180" aria-hidden />
+                  </IconButton>
                 </div>
               </div>
             )}

@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ChevronRight } from "lucide-react";
 
 interface CardShellProps {
   label?: string;
@@ -41,14 +43,22 @@ export function CardShell({ label, wallet, action, children, className }: CardSh
   );
 }
 
-export function CardAction({ href, children }: { href: string; children: ReactNode }) {
+export function CardAction({ href, children }: { href: string; children: string }) {
   return (
-    <Link
-      href={href}
-      className="underline-offset-4 hover:text-foreground hover:underline"
-    >
-      {children}
-    </Link>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Link
+            href={href}
+            aria-label={children}
+            className="-m-1 inline-flex rounded-full p-1 hover:text-foreground"
+          />
+        }
+      >
+        <ChevronRight className="size-4 rtl:rotate-180" aria-hidden />
+      </TooltipTrigger>
+      <TooltipContent>{children}</TooltipContent>
+    </Tooltip>
   );
 }
 

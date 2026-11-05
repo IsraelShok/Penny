@@ -18,7 +18,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -391,15 +391,9 @@ function DetailContent({ data }: { data: CategoryDetail }) {
             <h3 className="text-sm font-medium">
               {tb("transactionsHeading", { count: data.transactionCount })}
             </h3>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 gap-1 text-xs"
-              disabled
-              title={tb("manualEntryUnavailable")}
-            >
-              <Plus className="h-3.5 w-3.5" /> {tc("add")}
-            </Button>
+            <IconButton label={tc("add")} title={tb("manualEntryUnavailable")} size="icon-sm" disabled>
+              <Plus className="size-3.5" aria-hidden />
+            </IconButton>
           </div>
           <div className="overflow-hidden rounded-2xl border bg-card">
             {data.transactions.length === 0 ? (
@@ -613,14 +607,9 @@ function NeedsReviewSection({
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button
-                size="sm"
-                className="h-7 gap-1 px-2 text-xs"
-                onClick={() => onApprove(t.id)}
-              >
-                <Check className="h-3.5 w-3.5" />
-                {tb("approve")}
-              </Button>
+              <IconButton label={tb("approve")} variant="default" size="icon-sm" onClick={() => onApprove(t.id)}>
+                <Check className="size-3.5" aria-hidden />
+              </IconButton>
             </div>
           </li>
         ))}

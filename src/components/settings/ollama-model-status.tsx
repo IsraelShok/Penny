@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import {
   listOllamaModels,
   pullOllamaModel,
@@ -256,9 +257,9 @@ function ModelStatusInner({
             })}
           </p>
         </div>
-        <Button size="sm" onClick={onPull}>
-          {t("download")}
-        </Button>
+        <IconButton label={t("download")} variant="default" onClick={onPull}>
+          <Download className="size-4" aria-hidden />
+        </IconButton>
       </div>
       {pullError && <p className="text-xs text-destructive">{pullError}</p>}
     </div>

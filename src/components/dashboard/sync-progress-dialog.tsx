@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import {
   Check,
@@ -18,6 +18,7 @@ import {
   Sparkles,
   ShieldCheck,
   ExternalLink,
+  Plug,
 } from "lucide-react";
 import { BANK_PROVIDERS } from "@/lib/types";
 import { ProviderBadge } from "@/components/setup/provider-badge";
@@ -160,12 +161,16 @@ export function SyncProgressDialog({
               <Sparkles className="h-4 w-4" strokeWidth={1.75} />
             </div>
             <p className="min-w-0 flex-1 text-muted-foreground">{aiWarning}</p>
-            <Button
-              size="sm"
+            <IconButton
+              label={t("connectAi")}
+              variant="default"
+              size="icon-sm"
               nativeButton={false}
               className="self-start sm:self-auto"
-              render={<Link href="/settings/ai">{t("connectAi")}</Link>}
-            />
+              render={<Link href="/settings/ai" />}
+            >
+              <Plug className="size-3.5" aria-hidden />
+            </IconButton>
           </div>
         )}
       </DialogContent>
@@ -303,13 +308,15 @@ function OtpInputArea({
         disabled={submitting}
         aria-label={t("otpLabel")}
       />
-      <Button
+      <IconButton
+        label={submitting ? t("otpSubmitting") : t("otpSubmit")}
+        variant="default"
+        size="icon-sm"
         type="submit"
-        size="sm"
         disabled={submitting || code.trim().length < 4}
       >
-        {submitting ? t("otpSubmitting") : t("otpSubmit")}
-      </Button>
+        {submitting ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Check className="size-3.5" aria-hidden />}
+      </IconButton>
       {error && (
         <p className="absolute -bottom-5 start-0 text-xs text-destructive">
           {error}

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowDownRight, ArrowUpRight, HelpCircle } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, HelpCircle, Loader2, Tags } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import { toast } from "sonner";
 import { previewCategorize } from "@/lib/api";
 import type { CategorizePreview, TransactionsSummary } from "@/lib/api";
@@ -151,14 +152,16 @@ function PendingReview({ count, loading }: PendingReviewProps) {
         <div className="mt-0.5 text-xs text-muted-foreground">
           {count === 1 ? t("needCloserLookOne") : t("needCloserLookOther")}
         </div>
-        <button
-          type="button"
+        <IconButton
+          label={mutation.isPending ? t("loadingShort") : t("reviewNow")}
+          variant="outline"
+          size="icon-sm"
+          className="mt-3"
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending || loading || count === 0}
-          className="mt-3 inline-flex h-8 items-center justify-center rounded-md border border-border px-3 text-xs font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {mutation.isPending ? t("loadingShort") : t("reviewNow")}
-        </button>
+          {mutation.isPending ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Tags className="size-3.5" aria-hidden />}
+        </IconButton>
       </div>
 
       {preview && (

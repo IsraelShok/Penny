@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Info } from "lucide-react";
+import { ArrowLeft, ArrowRight, Info } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input, InputGroup } from "@/components/ui/input";
 import { updateSettings } from "@/lib/api";
 
@@ -82,15 +82,17 @@ export function MonthlyTargetStep({ onComplete, onBack }: MonthlyTargetStepProps
       </div>
 
       <footer className="flex items-center justify-between pt-2">
-        <Button variant="outline" onClick={onBack} disabled={saving}>
-          {t("aiBackButton")}
-        </Button>
-        <Button
+        <IconButton label={t("aiBackButton")} variant="outline" onClick={onBack} disabled={saving}>
+          <ArrowRight className="size-4 ltr:rotate-180" aria-hidden />
+        </IconButton>
+        <IconButton
+          label={saving ? t("aiSavingButton") : t("aiContinueButton")}
+          variant="default"
           onClick={() => save(valid ? parsed : null)}
           disabled={saving || !valid}
         >
-          {saving ? t("aiSavingButton") : t("aiContinueButton")}
-        </Button>
+          <ArrowLeft className="size-4 ltr:rotate-180" aria-hidden />
+        </IconButton>
       </footer>
 
       <div className="flex justify-center pt-1">

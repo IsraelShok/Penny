@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSyncErrorText } from "@/hooks/use-sync-error-text";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { startSync, submitSyncOtp } from "@/lib/api";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
@@ -176,15 +176,15 @@ export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
 
   return (
     <>
-      <Button
-        size="sm"
+      <IconButton
+        label={syncing ? t("syncing") : t("syncAndCategorize")}
+        variant="default"
+        size="icon-sm"
         onClick={handleSync}
         disabled={syncing}
-        className="gap-1.5"
       >
-        <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
-        <span className="max-sm:sr-only">{syncing ? t("syncing") : t("syncAndCategorize")}</span>
-      </Button>
+        <RefreshCw className={`size-3.5 ${syncing ? "animate-spin" : ""}`} aria-hidden />
+      </IconButton>
 
       <SyncProgressDialog
         open={dialogOpen}

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -157,7 +158,7 @@ export function RulesView() {
               </select>
             </div>
             <div className="sm:col-span-2">
-              <Button type="submit">{t("add")}</Button>
+              <IconButton label={t("add")} variant="default" type="submit"><Plus className="size-4" aria-hidden /></IconButton>
               {missing ? <span id="rule-missing" role="alert" className="ms-3 text-sm text-destructive">{t(missing)}</span> : null}
               {error ? <span role="alert" className="ms-3 text-sm text-destructive">{t("saveFailed")}</span> : null}
             </div>
@@ -176,9 +177,9 @@ export function RulesView() {
                 {` ${t("arrow")} `}
                 {[categoryName(r.categoryId), r.kind ? t(r.kind) : null].filter(Boolean).join(", ")}
               </span>
-              <Button variant="ghost" size="sm" aria-label={t("deleteRule", { rule: r.value })} onClick={() => remove(r)}>
-                {t("delete")}
-              </Button>
+              <IconButton label={t("deleteRule", { rule: r.value })} className="text-destructive" onClick={() => remove(r)}>
+                <Trash2 className="size-4" aria-hidden />
+              </IconButton>
             </li>
           ))}
         </ul>

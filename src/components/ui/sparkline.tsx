@@ -33,7 +33,8 @@ export function Sparkline({
         strokeLinecap="round"
         vectorEffect="non-scaling-stroke"
       />
-      <circle cx={last * step} cy={y(values[last])} r="2.5" fill={color} vectorEffect="non-scaling-stroke" />
+      {/* A zero-length round-capped line stays a circle when the SVG is stretched; a <circle> would not. */}
+      <line x1={last * step} y1={y(values[last])} x2={last * step} y2={y(values[last])} stroke={color} strokeWidth="5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }

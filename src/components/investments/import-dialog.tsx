@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { createAssets } from "@/lib/api";
 import { parseAmount, parseCsv } from "@/lib/csv";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { FileUp, X } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ASSET_TYPES, type AssetInput, type AssetType } from "@/lib/types";
@@ -164,10 +165,10 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>{tc("cancel")}</Button>
-          <Button disabled={assets.length === 0 || mutation.isPending} onClick={() => mutation.mutate()}>
-            {mutation.isPending ? t("saving") : t("importButton", { count: assets.length })}
-          </Button>
+          <IconButton label={tc("cancel")} variant="outline" onClick={onClose}><X className="size-4" aria-hidden /></IconButton>
+          <IconButton label={mutation.isPending ? t("saving") : t("importButton", { count: assets.length })} variant="default" disabled={assets.length === 0 || mutation.isPending} onClick={() => mutation.mutate()}>
+            <FileUp className="size-4" aria-hidden />
+          </IconButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input, InputGroup } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -112,9 +113,14 @@ function DisplayNameCard({ initialName }: { initialName: string }) {
             onChange={(e) => setValue(e.target.value)}
           />
         </div>
-        <Button type="submit" disabled={!dirty || mutation.isPending}>
-          {mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
-        </Button>
+        <IconButton
+          label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
+          variant="default"
+          type="submit"
+          disabled={!dirty || mutation.isPending}
+        >
+          <Check className="size-4" aria-hidden />
+        </IconButton>
       </form>
     </SettingCard>
   );
@@ -183,14 +189,16 @@ function MonthlyTargetCard({
           )}
         </div>
         <div className="mt-5 flex justify-end">
-          <Button
+          <IconButton
+            label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
+            variant="default"
             onClick={() =>
               mutation.mutate({ monthlyTarget: parsed })
             }
             disabled={!dirty || mutation.isPending}
           >
-            {mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
-          </Button>
+            <Check className="size-4" aria-hidden />
+          </IconButton>
         </div>
       </SettingCard>
     </div>
@@ -268,7 +276,9 @@ function GeneralForm({
         </div>
       </div>
       <div className="mt-5 flex justify-end">
-        <Button
+        <IconButton
+          label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
+          variant="default"
           onClick={() =>
             mutation.mutate({
               monthsToSync: Number(months),
@@ -277,8 +287,8 @@ function GeneralForm({
           }
           disabled={!dirty || mutation.isPending}
         >
-          {mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
-        </Button>
+          <Check className="size-4" aria-hidden />
+        </IconButton>
       </div>
     </SettingCard>
   );
@@ -350,14 +360,16 @@ function AutoSyncCard({
         </p>
       </div>
       <div className="mt-5 flex justify-end">
-        <Button
+        <IconButton
+          label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
+          variant="default"
           onClick={() =>
             mutation.mutate({ autoSyncEnabled: enabled, autoSyncTime: time })
           }
           disabled={!dirty || mutation.isPending}
         >
-          {mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
-        </Button>
+          <Check className="size-4" aria-hidden />
+        </IconButton>
       </div>
     </SettingCard>
   );

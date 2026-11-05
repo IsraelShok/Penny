@@ -100,6 +100,7 @@ function DialogFooter({
 }: React.ComponentProps<"div"> & {
   showCloseButton?: boolean
 }) {
+  const tNav = useTranslations("nav")
   return (
     <div
       data-slot="dialog-footer"
@@ -111,8 +112,8 @@ function DialogFooter({
     >
       {children}
       {showCloseButton && (
-        <DialogPrimitive.Close render={<Button variant="outline" />}>
-          Close
+        <DialogPrimitive.Close render={<Button variant="outline" size="icon" aria-label={tNav("close")} />}>
+          <XIcon aria-hidden />
         </DialogPrimitive.Close>
       )}
     </div>

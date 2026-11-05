@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { FileUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileUp, Pencil, Plus, RotateCw, Trash2 } from "lucide-react";
 import { deleteAsset, getAssets } from "@/lib/api";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkline } from "@/components/ui/sparkline";
 import { cn } from "@/lib/utils";
@@ -34,20 +35,18 @@ export function InvestmentsView() {
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="outline" onClick={() => setImporting(true)}>
+        <IconButton label={t("importCsv")} variant="outline" onClick={() => setImporting(true)}>
           <FileUp className="size-4" aria-hidden />
-          {t("importCsv")}
-        </Button>
-        <Button onClick={() => setEditing("new")}>
+        </IconButton>
+        <IconButton label={t("addAsset")} variant="default" onClick={() => setEditing("new")}>
           <Plus className="size-4" aria-hidden />
-          {t("addAsset")}
-        </Button>
+        </IconButton>
       </div>
 
       {query.isError ? (
         <CardShell>
           <p className="text-footnote text-muted-foreground">{t("loadFailed")}</p>
-          <Button variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}>{t("retry")}</Button>
+          <IconButton label={t("retry")} variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}><RotateCw className="size-4" aria-hidden /></IconButton>
         </CardShell>
       ) : !query.data ? (
         <div className="grid gap-4 md:grid-cols-3">
@@ -61,8 +60,8 @@ export function InvestmentsView() {
             <h2 className="text-title font-semibold">{t("emptyTitle")}</h2>
             <p className="mt-2 text-footnote text-pretty text-muted-foreground">{t("emptyBody")}</p>
             <div className="mt-5 flex justify-center gap-2">
-              <Button onClick={() => setEditing("new")}>{t("addAsset")}</Button>
-              <Button variant="outline" onClick={() => setImporting(true)}>{t("importCsv")}</Button>
+              <IconButton label={t("addAsset")} variant="default" onClick={() => setEditing("new")}><Plus className="size-4" aria-hidden /></IconButton>
+              <IconButton label={t("importCsv")} variant="outline" onClick={() => setImporting(true)}><FileUp className="size-4" aria-hidden /></IconButton>
             </div>
           </div>
         </CardShell>

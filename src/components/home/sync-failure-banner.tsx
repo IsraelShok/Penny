@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertTriangle, Plug } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 import { translateProviderName } from "@/lib/i18n-data";
 import type { HomeBankHealthItem } from "@/lib/types";
@@ -108,12 +108,16 @@ export function SyncFailureBanner({ items, className }: Props) {
         )}
       </div>
 
-      <Button
-        size="sm"
+      <IconButton
+        label={t("reconnectBank")}
+        variant="default"
+        size="icon-sm"
         nativeButton={false}
         className="self-start sm:self-auto"
-        render={<Link href="/settings/bank">{t("reconnectBank")}</Link>}
-      />
+        render={<Link href="/settings/bank" />}
+      >
+        <Plug className="size-3.5" aria-hidden />
+      </IconButton>
     </div>
   );
 }

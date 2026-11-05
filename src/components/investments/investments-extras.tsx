@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Check, Plus, Trash2 } from "lucide-react";
 import { deletePlanItem, getPlan, savePlan, savePlanItem } from "@/lib/api";
 import { ALLOCATION_CLASSES, BENCHMARK_FEES, CLASS_OF, debtPayoff, feeCost, type AllocationClass, type FinancialPlan } from "@/lib/plan";
 import { shekels } from "@/lib/money";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -191,7 +192,7 @@ function AllocationTarget({ assets, plan }: { assets: Asset[]; plan: FinancialPl
       </ul>
       <div className="mt-4 flex items-center justify-between gap-3">
         <p className={cn("text-caption", targetSum === 100 ? "text-muted-foreground" : "text-status-over")}>{t("allocationSum", { sum: targetSum })}</p>
-        <Button size="sm" disabled={targetSum !== 100 || save.isPending} onClick={() => save.mutate()}>{t("save")}</Button>
+        <IconButton label={t("save")} variant="default" disabled={targetSum !== 100 || save.isPending} onClick={() => save.mutate()}><Check className="size-4" aria-hidden /></IconButton>
       </div>
       <p className="mt-3 text-caption text-pretty text-muted-foreground">{t("allocationHint")}</p>
     </CardShell>
@@ -235,7 +236,7 @@ function PastNetWorth({ history }: { history: AssetsPayload["history"] }) {
           <Label htmlFor="past-value">{t("netWorth")}</Label>
           <Input id="past-value" type="number" required step="any" dir="ltr" value={value} onChange={(e) => setValue(e.target.value)} />
         </div>
-        <Button type="submit" disabled={add.isPending}>{t("add")}</Button>
+        <IconButton label={t("add")} variant="default" type="submit" disabled={add.isPending}><Plus className="size-4" aria-hidden /></IconButton>
       </form>
       {manual.length > 0 && (
         <ul className="mt-3 divide-y divide-border">

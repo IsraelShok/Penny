@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import { listIntegrations, getSettings } from "@/lib/api";
 import { BANK_PROVIDERS } from "@/lib/types";
 import { ProviderBadge } from "./provider-badge";
@@ -151,9 +152,9 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
       <ImportProgress />
 
       <div className="flex justify-center">
-        <Button size="lg" onClick={onFinish}>
-          {t("completeOpenBudgets")}
-        </Button>
+        <IconButton label={t("completeOpenBudgets")} variant="default" size="icon-lg" onClick={onFinish}>
+          <Check className="size-4" aria-hidden />
+        </IconButton>
       </div>
     </div>
   );

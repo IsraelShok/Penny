@@ -1,13 +1,13 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, CheckCheck, ChevronDown, X } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 
 interface TransactionMultiFilterProps {
@@ -59,24 +59,12 @@ export function TransactionMultiFilter({
       <PopoverContent align="end" className="w-64 p-0">
         {showBulkActions ? (
           <div className="flex items-center justify-between border-b border-border px-2 py-1.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs"
-              onClick={onSelectAll}
-            >
-              {selectAllLabel}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs text-muted-foreground"
-              onClick={onClear}
-            >
-              {clearLabel}
-            </Button>
+            <IconButton label={selectAllLabel} type="button" size="icon-xs" onClick={onSelectAll}>
+              <CheckCheck className="size-3.5" aria-hidden />
+            </IconButton>
+            <IconButton label={clearLabel} type="button" size="icon-xs" className="text-muted-foreground" onClick={onClear}>
+              <X className="size-3.5" aria-hidden />
+            </IconButton>
           </div>
         ) : null}
         <div className="max-h-64 overflow-y-auto p-1">{children}</div>

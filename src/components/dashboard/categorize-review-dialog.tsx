@@ -10,7 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { Check, CheckCheck, Loader2, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { applyCategorize, getCategories } from "@/lib/api";
@@ -147,7 +148,10 @@ export function CategorizeReviewDialog({
                     {t("proposedNew", { count: totalProposals })}
                   </h3>
                   <div className="flex gap-1.5">
-                    <button
+                    <IconButton
+                      label={t("approveAll")}
+                      size="icon-xs"
+                      className="text-muted-foreground"
                       onClick={() =>
                         setApprovedMap(
                           Object.fromEntries(
@@ -158,12 +162,13 @@ export function CategorizeReviewDialog({
                           )
                         )
                       }
-                      className="text-xs text-muted-foreground hover:text-foreground"
                     >
-                      {t("approveAll")}
-                    </button>
-                    <span className="text-xs text-muted-foreground">·</span>
-                    <button
+                      <CheckCheck className="size-3.5" aria-hidden />
+                    </IconButton>
+                    <IconButton
+                      label={t("rejectAll")}
+                      size="icon-xs"
+                      className="text-muted-foreground"
                       onClick={() =>
                         setApprovedMap(
                           Object.fromEntries(
@@ -174,10 +179,9 @@ export function CategorizeReviewDialog({
                           )
                         )
                       }
-                      className="text-xs text-muted-foreground hover:text-foreground"
                     >
-                      {t("rejectAll")}
-                    </button>
+                      <X className="size-3.5" aria-hidden />
+                    </IconButton>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -241,15 +245,17 @@ export function CategorizeReviewDialog({
               </div>
             )}
           </div>
-          <Button variant="ghost" onClick={onClose}>
-            {tc("cancel")}
-          </Button>
-          <Button
+          <IconButton label={tc("cancel")} onClick={onClose}>
+            <X className="size-4" aria-hidden />
+          </IconButton>
+          <IconButton
+            label={applyMutation.isPending ? t("applying") : t("apply")}
+            variant="default"
             onClick={() => applyMutation.mutate()}
             disabled={applyMutation.isPending}
           >
-            {applyMutation.isPending ? t("applying") : t("apply")}
-          </Button>
+            {applyMutation.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Check className="size-4" aria-hidden />}
+          </IconButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

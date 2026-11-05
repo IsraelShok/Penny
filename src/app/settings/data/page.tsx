@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Trash2, AlertTriangle, EyeOff } from "lucide-react";
+import { Trash2, AlertTriangle, EyeOff, X } from "lucide-react";
 import {
   deleteAllTransactions,
   deleteExcludedMerchantRule,
@@ -108,10 +108,10 @@ function DangerZone() {
               {t("dangerDescription")}
             </p>
           </div>
-          <Button
+          <IconButton
+            label={t("dangerButton")}
             variant="outline"
-            size="sm"
-            className="shrink-0 gap-1.5"
+            className="shrink-0"
             style={{
               borderColor:
                 "color-mix(in oklch, var(--status-over) 40%, transparent)",
@@ -119,9 +119,8 @@ function DangerZone() {
             }}
             onClick={() => setConfirmOpen(true)}
           >
-            <Trash2 className="h-3.5 w-3.5" />
-            {t("dangerButton")}
-          </Button>
+            <Trash2 className="size-4" aria-hidden />
+          </IconButton>
         </div>
       </div>
 
@@ -190,19 +189,19 @@ function DangerZone() {
           </div>
 
           <div className="mt-4 flex items-center justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
+            <IconButton
+              label={tCommon("cancel")}
               onClick={() => {
                 setConfirmOpen(false);
                 setConfirmText("");
               }}
               disabled={mutation.isPending}
             >
-              {tCommon("cancel")}
-            </Button>
-            <Button
-              size="sm"
+              <X className="size-4" aria-hidden />
+            </IconButton>
+            <IconButton
+              label={mutation.isPending ? tCommon("deleting") : t("deleteEverything")}
+              variant="default"
               disabled={!canConfirm || mutation.isPending}
               onClick={() => mutation.mutate()}
               style={
@@ -213,11 +212,9 @@ function DangerZone() {
                     }
                   : undefined
               }
-              className="gap-1.5"
             >
-              <Trash2 className="h-3.5 w-3.5" />
-              {mutation.isPending ? tCommon("deleting") : t("deleteEverything")}
-            </Button>
+              <Trash2 className="size-4" aria-hidden />
+            </IconButton>
           </div>
         </DialogContent>
       </Dialog>
@@ -285,16 +282,15 @@ function ExcludedMerchantsCard() {
                     {providerName}
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1.5 px-2 text-muted-foreground hover:text-foreground"
+                <IconButton
+                  label={t("excludedRemoveBtn")}
+                  size="icon-sm"
+                  className="text-muted-foreground hover:text-foreground"
                   onClick={() => removeMutation.mutate(rule.id)}
                   disabled={removeMutation.isPending}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  {t("excludedRemoveBtn")}
-                </Button>
+                  <Trash2 className="size-3.5" aria-hidden />
+                </IconButton>
               </li>
             );
           })}

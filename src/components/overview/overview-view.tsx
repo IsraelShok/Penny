@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, CircleDot, Printer } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleDot, Printer, RotateCw } from "lucide-react";
 import { getOverview } from "@/lib/api";
 import { ICON_MAP } from "@/components/dashboard/category-card";
 import { CardShell } from "@/components/home/card-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { cn } from "@/lib/utils";
 import type { PeriodKind } from "@/lib/period";
@@ -79,19 +80,18 @@ export function OverviewView() {
             <ChevronLeft className="size-4 rtl:hidden" aria-hidden />
             <ChevronRight className="hidden size-4 rtl:block" aria-hidden />
           </Button>
-          <Button variant="outline" className="ms-2" onClick={() => window.print()} disabled={!query.data}>
+          <IconButton label={t("print")} variant="outline" className="ms-2" onClick={() => window.print()} disabled={!query.data}>
             <Printer className="size-4" aria-hidden />
-            {t("print")}
-          </Button>
+          </IconButton>
         </div>
       </div>
 
       {query.isError ? (
         <CardShell>
           <p className="text-footnote text-muted-foreground">{t("error")}</p>
-          <Button variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}>
-            {t("retry")}
-          </Button>
+          <IconButton label={t("retry")} variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}>
+            <RotateCw className="size-4" aria-hidden />
+          </IconButton>
         </CardShell>
       ) : !query.data ? (
         <div className="grid gap-4 md:grid-cols-4">

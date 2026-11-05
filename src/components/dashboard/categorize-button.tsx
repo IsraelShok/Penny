@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { Loader2, Tags } from "lucide-react";
 import { previewCategorize } from "@/lib/api";
 import { toast } from "sonner";
 import { CategorizeReviewDialog } from "./categorize-review-dialog";
@@ -37,50 +38,15 @@ export function CategorizeButton({ onApplied }: CategorizeButtonProps) {
 
   return (
     <>
-      <Button
+      <IconButton
+        label={mutation.isPending ? t("thinking") : t("categorize")}
         variant="outline"
-        size="sm"
+        size="icon-sm"
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending}
-        className="gap-1.5"
       >
-        {mutation.isPending ? (
-          <svg
-            className="h-3.5 w-3.5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
-        ) : (
-          <svg
-            className="h-3.5 w-3.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-            />
-          </svg>
-        )}
-        <span className="max-sm:sr-only">{mutation.isPending ? t("thinking") : t("categorize")}</span>
-      </Button>
+        {mutation.isPending ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Tags className="size-3.5" aria-hidden />}
+      </IconButton>
 
       {preview && (
         <CategorizeReviewDialog

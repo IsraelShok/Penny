@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { CardAction } from "@/components/home/card-shell";
 import { useLocale, useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters";
@@ -151,12 +151,9 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
       )}
       {!hasBudget && (
         <div className="pt-1">
-          <Link
-            href="/settings/general#section-monthly-target"
-            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            {ctaLabel}
-          </Link>
+          <span className="text-muted-foreground">
+            <CardAction href="/settings/general#section-monthly-target">{ctaLabel}</CardAction>
+          </span>
         </div>
       )}
     </div>

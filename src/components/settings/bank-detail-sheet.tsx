@@ -11,7 +11,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ProviderBadge } from "@/components/setup/provider-badge";
@@ -25,7 +25,7 @@ import {
 } from "@/lib/api";
 import { TwoFactorSection } from "@/components/setup/two-factor-section";
 import { translateProviderBlurb, translateProviderName } from "@/lib/i18n-data";
-import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, Check, PlugZap, Unplug, X } from "lucide-react";
 
 export interface BankDetailSheetProps {
   open: boolean;
@@ -383,16 +383,22 @@ function CredentialsForm({
       )}
 
       <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-        <Button
+        <IconButton
+          label={testing ? tSetup("bankTesting") : tSetup("bankTestConnection")}
           variant="outline"
           onClick={handleTest}
           disabled={!allValid || testing || saving}
         >
-          {testing ? tSetup("bankTesting") : tSetup("bankTestConnection")}
-        </Button>
-        <Button onClick={handleSave} disabled={!allValid || saving || testing}>
-          {saving ? tCommon("saving") : tCommon("save")}
-        </Button>
+          <PlugZap className="size-4" aria-hidden />
+        </IconButton>
+        <IconButton
+          label={saving ? tCommon("saving") : tCommon("save")}
+          variant="default"
+          onClick={handleSave}
+          disabled={!allValid || saving || testing}
+        >
+          <Check className="size-4" aria-hidden />
+        </IconButton>
       </div>
     </div>
   );
@@ -460,32 +466,30 @@ function DangerZone({
             {t("disconnectHint")}
           </p>
           {!confirming ? (
-            <Button
+            <IconButton
+              label={t("disconnect")}
               variant="outline"
-              size="sm"
-              className="mt-3 gap-1.5 text-destructive hover:text-destructive"
+              className="mt-3 text-destructive hover:text-destructive"
               onClick={() => setConfirming(true)}
             >
-              <Trash2 className="h-3.5 w-3.5" />
-              {t("disconnect")}
-            </Button>
+              <Unplug className="size-4" aria-hidden />
+            </IconButton>
           ) : (
             <div className="mt-3 flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
+              <IconButton
+                label={tCommon("cancel")}
                 onClick={() => setConfirming(false)}
               >
-                {tCommon("cancel")}
-              </Button>
-              <Button
-                size="sm"
+                <X className="size-4" aria-hidden />
+              </IconButton>
+              <IconButton
+                label={mutation.isPending ? t("disconnecting") : t("confirmDisconnect")}
                 variant="destructive"
                 onClick={() => mutation.mutate()}
                 disabled={mutation.isPending}
               >
-                {mutation.isPending ? t("disconnecting") : t("confirmDisconnect")}
-              </Button>
+                <Unplug className="size-4" aria-hidden />
+              </IconButton>
             </div>
           )}
         </div>

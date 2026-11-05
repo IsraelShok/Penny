@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Check, Plus, Trash2 } from "lucide-react";
 import { deletePlanItem, getPlan, savePlan, savePlanItem } from "@/lib/api";
 import { goalMonthly, type FinancialPlan } from "@/lib/plan";
 import { fmt, shekels } from "@/lib/money";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sparkline } from "@/components/ui/sparkline";
@@ -119,7 +120,7 @@ function PlanSettings({ plan }: { plan: FinancialPlan }) {
           </div>
         ))}
         <p className="col-span-2 text-caption text-pretty text-muted-foreground">{t("settingsHint")}</p>
-        <Button type="submit" className="col-span-2 justify-self-start" disabled={save.isPending}>{t("save")}</Button>
+        <IconButton label={t("save")} variant="default" type="submit" className="col-span-2 justify-self-start" disabled={save.isPending}><Check className="size-4" aria-hidden /></IconButton>
       </form>
     </CardShell>
   );
@@ -195,7 +196,7 @@ function Goals({ goals }: { goals: Goal[] }) {
           <Label htmlFor="goal-saved">{t("goalSaved")}</Label>
           <Input id="goal-saved" type="number" min="0" dir="ltr" value={draft.savedAmount} onChange={(e) => setDraft({ ...draft, savedAmount: e.target.value })} />
         </div>
-        <Button type="submit" disabled={add.isPending}>{t("addGoal")}</Button>
+        <IconButton label={t("addGoal")} variant="default" type="submit" disabled={add.isPending}><Plus className="size-4" aria-hidden /></IconButton>
       </form>
     </CardShell>
   );
@@ -325,7 +326,7 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
           <Label htmlFor="pol-premium">{t("policyPremium")}</Label>
           <Input id="pol-premium" required type="number" min="0" step="any" dir="ltr" value={draft.monthlyPremium} onChange={(e) => setDraft({ ...draft, monthlyPremium: e.target.value })} />
         </div>
-        <Button type="submit" disabled={add.isPending}>{t("add")}</Button>
+        <IconButton label={t("add")} variant="default" type="submit" disabled={add.isPending}><Plus className="size-4" aria-hidden /></IconButton>
       </form>
       <p className="mt-3 text-caption text-pretty text-muted-foreground">{t("insuranceHint")}</p>
     </CardShell>

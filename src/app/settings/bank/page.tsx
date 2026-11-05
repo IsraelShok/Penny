@@ -11,7 +11,7 @@ import {
   CircleCheck,
   CircleAlert,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,24 +92,21 @@ export default function BankSettingsPage() {
             ) : null}
           </div>
           <div className="flex items-center gap-2">
-            <Button
+            <IconButton
+              label={anySyncing ? t("syncing") : t("syncAll")}
               variant="outline"
-              size="sm"
               onClick={handleSyncAll}
               disabled={integrations.length === 0 || anySyncing}
-              className="gap-1.5"
             >
-              <RefreshCw className="h-3.5 w-3.5" />
-              {anySyncing ? t("syncing") : t("syncAll")}
-            </Button>
+              <RefreshCw className={anySyncing ? "size-4 animate-spin" : "size-4"} aria-hidden />
+            </IconButton>
             {availableToAdd.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
-                    <Button size="sm" className="gap-1.5">
-                      <Plus className="h-3.5 w-3.5" />
-                      {t("addBank")}
-                    </Button>
+                    <IconButton label={t("addBank")} variant="default">
+                      <Plus className="size-4" aria-hidden />
+                    </IconButton>
                   }
                 />
                 <DropdownMenuContent align="end" className="w-56">
@@ -289,14 +286,8 @@ function SyncShortButton({
     );
   }
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="shrink-0 gap-1.5"
-      onClick={onClick}
-    >
-      <RefreshCw className="h-3.5 w-3.5" />
-      {t("syncShort")}
-    </Button>
+    <IconButton label={t("syncShort")} className="shrink-0" onClick={onClick}>
+      <RefreshCw className="size-4" aria-hidden />
+    </IconButton>
   );
 }

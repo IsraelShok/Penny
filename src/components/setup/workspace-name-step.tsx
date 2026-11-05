@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 
 interface WorkspaceNameStepProps {
   onComplete: (name: string) => void;
@@ -91,13 +92,14 @@ export function WorkspaceNameStep({
           {t("workspaceRenameHint")}
         </p>
 
-        <Button
+        <IconButton
+          label={submitting ? t("workspaceCreating") : t("workspaceCreateButton")}
+          variant="default"
           type="submit"
           disabled={!name.trim() || submitting}
-          className="rounded-full px-6 py-3 text-sm font-semibold"
         >
-          {submitting ? t("workspaceCreating") : t("workspaceCreateButton")}
-        </Button>
+          <Plus className="size-4" aria-hidden />
+        </IconButton>
       </form>
 
       <div className="mt-6 flex w-full max-w-[380px] items-center justify-between text-xs text-muted-foreground/80">

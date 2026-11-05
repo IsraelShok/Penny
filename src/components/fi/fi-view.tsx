@@ -7,7 +7,8 @@ import { getFi } from "@/lib/api";
 import { carCost, fiNumber, yearsToTarget, type CarInputs } from "@/lib/fi";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { CardShell } from "@/components/home/card-shell";
-import { Button } from "@/components/ui/button";
+import { RotateCw } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,7 +51,7 @@ export function FiView() {
     return (
       <CardShell>
         <p className="text-footnote text-muted-foreground">{t("loadFailed")}</p>
-        <Button variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}>{t("retry")}</Button>
+        <IconButton label={t("retry")} variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}><RotateCw className="size-4" aria-hidden /></IconButton>
       </CardShell>
     );
   }

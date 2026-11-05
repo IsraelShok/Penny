@@ -45,8 +45,11 @@ export function CashFlowCard({ data }: Props) {
                   : "text-[var(--status-over)]"
               }`}
             >
-              {netPositive ? "+" : "−"}
-              {formatCurrency(Math.abs(net))}
+              {/* bdi keeps the sign in front of the amount inside Hebrew text. */}
+              <bdi dir="ltr">
+                {netPositive ? "+" : "−"}
+                {formatCurrency(Math.abs(net))}
+              </bdi>
             </span>
           </div>
         </div>

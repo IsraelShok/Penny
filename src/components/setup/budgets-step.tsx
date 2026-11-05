@@ -3,31 +3,8 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import {
-  ShoppingBasket,
-  UtensilsCrossed,
-  TramFront,
-  ShoppingBag,
-  Ticket,
-  HeartPulse,
-  GraduationCap,
-  Receipt,
-  RefreshCw,
-  Plane,
-  Banknote,
-  ArrowLeftRight,
-  Shield,
-  Home,
-  Sparkles,
-  CircleDot,
-  Coffee,
-  PawPrint,
-  Gift,
-  Baby,
-  Briefcase,
-  type LucideIcon,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowLeftRight, ArrowRight, Baby, Banknote, Briefcase, CircleDot, Coffee, Gift, GraduationCap, HeartPulse, Home, PawPrint, Plane, Receipt, RefreshCw, Shield, ShoppingBag, ShoppingBasket, Sparkles, Ticket, TramFront, UtensilsCrossed, type LucideIcon } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import {
   Tooltip,
   TooltipContent,
@@ -167,12 +144,12 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
       </div>
 
       <footer className="flex items-center justify-between pt-2">
-        <Button variant="outline" onClick={onBack} disabled={saving}>
-          {t("aiBackButton")}
-        </Button>
-        <Button onClick={() => finish(true)} disabled={saving || isLoading}>
-          {saving ? t("aiSavingButton") : t("aiContinueButton")}
-        </Button>
+        <IconButton label={t("aiBackButton")} variant="outline" onClick={onBack} disabled={saving}>
+          <ArrowRight className="size-4 ltr:rotate-180" aria-hidden />
+        </IconButton>
+        <IconButton label={saving ? t("aiSavingButton") : t("aiContinueButton")} variant="default" onClick={() => finish(true)} disabled={saving || isLoading}>
+          <ArrowLeft className="size-4 ltr:rotate-180" aria-hidden />
+        </IconButton>
       </footer>
 
       <div className="flex justify-center pt-1">

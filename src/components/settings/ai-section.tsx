@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import {
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { RECOMMENDED_OLLAMA_MODELS, type AppSettings } from "@/lib/types";
 import { getSettings, saveAIConfig } from "@/lib/api";
 import { OllamaModelStatus } from "./ollama-model-status";
@@ -207,12 +208,14 @@ function AIForm({ settings }: { settings: AppSettings }) {
       )}
 
       <div className="flex justify-end">
-        <Button
+        <IconButton
+          label={mutation.isPending ? tCommon("saving") : t("saveAiSettings")}
+          variant="default"
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending}
         >
-          {mutation.isPending ? tCommon("saving") : t("saveAiSettings")}
-        </Button>
+          <Check className="size-4" aria-hidden />
+        </IconButton>
       </div>
     </>
   );

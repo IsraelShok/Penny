@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { CardAction } from "./card-shell";
 import { useLocale, useTranslations } from "next-intl";
 
 const TZ = "Asia/Jerusalem";
@@ -37,12 +37,9 @@ export function Greeting({ name }: { name: string | undefined }) {
         {name ? t("greetingWithName", { greeting, name }) : greeting}
       </h2>
       {name === "" && (
-        <Link
-          href="/settings/general"
-          className="mt-1 inline-block rounded-md text-footnote text-primary underline-offset-4 hover:underline"
-        >
-          {t("addYourName")}
-        </Link>
+        <span className="mt-1 inline-block text-primary">
+          <CardAction href="/settings/general">{t("addYourName")}</CardAction>
+        </span>
       )}
     </div>
   );

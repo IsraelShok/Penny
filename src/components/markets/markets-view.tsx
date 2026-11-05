@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { getMarkets } from "@/lib/api";
 import { CardShell } from "@/components/home/card-shell";
-import { Button } from "@/components/ui/button";
+import { RotateCw } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkline } from "@/components/ui/sparkline";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,7 @@ export function MarketsView() {
     return (
       <CardShell>
         <p className="text-footnote text-muted-foreground">{t("loadFailed")}</p>
-        <Button variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}>{t("retry")}</Button>
+        <IconButton label={t("retry")} variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}><RotateCw className="size-4" aria-hidden /></IconButton>
       </CardShell>
     );
   }

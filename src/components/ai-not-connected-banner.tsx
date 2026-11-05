@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plug, Sparkles } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import { getSettings } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -41,12 +41,16 @@ export function AINotConnectedBanner({ className }: AINotConnectedBannerProps) {
         <p className="mt-1 text-sm text-muted-foreground">{t("description")}</p>
       </div>
 
-      <Button
-        size="sm"
+      <IconButton
+        label={t("connectAi")}
+        variant="default"
+        size="icon-sm"
         nativeButton={false}
         className="self-start sm:self-auto"
-        render={<Link href="/settings/ai">{t("connectAi")}</Link>}
-      />
+        render={<Link href="/settings/ai" />}
+      >
+        <Plug className="size-3.5" aria-hidden />
+      </IconButton>
     </div>
   );
 }

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Check, PlugZap, Plus } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -284,18 +285,21 @@ export function BankStep({ onComplete }: BankStepProps) {
             </div>
 
             <footer className="mt-2 flex items-center justify-between pt-2">
-              <Button
+              <IconButton
+                label={t("bankAddAnother")}
                 variant="outline"
                 onClick={() => setSub("pick")}
               >
-                {t("bankAddAnother")}
-              </Button>
-              <Button
+                <Plus className="size-4" aria-hidden />
+              </IconButton>
+              <IconButton
+                label={t("bankContinueToAi")}
+                variant="default"
                 onClick={onComplete}
                 disabled={integrations.length === 0}
               >
-                {t("bankContinueToAi")}
-              </Button>
+                <ArrowLeft className="size-4 ltr:rotate-180" aria-hidden />
+              </IconButton>
             </footer>
           </div>
         )}
@@ -725,25 +729,26 @@ function CredentialForm({
           </AnimatePresence>
 
           <div className="flex items-center gap-2 pt-2">
-            <Button
+            <IconButton
+              label={testing ? t("bankTesting") : t("bankTestConnection")}
               variant="outline"
               onClick={handleTest}
               disabled={!valid || testing || saving}
-              className="flex-1 rounded-full"
             >
-              {testing ? t("bankTesting") : t("bankTestConnection")}
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!valid || saving}
-              className="flex-1 rounded-full"
-            >
-              {saving
+              <PlugZap className="size-4" aria-hidden />
+            </IconButton>
+            <IconButton
+              label={saving
                 ? tCommon("saving")
                 : isEdit
                   ? tCommon("saveChanges")
                   : t("bankSaveAndContinue")}
-            </Button>
+              variant="default"
+              onClick={handleSave}
+              disabled={!valid || saving}
+            >
+              <Check className="size-4" aria-hidden />
+            </IconButton>
           </div>
 
           <div className="mt-2 flex items-start gap-2 rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">

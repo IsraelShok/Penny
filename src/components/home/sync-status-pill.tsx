@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatLastSync, formatJerusalemTimeOfDay } from "@/lib/formatters";
 import { translateProviderName, useFormatterLabels } from "@/lib/i18n-data";
 import {
@@ -169,36 +170,35 @@ export function SyncStatusPill({
   const nextText = nextScheduledSync
     ? tPill("nextScheduled", { time: formatJerusalemTimeOfDay(nextScheduledSync) })
     : null;
+  const tooltipText = nextText && !syncActive ? `${state.label} · ${nextText}` : state.label;
 
   return (
     <Popover onOpenChange={onOpenChange}>
-      <PopoverTrigger
-        render={
-          <button
-            type="button"
-            className={cn(
-              "inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-xs ring-1 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              styles.text,
-              styles.ring
-            )}
-          >
-            <span
-              className={cn(
-                "h-1.5 w-1.5 shrink-0 rounded-full",
-                styles.dot,
-                styles.pulse && "animate-pulse"
-              )}
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <PopoverTrigger
+              render={
+                <button
+                  type="button"
+                  className={cn(
+                    "inline-flex size-8 items-center justify-center rounded-full bg-card ring-1 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    styles.text,
+                    styles.ring
+                  )}
+                />
+              }
             />
-            <span className="font-medium max-sm:sr-only">{state.label}</span>
-            {nextText && !syncActive && (
-              <>
-                <span className="text-muted-foreground/60 max-sm:hidden">·</span>
-                <span className="text-muted-foreground max-sm:sr-only">{nextText}</span>
-              </>
-            )}
-          </button>
-        }
-      />
+          }
+        >
+          <span
+            aria-hidden
+            className={cn("size-2 shrink-0 rounded-full", styles.dot, styles.pulse && "animate-pulse")}
+          />
+          <span className="sr-only">{tooltipText}</span>
+        </TooltipTrigger>
+        <TooltipContent>{tooltipText}</TooltipContent>
+      </Tooltip>
       <PopoverContent>
         <ActivityPanel activity={activity} />
       </PopoverContent>

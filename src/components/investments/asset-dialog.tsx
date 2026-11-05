@@ -6,7 +6,8 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { createAssets, updateAsset } from "@/lib/api";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Check, X } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -186,10 +187,10 @@ export function AssetDialog({ asset, onClose }: { asset: Asset | "new"; onClose:
           )}
         </form>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>{tc("cancel")}</Button>
-          <Button type="submit" form="asset-form" disabled={mutation.isPending}>
-            {mutation.isPending ? t("saving") : t("save")}
-          </Button>
+          <IconButton label={tc("cancel")} variant="outline" onClick={onClose}><X className="size-4" aria-hidden /></IconButton>
+          <IconButton label={mutation.isPending ? t("saving") : t("save")} variant="default" type="submit" form="asset-form" disabled={mutation.isPending}>
+            <Check className="size-4" aria-hidden />
+          </IconButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Check, Trash2, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SettingCard } from "./section-shell";
@@ -86,12 +86,14 @@ function WorkspaceNameCardInner({ workspace }: { workspace: Workspace }) {
             {t("slugLabel")} <code className="rounded bg-muted px-1">{workspace.slug}</code>
           </p>
         </div>
-        <Button
+        <IconButton
+          label={rename.isPending ? tCommon("saving") : tCommon("save")}
+          variant="default"
           onClick={() => rename.mutate(name.trim())}
           disabled={!dirty || rename.isPending}
         >
-          {rename.isPending ? tCommon("saving") : tCommon("save")}
-        </Button>
+          <Check className="size-4" aria-hidden />
+        </IconButton>
       </div>
     </SettingCard>
   );
@@ -148,14 +150,14 @@ function DangerCard({
   return (
     <>
       <SettingCard title={t("dangerTitle")} description={t("dangerDescription")}>
-        <Button
+        <IconButton
+          label={t("deleteButton")}
           variant="destructive"
           onClick={() => setOpen(true)}
           disabled={disabled}
         >
-          <Trash2 className="me-2 size-4" />
-          {t("deleteButton")}
-        </Button>
+          <Trash2 className="size-4" aria-hidden />
+        </IconButton>
         {disabled ? (
           <p className="mt-2 text-xs text-muted-foreground">
             {t("lastOneHint")}
@@ -170,16 +172,21 @@ function DangerCard({
             <DialogDescription>{t("confirmDescription")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              {tCommon("cancel")}
-            </Button>
-            <Button
+            <IconButton
+              label={tCommon("cancel")}
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
+              <X className="size-4" aria-hidden />
+            </IconButton>
+            <IconButton
+              label={del.isPending ? tCommon("deleting") : t("deleteButton")}
               variant="destructive"
               onClick={() => del.mutate()}
               disabled={del.isPending}
             >
-              {del.isPending ? tCommon("deleting") : t("deleteButton")}
-            </Button>
+              <Trash2 className="size-4" aria-hidden />
+            </IconButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

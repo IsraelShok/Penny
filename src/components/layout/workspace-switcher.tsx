@@ -78,20 +78,17 @@ export function WorkspaceSwitcher() {
               <span className="truncate text-sm font-medium">
                 {active?.name ?? t("workspace")}
               </span>
-              <span className="truncate text-xs text-muted-foreground">
-                {t("workspace")}
-              </span>
             </div>
             <ChevronsUpDown className="ms-auto size-4 shrink-0 opacity-60 group-data-[collapsible=icon]:hidden" />
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
             align="start"
-            side="bottom"
+            side="top"
             sideOffset={8}
             className="min-w-[14rem]"
           >
-            <div className="px-2 pb-1 pt-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="px-2 pb-1 pt-1.5 text-xs font-medium text-muted-foreground">
               {t("workspaces")}
             </div>
             {workspaces.map((w) => (

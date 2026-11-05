@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { AlertTriangle, Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2, X } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input, InputGroup } from "@/components/ui/input";
@@ -260,16 +260,15 @@ function DeleteCategorySection({
                 ))}
               </ul>
             ) : null}
-            <Button
+            <IconButton
+              label={t("deleteButton")}
               variant="destructive"
-              size="sm"
-              className="mt-3 gap-1.5"
+              className="mt-3"
               onClick={() => setOpen(true)}
               disabled={isParentGroup}
             >
-              <Trash2 className="h-3.5 w-3.5" />
-              {t("deleteButton")}
-            </Button>
+              <Trash2 className="size-4" aria-hidden />
+            </IconButton>
           </div>
         </div>
       </section>
@@ -285,16 +284,21 @@ function DeleteCategorySection({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              {tCommon("cancel")}
-            </Button>
-            <Button
+            <IconButton
+              label={tCommon("cancel")}
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
+              <X className="size-4" aria-hidden />
+            </IconButton>
+            <IconButton
+              label={mutation.isPending ? tCommon("deleting") : t("deleteButton")}
               variant="destructive"
               onClick={() => mutation.mutate()}
               disabled={mutation.isPending}
             >
-              {mutation.isPending ? tCommon("deleting") : t("deleteButton")}
-            </Button>
+              <Trash2 className="size-4" aria-hidden />
+            </IconButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
