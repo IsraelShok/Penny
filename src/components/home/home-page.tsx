@@ -13,6 +13,7 @@ import { ThisMonthCard } from "./this-month-card";
 import { CashFlowCard } from "./cash-flow-card";
 import { Greeting } from "./greeting";
 import { MarketStrip } from "@/components/markets/markets-view";
+import { SuggestionsCard } from "./suggestions-card";
 import { NextBillCard, SubscriptionsCard } from "./bills-card";
 import { CategoryScroll } from "./category-scroll";
 import { HistoricalTrendCard } from "./historical-trend-card";
@@ -125,6 +126,7 @@ export function HomePage() {
         <AINotConnectedBanner className="mb-4 md:mb-5 lg:mb-6" />
         <Greeting name={settings?.displayName} />
         <MarketStrip />
+        <SuggestionsCard />
         <div className="grid grid-cols-12 gap-3 md:gap-4">
           {renderSection("thisMonth", data, isLoading, isError, ROW_1, skeletonLabels)}
           <div className="col-span-12 grid gap-3 sm:grid-cols-2 md:gap-4 lg:col-span-4 lg:grid-cols-1">

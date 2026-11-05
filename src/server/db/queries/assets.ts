@@ -74,9 +74,19 @@ export function deleteManualNetWorth(workspaceId: number, date: string): boolean
   return getDb().prepare("DELETE FROM net_worth_manual WHERE workspace_id = ? AND date = ?").run(workspaceId, date).changes > 0;
 }
 
-/** Hand-entered net worth for months before tracking, then tracked snapshots (tracked wins on the same date). */
+export function saveDailyNetWorth(workspaceId: number, date: string, netWorth: number) {
+  getDb()
+    .prepare("INSERT INTO net_worth_daily (workspace_id, date, net_worth) VALUES (?, ?, ?) ON CONFLICT(workspace_id, date) DO UPDATE SET net_worth = excluded.net_worth")
+    .run(workspaceId, date, netWorth);
+}
+
+/** Hand-entered months before tracking, then daily totals (older per-asset snapshots fill days before those began). */
 export function netWorthHistory(workspaceId: number): { date: string; netWorth: number; manual?: boolean }[] {
-  const tracked = trackedHistory(workspaceId);
+  const daily = getDb()
+    .prepare("SELECT date, net_worth as netWorth FROM net_worth_daily WHERE workspace_id = ? ORDER BY date")
+    .all(workspaceId) as { date: string; netWorth: number }[];
+  const firstDaily = daily[0]?.date ?? "9999";
+  const tracked = [...trackedHistory(workspaceId).filter((h) => h.date < firstDaily), ...daily];
   const first = tracked[0]?.date ?? "9999";
   const manual = (getDb()
     .prepare("SELECT date, net_worth as netWorth FROM net_worth_manual WHERE workspace_id = ? AND date < ? ORDER BY date")
@@ -101,4 +111,24 @@ function trackedHistory(workspaceId: number): { date: string; netWorth: number }
     else out.push({ date: r.date, netWorth: total });
   }
   return out;
+}
+
+export function saveAccountBalances(workspaceId: number, provider: string, accounts: { accountNumber: string; balance?: number }[]) {
+  const db = getDb();
+  const stmt = db.prepare(
+    `INSERT INTO account_balances (workspace_id, provider, account_number, balance, updated_at) VALUES (?, ?, ?, ?, datetime('now'))
+     ON CONFLICT(workspace_id, provider, account_number) DO UPDATE SET balance = excluded.balance, updated_at = excluded.updated_at`
+  );
+  db.transaction(() => {
+    for (const a of accounts) if (a.balance != null) stmt.run(workspaceId, provider, a.accountNumber, a.balance);
+  })();
+}
+
+export function listAccountBalances(workspaceId: number) {
+  return getDb()
+    .prepare(
+      `SELECT rowid as id, provider, account_number as accountNumber, balance, updated_at as updatedAt
+       FROM account_balances WHERE workspace_id = ? ORDER BY provider, account_number`
+    )
+    .all(workspaceId) as { id: number; provider: string; accountNumber: string; balance: number; updatedAt: string }[];
 }

@@ -19,6 +19,7 @@ interface RawTxn {
 
 interface RawAccount {
   accountNumber: string;
+  balance?: number;
   txns: RawTxn[];
   windowCoverage?: { status: string; reason?: string; caveats?: readonly string[] };
 }
@@ -65,6 +66,7 @@ export function toScrapeResult(result: RawScrapeResult): ScrapeResult {
     success: true,
     accounts: accounts.map((account) => ({
       accountNumber: account.accountNumber,
+      balance: typeof account.balance === "number" && Number.isFinite(account.balance) ? account.balance : undefined,
       transactions: account.txns.map(
         (txn): ScrapedTransaction => ({
           type: txn.type === "installments" ? "installments" : "normal",

@@ -22,11 +22,22 @@ const ILLIQUID_DEFAULT: AssetType[] = ["pension", "real_estate", "vehicle", "bus
 /** Long-term savings with management fees and monthly deposits. */
 const SAVINGS_TYPES: AssetType[] = ["pension", "study_fund", "provident"];
 
-export function AssetDialog({ asset, onClose }: { asset: Asset | "new"; onClose: () => void }) {
+export function AssetDialog({
+  asset,
+  preset,
+  onClose,
+  onSaved,
+}: {
+  asset: Asset | "new";
+  /** Starting values for a new asset, e.g. from an automatic suggestion. */
+  preset?: Partial<AssetInput>;
+  onClose: () => void;
+  onSaved?: () => void;
+}) {
   const t = useTranslations("investments");
   const tc = useTranslations("common");
   const queryClient = useQueryClient();
-  const initial = asset === "new" ? null : asset;
+  const initial = asset === "new" ? (preset ? ({ ...preset, symbol: preset.symbol ?? null } as Partial<Asset>) : null) : asset;
   const [form, setForm] = useState({
     name: initial?.name ?? "",
     type: (initial?.type ?? "stock") as AssetType,
@@ -68,11 +79,12 @@ export function AssetDialog({ asset, onClose }: { asset: Asset | "new"; onClose:
         interestRate: isLiability ? opt(form.interestRate) : null,
         monthlyPayment: isLiability ? opt(form.monthlyPayment) : null,
       };
-      return initial ? updateAsset(initial.id, input).then(() => undefined) : createAssets([input]).then(() => undefined);
+      return asset !== "new" ? updateAsset(asset.id, input).then(() => undefined) : createAssets([input]).then(() => undefined);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       toast.success(t("saved"));
+      onSaved?.();
       onClose();
     },
     onError: (err: Error) => toast.error(err.message || t("saveFailed")),
@@ -82,7 +94,7 @@ export function AssetDialog({ asset, onClose }: { asset: Asset | "new"; onClose:
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{initial ? t("editTitle") : t("addTitle")}</DialogTitle>
+          <DialogTitle>{asset !== "new" ? t("editTitle") : t("addTitle")}</DialogTitle>
         </DialogHeader>
         <form
           id="asset-form"

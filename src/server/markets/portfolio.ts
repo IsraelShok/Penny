@@ -1,6 +1,7 @@
 import "server-only";
 
-import { listAssets, netWorthHistory, saveSnapshots } from "../db/queries/assets";
+import { listAccountBalances, listAssets, netWorthHistory, saveDailyNetWorth, saveSnapshots } from "../db/queries/assets";
+import { BANK_PROVIDERS } from "@/lib/types";
 import { fxRate, getQuotes } from "./quotes";
 import { BENCHMARKS } from "@/lib/markets";
 import { toLocalISODate } from "../lib/date-utils";
@@ -33,6 +34,36 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
     return { ...r, currency, value, valueIls, gainIls, quote };
   });
 
+  // Synced bank balances, as cash (an overdrawn account counts as a short-term debt).
+  for (const b of listAccountBalances(workspaceId)) {
+    const bank = BANK_PROVIDERS.find((p) => p.id === b.provider)?.name ?? b.provider;
+    const overdrawn = b.balance < 0;
+    assets.push({
+      id: -b.id,
+      name: `${bank} · ${b.accountNumber.slice(-4)}`,
+      type: overdrawn ? "credit" : "cash",
+      currency: "ILS",
+      symbol: null,
+      quantity: null,
+      manualValue: Math.abs(b.balance),
+      costBasis: null,
+      liquid: true,
+      note: null,
+      feeDeposit: null,
+      feeBalance: null,
+      monthlyDeposit: null,
+      interestRate: null,
+      monthlyPayment: null,
+      isLiability: overdrawn,
+      value: Math.abs(b.balance),
+      valueIls: Math.abs(b.balance),
+      gainIls: null,
+      quote: null,
+      source: "bank",
+      updatedAt: b.updatedAt,
+    });
+  }
+
   let total = 0, liquid = 0, liabilities = 0, mortgages = 0, deferredTax = 0;
   for (const a of assets) {
     const v = a.valueIls ?? 0;
@@ -48,8 +79,11 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
 
   saveSnapshots(
     toLocalISODate(new Date()),
-    assets.flatMap((a) => (a.valueIls != null ? [{ assetId: a.id, valueIls: a.valueIls }] : []))
+    assets.flatMap((a) => (a.valueIls != null && a.id > 0 ? [{ assetId: a.id, valueIls: a.valueIls }] : []))
   );
+
+  const netWorth = total - liabilities - deferredTax;
+  saveDailyNetWorth(workspaceId, toLocalISODate(new Date()), netWorth);
 
   return {
     assets,
@@ -58,7 +92,7 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
       liquid,
       liabilities,
       deferredTax,
-      netWorth: total - liabilities - deferredTax,
+      netWorth,
       // Mortgage payments are already in monthly spending, which the FI target funds; subtracting the balance too would count it twice.
       liquidNetWorth: liquid - (liabilities - mortgages) - deferredTax,
     },

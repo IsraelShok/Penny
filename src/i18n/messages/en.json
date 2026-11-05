@@ -1196,7 +1196,8 @@
     "column_feeBalance": "Fee on balance",
     "column_feeDeposit": "Fee on deposits",
     "column_deposit": "Monthly deposit",
-    "marketsTitle": "Markets"
+    "marketsTitle": "Markets",
+    "fromBank": "updated from the bank"
   },
   "markets": {
     "title": "Markets",
@@ -1370,5 +1371,31 @@
     "policy_travel": "Travel",
     "policy_other": "Other",
     "tax_refund_hint": "You can claim up to 6 years back"
+  },
+  "suggestions": {
+    "title": "Spotted for you",
+    "added": "Added",
+    "failed": "Couldn't update",
+    "add": "Add",
+    "dismiss": "Not relevant",
+    "gotIt": "Got it",
+    "more": "and {count} more",
+    "policy": "Insurance: {name}, {amount} a month ({kind}). Add it to your policies?",
+    "debt": "Regular debt payment: {name}, {amount} a month. Add the debt?",
+    "portfolio": "Regular deposits to {name}, {amount} a month. Add the portfolio to your assets?",
+    "fees": "You paid {amount} in bank fees over the last year ({count} charges). A basic fee track or a digital account could save most of it.",
+    "interest": "You paid {amount} overdraft interest over the last year. Clearing it from savings or asking for a cheaper line would help.",
+    "fx": "You paid {amount} in conversion and foreign fees this year. A card without conversion fees would save them.",
+    "duplicate": "Possible double charge: {name}, {amount} twice on {date}. Worth checking with the card company.",
+    "price": "{name} went up from {from} to {to}.",
+    "payday": "Your salary usually arrives on day {day}. Count months from that day?",
+    "kind_health": "health",
+    "kind_life": "life",
+    "kind_disability": "disability",
+    "kind_long_term_care": "long-term care",
+    "kind_home": "home",
+    "kind_car": "car",
+    "kind_travel": "travel",
+    "kind_other": "other"
   }
 }

@@ -17,6 +17,8 @@ export interface ScrapedTransaction {
 
 export interface ScrapedAccount {
   accountNumber: string;
+  /** Current balance, when the bank reports one (bank accounts, not cards). */
+  balance?: number;
   transactions: ScrapedTransaction[];
 }
 

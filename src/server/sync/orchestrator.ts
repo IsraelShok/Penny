@@ -1,3 +1,4 @@
+import { saveAccountBalances } from "../db/queries/assets";
 import "server-only";
 
 import {
@@ -265,6 +266,10 @@ async function syncOneCredential(
     syncRunId,
     result.accounts.map((a) => a.accountNumber)
   );
+  // Bank balances feed cash, the emergency fund and net worth without typing them in.
+  if (BANK_PROVIDERS.find((b) => b.id === provider)?.kind === "bank") {
+    saveAccountBalances(workspaceId, provider, result.accounts);
+  }
   applyMerchantRulesToSyncRun(workspaceId, syncRunId);
   applyRulesToSyncRun(workspaceId, syncRunId);
   completeSyncRun(syncRunId, added, updated);

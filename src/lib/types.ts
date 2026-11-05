@@ -824,6 +824,9 @@ export interface AssetInput {
 export interface Asset extends AssetInput {
   id: number;
   isLiability: boolean;
+  /** "bank" = a synced account balance, updated automatically and not editable. */
+  source?: "bank";
+  updatedAt?: string;
   /** Current value in its own currency and in ILS (null if no price or FX rate). */
   value: number | null;
   valueIls: number | null;

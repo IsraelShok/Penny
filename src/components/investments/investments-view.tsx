@@ -236,6 +236,7 @@ function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[
                 )}
                 {!a.liquid && !a.isLiability && <> · {t("illiquid")}</>}
                 {a.quote?.stale && <> · {t("stalePrice")}</>}
+                {a.source === "bank" && <> · {t("fromBank")}</>}
               </p>
             </div>
             {a.quote && a.quote.series.length > 1 && (
@@ -252,7 +253,7 @@ function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[
                 {a.gainIls != null && <span>{shekels(a.gainIls, locale)}</span>}
               </p>
             </div>
-            <div className="flex shrink-0">
+            <div className={cn("flex shrink-0", a.source === "bank" && "invisible")} aria-hidden={a.source === "bank" || undefined}>
               <Button variant="ghost" size="icon" aria-label={t("editAsset", { name: a.name })} onClick={() => onEdit(a)}>
                 <Pencil className="size-4" aria-hidden />
               </Button>

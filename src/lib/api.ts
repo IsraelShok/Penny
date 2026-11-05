@@ -298,6 +298,18 @@ export function getOverview(period: string, offset: number) {
   return fetchJSON<OverviewPayload>(`/api/overview?period=${period}&offset=${offset}`);
 }
 
+export function getSuggestions() {
+  return fetchJSON<{ suggestions: import("./suggestions").Suggestion[] }>(`/api/suggestions`);
+}
+
+export function dismissSuggestion(key: string) {
+  return fetchJSON<{ success: boolean }>(`/api/suggestions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key }),
+  });
+}
+
 export function getPlan() {
   return fetchJSON<PlanPayload>(`/api/plan`);
 }
