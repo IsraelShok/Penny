@@ -23,7 +23,8 @@ export type Suggestion =
   | { key: string; type: "price"; name: string; from: number; to: number }
   | { key: string; type: "payday"; day: number }
   | { key: string; type: "rule"; merchant: string; categoryId: number; categoryName: string; count: number }
-  | { key: string; type: "fxMarkup"; total: number; avgPct: number; count: number };
+  | { key: string; type: "fxMarkup"; total: number; avgPct: number; count: number }
+  | { key: string; type: "taxRefund"; year: number; reason: "twoEmployers" | "gap"; payers: number; months: number };
 
 export type PolicyGuess = "health" | "life" | "disability" | "long_term_care" | "home" | "car" | "travel" | "other";
 
@@ -80,6 +81,43 @@ export interface SuggestionContext {
   ruleCandidates?: { merchant: string; categoryId: number; categoryName: string; count: number }[];
   /** Conversion markup over the market rate on foreign card charges, last 12 months. */
   fxMarkup?: { total: number; avgPct: number; count: number } | null;
+  /** From taxYearFacts: salary patterns per past tax year. */
+  taxYears?: TaxYearFacts[];
+}
+
+export interface TaxYearFacts {
+  year: number;
+  /** Distinct employers paying salary in at least two months. */
+  payers: number;
+  /** Months with any salary. */
+  salaryMonths: number;
+  /** Transactions exist in both January and December, so missing months are real, not missing data. */
+  fullYear: boolean;
+}
+
+/**
+ * Salary patterns per completed tax year, for the refund hint. `rows` are salary credits;
+ * `months` lists every YYYY-MM that has any transaction. Only the years a refund can still be claimed.
+ */
+export function taxYearFacts(rows: { date: string; description: string }[], months: string[], today: string, yearsBack = 6): TaxYearFacts[] {
+  const now = Number(today.slice(0, 4));
+  const out: TaxYearFacts[] = [];
+  for (let year = now - yearsBack; year < now; year++) {
+    const inYear = rows.filter((r) => r.date.startsWith(`${year}-`));
+    if (inYear.length === 0) continue;
+    const byPayer = new Map<string, Set<string>>();
+    for (const r of inYear) {
+      const payer = clean(r.description);
+      byPayer.set(payer, (byPayer.get(payer) ?? new Set()).add(month(r.date)));
+    }
+    out.push({
+      year,
+      payers: [...byPayer.values()].filter((m) => m.size >= 2).length,
+      salaryMonths: new Set(inYear.map((r) => month(r.date))).size,
+      fullYear: months.includes(`${year}-01`) && months.includes(`${year}-12`),
+    });
+  }
+  return out;
 }
 
 export function buildSuggestions(txns: SuggestionTxn[], ctx: SuggestionContext): Suggestion[] {
@@ -143,6 +181,11 @@ export function buildSuggestions(txns: SuggestionTxn[], ctx: SuggestionContext):
     }
     const [day, n] = [...days.entries()].sort((a, b) => b[1] - a[1])[0] ?? [1, 0];
     if (n >= 3 && day > 3) out.push({ key: `payday:${day}`, type: "payday", day });
+  }
+  // Two employers in a year, or months without salary, often mean too much tax was withheld (form 135).
+  for (const y of ctx.taxYears ?? []) {
+    const reason = y.payers >= 2 ? "twoEmployers" : y.fullYear && y.salaryMonths >= 3 && y.salaryMonths <= 10 ? "gap" : null;
+    if (reason) out.push({ key: `taxRefund:${y.year}`, type: "taxRefund", year: y.year, reason, payers: y.payers, months: y.salaryMonths });
   }
   return out;
 }

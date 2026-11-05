@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSuggestions, type SuggestionTxn } from "@/lib/suggestions";
+import { buildSuggestions, taxYearFacts, type SuggestionTxn } from "@/lib/suggestions";
 
 const ctx = { today: "2026-11-05", known: [], monthStartDay: 1, priceChanges: [] };
 const t = (date: string, description: string, amount: number, kind = "expense", categoryName?: string): SuggestionTxn => ({ date, description, amount, kind, categoryName });
@@ -55,5 +55,21 @@ describe("buildSuggestions", () => {
     ]);
     expect(buildSuggestions([], { ...ctx, fxMarkup: { total: 120, avgPct: 0.3, count: 14 } })).toEqual([]);
     expect(buildSuggestions([], { ...ctx, fxMarkup: { total: 15, avgPct: 3, count: 2 } })).toEqual([]);
+  });
+
+  it("hints at a tax refund for two employers or a gap in salary", () => {
+    const months = ["2024-01", "2024-12", "2025-01", "2025-12"];
+    const rows = [
+      ...["01", "02", "03", "04", "05", "06"].map((m) => ({ date: `2024-${m}-10`, description: "משכורת חברת אלפא" })),
+      ...["07", "08", "09", "10", "11", "12"].map((m) => ({ date: `2024-${m}-10`, description: "משכורת חברת בטא" })),
+      ...["01", "02", "03", "04", "05", "06", "07", "08"].map((m) => ({ date: `2025-${m}-10`, description: "משכורת חברת בטא" })),
+    ];
+    const facts = taxYearFacts(rows, months, "2026-11-05");
+    expect(facts).toEqual([
+      { year: 2024, payers: 2, salaryMonths: 12, fullYear: true },
+      { year: 2025, payers: 1, salaryMonths: 8, fullYear: true },
+    ]);
+    const s = buildSuggestions([], { ...ctx, taxYears: facts }).filter((x) => x.type === "taxRefund");
+    expect(s.map((x) => x.type === "taxRefund" && x.reason)).toEqual(["twoEmployers", "gap"]);
   });
 });

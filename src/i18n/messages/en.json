@@ -1412,7 +1412,13 @@
     "kind_travel": "travel",
     "kind_other": "other",
     "rule": "You moved {name} to {category} {count} times. Make it a rule?",
-    "fxMarkup": "Your cards charged {amount} over the market exchange rate on {count} foreign purchases over the last year, {pct}% on average. This compares with Yahoo market rates, not the Bank of Israel rate, so treat it as an estimate."
+    "fxMarkup": "Your cards charged {amount} over the market exchange rate on {count} foreign purchases over the last year, {pct}% on average. This compares with Yahoo market rates, not the Bank of Israel rate, so treat it as an estimate.",
+    "taxRefundEmployers": "In {year} you were paid by two employers, which often means too much tax was withheld. Worth checking for a refund (form 135).",
+    "taxRefundGap": "In {year} only {months} months had a salary. Months without work often mean a tax refund (form 135).",
+    "notifyTitle": "Spent spotted something new",
+    "notifyBody": "{count, plural, one {One new finding} other {# new findings}} on Home",
+    "notifyEnable": "Get desktop notifications",
+    "notifyOn": "Desktop notifications are on"
   },
   "cashAhead": {
     "title": "Free to spend",

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
-import { buildSuggestions, type Suggestion, type SuggestionTxn } from "@/lib/suggestions";
+import { buildSuggestions, taxYearFacts, type Suggestion, type SuggestionTxn } from "@/lib/suggestions";
 import { loadInsights } from "@/server/insights/data";
 import { listPolicies, getPlan } from "@/server/db/queries/plan";
 import { listAssets } from "@/server/db/queries/assets";
@@ -38,9 +38,9 @@ export async function GET(request: Request) {
     db
       .prepare(
         `SELECT cc.merchant_key as merchant, MAX(cc.description) as description, cc.user_category_id as categoryId,
-                c.name as categoryName, COUNT(*) as count
+                c.name as categoryName, SUM(cc.times) as count
          FROM category_corrections cc JOIN categories c ON c.id = cc.user_category_id
-         WHERE cc.workspace_id = ? GROUP BY cc.merchant_key, cc.user_category_id HAVING COUNT(*) >= 2`
+         WHERE cc.workspace_id = ? GROUP BY cc.merchant_key, cc.user_category_id HAVING SUM(cc.times) >= 2`
       )
       .all(ws) as { merchant: string; description: string; categoryId: number; categoryName: string; count: number }[]
   )
@@ -60,7 +60,21 @@ export async function GET(request: Request) {
     .map((r) => ({ ...(r as FxCharge), date: israelDay((r as FxCharge).date) }));
   const fx = fxCharges.length ? fxMarkup(fxCharges, await dailyRates([...new Set(fxCharges.map((c) => c.currency))], today)) : null;
 
-  const suggestions: Suggestion[] = buildSuggestions(txns, { today, known, monthStartDay: getPlan(ws).monthStartDay, priceChanges, ruleCandidates, fxMarkup: fx })
+  // Seven years of salary credits for the tax-refund hint (claims go back six).
+  const taxSince = `${Number(today.slice(0, 4)) - 7}-01-01`;
+  const salaryRows = db
+    .prepare(
+      `SELECT t.date, t.description FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
+       WHERE t.workspace_id = ? AND t.date >= ? AND t.kind = 'income' AND t.charged_amount > 0 AND t.is_excluded = 0
+         AND (c.name = 'Salary' OR t.description LIKE '%משכורת%' OR t.description LIKE '%שכר%')`
+    )
+    .all(ws, taxSince) as { date: string; description: string }[];
+  const months = (db
+    .prepare("SELECT DISTINCT substr(date, 1, 7) as m FROM transactions WHERE workspace_id = ? AND date >= ?")
+    .all(ws, taxSince) as { m: string }[]).map((r) => r.m);
+  const taxYears = taxYearFacts(salaryRows, months, today);
+
+  const suggestions: Suggestion[] = buildSuggestions(txns, { today, known, monthStartDay: getPlan(ws).monthStartDay, priceChanges, ruleCandidates, fxMarkup: fx, taxYears })
     .filter((s) => !dismissed.has(s.key));
   return NextResponse.json({ suggestions });
 }

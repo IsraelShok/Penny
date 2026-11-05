@@ -19,6 +19,8 @@ export function recordCorrection(
          (workspace_id, merchant_key, description, ai_category_id, user_category_id, kind)
        VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(workspace_id, merchant_key, ai_category_id) DO UPDATE SET
+         -- Same fix again counts up; a different fix starts over.
+         times = CASE WHEN user_category_id = excluded.user_category_id THEN times + 1 ELSE 1 END,
          user_category_id = excluded.user_category_id,
          description = excluded.description,
          kind = excluded.kind,

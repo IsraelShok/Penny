@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
 import { PageWheelNav } from "./page-wheel-nav";
+import { AlertNotifier } from "./alert-notifier";
 
 /** Lives in the root layout so the collapsed state survives page changes. */
 export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; children: ReactNode }) {
@@ -21,6 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SidebarInset>
         {children}
         <PageWheelNav />
+        <AlertNotifier />
       </SidebarInset>
     </>
   );
