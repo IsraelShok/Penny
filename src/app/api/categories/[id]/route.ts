@@ -4,7 +4,9 @@ import {
   setCategoryParent,
   updateCategoryBudgetMode,
   updateCategoryDescription,
+  updateCategorySpendingType,
 } from "@/server/db/queries/categories";
+import type { CostType, NeedType } from "@/lib/types";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 const MAX_DESCRIPTION_LENGTH = 500;
@@ -31,9 +33,27 @@ export async function PATCH(
     budgetMode?: unknown;
     description?: unknown;
     parentId?: unknown;
+    needType?: unknown;
+    costType?: unknown;
   };
 
   let applied = false;
+
+  if (typed.needType !== undefined || typed.costType !== undefined) {
+    const needOk = typed.needType === undefined || ["need", "want", "saving"].includes(typed.needType as string);
+    const costOk = typed.costType === undefined || ["fixed", "variable", "unplanned"].includes(typed.costType as string);
+    if (!needOk || !costOk) {
+      return NextResponse.json({ error: "invalid needType or costType" }, { status: 400 });
+    }
+    const ok = updateCategorySpendingType(workspaceId, categoryId, {
+      needType: typed.needType as NeedType | undefined,
+      costType: typed.costType as CostType | undefined,
+    });
+    if (!ok) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+    applied = true;
+  }
 
   if (typed.budgetMode !== undefined) {
     if (typed.budgetMode !== "budgeted" && typed.budgetMode !== "tracking") {

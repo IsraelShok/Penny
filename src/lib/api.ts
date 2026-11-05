@@ -15,6 +15,9 @@ import type {
   Workspace,
   HomePayload,
   ActivitySnapshot,
+  NeedType,
+  CostType,
+  OverviewPayload,
 } from "./types";
 import { getActiveWorkspaceIdSync } from "./workspace-store";
 
@@ -286,6 +289,10 @@ export function getSummary(params: {
   return fetchJSON<DashboardSummary>(`/api/summary?${searchParams}`);
 }
 
+export function getOverview(period: string, offset: number) {
+  return fetchJSON<OverviewPayload>(`/api/overview?period=${period}&offset=${offset}`);
+}
+
 export function getHome() {
   return fetchJSON<HomePayload>(`/api/home`);
 }
@@ -401,6 +408,17 @@ export function setCategoryParent(
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ parentId }),
+  });
+}
+
+export function updateCategorySpendingType(
+  categoryId: number,
+  fields: { needType?: NeedType; costType?: CostType }
+) {
+  return fetchJSON<{ success: boolean }>(`/api/categories/${categoryId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(fields),
   });
 }
 

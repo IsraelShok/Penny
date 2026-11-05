@@ -54,7 +54,13 @@ export interface Category {
   kind: CategoryKind;
   budgetMode: BudgetMode;
   description: string | null;
+  needType: NeedType;
+  costType: CostType;
 }
+
+/** 50/30/20 bucket and how predictable the cost is (only expense leaves use them). */
+export type NeedType = "need" | "want" | "saving";
+export type CostType = "fixed" | "variable" | "unplanned";
 
 export type CategoryViewMode = "collapsed" | "expanded";
 
@@ -734,4 +740,36 @@ export interface ExcludedMerchant {
   provider: string;
   merchantKey: string;
   createdAt: string;
+}
+
+export interface OverviewTotals {
+  income: number;
+  expenses: number;
+  net: number;
+  /** net / income, or null with no income. */
+  savingsRate: number | null;
+}
+
+export interface OverviewCategoryRow {
+  categoryId: number;
+  name: string;
+  color: string;
+  icon: string | null;
+  spent: number;
+  /** YYYY-MM -> spent, for every month in the period. */
+  monthly: Record<string, number>;
+  previous: number;
+  lastYear: number;
+}
+
+export interface OverviewPayload {
+  period: { kind: "month" | "quarter" | "half" | "year"; year: number; startMonth: number; from: string; to: string; months: string[] };
+  totals: OverviewTotals;
+  previous: OverviewTotals;
+  lastYear: OverviewTotals;
+  monthly: { month: string; income: number; expenses: number }[];
+  byNeed: Record<NeedType, number>;
+  byCost: Record<CostType, number>;
+  uncategorized: number;
+  categories: OverviewCategoryRow[];
 }

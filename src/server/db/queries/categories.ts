@@ -1,10 +1,10 @@
 import "server-only";
 
 import { getDb } from "../index";
-import type { Category, CategoryKind } from "@/lib/types";
+import type { Category, CategoryKind, CostType, NeedType } from "@/lib/types";
 
 const CATEGORY_COLUMNS =
-  "id, parent_id as parentId, name, color, icon, kind, budget_mode as budgetMode, description";
+  "id, parent_id as parentId, name, color, icon, kind, budget_mode as budgetMode, description, need_type as needType, cost_type as costType";
 
 export function getAllCategories(
   workspaceId: number,
@@ -117,6 +117,20 @@ export function updateCategoryDescription(
       "UPDATE categories SET description = ? WHERE workspace_id = ? AND id = ?"
     )
     .run(value, workspaceId, id);
+  return result.changes > 0;
+}
+
+export function updateCategorySpendingType(
+  workspaceId: number,
+  id: number,
+  fields: { needType?: NeedType; costType?: CostType }
+): boolean {
+  const result = getDb()
+    .prepare(
+      `UPDATE categories SET need_type = COALESCE(?, need_type), cost_type = COALESCE(?, cost_type)
+       WHERE workspace_id = ? AND id = ?`
+    )
+    .run(fields.needType ?? null, fields.costType ?? null, workspaceId, id);
   return result.changes > 0;
 }
 
@@ -244,6 +258,8 @@ export function createParentCategory(
     kind: input.kind,
     budgetMode: "budgeted",
     description,
+    needType: "want",
+    costType: "variable",
   };
 }
 
@@ -346,6 +362,8 @@ export function ensureCategory(
     kind,
     budgetMode: "budgeted",
     description: null,
+    needType: "want",
+    costType: "variable",
   };
 }
 

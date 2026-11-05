@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
+  PieChart,
   Wallet,
   ArrowLeftRight,
   Lightbulb,
@@ -39,6 +40,12 @@ const NAV: NavDef[] = [
     labelKey: "home",
     Icon: LayoutDashboard,
     match: (p: string) => p === "/",
+  },
+  {
+    href: "/overview",
+    labelKey: "overview",
+    Icon: PieChart,
+    match: (p: string) => p.startsWith("/overview"),
   },
   {
     href: "/budget",

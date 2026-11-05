@@ -43,6 +43,7 @@
   --color-status-on-track: var(--status-on-track);
   --color-status-heads-up: var(--status-heads-up);
   --color-status-over: var(--status-over);
+  --color-gold: var(--gold);
   --color-status-plenty-left: var(--status-plenty-left);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -95,92 +96,93 @@
 }
 
 :root {
-  /* Headings use the UI sans (SF-like Inter / Rubik), no display serif */
+  /* Headings use the UI sans (Inter / Heebo), no display serif */
   --font-serif: var(--font-sans);
-  /* Neutral Apple-style light theme: colour is reserved for money and categories */
-  --background: oklch(0.975 0.003 260);
-  --foreground: oklch(0.2 0.01 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.01 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.01 260);
-  --primary: oklch(0.5 0.12 160);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.95 0.004 260);
-  --secondary-foreground: oklch(0.2 0.01 260);
-  --muted: oklch(0.955 0.004 260);
-  --muted-foreground: oklch(0.48 0.012 260);
-  --accent: oklch(0.95 0.004 260);
-  --accent-foreground: oklch(0.2 0.01 260);
-  --destructive: oklch(0.53 0.19 25);
-  --border: oklch(0 0 0 / 8%);
-  --input: oklch(0 0 0 / 14%);
-  --ring: oklch(0.5 0.12 160);
-  --chart-1: oklch(0.7 0.12 160);
-  --chart-2: oklch(0.7 0.12 40);
-  --chart-3: oklch(0.75 0.12 85);
-  --chart-4: oklch(0.7 0.12 350);
-  --chart-5: oklch(0.7 0.12 240);
-  /* Status colours: L 0.52 so they pass 4.5:1 as text on cards and the page */
-  --status-on-track: oklch(0.52 0.12 155);
-  --status-heads-up: oklch(0.52 0.11 70);
-  --status-over: oklch(0.53 0.19 25);
-  --status-plenty-left: oklch(0.52 0.12 240);
+  /* Private bank: warm stone ground, deep navy primary, muted gold reserved for net worth and milestones */
+  --background: #f6f4ef;
+  --foreground: #1a1f27;
+  --card: #ffffff;
+  --card-foreground: #1a1f27;
+  --popover: #ffffff;
+  --popover-foreground: #1a1f27;
+  --primary: #1f3a5f;
+  --primary-foreground: #f8f6f1;
+  --secondary: #eeeae2;
+  --secondary-foreground: #1a1f27;
+  --muted: #efece5;
+  --muted-foreground: #5d6470;
+  --accent: #ebe7de;
+  --accent-foreground: #1a1f27;
+  --gold: #8a6a35;
+  --destructive: #b4443a;
+  --border: oklch(0.3 0.02 70 / 12%);
+  --input: oklch(0.3 0.02 70 / 20%);
+  --ring: #1f3a5f;
+  --chart-1: #1f3a5f;
+  --chart-2: #b08d57;
+  --chart-3: #2f7d5b;
+  --chart-4: #7a8aa3;
+  --chart-5: #b4443a;
+  --status-on-track: #2f7d5b;
+  --status-heads-up: #8f6416;
+  --status-over: #b4443a;
+  --status-plenty-left: #1f3a5f;
   --radius: 0.75rem;
-  --sidebar: oklch(0.96 0.004 260);
-  --sidebar-foreground: oklch(0.2 0.01 260);
-  --sidebar-primary: oklch(0.5 0.12 160);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.92 0.005 260);
-  --sidebar-accent-foreground: oklch(0.2 0.01 260);
-  --sidebar-border: oklch(0 0 0 / 8%);
-  --sidebar-ring: oklch(0.5 0.12 160);
+  --sidebar: #efece5;
+  --sidebar-foreground: #1a1f27;
+  --sidebar-primary: #1f3a5f;
+  --sidebar-primary-foreground: #f8f6f1;
+  --sidebar-accent: #e4dfd4;
+  --sidebar-accent-foreground: #1a1f27;
+  --sidebar-border: oklch(0.3 0.02 70 / 12%);
+  --sidebar-ring: #1f3a5f;
 }
 
 .dark {
-  --background: oklch(0.145 0.004 260);
-  --foreground: oklch(0.96 0.003 260);
-  --card: oklch(0.205 0.005 260);
-  --card-foreground: oklch(0.96 0.003 260);
-  --popover: oklch(0.23 0.005 260);
-  --popover-foreground: oklch(0.96 0.003 260);
-  --primary: oklch(0.78 0.13 160);
-  --primary-foreground: oklch(0.18 0.03 160);
-  --secondary: oklch(0.26 0.005 260);
-  --secondary-foreground: oklch(0.96 0.003 260);
-  --muted: oklch(0.26 0.005 260);
-  --muted-foreground: oklch(0.72 0.01 260);
-  --accent: oklch(0.27 0.005 260);
-  --accent-foreground: oklch(0.96 0.003 260);
-  --destructive: oklch(0.7 0.18 25);
+  --background: #0e1116;
+  --foreground: #eceae5;
+  --card: #161a21;
+  --card-foreground: #eceae5;
+  --popover: #1b2029;
+  --popover-foreground: #eceae5;
+  --primary: #8fb3e0;
+  --primary-foreground: #0e1116;
+  --secondary: #1f242d;
+  --secondary-foreground: #eceae5;
+  --muted: #1f242d;
+  --muted-foreground: #a3a9b4;
+  --accent: #222833;
+  --accent-foreground: #eceae5;
+  --gold: #c9a46a;
+  --destructive: #e07a70;
   --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.78 0.13 160);
-  --chart-1: oklch(0.74 0.12 160);
-  --chart-2: oklch(0.74 0.12 40);
-  --chart-3: oklch(0.78 0.12 85);
-  --chart-4: oklch(0.74 0.12 350);
-  --chart-5: oklch(0.74 0.12 240);
-  --status-on-track: oklch(0.78 0.13 155);
-  --status-heads-up: oklch(0.8 0.13 80);
-  --status-over: oklch(0.72 0.17 25);
-  --status-plenty-left: oklch(0.78 0.11 240);
-  --sidebar: oklch(0.17 0.004 260);
-  --sidebar-foreground: oklch(0.96 0.003 260);
-  --sidebar-primary: oklch(0.78 0.13 160);
-  --sidebar-primary-foreground: oklch(0.18 0.03 160);
-  --sidebar-accent: oklch(0.26 0.005 260);
-  --sidebar-accent-foreground: oklch(0.96 0.003 260);
+  --ring: #8fb3e0;
+  --chart-1: #8fb3e0;
+  --chart-2: #c9a46a;
+  --chart-3: #5fb08a;
+  --chart-4: #8c97aa;
+  --chart-5: #e07a70;
+  --status-on-track: #5fb08a;
+  --status-heads-up: #d9a94e;
+  --status-over: #e07a70;
+  --status-plenty-left: #8fb3e0;
+  --sidebar: #0b0e12;
+  --sidebar-foreground: #eceae5;
+  --sidebar-primary: #8fb3e0;
+  --sidebar-primary-foreground: #0e1116;
+  --sidebar-accent: #1f242d;
+  --sidebar-accent-foreground: #eceae5;
   --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.78 0.13 160);
+  --sidebar-ring: #8fb3e0;
 }
 
-/* Hebrew: Rubik everywhere (sans and serif headings); mono falls back to Rubik for Hebrew glyphs.
+/* Hebrew: Heebo everywhere (sans and serif headings); mono falls back to Heebo for Hebrew glyphs.
    Higher specificity than next/font's class-based variable definitions. */
 html[lang="he"] {
-  --font-sans: var(--font-rubik), "Arial Hebrew", Arial, sans-serif;
-  --font-serif: var(--font-rubik), "Arial Hebrew", Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, var(--font-rubik), monospace;
+  --font-sans: var(--font-heebo), "Arial Hebrew", Arial, sans-serif;
+  --font-serif: var(--font-heebo), "Arial Hebrew", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, var(--font-heebo), monospace;
 }
 
 @layer base {
@@ -257,7 +259,7 @@ html[lang="he"] {
   }
 }
 
-/* Hebrew has no case and Rubik is spaced for it: drop the Latin eyebrow and heading tracking (unlayered, so it beats utilities). */
+/* Hebrew has no case and Heebo is spaced for it: drop the Latin eyebrow and heading tracking (unlayered, so it beats utilities). */
 html[lang="he"] [class*="tracking-"],
 html[lang="he"] .font-serif,
 html[lang="he"] .text-display {

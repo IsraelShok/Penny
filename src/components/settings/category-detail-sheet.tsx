@@ -35,11 +35,12 @@ import {
   deleteCategory,
   getCategories,
   setCategoryParent,
+  updateCategorySpendingType,
   updateBudget,
   updateCategoryBudgetMode,
   updateCategoryDescription,
 } from "@/lib/api";
-import type { Category, CategoryWithData } from "@/lib/types";
+import type { Category, CategoryWithData, CostType, NeedType } from "@/lib/types";
 
 const NONE_VALUE = "__none__";
 const DESCRIPTION_MAX = 500;
@@ -159,6 +160,10 @@ function Body({
           category={category}
           eligibleParents={eligibleParents}
         />
+
+        {category.kind === "expense" && !isParentGroup && (
+          <SpendingTypeSection category={category} />
+        )}
 
         <DescriptionSection category={category} />
 
@@ -402,6 +407,67 @@ function BudgetSection({
             ) : null}
           </div>
         ) : null}
+      </div>
+    </section>
+  );
+}
+
+const NEED_TYPES = ["need", "want", "saving"] as const;
+const COST_TYPES = ["fixed", "variable", "unplanned"] as const;
+
+/** 50/30/20 bucket and fixed/variable tag, used by the period overview. */
+function SpendingTypeSection({ category }: { category: Category }) {
+  const td = useTranslations("settings.categoryDetail");
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (fields: { needType?: NeedType; costType?: CostType }) =>
+      updateCategorySpendingType(category.id, fields),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["overview"] });
+      toast.success(td("spendingTypeSaved"));
+    },
+    onError: () => toast.error(td("spendingTypeSaveFailed")),
+  });
+
+  return (
+    <section>
+      <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        {td("spendingTypeHeading")}
+      </div>
+      <div className="mt-3 grid gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>{td("needTypeLabel")}</Label>
+          <Select
+            value={category.needType}
+            onValueChange={(v) => v && mutation.mutate({ needType: v as NeedType })}
+          >
+            <SelectTrigger>
+              <SelectValue>{(v: string) => td(`needType_${v}`)}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {NEED_TYPES.map((v) => (
+                <SelectItem key={v} value={v}>{td(`needType_${v}`)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>{td("costTypeLabel")}</Label>
+          <Select
+            value={category.costType}
+            onValueChange={(v) => v && mutation.mutate({ costType: v as CostType })}
+          >
+            <SelectTrigger>
+              <SelectValue>{(v: string) => td(`costType_${v}`)}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {COST_TYPES.map((v) => (
+                <SelectItem key={v} value={v}>{td(`costType_${v}`)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </section>
   );
