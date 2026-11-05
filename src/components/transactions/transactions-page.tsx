@@ -134,7 +134,7 @@ export function TransactionsPage() {
           loading={summaryInitialLoading}
         />
 
-        <div className="flex flex-wrap items-center gap-1.5 rounded-full border border-border bg-card p-1 w-fit">
+        <div className="flex flex-wrap items-center gap-1.5 rounded-full bg-card p-1 w-fit">
           {filterOptions.map((opt) => {
             const active = kind === opt.value;
             return (

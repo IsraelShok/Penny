@@ -33,7 +33,7 @@ export function Greeting({ name }: { name: string | undefined }) {
         {date}
         {hebrewDate ? ` · ${hebrewDate}` : null}
       </p>
-      <h2 className="mt-1 text-display font-semibold text-balance" suppressHydrationWarning>
+      <h2 className="mt-1 text-[2rem] leading-tight font-medium tracking-tight text-balance" suppressHydrationWarning>
         {name ? t("greetingWithName", { greeting, name }) : greeting}
       </h2>
       {name === "" && (

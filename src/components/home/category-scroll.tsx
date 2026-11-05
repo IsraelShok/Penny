@@ -22,7 +22,7 @@ export function CategoryScroll({ items }: { items: HomeCategoryBlock[] }) {
         <p className="text-footnote text-muted-foreground">{t("categoriesSubtitle")}</p>
       </div>
       {items.length === 0 ? (
-        <p className="rounded-2xl border border-border bg-card p-6 text-footnote text-muted-foreground">
+        <p className="rounded-2xl bg-card p-6 text-footnote text-muted-foreground">
           {t("noCategoriesYet")}
         </p>
       ) : (
@@ -53,7 +53,7 @@ function CategoryBlock({ item }: { item: HomeCategoryBlock }) {
   return (
     <li
       aria-labelledby={headingId}
-      className="snap-start scroll-mt-16 rounded-2xl border border-border bg-card md:scroll-mt-20"
+      className="snap-start scroll-mt-16 rounded-2xl bg-card md:scroll-mt-20"
     >
       <Link
         href="/budget"

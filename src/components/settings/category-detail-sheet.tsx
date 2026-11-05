@@ -350,7 +350,7 @@ function BudgetSection({
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {td("budgetHeading")}
       </div>
-      <div className="mt-3 rounded-xl border border-border bg-card p-4">
+      <div className="mt-3 rounded-xl bg-muted/60 p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1 space-y-1">
             <Label
@@ -435,7 +435,7 @@ function SpendingTypeSection({ category }: { category: Category }) {
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {td("spendingTypeHeading")}
       </div>
-      <div className="mt-3 grid gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-2">
+      <div className="mt-3 grid gap-4 rounded-xl bg-muted/60 p-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>{td("needTypeLabel")}</Label>
           <Select
@@ -511,7 +511,7 @@ function GroupSection({
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {td("groupHeading")}
       </div>
-      <div className="mt-3 rounded-xl border border-border bg-card p-4 space-y-2">
+      <div className="mt-3 rounded-xl bg-muted/60 p-4 space-y-2">
         <Label>{td("parentGroup")}</Label>
         <Select
           value={current}
@@ -584,7 +584,7 @@ function DescriptionSection({ category }: { category: Category }) {
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {td("aiHintHeading")}
       </div>
-      <div className="mt-3 rounded-xl border border-border bg-card p-4 space-y-2">
+      <div className="mt-3 rounded-xl bg-muted/60 p-4 space-y-2">
         <Label htmlFor={`desc-${category.id}`}>{td("description")}</Label>
         <textarea
           id={`desc-${category.id}`}

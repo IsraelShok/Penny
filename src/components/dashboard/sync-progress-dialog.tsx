@@ -128,7 +128,7 @@ export function SyncProgressDialog({
         </div>
 
         {summary && (
-          <div className="mx-6 mb-4 mt-2 overflow-hidden rounded-xl border border-border bg-card p-4">
+          <div className="mx-6 mb-4 mt-2 overflow-hidden rounded-xl bg-card p-4">
             <div className="flex items-center justify-around gap-3 text-center">
               <SummaryStat label={t("statNew")} value={summary.added} accent />
               <Divider />

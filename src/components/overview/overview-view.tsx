@@ -143,7 +143,7 @@ function Body({ data }: { data: OverviewPayload }) {
           {data.period.months.length > 1 && <YearTable data={data} />}
 
           <p className="px-1 text-footnote text-muted-foreground" title={t("lifeCostHint")}>
-            <span className="font-medium text-gold">{t("lifeCost", { amount: fmt(avgMonthly * 300, locale) })}</span>
+            <span className="font-medium text-foreground">{t("lifeCost", { amount: fmt(avgMonthly * 300, locale) })}</span>
             {" · "}
             {t("lifeCostHint")}
           </p>
@@ -173,7 +173,7 @@ function Stat({
   const t = useTranslations("overview");
   return (
     <CardShell label={label}>
-      <p className={cn("text-title font-semibold tabular-nums", tone === "bad" && "text-status-over")}>{value}</p>
+      <p className={cn("figure text-[2rem] leading-tight", tone === "bad" && "text-status-over")}>{value}</p>
       <div className="mt-2 space-y-0.5">
         <Delta cur={cur} base={prev} goodWhenUp={goodWhenUp} label={t("vsPrevShort")} />
         <Delta cur={cur} base={ly} goodWhenUp={goodWhenUp} label={t("vsLyShort")} />
@@ -196,7 +196,7 @@ function SavingsStat({ totals, previous, lastYear }: { totals: OverviewTotals; p
     ) : null;
   return (
     <CardShell label={t("savingsRate")}>
-      <p className={cn("text-title font-semibold tabular-nums", rate != null && rate < 0 && "text-status-over")} dir="ltr">
+      <p className={cn("figure text-[2rem] leading-tight", rate != null && rate < 0 && "text-status-over")} dir="ltr">
         {rate == null ? "—" : pct(rate)}
       </p>
       {rate == null ? (

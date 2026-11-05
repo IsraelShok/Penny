@@ -65,7 +65,7 @@ function Tile({ item }: { item: MarketsPayload["items"][number] }) {
   const q = item.quote;
   const name = t(`symbols.${item.key}`);
   return (
-    <li className="rounded-2xl border border-border bg-card p-5">
+    <li className="rounded-2xl bg-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-footnote font-semibold">{name}</h3>
@@ -78,7 +78,7 @@ function Tile({ item }: { item: MarketsPayload["items"][number] }) {
       {q ? (
         <>
           <div className="mt-3 flex items-end justify-between gap-3">
-            <p className="text-title font-semibold tabular-nums" dir="ltr">{price(q, item.group, locale)}</p>
+            <p className="figure text-[1.75rem] leading-tight" dir="ltr">{price(q, item.group, locale)}</p>
             <Sparkline values={q.series} color={(q.change12m ?? 0) >= 0 ? "var(--status-on-track)" : "var(--status-over)"} label={t("trend12m", { name })} fitToRange className="h-9 w-28" />
           </div>
           <dl className="mt-3 flex gap-5 text-caption">
@@ -110,7 +110,7 @@ export function MarketStrip() {
     <Link
       href="/markets"
       aria-label={t("stripLabel")}
-      className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3 text-footnote transition-colors hover:bg-accent md:mb-8"
+      className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl bg-card px-4 py-3 text-footnote transition-colors hover:bg-accent md:mb-8"
     >
       {items.map((i) => (
         <span key={i.key} className="flex items-baseline gap-2">

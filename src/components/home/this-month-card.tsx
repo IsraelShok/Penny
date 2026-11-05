@@ -50,16 +50,17 @@ export function ThisMonthCard({ data }: Props) {
 
   return (
     <CardShell
+      wallet
       label={t("thisMonthLabel", { month: monthLabel })}
       action={<CardAction href="/budget">{t("budgetDetail")}</CardAction>}
     >
       <Link
         href="/budget"
-        className="group -m-2 flex flex-1 flex-col gap-5 rounded-2xl p-2 outline-none transition-colors hover:bg-accent/30 focus-visible:bg-accent/40"
+        className="group -m-2 flex flex-1 flex-col gap-5 rounded-2xl p-2 outline-none transition-colors hover:bg-white/5 focus-visible:bg-white/10"
       >
         <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
           <div className="flex flex-col">
-            <span className="text-display font-semibold tabular-nums md:text-[2.75rem] md:leading-[3rem]">
+            <span className="figure text-[3.5rem] leading-none">
               {formatCurrency(spent)}
             </span>
             <span className={`mt-2 text-sm ${verdictClass}`}>{verdict}</span>

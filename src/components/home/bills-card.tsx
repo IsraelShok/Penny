@@ -26,7 +26,7 @@ export function NextBillCard({ data }: { data: InsightsPayload }) {
         <div className="flex items-center gap-3">
           <IconTile><CreditCard className="size-5" aria-hidden /></IconTile>
           <div className="min-w-0">
-            <p className="text-title font-semibold tabular-nums">{shekels(total, locale)}</p>
+            <p className="figure text-[1.75rem] leading-tight">{shekels(total, locale)}</p>
             <p className="text-footnote text-pretty text-muted-foreground">
               {t("nextBillDetail", {
                 card: sameDay.map((f) => f.account?.slice(-4)).filter(Boolean).join(", "),
@@ -55,7 +55,7 @@ export function SubscriptionsCard({ data }: { data: InsightsPayload }) {
         <div className="flex items-center gap-3">
           <IconTile><Repeat className="size-5" aria-hidden /></IconTile>
           <div className="min-w-0">
-            <p className="text-title font-semibold tabular-nums">{shekels(total, locale)}</p>
+            <p className="figure text-[1.75rem] leading-tight">{shekels(total, locale)}</p>
             <p className="text-footnote text-pretty text-muted-foreground">
               {t("subscriptionsDetail", { count: active.length })}
             </p>

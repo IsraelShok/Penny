@@ -246,7 +246,7 @@ export function BankStep({ onComplete }: BankStepProps) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -16, height: 0 }}
                       transition={{ duration: 0.22 }}
-                      className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+                      className="flex items-center gap-3 rounded-xl bg-card p-3"
                     >
                       <ProviderBadge
                         color={info.color}
@@ -335,7 +335,7 @@ function PickerCard({
   const t = useTranslations("setup");
   const tBanks = useTranslations("banks");
   return (
-    <div className="w-full rounded-2xl border border-border bg-card p-5 text-start shadow-sm">
+    <div className="w-full rounded-2xl bg-card p-5 text-start shadow-sm">
       <div className="mb-3 flex items-baseline justify-between">
         <div className="text-xs font-bold tracking-tight">
           {t("bankSupportedProviders", { count: total })}
@@ -584,7 +584,7 @@ function CredentialForm({
   };
 
   return (
-    <div className="w-full rounded-2xl border border-border bg-card p-6 text-start shadow-sm">
+    <div className="w-full rounded-2xl bg-card p-6 text-start shadow-sm">
       <div className="mb-5 flex items-center gap-3 border-b border-border/60 pb-4">
         <ProviderBadge
           color={info.color}

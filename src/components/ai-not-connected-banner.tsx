@@ -26,24 +26,11 @@ export function AINotConnectedBanner({ className }: AINotConnectedBannerProps) {
     <div
       role="status"
       className={cn(
-        "flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5",
+        "flex flex-col gap-3 rounded-[1.375rem] bg-card p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5",
         className
       )}
-      style={{
-        background:
-          "color-mix(in oklch, var(--status-heads-up) 14%, var(--card))",
-        borderColor:
-          "color-mix(in oklch, var(--status-heads-up) 35%, var(--border))",
-      }}
     >
-      <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-        style={{
-          background:
-            "color-mix(in oklch, var(--status-heads-up) 28%, var(--card))",
-          color: "var(--status-heads-up)",
-        }}
-      >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
         <Sparkles className="h-5 w-5" strokeWidth={1.75} />
       </div>
 

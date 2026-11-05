@@ -759,7 +759,7 @@ function BudgetStat({
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-2xl border border-border bg-card p-4">{children}</div>;
+  return <div className="rounded-2xl bg-muted/60 p-4">{children}</div>;
 }
 
 function CardLabel({ children }: { children: React.ReactNode }) {

@@ -50,7 +50,7 @@ export function WorkspaceNameStep({
         onSubmit={handleSubmit}
         className="mt-2 flex w-full max-w-[380px] flex-col items-center gap-3"
       >
-        <div className="relative w-full rounded-2xl border border-border bg-card p-5 text-start shadow-sm">
+        <div className="relative w-full rounded-2xl bg-card p-5 text-start shadow-sm">
           <div className="absolute end-5 top-5 text-xs font-semibold text-muted-foreground">
             {t("workspaceCharCount", { count: name.length })}
           </div>

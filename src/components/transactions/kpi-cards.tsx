@@ -107,7 +107,7 @@ function KpiCard({
   locale,
 }: KpiCardProps) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
+    <div className="rounded-2xl bg-card p-5">
       <div className="flex items-center justify-between">
         <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
           {label}

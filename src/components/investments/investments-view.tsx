@@ -88,8 +88,8 @@ function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => voi
   return (
     <>
       <div className="grid gap-4 md:grid-cols-3">
-        <CardShell label={t("netWorth")} className="md:col-span-2">
-          <p className="text-display font-semibold tabular-nums text-gold">{shekels(totals.netWorth, locale)}</p>
+        <CardShell wallet label={t("netWorth")} className="md:col-span-2">
+          <p className="figure text-[3.5rem] leading-none">{shekels(totals.netWorth, locale)}</p>
           {change != null && (
             <p className="mt-1 text-footnote text-muted-foreground">
               <span className={cn("font-semibold tabular-nums", change >= 0 ? "text-status-on-track" : "text-status-over")}>
@@ -99,7 +99,7 @@ function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => voi
             </p>
           )}
           {data.history.length > 1 && (
-            <Sparkline values={data.history.map((h) => h.netWorth)} color="var(--gold)" label={t("netWorthTrend")} fitToRange className="mt-4 h-16 w-full" />
+            <Sparkline values={data.history.map((h) => h.netWorth)} color="var(--foreground)" label={t("netWorthTrend")} fitToRange className="mt-4 h-16 w-full" />
           )}
           <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 text-footnote sm:grid-cols-4">
             <Figure label={t("totalAssets")} value={shekels(totals.assets, locale)} />
@@ -113,7 +113,7 @@ function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => voi
       </div>
 
       {missing.length > 0 && (
-        <p className="rounded-xl border border-border bg-card px-4 py-3 text-footnote text-status-heads-up" role="status">
+        <p className="rounded-xl bg-card px-4 py-3 text-footnote text-status-heads-up" role="status">
           {t("missingPrices", { names: missing.map((a) => a.name).join(", ") })}
         </p>
       )}

@@ -318,7 +318,7 @@ function ClaudeConfig({
 }) {
   const t = useTranslations("setup");
   return (
-    <div className="space-y-2 rounded-xl border border-border bg-card/60 p-4">
+    <div className="space-y-2 rounded-xl bg-card/60 p-4">
       <div className="flex items-center justify-between gap-2">
         <Label htmlFor="claude-api-key" className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
           {t("aiClaudeKeyLabel")}
@@ -382,7 +382,7 @@ function OllamaConfig({
   const t = useTranslations("setup");
   const tModels = useTranslations("ollamaModels");
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-card/60 p-4">
+    <div className="space-y-3 rounded-xl bg-card/60 p-4">
       <div
         className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium"
         style={{
@@ -483,7 +483,7 @@ function OllamaConfig({
 function ManualNote() {
   const t = useTranslations("setup");
   return (
-    <div className="rounded-xl border border-border bg-card/60 p-4 text-[12px] leading-relaxed text-muted-foreground">
+    <div className="rounded-xl bg-card/60 p-4 text-[12px] leading-relaxed text-muted-foreground">
       {t("aiManualNoteBefore")}{" "}
       <span className="text-foreground">{t("aiManualNoteUncategorized")}</span>
       {t("aiManualNoteAfter")}{" "}

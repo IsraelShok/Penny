@@ -101,7 +101,7 @@ export default function CategoriesSettingsPage() {
         description={t("description")}
       >
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-full border border-border bg-card p-0.5">
+          <div className="inline-flex rounded-full bg-card p-0.5">
             <KindTab
               active={activeKind === "expense"}
               onClick={() => setActiveKind("expense")}
@@ -247,7 +247,7 @@ function GroupBlock({
           </button>
         ) : null}
       </div>
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="overflow-hidden rounded-2xl bg-card">
         <ul className="divide-y divide-border/60">{children}</ul>
       </div>
     </section>

@@ -48,7 +48,7 @@ function TopMerchants({ merchants, loading }: TopMerchantsProps) {
   const t = useTranslations("transactions");
   const locale = useLocale() as Locale;
   return (
-    <div className="h-full rounded-2xl border border-border bg-card p-5">
+    <div className="h-full rounded-2xl bg-card p-5">
       <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
         {t("topMerchants")}
       </div>
@@ -116,7 +116,7 @@ function PendingReview({ count, loading }: PendingReviewProps) {
 
   if (!loading && count === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="rounded-2xl bg-card p-5">
         <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
           {t("pendingReview")}
         </div>
@@ -129,7 +129,7 @@ function PendingReview({ count, loading }: PendingReviewProps) {
 
   return (
     <>
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="rounded-2xl bg-card p-5">
         <div className="flex items-center justify-between">
           <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
             {t("pendingReview")}
@@ -189,7 +189,7 @@ interface OutliersProps {
 function Outliers({ largestIncome, largestExpense, loading }: OutliersProps) {
   const t = useTranslations("transactions");
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
+    <div className="rounded-2xl bg-card p-5">
       <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
         {t("outliers")}
       </div>

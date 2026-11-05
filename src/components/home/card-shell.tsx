@@ -8,16 +8,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface CardShellProps {
   label?: string;
+  /** The page's one dark Apple Pay-style card, for its headline figure. */
+  wallet?: boolean;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
 }
 
-export function CardShell({ label, action, children, className }: CardShellProps) {
+export function CardShell({ label, wallet, action, children, className }: CardShellProps) {
   return (
     <div
       className={cn(
-        "flex h-full flex-col rounded-2xl border border-border bg-card p-5 md:p-6",
+        "flex h-full flex-col rounded-[1.375rem] bg-card p-7",
+        wallet && "wallet",
         className
       )}
     >

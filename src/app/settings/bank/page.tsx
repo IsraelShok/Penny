@@ -147,7 +147,7 @@ export default function BankSettingsPage() {
             })}
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="overflow-hidden rounded-2xl bg-card">
             <ul className="divide-y divide-border/60">
               {integrations.map((integration) => {
                 const info = BANK_PROVIDERS.find(
