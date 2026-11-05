@@ -773,3 +773,70 @@ export interface OverviewPayload {
   uncategorized: number;
   categories: OverviewCategoryRow[];
 }
+
+export interface Quote {
+  symbol: string;
+  name: string;
+  /** In `currency` (Tel Aviv agorot already converted to ILS). */
+  price: number;
+  currency: string;
+  /** Fractions, e.g. 0.012 = +1.2%. Null when there is no base. */
+  changeDay: number | null;
+  changeYtd: number | null;
+  change12m: number | null;
+  /** About 52 closes over the past year, oldest first. */
+  series: number[];
+  asOf: string;
+  /** True when Yahoo could not be reached and this is the last saved quote. */
+  stale: boolean;
+}
+
+export interface MarketsPayload {
+  items: { symbol: string; key: string; group: string; quote: Quote | null }[];
+}
+
+export const ASSET_TYPES = [
+  "cash", "deposit", "bond", "stock", "fund", "study_fund", "provident", "pension",
+  "real_estate", "business", "metal", "crypto", "vehicle", "other",
+] as const;
+export const LIABILITY_TYPES = ["mortgage", "loan", "credit", "other_liability"] as const;
+export type AssetType = (typeof ASSET_TYPES)[number] | (typeof LIABILITY_TYPES)[number];
+
+export interface AssetInput {
+  name: string;
+  type: AssetType;
+  currency: string;
+  symbol: string | null;
+  quantity: number | null;
+  manualValue: number | null;
+  costBasis: number | null;
+  liquid: boolean;
+  note: string | null;
+}
+
+export interface Asset extends AssetInput {
+  id: number;
+  isLiability: boolean;
+  /** Current value in its own currency and in ILS (null if no price or FX rate). */
+  value: number | null;
+  valueIls: number | null;
+  /** Unrealised gain in ILS, when a cost basis is set. */
+  gainIls: number | null;
+  quote: Quote | null;
+}
+
+export interface AssetsPayload {
+  assets: Asset[];
+  totals: {
+    assets: number;
+    liquid: number;
+    liabilities: number;
+    /** 25% of unrealised gains on taxable holdings (not pension, study fund or provident). */
+    deferredTax: number;
+    netWorth: number;
+    /** Net worth that can fund early retirement: liquid assets minus liabilities and deferred tax. */
+    liquidNetWorth: number;
+  };
+  history: { date: string; netWorth: number }[];
+  benchmarks: { symbol: string; change12m: number | null; changeYtd: number | null }[];
+}

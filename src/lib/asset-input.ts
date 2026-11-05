@@ -1,0 +1,33 @@
+import { ASSET_TYPES, LIABILITY_TYPES, type AssetInput } from "./types";
+
+const TYPES: readonly string[] = [...ASSET_TYPES, ...LIABILITY_TYPES];
+const num = (v: unknown) => (v === null || v === undefined || v === "" ? null : Number(v));
+
+/** Validate an asset from a request body or CSV row. Returns the clean input, or an error message. */
+export function parseAssetInput(raw: unknown): AssetInput | string {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const name = typeof r.name === "string" ? r.name.trim().slice(0, 80) : "";
+  if (!name) return "name is required";
+  if (typeof r.type !== "string" || !TYPES.includes(r.type)) return `invalid type for ${name}`;
+  const currency = typeof r.currency === "string" && /^[A-Z]{3}$/.test(r.currency) ? r.currency : "ILS";
+  const symbol = typeof r.symbol === "string" && r.symbol.trim() ? r.symbol.trim().toUpperCase().slice(0, 20) : null;
+  const quantity = num(r.quantity);
+  const manualValue = num(r.manualValue);
+  const costBasis = num(r.costBasis);
+  for (const [k, v] of Object.entries({ quantity, manualValue, costBasis })) {
+    if (v !== null && (!Number.isFinite(v) || v < 0)) return `${k} must be a positive number for ${name}`;
+  }
+  if (symbol && quantity === null) return `quantity is required with a symbol for ${name}`;
+  if (!symbol && manualValue === null) return `a value or a symbol is required for ${name}`;
+  return {
+    name,
+    type: r.type as AssetInput["type"],
+    currency,
+    symbol,
+    quantity: symbol ? quantity : null,
+    manualValue: symbol ? null : manualValue,
+    costBasis,
+    liquid: r.liquid !== false,
+    note: typeof r.note === "string" && r.note.trim() ? r.note.trim().slice(0, 200) : null,
+  };
+}

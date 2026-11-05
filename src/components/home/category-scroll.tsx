@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { CircleDot } from "lucide-react";
 import { ICON_MAP } from "@/components/dashboard/category-card";
 import { translateCategoryName } from "@/lib/i18n-data";
+import { Sparkline } from "@/components/ui/sparkline";
 import type { HomeCategoryBlock } from "@/lib/types";
 
 const shekels = (n: number, locale: string) =>
@@ -127,19 +128,5 @@ function CategoryBlock({ item }: { item: HomeCategoryBlock }) {
         )}
       </div>
     </li>
-  );
-}
-
-function Sparkline({ values, color, label }: { values: number[]; color: string; label: string }) {
-  const max = Math.max(...values, 1);
-  const step = values.length > 1 ? 100 / (values.length - 1) : 0;
-  const points = values.map((v, i) => `${i * step},${30 - (v / max) * 26}`).join(" ");
-  const last = values.length - 1;
-  return (
-    // SVG coordinates ignore dir, so time runs left to right like other charts.
-    <svg viewBox="-3 0 106 32" className="h-8 w-24 shrink-0 overflow-visible" role="img" aria-label={label}>
-      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-      <circle cx={last * step} cy={30 - (values[last] / max) * 26} r="2.5" fill={color} />
-    </svg>
   );
 }

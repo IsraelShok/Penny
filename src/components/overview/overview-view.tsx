@@ -20,7 +20,8 @@ const COST_COLORS: Record<CostType, string> = { fixed: "var(--chart-1)", variabl
 
 const fmt = (n: number, locale: string) =>
   Math.round(n).toLocaleString(locale === "he" ? "he-IL" : "en-US");
-const shekels = (n: number, locale: string) => `₪${fmt(n, locale)}`;
+// LTR isolate keeps the sign in front of the amount inside Hebrew text.
+const shekels = (n: number, locale: string) => `⁦${n < 0 ? "−" : ""}₪${fmt(Math.abs(n), locale)}⁩`;
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
 export function OverviewView() {

@@ -18,6 +18,9 @@ import type {
   NeedType,
   CostType,
   OverviewPayload,
+  AssetsPayload,
+  AssetInput,
+  MarketsPayload,
 } from "./types";
 import { getActiveWorkspaceIdSync } from "./workspace-store";
 
@@ -291,6 +294,34 @@ export function getSummary(params: {
 
 export function getOverview(period: string, offset: number) {
   return fetchJSON<OverviewPayload>(`/api/overview?period=${period}&offset=${offset}`);
+}
+
+export function getMarkets() {
+  return fetchJSON<MarketsPayload>(`/api/markets`);
+}
+
+export function getAssets() {
+  return fetchJSON<AssetsPayload>(`/api/assets`);
+}
+
+export function createAssets(assets: AssetInput[]) {
+  return fetchJSON<{ created: number }>(`/api/assets`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assets }),
+  });
+}
+
+export function updateAsset(id: number, asset: AssetInput) {
+  return fetchJSON<{ success: boolean }>(`/api/assets/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(asset),
+  });
+}
+
+export function deleteAsset(id: number) {
+  return fetchJSON<{ success: boolean }>(`/api/assets/${id}`, { method: "DELETE" });
 }
 
 export function getHome() {

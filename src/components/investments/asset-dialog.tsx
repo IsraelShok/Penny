@@ -1,0 +1,168 @@
+"use client";
+
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+import { toast } from "sonner";
+import { createAssets, updateAsset } from "@/lib/api";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ASSET_TYPES, LIABILITY_TYPES, type Asset, type AssetInput, type AssetType } from "@/lib/types";
+
+const CURRENCIES = ["ILS", "USD", "EUR", "GBP"];
+/** Types that usually have a ticker on Yahoo Finance. */
+const TICKER_TYPES: AssetType[] = ["stock", "fund", "bond", "crypto", "metal"];
+/** Not available before retirement age, as in HaExolidit's split. */
+const ILLIQUID_DEFAULT: AssetType[] = ["pension", "real_estate", "vehicle", "business"];
+
+export function AssetDialog({ asset, onClose }: { asset: Asset | "new"; onClose: () => void }) {
+  const t = useTranslations("investments");
+  const tc = useTranslations("common");
+  const queryClient = useQueryClient();
+  const initial = asset === "new" ? null : asset;
+  const [form, setForm] = useState({
+    name: initial?.name ?? "",
+    type: (initial?.type ?? "stock") as AssetType,
+    currency: initial?.currency ?? "ILS",
+    priced: initial ? initial.symbol != null : true,
+    symbol: initial?.symbol ?? "",
+    quantity: initial?.quantity?.toString() ?? "",
+    manualValue: initial?.manualValue?.toString() ?? "",
+    costBasis: initial?.costBasis?.toString() ?? "",
+    liquid: initial?.liquid ?? true,
+  });
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const canPrice = TICKER_TYPES.includes(form.type);
+  const priced = canPrice && form.priced;
+  const isLiability = (LIABILITY_TYPES as readonly string[]).includes(form.type);
+
+  const mutation = useMutation({
+    mutationFn: () => {
+      const input: AssetInput = {
+        name: form.name,
+        type: form.type,
+        currency: form.currency,
+        symbol: priced ? form.symbol : null,
+        quantity: priced ? Number(form.quantity) : null,
+        manualValue: priced ? null : Number(form.manualValue),
+        costBasis: form.costBasis ? Number(form.costBasis) : null,
+        liquid: form.liquid,
+        note: initial?.note ?? null,
+      };
+      return initial ? updateAsset(initial.id, input).then(() => undefined) : createAssets([input]).then(() => undefined);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      toast.success(t("saved"));
+      onClose();
+    },
+    onError: (err: Error) => toast.error(err.message || t("saveFailed")),
+  });
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{initial ? t("editTitle") : t("addTitle")}</DialogTitle>
+        </DialogHeader>
+        <form
+          id="asset-form"
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            mutation.mutate();
+          }}
+        >
+          <div className="space-y-1.5">
+            <Label htmlFor="asset-name">{t("fieldName")}</Label>
+            <Input id="asset-name" required maxLength={80} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("namePlaceholder")} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>{t("fieldType")}</Label>
+              <Select
+                value={form.type}
+                onValueChange={(v) => {
+                  if (!v) return;
+                  const type = v as AssetType;
+                  setForm((f) => ({ ...f, type, liquid: !ILLIQUID_DEFAULT.includes(type) }));
+                }}
+              >
+                <SelectTrigger className="w-full"><SelectValue>{(v: string) => t(`type_${v}`)}</SelectValue></SelectTrigger>
+                <SelectContent>
+                  {[...ASSET_TYPES, ...LIABILITY_TYPES].map((v) => (
+                    <SelectItem key={v} value={v}>{t(`type_${v}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("fieldCurrency")}</Label>
+              <Select value={form.currency} onValueChange={(v) => v && set("currency", v)}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {canPrice && (
+            <label className="flex items-center justify-between gap-3 rounded-xl border border-border p-3 text-footnote">
+              <span>
+                <span className="block font-medium">{t("livePrice")}</span>
+                <span className="text-muted-foreground">{t("livePriceHint")}</span>
+              </span>
+              <Switch checked={form.priced} onCheckedChange={(v) => set("priced", v)} />
+            </label>
+          )}
+
+          {priced ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="asset-symbol">{t("fieldSymbol")}</Label>
+                <Input id="asset-symbol" required dir="ltr" value={form.symbol} onChange={(e) => set("symbol", e.target.value)} placeholder="VOO / TEVA.TA" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="asset-qty">{t("fieldQuantity")}</Label>
+                <Input id="asset-qty" required type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={form.quantity} onChange={(e) => set("quantity", e.target.value)} />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="asset-value">{isLiability ? t("fieldBalance") : t("fieldValue")}</Label>
+              <Input id="asset-value" required type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={form.manualValue} onChange={(e) => set("manualValue", e.target.value)} />
+            </div>
+          )}
+
+          {!isLiability && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="asset-cost">{t("fieldCost")}</Label>
+                <Input id="asset-cost" type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={form.costBasis} onChange={(e) => set("costBasis", e.target.value)} />
+                <p className="text-caption text-muted-foreground">{t("fieldCostHint")}</p>
+              </div>
+              <label className="flex items-center justify-between gap-3 text-footnote">
+                <span>
+                  <span className="block font-medium">{t("fieldLiquid")}</span>
+                  <span className="text-muted-foreground">{t("fieldLiquidHint")}</span>
+                </span>
+                <Switch checked={form.liquid} onCheckedChange={(v) => set("liquid", v)} />
+              </label>
+            </>
+          )}
+        </form>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>{tc("cancel")}</Button>
+          <Button type="submit" form="asset-form" disabled={mutation.isPending}>
+            {mutation.isPending ? t("saving") : t("save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

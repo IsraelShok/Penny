@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
   PieChart,
+  Landmark,
+  LineChart,
   Wallet,
   ArrowLeftRight,
   Lightbulb,
@@ -46,6 +48,18 @@ const NAV: NavDef[] = [
     labelKey: "overview",
     Icon: PieChart,
     match: (p: string) => p.startsWith("/overview"),
+  },
+  {
+    href: "/investments",
+    labelKey: "investments",
+    Icon: Landmark,
+    match: (p: string) => p.startsWith("/investments"),
+  },
+  {
+    href: "/markets",
+    labelKey: "markets",
+    Icon: LineChart,
+    match: (p: string) => p.startsWith("/markets"),
   },
   {
     href: "/budget",
