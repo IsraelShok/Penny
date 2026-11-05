@@ -5,6 +5,7 @@ import { toLocalISODate } from "../../lib/date-utils";
 import type {
   HomeBankHealthItem,
   HomeCashFlow,
+  HomeCategoryBlock,
   HomeCategorySnapshotItem,
   HomeHistoricalTrendPoint,
   HomeNeedsAttention,
@@ -300,4 +301,56 @@ export function getCategorySnapshot(
 
   items.sort((a, b) => b.spent - a.spent);
   return items.slice(0, limit);
+}
+
+/** Every expense category with spend this month (rolled up to parents), for the Home category scroll. */
+export function getCategoryScroll(
+  workspaceId: number,
+  from: string,
+  to: string,
+  trendMonths: number
+): HomeCategoryBlock[] {
+  const db = getDb();
+  // Month keys ending at `from`'s month, oldest first.
+  const [y, m] = from.split("-").map(Number);
+  const months = Array.from({ length: trendMonths }, (_, i) => {
+    const d = new Date(y, m - 1 - (trendMonths - 1 - i), 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const trendFrom = `${months[0]}-01`;
+  const snapshot = getCategorySnapshot(workspaceId, from, to, Number.MAX_SAFE_INTEGER);
+  const icons = new Map(
+    (db
+      .prepare("SELECT id, icon FROM categories WHERE workspace_id = ?")
+      .all(workspaceId) as Array<{ id: number; icon: string | null }>).map((r) => [r.id, r.icon])
+  );
+  const where = `t.workspace_id = ? AND t.date >= ? AND t.date <= ?
+         AND t.status = 'completed' AND t.kind = 'expense' AND t.is_excluded = 0`;
+  const trendRows = db
+    .prepare(
+      `SELECT COALESCE(c.parent_id, c.id) as key, substr(t.date, 1, 7) as month, SUM(ABS(t.charged_amount)) as amount
+       FROM transactions t JOIN categories c ON c.id = t.category_id
+       WHERE ${where} GROUP BY key, month`
+    )
+    .all(workspaceId, trendFrom, to) as Array<{ key: number; month: string; amount: number }>;
+  const merchantRows = db
+    .prepare(
+      `SELECT COALESCE(c.parent_id, c.id) as key, t.description as merchant, SUM(ABS(t.charged_amount)) as amount
+       FROM transactions t JOIN categories c ON c.id = t.category_id
+       WHERE ${where} GROUP BY key, merchant ORDER BY amount DESC`
+    )
+    .all(workspaceId, from, to) as Array<{ key: number; merchant: string; amount: number }>;
+
+  return snapshot.map((c) => {
+    const byMonth = new Map(trendRows.filter((r) => r.key === c.categoryId).map((r) => [r.month, r.amount]));
+    return {
+      ...c,
+      icon: icons.get(c.categoryId) ?? null,
+      trend: months.map((m) => byMonth.get(m) ?? 0),
+      topMerchants: merchantRows
+        .filter((r) => r.key === c.categoryId)
+        .slice(0, 3)
+        .map(({ merchant, amount }) => ({ merchant, amount })),
+    };
+  });
 }

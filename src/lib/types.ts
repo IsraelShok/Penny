@@ -156,7 +156,8 @@ export type HomeSection =
   | "recentTransactions"
   | "topMerchants"
   | "needsAttention"
-  | "bankHealth";
+  | "bankHealth"
+  | "categories";
 
 export interface HomeThisMonth {
   spent: number;
@@ -181,6 +182,14 @@ export interface HomeCategorySnapshotItem {
   spent: number;
   budget: number;
   percentSpent: number;
+}
+
+export interface HomeCategoryBlock extends HomeCategorySnapshotItem {
+  /** Lucide icon name (kebab-case), if the category has one. */
+  icon: string | null;
+  /** Monthly spend, oldest first; the last value is this month. */
+  trend: number[];
+  topMerchants: { merchant: string; amount: number }[];
 }
 
 export interface HomeHistoricalTrendPoint {
@@ -235,6 +244,7 @@ export interface HomePayload {
   topMerchants: HomeTopMerchant[] | null;
   needsAttention: HomeNeedsAttention | null;
   bankHealth: HomeBankHealthItem[] | null;
+  categories: HomeCategoryBlock[] | null;
   nextScheduledSync: string | null;
   errors: HomeSectionError[];
 }
@@ -289,6 +299,7 @@ export interface AppSettings {
   autoSyncEnabled: boolean;
   autoSyncTime: string;
   language: "en" | "he";
+  displayName: string;
 }
 
 export type BankProvider =

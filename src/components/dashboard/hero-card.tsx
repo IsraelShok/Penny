@@ -44,7 +44,7 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
 
   if (loading || !data) {
     return (
-      <div className="rounded-3xl border border-border bg-card p-8">
+      <div className="rounded-2xl border border-border bg-card p-8">
         <Skeleton className="h-40 w-full" />
       </div>
     );
@@ -119,7 +119,7 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
         </span>{" "}
         {t("untilPayday")}
       </p>
-      <h2 className="font-serif text-3xl leading-[1.05] tracking-tighter md:text-4xl lg:text-5xl">
+      <h2 className="font-serif text-title text-balance md:text-3xl lg:text-display">
         <HeroPhrase
           hasBudget={hasBudget}
           verdict={verdict}
@@ -163,7 +163,7 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
   );
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 md:p-8 lg:p-10">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 md:p-8 lg:p-10">
       {hasBudget ? (
         <div className="grid gap-6 md:grid-cols-[200px_1fr] md:gap-10 lg:grid-cols-[240px_1fr]">
           <div className="flex flex-col items-center justify-center gap-2">

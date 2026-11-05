@@ -59,7 +59,7 @@ export function ThisMonthCard({ data }: Props) {
       >
         <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
           <div className="flex flex-col">
-            <span className="font-serif text-4xl leading-none tracking-tight md:text-5xl">
+            <span className="text-display font-semibold tabular-nums md:text-[2.75rem] md:leading-[3rem]">
               {formatCurrency(spent)}
             </span>
             <span className={`mt-2 text-sm ${verdictClass}`}>{verdict}</span>

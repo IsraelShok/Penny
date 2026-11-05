@@ -32,7 +32,7 @@ export function WorkspaceNameStep({
 
   return (
     <div className="mx-auto flex max-w-[520px] flex-col items-center gap-4 pt-8 text-center">
-      <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+      <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
         {t("workspaceStep")}
       </div>
       <h1 className="max-w-[440px] font-serif text-4xl leading-[1.08] tracking-tight">
@@ -51,12 +51,12 @@ export function WorkspaceNameStep({
         className="mt-2 flex w-full max-w-[380px] flex-col items-center gap-3"
       >
         <div className="relative w-full rounded-2xl border border-border bg-card p-5 text-start shadow-sm">
-          <div className="absolute end-5 top-5 text-[9px] font-semibold text-muted-foreground">
+          <div className="absolute end-5 top-5 text-xs font-semibold text-muted-foreground">
             {t("workspaceCharCount", { count: name.length })}
           </div>
           <label
             htmlFor="workspace-name"
-            className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground"
+            className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground"
           >
             {t("workspaceLabel")}
           </label>
@@ -104,7 +104,7 @@ export function WorkspaceNameStep({
         <span>{t("workspaceEncryptedLocally")}</span>
         <span>
           {t("workspacePressEnter")}{" "}
-          <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[9px] font-semibold">
+          <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold">
             ↵
           </kbd>{" "}
           {t("workspaceToContinue")}

@@ -189,11 +189,11 @@ export function SyncStatusPill({
                 styles.pulse && "animate-pulse"
               )}
             />
-            <span className="font-medium">{state.label}</span>
+            <span className="font-medium max-sm:sr-only">{state.label}</span>
             {nextText && !syncActive && (
               <>
-                <span className="text-muted-foreground/60">·</span>
-                <span className="text-muted-foreground">{nextText}</span>
+                <span className="text-muted-foreground/60 max-sm:hidden">·</span>
+                <span className="text-muted-foreground max-sm:sr-only">{nextText}</span>
               </>
             )}
           </button>

@@ -6,6 +6,7 @@ import {
 import {
   getBankHealth,
   getCashFlow,
+  getCategoryScroll,
   getCategorySnapshot,
   getHistoricalTrend,
   getNeedsAttentionCounts,
@@ -25,6 +26,7 @@ import { toLocalISODate } from "@/server/lib/date-utils";
 import type {
   HomeBankHealthItem,
   HomeCashFlow,
+  HomeCategoryBlock,
   HomeCategorySnapshotItem,
   HomeHistoricalTrendPoint,
   HomeNeedsAttention,
@@ -40,6 +42,7 @@ const HISTORICAL_MONTHS = 8;
 const RECENT_TXN_LIMIT = 8;
 const TOP_MERCHANT_LIMIT = 6;
 const CATEGORY_SNAPSHOT_LIMIT = 6;
+const CATEGORY_TREND_MONTHS = 6;
 
 function safe<T>(
   section: HomeSection,
@@ -159,6 +162,10 @@ export async function GET(request: Request) {
     getBankHealth(workspaceId)
   );
 
+  const categories = safe<HomeCategoryBlock[]>("categories", errors, () =>
+    getCategoryScroll(workspaceId, from, to, CATEGORY_TREND_MONTHS)
+  );
+
   const payload: HomePayload = {
     thisMonth,
     cashFlow,
@@ -168,6 +175,7 @@ export async function GET(request: Request) {
     topMerchants,
     needsAttention,
     bankHealth,
+    categories,
     nextScheduledSync: getNextRunAt(),
     errors,
   };

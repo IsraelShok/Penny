@@ -251,20 +251,20 @@ function StatusPill({
   const t = useTranslations("settings.bank");
   if (syncing) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
         <Loader2 className="h-3 w-3 animate-spin" /> {t("statusSyncing")}
       </span>
     );
   }
   if (!lastSyncAt) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] text-amber-700 dark:text-amber-300">
+      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--status-heads-up)]/15 px-1.5 py-0.5 text-xs text-[var(--status-heads-up)]">
         <CircleAlert className="h-3 w-3" /> {t("statusNeverSynced")}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] text-emerald-700 dark:text-emerald-300">
+    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-xs text-emerald-700 dark:text-emerald-300">
       <CircleCheck className="h-3 w-3" /> {t("statusConnected")}
     </span>
   );

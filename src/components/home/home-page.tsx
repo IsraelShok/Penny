@@ -4,14 +4,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { getActivity, getHome } from "@/lib/api";
+import { getActivity, getHome, getInsights, getSettings } from "@/lib/api";
 import { PageHeader } from "@/components/layout/app-shell";
 import { SyncButton } from "@/components/dashboard/sync-button";
 import { CategorizeButton } from "@/components/dashboard/categorize-button";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { ThisMonthCard } from "./this-month-card";
 import { CashFlowCard } from "./cash-flow-card";
-import { CategorySnapshotCard } from "./category-snapshot-card";
+import { Greeting } from "./greeting";
+import { NextBillCard, SubscriptionsCard } from "./bills-card";
+import { CategoryScroll } from "./category-scroll";
 import { HistoricalTrendCard } from "./historical-trend-card";
 import { RecentTransactionsCard } from "./recent-transactions-card";
 import { TopMerchantsCard } from "./top-merchants-card";
@@ -23,9 +25,10 @@ import { CardError, CardSkeleton } from "./card-shell";
 import type { HomePayload, HomeSection } from "@/lib/types";
 
 const ROW_1 = "col-span-12 lg:col-span-8";
-const ROW_1_SIDE = "col-span-12 md:col-span-6 lg:col-span-4";
+const ROW_1_SIDE = "col-span-12 sm:col-span-6 lg:col-span-4";
 const ROW_2 = "col-span-12 md:col-span-6 lg:col-span-7";
 const ROW_2_SIDE = "col-span-12 md:col-span-6 lg:col-span-5";
+const FULL = "col-span-12";
 
 export function HomePage() {
   const queryClient = useQueryClient();
@@ -43,6 +46,7 @@ export function HomePage() {
       topMerchants: t("topMerchants"),
       needsAttention: t("needsAttention"),
       bankHealth: t("bankConnections"),
+      categories: t("categoriesTitle"),
     }),
     [t]
   );
@@ -57,6 +61,9 @@ export function HomePage() {
     queryKey: ["home"],
     queryFn: getHome,
   });
+
+  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: getSettings });
+  const { data: insights } = useQuery({ queryKey: ["insights"], queryFn: getInsights });
 
   const [activityPopoverOpen, setActivityPopoverOpen] = useState(false);
   const { data: activity } = useQuery({
@@ -85,6 +92,7 @@ export function HomePage() {
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
     queryClient.invalidateQueries({ queryKey: ["settings"] });
     queryClient.invalidateQueries({ queryKey: ["activity"] });
+    queryClient.invalidateQueries({ queryKey: ["insights"] });
   }, [queryClient]);
 
   return (
@@ -114,15 +122,29 @@ export function HomePage() {
           className="mb-4 md:mb-5 lg:mb-6"
         />
         <AINotConnectedBanner className="mb-4 md:mb-5 lg:mb-6" />
-        <div className="grid grid-cols-12 gap-4 md:gap-5 lg:gap-6">
+        <Greeting name={settings?.displayName} />
+        <div className="grid grid-cols-12 gap-3 md:gap-4">
           {renderSection("thisMonth", data, isLoading, isError, ROW_1, skeletonLabels)}
+          <div className="col-span-12 grid gap-3 sm:grid-cols-2 md:gap-4 lg:col-span-4 lg:grid-cols-1">
+            {insights ? (
+              <>
+                <NextBillCard data={insights} />
+                <SubscriptionsCard data={insights} />
+              </>
+            ) : (
+              <>
+                <CardSkeleton label={t("nextBill")} height={48} />
+                <CardSkeleton label={t("subscriptionsTitle")} height={48} />
+              </>
+            )}
+          </div>
+          {renderSection("needsAttention", data, isLoading, isError, ROW_1_SIDE, skeletonLabels)}
           {renderSection("cashFlow", data, isLoading, isError, ROW_1_SIDE, skeletonLabels)}
-          {renderSection("categorySnapshot", data, isLoading, isError, ROW_2, skeletonLabels)}
-          {renderSection("historicalTrend", data, isLoading, isError, ROW_2_SIDE, skeletonLabels)}
+          {renderSection("historicalTrend", data, isLoading, isError, ROW_1_SIDE, skeletonLabels)}
+          {renderSection("categories", data, isLoading, isError, `${FULL} mt-4 md:mt-6`, skeletonLabels)}
           {renderSection("recentTransactions", data, isLoading, isError, ROW_2, skeletonLabels)}
           {renderSection("topMerchants", data, isLoading, isError, ROW_2_SIDE, skeletonLabels)}
-          {renderSection("needsAttention", data, isLoading, isError, ROW_2, skeletonLabels)}
-          {renderSection("bankHealth", data, isLoading, isError, ROW_2_SIDE, skeletonLabels)}
+          {renderSection("bankHealth", data, isLoading, isError, FULL, skeletonLabels)}
         </div>
       </div>
     </>
@@ -170,9 +192,10 @@ function renderCard(section: HomeSection, data: HomePayload) {
     case "cashFlow":
       return data.cashFlow ? <CashFlowCard data={data.cashFlow} /> : null;
     case "categorySnapshot":
-      return data.categorySnapshot ? (
-        <CategorySnapshotCard items={data.categorySnapshot} />
-      ) : null;
+      // Superseded on Home by the category scroll.
+      return null;
+    case "categories":
+      return data.categories ? <CategoryScroll items={data.categories} /> : null;
     case "historicalTrend":
       return data.historicalTrend ? (
         <HistoricalTrendCard data={data.historicalTrend} />
@@ -205,4 +228,5 @@ const SKELETON_HEIGHTS: Record<HomeSection, number> = {
   topMerchants: 220,
   needsAttention: 160,
   bankHealth: 160,
+  categories: 480,
 };

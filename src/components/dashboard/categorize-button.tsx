@@ -79,7 +79,7 @@ export function CategorizeButton({ onApplied }: CategorizeButtonProps) {
             />
           </svg>
         )}
-        {mutation.isPending ? t("thinking") : t("categorize")}
+        <span className="max-sm:sr-only">{mutation.isPending ? t("thinking") : t("categorize")}</span>
       </Button>
 
       {preview && (

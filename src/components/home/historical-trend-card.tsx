@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CardShell } from "./card-shell";
 import { formatCurrency } from "@/lib/formatters";
 import type { HomeHistoricalTrendPoint } from "@/lib/types";
@@ -12,6 +12,7 @@ interface Props {
 
 export function HistoricalTrendCard({ data }: Props) {
   const t = useTranslations("home");
+  const locale = useLocale();
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const hasData = data.some((d) => d.total > 0);
 
@@ -37,7 +38,7 @@ export function HistoricalTrendCard({ data }: Props) {
               {formatCurrency(active.total)}
             </span>
             <span className="text-xs text-muted-foreground">
-              {active.label}
+              {monthName(active.month, locale)}
               {active.isCurrent ? ` ${t("soFar")}` : ""}
             </span>
           </div>
@@ -65,6 +66,7 @@ function BarChart({
   hoverIdx: number | null;
   onHover: (i: number | null) => void;
 }) {
+  const labelLocale = useLocale();
   const width = 100;
   const height = 36;
   const barWidth = width / data.length;
@@ -102,16 +104,22 @@ function BarChart({
           );
         })}
       </svg>
-      <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
+      {/* The SVG ignores dir, so the labels run left to right with it. */}
+      <div dir="ltr" className="flex justify-between text-xs text-muted-foreground tabular-nums">
         {data.map((d) => (
           <span
             key={d.month}
             className={d.isCurrent ? "font-medium text-foreground" : ""}
           >
-            {d.label}
+            {monthName(d.month, labelLocale)}
           </span>
         ))}
       </div>
     </div>
   );
+}
+
+/** "2026-04" as a short month name in the reader's language (the API label is English). */
+function monthName(month: string, locale: string) {
+  return new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(`${month}-01T12:00:00`));
 }

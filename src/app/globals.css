@@ -51,87 +51,128 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Type scale (size / line height), 12px floor */
+  --text-display: 2.125rem;
+  --text-display--line-height: 2.5rem;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.75rem;
+  --text-headline: 1.0625rem;
+  --text-headline--line-height: 1.375rem;
+  --text-footnote: 0.8125rem;
+  --text-footnote--line-height: 1.125rem;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+}
+
+/* Translucent chrome (header, sheets, dialogs, toasts). Solid where blur is unsupported or transparency is reduced. */
+@utility glass {
+  background-color: var(--background);
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background-color: color-mix(in oklab, var(--background) 88%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    backdrop-filter: blur(20px) saturate(1.6);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--background);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@utility glass-popover {
+  background-color: var(--popover);
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background-color: color-mix(in oklab, var(--popover) 90%, transparent);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    backdrop-filter: blur(24px) saturate(1.6);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--popover);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 :root {
-  /* Buttercream light theme - brighter warm cream that lifts white cards */
-  --background: #FCF7ED;
-  --foreground: #2C2A27;
+  /* Headings use the UI sans (SF-like Inter / Rubik), no display serif */
+  --font-serif: var(--font-sans);
+  /* Neutral Apple-style light theme: colour is reserved for money and categories */
+  --background: oklch(0.975 0.003 260);
+  --foreground: oklch(0.2 0.01 260);
   --card: oklch(1 0 0);
-  --card-foreground: #2C2A27;
+  --card-foreground: oklch(0.2 0.01 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: #2C2A27;
-  --primary: oklch(0.52 0.10 145);
-  --primary-foreground: oklch(0.98 0.012 90);
-  --secondary: oklch(0.94 0.03 85);
-  --secondary-foreground: #2C2A27;
-  --muted: oklch(0.95 0.022 85);
-  --muted-foreground: oklch(0.50 0.02 75);
-  --accent: oklch(0.94 0.03 85);
-  --accent-foreground: #2C2A27;
-  --destructive: oklch(0.58 0.18 30);
-  --border: #ECE3D2;
-  --input: #ECE3D2;
-  --ring: oklch(0.52 0.10 145);
-  /* Pastel chart palette - bumped chroma to match the L2 category lift */
-  --chart-1: oklch(0.72 0.10 145); /* sage green - groceries */
-  --chart-2: oklch(0.76 0.11 40);  /* coral - dining */
-  --chart-3: oklch(0.80 0.10 80);  /* sand/amber - shopping */
-  --chart-4: oklch(0.76 0.10 10);  /* rose - fun */
-  --chart-5: oklch(0.74 0.10 230); /* sky - transport */
-  /* Status colors - L 0.55 so they pass 4.5:1 as text on cards */
-  --status-on-track: oklch(0.55 0.10 145);
-  --status-heads-up: oklch(0.55 0.13 85);
-  --status-over: oklch(0.55 0.16 30);
-  --status-plenty-left: oklch(0.55 0.08 220);
-  --radius: 0.875rem;
-  --sidebar: oklch(0.95 0.025 85);
-  --sidebar-foreground: #2C2A27;
-  --sidebar-primary: oklch(0.52 0.10 145);
-  --sidebar-primary-foreground: oklch(0.98 0.012 90);
-  --sidebar-accent: oklch(0.94 0.03 85);
-  --sidebar-accent-foreground: #2C2A27;
-  --sidebar-border: #ECE3D2;
-  --sidebar-ring: oklch(0.52 0.10 145);
+  --popover-foreground: oklch(0.2 0.01 260);
+  --primary: oklch(0.5 0.12 160);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.004 260);
+  --secondary-foreground: oklch(0.2 0.01 260);
+  --muted: oklch(0.955 0.004 260);
+  --muted-foreground: oklch(0.48 0.012 260);
+  --accent: oklch(0.95 0.004 260);
+  --accent-foreground: oklch(0.2 0.01 260);
+  --destructive: oklch(0.53 0.19 25);
+  --border: oklch(0 0 0 / 8%);
+  --input: oklch(0 0 0 / 14%);
+  --ring: oklch(0.5 0.12 160);
+  --chart-1: oklch(0.7 0.12 160);
+  --chart-2: oklch(0.7 0.12 40);
+  --chart-3: oklch(0.75 0.12 85);
+  --chart-4: oklch(0.7 0.12 350);
+  --chart-5: oklch(0.7 0.12 240);
+  /* Status colours: L 0.52 so they pass 4.5:1 as text on cards and the page */
+  --status-on-track: oklch(0.52 0.12 155);
+  --status-heads-up: oklch(0.52 0.11 70);
+  --status-over: oklch(0.53 0.19 25);
+  --status-plenty-left: oklch(0.52 0.12 240);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.96 0.004 260);
+  --sidebar-foreground: oklch(0.2 0.01 260);
+  --sidebar-primary: oklch(0.5 0.12 160);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.92 0.005 260);
+  --sidebar-accent-foreground: oklch(0.2 0.01 260);
+  --sidebar-border: oklch(0 0 0 / 8%);
+  --sidebar-ring: oklch(0.5 0.12 160);
 }
 
 .dark {
-  /* Warm dark theme */
-  --background: oklch(0.18 0.008 60);
-  --foreground: oklch(0.94 0.018 85);
-  --card: oklch(0.22 0.010 60);
-  --card-foreground: oklch(0.94 0.018 85);
-  --popover: oklch(0.22 0.010 60);
-  --popover-foreground: oklch(0.94 0.018 85);
-  --primary: oklch(0.72 0.08 145);
-  --primary-foreground: oklch(0.18 0.012 60);
-  --secondary: oklch(0.28 0.012 65);
-  --secondary-foreground: oklch(0.94 0.018 85);
-  --muted: oklch(0.28 0.012 65);
-  --muted-foreground: oklch(0.68 0.022 80);
-  --accent: oklch(0.28 0.012 65);
-  --accent-foreground: oklch(0.94 0.018 85);
-  --destructive: oklch(0.7 0.18 30);
-  --border: oklch(1 0 0 / 10%);
+  --background: oklch(0.145 0.004 260);
+  --foreground: oklch(0.96 0.003 260);
+  --card: oklch(0.205 0.005 260);
+  --card-foreground: oklch(0.96 0.003 260);
+  --popover: oklch(0.23 0.005 260);
+  --popover-foreground: oklch(0.96 0.003 260);
+  --primary: oklch(0.78 0.13 160);
+  --primary-foreground: oklch(0.18 0.03 160);
+  --secondary: oklch(0.26 0.005 260);
+  --secondary-foreground: oklch(0.96 0.003 260);
+  --muted: oklch(0.26 0.005 260);
+  --muted-foreground: oklch(0.72 0.01 260);
+  --accent: oklch(0.27 0.005 260);
+  --accent-foreground: oklch(0.96 0.003 260);
+  --destructive: oklch(0.7 0.18 25);
+  --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.08 145);
-  --chart-1: oklch(0.75 0.10 145);
-  --chart-2: oklch(0.74 0.14 35);
-  --chart-3: oklch(0.78 0.10 85);
-  --chart-4: oklch(0.76 0.10 5);
-  --chart-5: oklch(0.74 0.10 240);
-  --status-on-track: oklch(0.74 0.12 145);
-  --status-heads-up: oklch(0.76 0.14 85);
-  --status-over: oklch(0.70 0.17 30);
-  --status-plenty-left: oklch(0.74 0.10 220);
-  --sidebar: oklch(0.22 0.010 60);
-  --sidebar-foreground: oklch(0.94 0.018 85);
-  --sidebar-primary: oklch(0.72 0.08 145);
-  --sidebar-primary-foreground: oklch(0.18 0.012 60);
-  --sidebar-accent: oklch(0.28 0.012 65);
-  --sidebar-accent-foreground: oklch(0.94 0.018 85);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.72 0.08 145);
+  --ring: oklch(0.78 0.13 160);
+  --chart-1: oklch(0.74 0.12 160);
+  --chart-2: oklch(0.74 0.12 40);
+  --chart-3: oklch(0.78 0.12 85);
+  --chart-4: oklch(0.74 0.12 350);
+  --chart-5: oklch(0.74 0.12 240);
+  --status-on-track: oklch(0.78 0.13 155);
+  --status-heads-up: oklch(0.8 0.13 80);
+  --status-over: oklch(0.72 0.17 25);
+  --status-plenty-left: oklch(0.78 0.11 240);
+  --sidebar: oklch(0.17 0.004 260);
+  --sidebar-foreground: oklch(0.96 0.003 260);
+  --sidebar-primary: oklch(0.78 0.13 160);
+  --sidebar-primary-foreground: oklch(0.18 0.03 160);
+  --sidebar-accent: oklch(0.26 0.005 260);
+  --sidebar-accent-foreground: oklch(0.96 0.003 260);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.78 0.13 160);
 }
 
 /* Hebrew: Rubik everywhere (sans and serif headings); mono falls back to Rubik for Hebrew glyphs.
@@ -152,6 +193,17 @@ html[lang="he"] {
   }
   html {
     @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* Money reads in columns */
+  .tabular-nums, [data-money] {
+    font-variant-numeric: tabular-nums;
   }
   /* Disable Inter's stylistic sets for Hebrew - they don't apply and can confuse fallback rendering */
   html[lang="he"] body {
@@ -159,8 +211,9 @@ html[lang="he"] {
   }
   /* Make sure all utility classes still resolve sensibly */
   .font-serif {
-    font-family: var(--font-serif), Georgia, serif;
-    font-feature-settings: "ss01", "ss03";
+    font-family: var(--font-serif);
+    font-weight: 600;
+    letter-spacing: -0.015em;
   }
   html[lang="he"] .font-serif {
     font-family: var(--font-serif);
@@ -193,4 +246,20 @@ html[lang="he"] {
 @keyframes countIn {
   0% { opacity: 0; transform: translateY(8px); }
   100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Hebrew has no case and Rubik is spaced for it: drop the Latin eyebrow and heading tracking (unlayered, so it beats utilities). */
+html[lang="he"] [class*="tracking-"],
+html[lang="he"] .font-serif,
+html[lang="he"] .text-display {
+  letter-spacing: normal;
 }

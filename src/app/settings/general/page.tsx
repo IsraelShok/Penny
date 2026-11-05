@@ -49,6 +49,9 @@ export default function GeneralSettingsPage() {
 
   return (
     <SectionShell title={t("title")} description={t("description")}>
+      {settings ? (
+        <DisplayNameCard key={`name:${settings.displayName}`} initialName={settings.displayName} />
+      ) : null}
       <WorkspaceNameCard />
       {settings ? (
         <>
@@ -74,6 +77,46 @@ export default function GeneralSettingsPage() {
         </SettingCard>
       )}
     </SectionShell>
+  );
+}
+
+function DisplayNameCard({ initialName }: { initialName: string }) {
+  const t = useTranslations("settings.general");
+  const tCommon = useTranslations("common");
+  const queryClient = useQueryClient();
+  const [value, setValue] = useState(initialName);
+  const mutation = useMutation({
+    mutationFn: updateSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      toast.success(tCommon("saved"));
+    },
+  });
+  const dirty = value.trim() !== initialName;
+  return (
+    <SettingCard title={t("displayNameTitle")} description={t("displayNameDescription")}>
+      <form
+        className="flex flex-wrap items-end gap-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          mutation.mutate({ displayName: value });
+        }}
+      >
+        <div className="min-w-0 flex-1 space-y-2 sm:max-w-xs">
+          <Label htmlFor="display-name">{t("displayNameLabel")}</Label>
+          <Input
+            id="display-name"
+            maxLength={40}
+            autoComplete="given-name"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </div>
+        <Button type="submit" disabled={!dirty || mutation.isPending}>
+          {mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
+        </Button>
+      </form>
+    </SettingCard>
   );
 }
 
@@ -128,13 +171,13 @@ function MonthlyTargetCard({
             />
           </InputGroup>
           {typicalMonthly != null ? (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {t("typicalLast3", {
                 amount: formatCurrency(typicalMonthly, "ILS", locale),
               })}
             </p>
           ) : (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {t("noPriorHistory")}
             </p>
           )}
@@ -201,7 +244,7 @@ function GeneralForm({
               ))}
             </SelectContent>
           </Select>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {t("banksLimit")}
           </p>
         </div>
@@ -219,7 +262,7 @@ function GeneralForm({
               ))}
             </SelectContent>
           </Select>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {t("paydayHint")}
           </p>
         </div>
@@ -280,7 +323,7 @@ function AutoSyncCard({
           <Label htmlFor="auto-sync-toggle" className="text-sm font-medium">
             {t("dailyAutoSync")}
           </Label>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {t("runsInIsraelTime")}
           </p>
         </div>
@@ -302,7 +345,7 @@ function AutoSyncCard({
           disabled={!enabled}
           className="tabular-nums"
         />
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {t("timeOfDayHint")}
         </p>
       </div>

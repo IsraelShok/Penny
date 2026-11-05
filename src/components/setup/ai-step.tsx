@@ -167,7 +167,7 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
   return (
     <div className="mx-auto w-full max-w-[520px] space-y-6">
       <header className="space-y-2">
-        <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           {t("aiStepLabel")}
         </div>
         <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
@@ -454,7 +454,7 @@ function OllamaConfig({
                   </span>
                 )}
               </div>
-              <div className="mt-0.5 font-mono text-[9px] text-muted-foreground">
+              <div className="mt-0.5 font-mono text-xs text-muted-foreground">
                 {m.sizeGb} GB
               </div>
               <p className="mt-1 text-xs leading-snug text-muted-foreground">

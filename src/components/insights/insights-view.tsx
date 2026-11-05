@@ -61,7 +61,7 @@ export function InsightsView() {
                     {money(s.expectedAmount)} · {t(s.cadence)}
                   </span>
                   {s.priceChange ? (
-                    <span className="w-full text-sm text-amber-600">
+                    <span className="w-full text-sm text-[var(--status-heads-up)]">
                       {t("priceChanged", { from: money(s.priceChange.from), to: money(s.priceChange.to) })}
                     </span>
                   ) : null}

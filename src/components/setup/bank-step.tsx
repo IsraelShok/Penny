@@ -136,7 +136,7 @@ export function BankStep({ onComplete }: BankStepProps) {
               </button>
             )}
             <header className="space-y-2">
-              <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                 {t("bankStep")}
               </div>
               <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
@@ -186,7 +186,7 @@ export function BankStep({ onComplete }: BankStepProps) {
               {t("bankBackToProviders")}
             </button>
             <header className="space-y-2">
-              <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                 {t("bankConnectingStep", { name: selectedName })}
               </div>
               <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
@@ -217,7 +217,7 @@ export function BankStep({ onComplete }: BankStepProps) {
             className="flex w-full flex-col gap-4"
           >
             <header className="space-y-2">
-              <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                 {t("bankStep")}
               </div>
               <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
@@ -229,7 +229,7 @@ export function BankStep({ onComplete }: BankStepProps) {
             </header>
 
             <div className="w-full space-y-2 text-start">
-              <div className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              <div className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
                 {t("bankConnectedHeading", { count: integrations.length })}
               </div>
               <AnimatePresence initial={false}>
@@ -263,7 +263,7 @@ export function BankStep({ onComplete }: BankStepProps) {
                           {infoName}
                         </div>
                       </div>
-                      <span className="rounded-full bg-primary/15 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-primary">
+                      <span className="rounded-full bg-primary/15 px-2 py-1 text-xs font-bold uppercase tracking-wider text-primary">
                         {t("bankReadyBadge")}
                       </span>
                       <button
@@ -414,7 +414,7 @@ function KindTag({ kind }: { kind: BankKind }) {
       : "bg-[color-mix(in_oklch,var(--status-heads-up)_18%,transparent)] text-[color-mix(in_oklch,var(--status-heads-up)_60%,black)]";
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${cls}`}
+      className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wider ${cls}`}
     >
       {kind === "bank" ? t("bankKindBank") : t("bankKindCard")}
     </span>
@@ -597,7 +597,7 @@ function CredentialForm({
           <div className="font-serif text-xl leading-tight tracking-tight">
             {name}
           </div>
-          <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          <div className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
             {info.kind === "bank" ? t("bankKindBank") : t("bankKindCardPlural")}
           </div>
         </div>

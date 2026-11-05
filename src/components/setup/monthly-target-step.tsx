@@ -33,7 +33,7 @@ export function MonthlyTargetStep({ onComplete, onBack }: MonthlyTargetStepProps
   return (
     <div className="mx-auto w-full max-w-[520px] space-y-6">
       <header className="space-y-2">
-        <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           {t("targetStep")}
         </div>
         <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">

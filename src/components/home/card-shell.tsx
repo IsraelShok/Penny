@@ -17,19 +17,19 @@ export function CardShell({ label, action, children, className }: CardShellProps
   return (
     <div
       className={cn(
-        "flex h-full flex-col rounded-3xl border border-border bg-card p-5 md:p-6",
+        "flex h-full flex-col rounded-2xl border border-border bg-card p-5 md:p-6",
         className
       )}
     >
       {(label || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
           {label && (
-            <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <h3 className="text-footnote font-semibold text-muted-foreground">
               {label}
             </h3>
           )}
           {action && (
-            <div className="text-xs text-muted-foreground">{action}</div>
+            <div className="text-footnote text-primary">{action}</div>
           )}
         </div>
       )}

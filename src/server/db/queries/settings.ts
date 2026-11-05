@@ -81,6 +81,7 @@ export function getAppSettings(workspaceId: number): AppSettings {
     autoSyncTime:
       storedTime && AUTO_SYNC_TIME_RE.test(storedTime) ? storedTime : "06:00",
     language: storedLang === "he" ? "he" : "en",
+    displayName: getGlobalSetting("display_name") ?? "",
   };
 }
 
@@ -144,6 +145,9 @@ export function updateAppSettings(
         throw new Error("language must be 'en' or 'he'");
       }
       setGlobalSetting("language", settings.language);
+    }
+    if (settings.displayName !== undefined) {
+      setGlobalSetting("display_name", String(settings.displayName).trim().slice(0, 40));
     }
   });
   update();

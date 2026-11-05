@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Fraunces, Geist_Mono, Rubik } from "next/font/google";
+import { Inter, Geist_Mono, Rubik } from "next/font/google";
 import { getLocale, getMessages } from "next-intl/server";
 import { I18nProvider } from "@/i18n/client-provider";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -12,12 +12,6 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-serif",
-  subsets: ["latin"],
-  display: "swap",
 });
 
 // Hebrew UI font; globals.css points the font variables at it under lang="he".
@@ -50,7 +44,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={dir}
-      className={`${inter.variable} ${fraunces.variable} ${rubik.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${rubik.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">

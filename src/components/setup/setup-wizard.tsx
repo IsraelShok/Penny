@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { BankStep } from "@/components/setup/bank-step";
@@ -69,6 +69,7 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="relative min-h-screen bg-background">
       <header className="relative z-10 mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-6 md:px-8">
         <BrandMark />
@@ -130,6 +131,7 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
         </AnimatePresence>
       </main>
     </div>
+    </MotionConfig>
   );
 }
 
@@ -223,7 +225,7 @@ function DotLabel({
         className="h-1.5 w-1.5 rounded-full"
       />
       <span
-        className={`text-[9px] font-bold uppercase tracking-[0.14em] transition-colors ${
+        className={`text-xs font-bold uppercase tracking-[0.14em] transition-colors ${
           state === "active"
             ? "text-foreground"
             : state === "done"

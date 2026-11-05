@@ -281,7 +281,7 @@ function ExcludedMerchantsCard() {
                       {rule.merchantKey}
                     </span>
                   </div>
-                  <div className="ms-5 text-[11px] text-muted-foreground">
+                  <div className="ms-5 text-xs text-muted-foreground">
                     {providerName}
                   </div>
                 </div>
