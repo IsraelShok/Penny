@@ -264,7 +264,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
             {data.budget > 0 && (
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-background/40">
                 <div
-                  className="h-full rounded-full transition-all"
+                  className="h-full rounded-full transition-[width,opacity,background-color,color,transform]"
                   style={{
                     width: `${pct}%`,
                     background: shade(data.category.color),

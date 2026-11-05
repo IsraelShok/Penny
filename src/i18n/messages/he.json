@@ -338,7 +338,8 @@
       "bank": "חשבונות בנק",
       "ai": "ספק AI",
       "categories": "קטגוריות",
-      "data": "נתונים ופרטיות"
+      "data": "נתונים ופרטיות",
+      "rules": "כללי סיווג"
     },
     "workspace": {
       "nameTitle": "שם סביבת העבודה",
@@ -1194,7 +1195,8 @@
     "fieldMonthlyPayment": "תשלום חודשי",
     "column_feeBalance": "דמי ניהול מצבירה",
     "column_feeDeposit": "דמי ניהול מהפקדה",
-    "column_deposit": "הפקדה חודשית"
+    "column_deposit": "הפקדה חודשית",
+    "marketsTitle": "שווקים"
   },
   "markets": {
     "title": "שווקים",

@@ -195,7 +195,7 @@ function ProviderRowView({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border bg-card p-3 transition-all duration-300",
+        "relative overflow-hidden rounded-xl border bg-card p-3 transition-[width,opacity,background-color,color,transform] duration-300",
         row.status === "running" &&
           "shadow-[0_0_0_1px_color-mix(in_oklch,var(--ring)_30%,transparent)]",
         isInteractive2fa &&

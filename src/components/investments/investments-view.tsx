@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { AssetDialog } from "./asset-dialog";
 import { ImportDialog } from "./import-dialog";
 import { InvestmentsExtras } from "./investments-extras";
+import { MarketsView } from "@/components/markets/markets-view";
 import type { Asset, AssetsPayload } from "@/lib/types";
 
 const fmt = (n: number, locale: string, digits = 0) =>
@@ -68,6 +69,11 @@ export function InvestmentsView() {
       ) : (
         <Body data={query.data} onEdit={setEditing} />
       )}
+
+      <section id="markets" aria-labelledby="markets-title" className="scroll-mt-20 pt-4">
+        <h2 id="markets-title" className="mb-4 px-1 text-title font-semibold">{t("marketsTitle")}</h2>
+        <MarketsView />
+      </section>
 
       {editing && <AssetDialog asset={editing} onClose={() => setEditing(null)} />}
       {importing && <ImportDialog onClose={() => setImporting(false)} />}

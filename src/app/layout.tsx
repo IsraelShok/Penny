@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono, Heebo } from "next/font/google";
 import { getLocale, getMessages } from "next-intl/server";
+import { cookies } from "next/headers";
+import { SidebarRoot } from "@/components/layout/app-shell";
 import { I18nProvider } from "@/i18n/client-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -40,6 +42,8 @@ export default async function RootLayout({
   const locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
   const messages = await getMessages();
   const dir = dirFor(locale);
+  // Set by the sidebar's collapse button.
+  const sidebarOpen = (await cookies()).get("sidebar_state")?.value !== "false";
   return (
     <html
       lang={locale}
@@ -49,10 +53,10 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <I18nProvider locale={locale} messages={messages as Record<string, unknown>}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <QueryProvider>
               <TooltipProvider>
-                {children}
+                <SidebarRoot defaultOpen={sidebarOpen}>{children}</SidebarRoot>
                 <Toaster />
               </TooltipProvider>
             </QueryProvider>

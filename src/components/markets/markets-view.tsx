@@ -49,7 +49,7 @@ export function MarketsView() {
       {stale && <p className="text-footnote text-status-heads-up" role="status">{t("staleNotice")}</p>}
       {GROUPS.map((g) => (
         <section key={g} aria-labelledby={`mk-${g}`}>
-          <h2 id={`mk-${g}`} className="mb-3 px-1 text-headline font-semibold">{t(`group_${g}`)}</h2>
+          <h3 id={`mk-${g}`} className="mb-3 px-1 text-headline font-semibold">{t(`group_${g}`)}</h3>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {query.data.items.filter((i) => i.group === g).map((i) => <Tile key={i.symbol} item={i} />)}
           </ul>
@@ -109,7 +109,7 @@ export function MarketStrip() {
   if (items.length === 0) return null;
   return (
     <Link
-      href="/markets"
+      href="/investments#markets"
       aria-label={t("stripLabel")}
       className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl bg-card px-4 py-3 text-footnote transition-colors hover:bg-accent md:mb-8"
     >

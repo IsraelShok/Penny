@@ -8,13 +8,12 @@ import {
   LayoutDashboard,
   PieChart,
   Landmark,
-  LineChart,
   Flag,
   Wallet,
   ArrowLeftRight,
   Lightbulb,
-  ListFilter,
   Settings as SettingsIcon,
+  PanelLeftIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -25,7 +24,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { IconButton } from "@/components/ui/icon-button";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 
 interface NavDef {
@@ -35,7 +36,7 @@ interface NavDef {
   match: (p: string) => boolean;
 }
 
-const NAV: NavDef[] = [
+export const NAV: NavDef[] = [
   {
     href: "/",
     labelKey: "home",
@@ -53,12 +54,6 @@ const NAV: NavDef[] = [
     labelKey: "investments",
     Icon: Landmark,
     match: (p: string) => p.startsWith("/investments"),
-  },
-  {
-    href: "/markets",
-    labelKey: "markets",
-    Icon: LineChart,
-    match: (p: string) => p.startsWith("/markets"),
   },
   {
     href: "/fi",
@@ -84,15 +79,9 @@ const NAV: NavDef[] = [
     Icon: Lightbulb,
     match: (p: string) => p.startsWith("/insights"),
   },
-  {
-    href: "/rules",
-    labelKey: "rules",
-    Icon: ListFilter,
-    match: (p: string) => p.startsWith("/rules"),
-  },
 ];
 
-const FOOTER_NAV: NavDef[] = [
+export const FOOTER_NAV: NavDef[] = [
   {
     href: "/settings",
     labelKey: "settings",
@@ -108,6 +97,8 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("nav");
+  const { toggleSidebar } = useSidebar();
+  // Settings lives as an icon by the workspace, but the wheel still reaches it last.
   const pages = [...NAV, ...FOOTER_NAV];
   const lastWheel = useRef(0);
 
@@ -128,7 +119,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {pages.map((item) => {
+              {NAV.map((item) => {
                 const label = t(item.labelKey);
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -150,8 +141,22 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <WorkspaceSwitcher />
+      <SidebarFooter className="flex-row items-center gap-1 group-data-[collapsible=icon]:flex-col">
+        <div className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none">
+          <WorkspaceSwitcher />
+        </div>
+        <IconButton
+          label={t("settings")}
+          variant={pathname.startsWith("/settings") ? "secondary" : "ghost"}
+          size="icon-sm"
+          nativeButton={false}
+          render={<Link href="/settings" />}
+        >
+          <SettingsIcon className="size-4" aria-hidden />
+        </IconButton>
+        <IconButton label={t("toggleSidebar")} size="icon-sm" onClick={toggleSidebar}>
+          <PanelLeftIcon className="size-4 rtl:rotate-180" aria-hidden />
+        </IconButton>
       </SidebarFooter>
     </Sidebar>
   );

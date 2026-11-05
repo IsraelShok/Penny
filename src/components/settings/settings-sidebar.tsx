@@ -10,6 +10,7 @@ import {
   Sparkles,
   Layers,
   ShieldAlert,
+  ListFilter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +69,12 @@ const GROUPS: NavGroup[] = [
         labelKey: "categories",
         Icon: Layers,
         match: (p) => p.startsWith("/settings/categories"),
+      },
+      {
+        href: "/settings/rules",
+        labelKey: "rules",
+        Icon: ListFilter,
+        match: (p) => p.startsWith("/settings/rules"),
       },
     ],
   },

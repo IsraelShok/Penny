@@ -7,13 +7,22 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
+import { PageWheelNav } from "./page-wheel-nav";
+
+/** Lives in the root layout so the collapsed state survives page changes. */
+export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; children: ReactNode }) {
+  return <SidebarProvider defaultOpen={defaultOpen}>{children}</SidebarProvider>;
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider>
+    <>
       <AppSidebar />
-      <SidebarInset>{children}</SidebarInset>
-    </SidebarProvider>
+      <SidebarInset>
+        {children}
+        <PageWheelNav />
+      </SidebarInset>
+    </>
   );
 }
 

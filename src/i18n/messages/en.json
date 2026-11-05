@@ -338,7 +338,8 @@
       "bank": "Bank accounts",
       "ai": "AI provider",
       "categories": "Categories",
-      "data": "Data & privacy"
+      "data": "Data & privacy",
+      "rules": "Categorization rules"
     },
     "workspace": {
       "nameTitle": "Workspace name",
@@ -1194,7 +1195,8 @@
     "fieldMonthlyPayment": "Monthly payment",
     "column_feeBalance": "Fee on balance",
     "column_feeDeposit": "Fee on deposits",
-    "column_deposit": "Monthly deposit"
+    "column_deposit": "Monthly deposit",
+    "marketsTitle": "Markets"
   },
   "markets": {
     "title": "Markets",
