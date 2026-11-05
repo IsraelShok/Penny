@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSyncErrorText } from "@/hooks/use-sync-error-text";
 import { Button } from "@/components/ui/button";
 import { startSync, submitSyncOtp } from "@/lib/api";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ interface SyncButtonProps {
 
 export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
   const t = useTranslations("dashboard");
+  const errorText = useSyncErrorText();
   const [syncing, setSyncing] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [providers, setProviders] = useState<string[]>([]);
@@ -123,7 +125,7 @@ export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
           )
         );
         if (!ok && errorMessage) {
-          toast.error(`${provider}: ${errorMessage}`, {
+          toast.error(`${provider}: ${errorText(errorMessage).message}`, {
             duration: 8000,
             closeButton: true,
           });

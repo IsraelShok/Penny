@@ -24,7 +24,7 @@ export function CardShell({ label, action, children, className }: CardShellProps
       {(label || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
           {label && (
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               {label}
             </h3>
           )}

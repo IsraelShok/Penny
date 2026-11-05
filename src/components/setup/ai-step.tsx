@@ -282,7 +282,7 @@ function ProviderRow({
             </span>
           )}
         </div>
-        <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+        <div className="mt-0.5 truncate text-xs text-muted-foreground">
           {provider.tagline}
         </div>
       </div>
@@ -314,14 +314,14 @@ function ClaudeConfig({
   return (
     <div className="space-y-2 rounded-xl border border-border bg-card/60 p-4">
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor="claude-api-key" className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+        <Label htmlFor="claude-api-key" className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
           API key
         </Label>
         <a
           href="https://console.anthropic.com"
           target="_blank"
           rel="noreferrer"
-          className="text-[11px] font-medium text-primary hover:underline"
+          className="text-xs font-medium text-primary hover:underline"
         >
           Get a key ↗
         </a>
@@ -338,12 +338,12 @@ function ClaudeConfig({
         <button
           type="button"
           onClick={() => setShowKey(!showKey)}
-          className="absolute end-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent"
+          className="absolute end-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
         >
           {showKey ? "hide" : "show"}
         </button>
       </div>
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Encrypted with AES-256-GCM and stored locally.
       </p>
     </div>
@@ -376,7 +376,7 @@ function OllamaConfig({
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card/60 p-4">
       <div
-        className="flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium"
+        className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium"
         style={{
           background:
             reachable === false
@@ -409,7 +409,7 @@ function OllamaConfig({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="ollama-url" className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+        <Label htmlFor="ollama-url" className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
           Server URL
         </Label>
         <Input
@@ -421,7 +421,7 @@ function OllamaConfig({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+        <Label className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
           Pick a model
         </Label>
         <div className="grid grid-cols-3 gap-1.5">
@@ -437,7 +437,7 @@ function OllamaConfig({
               }`}
             >
               <div className="flex items-baseline justify-between gap-1">
-                <span className="truncate text-[11px] font-bold tracking-tight">
+                <span className="truncate text-xs font-bold tracking-tight">
                   {m.name}
                 </span>
                 {m.recommended && (
@@ -449,7 +449,7 @@ function OllamaConfig({
               <div className="mt-0.5 font-mono text-[9px] text-muted-foreground">
                 {m.sizeGb} GB
               </div>
-              <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+              <p className="mt-1 text-xs leading-snug text-muted-foreground">
                 {m.description}
               </p>
             </button>
@@ -526,7 +526,7 @@ function OllamaPullCTA({
           <button
             type="button"
             onClick={onCancel}
-            className="text-[11px] text-muted-foreground hover:text-foreground"
+            className="text-xs text-muted-foreground hover:text-foreground"
           >
             Cancel
           </button>
@@ -539,7 +539,7 @@ function OllamaPullCTA({
             transition={{ duration: 0.3 }}
           />
         </div>
-        <div className="flex items-center justify-between text-[10px] tabular-nums text-muted-foreground">
+        <div className="flex items-center justify-between text-xs tabular-nums text-muted-foreground">
           <span>
             {formatBytes(pullState.completed)} / {formatBytes(pullState.total)}{" "}
             ({percent}%)
@@ -566,7 +566,7 @@ function OllamaPullCTA({
         ↓ Download {model} {info ? `(${info.sizeGb} GB)` : ""}
       </Button>
       {pullError && (
-        <p className="text-[11px] text-destructive">{pullError}</p>
+        <p className="text-xs text-destructive">{pullError}</p>
       )}
     </div>
   );

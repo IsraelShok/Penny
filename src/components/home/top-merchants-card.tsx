@@ -43,7 +43,7 @@ export function TopMerchantsCard({ items }: Props) {
                     style={{ width: `${widthPct}%` }}
                   />
                 </div>
-                <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">
+                <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
                   {m.count} {m.count === 1 ? t("txnsOne") : t("txnsOther")}
                 </span>
               </div>

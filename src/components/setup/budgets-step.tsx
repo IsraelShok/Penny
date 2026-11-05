@@ -149,7 +149,7 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
         </div>
       )}
 
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
           {budgeted.length} of {categories.length} budgeted
         </span>
@@ -174,7 +174,7 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
           type="button"
           onClick={() => finish(false)}
           disabled={saving}
-          className="text-[11px] text-muted-foreground underline decoration-muted-foreground/30 underline-offset-4 transition-colors hover:text-foreground"
+          className="text-xs text-muted-foreground underline decoration-muted-foreground/30 underline-offset-4 transition-colors hover:text-foreground"
         >
           Skip, auto-set from spending after first sync
         </button>
@@ -215,7 +215,7 @@ function CategoryCell({
       <Tooltip>
         <TooltipTrigger
           render={
-            <span className="min-w-0 flex-1 cursor-default truncate text-[11px] font-medium">
+            <span className="min-w-0 flex-1 cursor-default truncate text-xs font-medium">
               {category.name}
             </span>
           }
@@ -225,7 +225,7 @@ function CategoryCell({
         </TooltipContent>
       </Tooltip>
       <div className="flex items-baseline gap-0.5">
-        <span className="text-[10px] text-muted-foreground">₪</span>
+        <span className="text-xs text-muted-foreground">₪</span>
         <input
           type="number"
           inputMode="numeric"
@@ -234,7 +234,7 @@ function CategoryCell({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="—"
-          className="w-12 border-0 bg-transparent p-0 text-end text-[11px] tabular-nums outline-none placeholder:text-muted-foreground/40 focus:underline focus:decoration-foreground/30 focus:underline-offset-4"
+          className="w-12 border-0 bg-transparent p-0 text-end text-xs tabular-nums outline-none placeholder:text-muted-foreground/40 focus:underline focus:decoration-foreground/30 focus:underline-offset-4"
           style={{
             fontWeight: filled ? 600 : 400,
           }}

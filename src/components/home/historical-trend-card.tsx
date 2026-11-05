@@ -102,7 +102,7 @@ function BarChart({
           );
         })}
       </svg>
-      <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums">
+      <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
         {data.map((d) => (
           <span
             key={d.month}

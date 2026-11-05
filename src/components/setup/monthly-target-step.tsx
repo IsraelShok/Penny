@@ -55,7 +55,7 @@ export function MonthlyTargetStep({ onComplete, onBack }: MonthlyTargetStepProps
       <div className="space-y-2">
         <label
           htmlFor="monthly-target"
-          className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground"
+          className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
         >
           Monthly target
         </label>
@@ -73,7 +73,7 @@ export function MonthlyTargetStep({ onComplete, onBack }: MonthlyTargetStepProps
             autoFocus
           />
         </InputGroup>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           You can change this any time in settings.
         </p>
       </div>
@@ -95,7 +95,7 @@ export function MonthlyTargetStep({ onComplete, onBack }: MonthlyTargetStepProps
           type="button"
           onClick={() => save(null)}
           disabled={saving}
-          className="text-[11px] text-muted-foreground underline decoration-muted-foreground/30 underline-offset-4 transition-colors hover:text-foreground"
+          className="text-xs text-muted-foreground underline decoration-muted-foreground/30 underline-offset-4 transition-colors hover:text-foreground"
         >
           Skip for now
         </button>

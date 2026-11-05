@@ -67,7 +67,7 @@ export function TwoFactorSection({
         />
       </div>
       {supportsProgrammatic ? (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Not needed for {info.name} — 2FA is handled programmatically.
         </p>
       ) : null}
@@ -76,7 +76,7 @@ export function TwoFactorSection({
         <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
           <div>
             <div className="text-sm font-medium">Saved 2FA token</div>
-            <div className="text-[11px] text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               Removing it forces a fresh SMS code on the next sync.
             </div>
           </div>

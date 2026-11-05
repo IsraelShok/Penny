@@ -248,7 +248,7 @@ function ActivityPanel({ activity }: { activity: ActivitySnapshot | null }) {
       <Row label={t("syncLabel")} value={syncRow.text} tone={syncRow.tone} />
       <Row label={t("schedulerLabel")} value={schedulerRow.text} tone={schedulerRow.tone} />
       <Row label={t("ollamaLabel")} value={ollamaRow.text} tone={ollamaRow.tone} />
-      <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
+      <p className="pt-1 text-xs leading-snug text-muted-foreground">
         {t("footerNote")}
       </p>
     </div>

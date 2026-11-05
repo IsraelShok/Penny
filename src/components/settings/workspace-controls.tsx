@@ -82,7 +82,7 @@ function WorkspaceNameCardInner({ workspace }: { workspace: Workspace }) {
             onChange={(e) => setName(e.target.value)}
             maxLength={60}
           />
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {t("slugLabel")} <code className="rounded bg-muted px-1">{workspace.slug}</code>
           </p>
         </div>

@@ -9,6 +9,7 @@ import type { ScrapeResult } from "./types";
 import { toScrapeResult } from "./result";
 import { usesScraperFork } from "./select";
 import { preparePage } from "./user-agent";
+import { SYNC_ERRORS } from "@/lib/sync-errors";
 import type { BankProvider } from "@/lib/types";
 import { getWorkspaceSetting } from "../db/queries/settings";
 
@@ -69,22 +70,14 @@ function classifyError(error: unknown): {
   // "result: Block Automation" out of the ValidateIdData endpoint, so this
   // must match BEFORE the ValidateIdData credential check below.
   if (/Block Automation|Cloudflare|captcha|recaptcha/i.test(msg)) {
-    return {
-      retryable: false,
-      friendly:
-        "The bank's bot protection blocked this sync. It usually clears after a few hours (often overnight). Wait and try again. You can also enable 'Show browser during sync' in settings - headful browsers are harder to detect.",
-    };
+    return { retryable: false, friendly: SYNC_ERRORS.botBlocked };
   }
 
   // Isracard ValidateIdData returns an empty body when the ID/card-suffix
   // combination doesn't match a real card. This is almost always a credential
   // typo (most commonly entering the full ID into the "Last 6 Digits" field).
   if (/reqName=ValidateIdData/.test(msg)) {
-    return {
-      retryable: false,
-      friendly:
-        "Isracard rejected your ID and card combination. Double-check the 'Last 6 Digits of Your Card' field - it should be the last 6 digits of your credit card number, NOT your Israeli ID. Re-run setup from the settings drawer to fix it.",
-    };
+    return { retryable: false, friendly: SYNC_ERRORS.isracardIdMismatch };
   }
 
   // Empty JSON response from bank - usually transient (rate limit, bot block, flaky endpoint).
@@ -92,27 +85,15 @@ function classifyError(error: unknown): {
     /Unexpected end of JSON input/.test(msg) ||
     /fetchPostWithinPage parse error/.test(msg)
   ) {
-    return {
-      retryable: true,
-      friendly:
-        "The bank returned an empty response. This usually means temporary rate limiting or a flaky endpoint on their side. We'll retry automatically; if it keeps failing, wait a few minutes and try again.",
-    };
+    return { retryable: true, friendly: SYNC_ERRORS.emptyResponse };
   }
 
   if (/net::ERR_/i.test(msg) || /ECONNRESET|ECONNREFUSED|ETIMEDOUT/i.test(msg)) {
-    return {
-      retryable: true,
-      friendly:
-        "Network error reaching the bank. Check your connection and try again.",
-    };
+    return { retryable: true, friendly: SYNC_ERRORS.network };
   }
 
   if (/Navigation timeout|TimeoutError/i.test(msg)) {
-    return {
-      retryable: true,
-      friendly:
-        "The bank's site took too long to respond. Often temporary - try again in a minute.",
-    };
+    return { retryable: true, friendly: SYNC_ERRORS.slowSite };
   }
 
   return { retryable: false, friendly: null };
@@ -122,25 +103,22 @@ function classifyError(error: unknown): {
 // Not TIMEOUT: it also covers login and 2FA waits, and retrying means a second login, maybe a second SMS.
 const RETRYABLE_ERROR_TYPES = new Set(["NETWORK_ERROR"]);
 
+// A Linux host without a display (Docker) cannot show the browser, so don't suggest it there.
+const unexpected =
+  process.platform === "linux" && !process.env.DISPLAY
+    ? SYNC_ERRORS.unexpectedHeadless
+    : SYNC_ERRORS.unexpected;
+
 const FRIENDLY_ERRORS: Record<string, string> = {
-  WAF_BLOCKED:
-    "The bank's bot protection blocked this sync. It usually clears after a few hours (often overnight). Wait and try again.",
-  NETWORK_ERROR:
-    "Network error reaching the bank. Check your connection and try again.",
-  INVALID_PASSWORD:
-    "The credentials were rejected by the bank. Double-check ID, card last 6 digits, and password.",
-  CHANGE_PASSWORD:
-    "The bank is asking you to change your password. Log in via the bank's website first.",
-  ACCOUNT_BLOCKED:
-    "The account is blocked by the bank. Resolve this on the bank's website.",
-  TIMEOUT:
-    "The scrape timed out. The bank's site may be slow or down. Try again.",
-  TWO_FACTOR_RETRIEVER_MISSING:
-    "This account is asking for 2FA. For most banks, turn on 'This account requires 2FA' in the bank's settings so Spent shows the browser and you can solve it manually. For One Zero, make sure the phone number is set on the account.",
-  GENERIC:
-    "The scraper failed unexpectedly. Run with 'Show browser during sync' enabled to see what's happening.",
-  GENERAL_ERROR:
-    "The scraper failed unexpectedly. Run with 'Show browser during sync' enabled to see what's happening.",
+  WAF_BLOCKED: SYNC_ERRORS.botBlocked,
+  NETWORK_ERROR: SYNC_ERRORS.network,
+  INVALID_PASSWORD: SYNC_ERRORS.invalidPassword,
+  CHANGE_PASSWORD: SYNC_ERRORS.changePassword,
+  ACCOUNT_BLOCKED: SYNC_ERRORS.accountBlocked,
+  TIMEOUT: SYNC_ERRORS.timeout,
+  TWO_FACTOR_RETRIEVER_MISSING: SYNC_ERRORS.twoFactor,
+  GENERIC: unexpected,
+  GENERAL_ERROR: unexpected,
 };
 
 async function runScrape(

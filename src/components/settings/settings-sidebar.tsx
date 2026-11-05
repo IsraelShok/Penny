@@ -93,14 +93,14 @@ export function SettingsSidebar() {
         <div className="font-serif text-xl leading-none tracking-tight">
           {t("title")}
         </div>
-        <div className="mt-1 text-[11px] text-muted-foreground">
+        <div className="mt-1 text-xs text-muted-foreground">
           {t("subtitle")}
         </div>
       </div>
       <nav className="flex-1 overflow-y-auto px-2 pb-6">
         {GROUPS.map((group) => (
           <div key={group.titleKey} className="mt-3">
-            <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
+            <div className="px-3 pb-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
               {t(group.titleKey)}
             </div>
             <ul className="space-y-0.5">

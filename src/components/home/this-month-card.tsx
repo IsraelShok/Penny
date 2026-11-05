@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { CardShell, CardAction } from "./card-shell";
 import { formatCurrency } from "@/lib/formatters";
@@ -19,8 +19,9 @@ export function ThisMonthCard({ data }: Props) {
     deltaVsLastMonth,
     daysUntilPayday,
     timeElapsedPercent,
-    monthLabel,
   } = data;
+  // The API's monthLabel is English; name the month in the reader's language.
+  const monthLabel = new Intl.DateTimeFormat(useLocale(), { month: "long", timeZone: "Asia/Jerusalem" }).format(new Date());
   const hasBudget = budget > 0;
   const percentSpent = hasBudget ? Math.min(100, (spent / budget) * 100) : 0;
   const pctSpent = hasBudget ? (spent / budget) * 100 : 0;

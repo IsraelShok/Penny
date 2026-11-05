@@ -74,7 +74,7 @@ export function WorkspaceNameStep({
               type="button"
               onClick={() => setName(s)}
               disabled={submitting}
-              className="rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
+              className="rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
             >
               {s}
             </button>
@@ -94,7 +94,7 @@ export function WorkspaceNameStep({
         </Button>
       </form>
 
-      <div className="mt-6 flex w-full max-w-[380px] items-center justify-between text-[10px] text-muted-foreground/80">
+      <div className="mt-6 flex w-full max-w-[380px] items-center justify-between text-xs text-muted-foreground/80">
         <span>Encrypted locally</span>
         <span>
           Press{" "}

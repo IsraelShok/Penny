@@ -91,12 +91,12 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
         transition={{ delay: 0.3 }}
         className="rounded-2xl bg-card p-5 text-start"
       >
-        <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        <div className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
           Setup summary
         </div>
 
         <div className="border-t border-border/40 py-3">
-          <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             🏦 Connections · {integrations.length}
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -123,14 +123,14 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
         </div>
 
         <div className="grid grid-cols-[100px_1fr] items-center gap-3 border-t border-border/40 py-3">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             🤖 AI
           </span>
           <span className="text-sm font-medium">{aiLabel}</span>
         </div>
 
         <div className="grid grid-cols-[100px_1fr] items-center gap-3 border-t border-border/40 py-3">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             🔒 Storage
           </span>
           <span className="text-sm font-medium">
@@ -199,7 +199,7 @@ function ImportProgress() {
                 ? { duration: 1.2, repeat: Infinity }
                 : { duration: 0.2 }
             }
-            className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold"
+            className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
             style={{
               background:
                 s.state === "done"
@@ -244,7 +244,7 @@ function ImportProgress() {
             {s.label}
           </span>
           {s.state === "active" && (
-            <span className="ms-auto font-mono text-[11px] text-muted-foreground">
+            <span className="ms-auto font-mono text-xs text-muted-foreground">
               working...
             </span>
           )}

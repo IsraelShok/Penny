@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { translateProviderName } from "@/lib/i18n-data";
 import type { HomeBankHealthItem } from "@/lib/types";
+import { useSyncErrorText } from "@/hooks/use-sync-error-text";
 
 interface Props {
   items: HomeBankHealthItem[] | null;
@@ -28,14 +29,10 @@ function isToday(iso: string): boolean {
   return fmt(now) === fmt(synced);
 }
 
-function truncate(s: string, max = 120): string {
-  if (s.length <= max) return s;
-  return s.slice(0, max - 1).trimEnd() + "…";
-}
-
 export function SyncFailureBanner({ items, className }: Props) {
   const t = useTranslations("syncFailureBanner");
   const tBanks = useTranslations("banks");
+  const errorText = useSyncErrorText();
   if (!items) return null;
   const failures = items.filter(
     (i) => i.status === "error" && i.lastSyncAt && isToday(i.lastSyncAt)
@@ -89,10 +86,17 @@ export function SyncFailureBanner({ items, className }: Props) {
         <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
           {failures.map((f) => {
             const name = translateProviderName(f.provider, f.providerName, tBanks);
+            const { message, detail } = errorText(f.errorMessage ?? t("fallbackErrorMsg"));
             return (
-              <li key={f.provider} className="truncate">
+              <li key={f.provider} className="break-words">
                 <span className="font-medium text-foreground/80">{name}:</span>{" "}
-                {truncate(f.errorMessage ?? t("fallbackErrorMsg"))}
+                {message}
+                {detail && (
+                  <details className="mt-1 text-xs">
+                    <summary className="cursor-pointer">{t("showDetails")}</summary>
+                    <bdi dir="ltr" className="block break-all font-mono">{detail}</bdi>
+                  </details>
+                )}
               </li>
             );
           })}

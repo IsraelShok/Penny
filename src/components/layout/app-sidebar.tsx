@@ -100,7 +100,7 @@ export function AppSidebar() {
             <div className="font-serif text-[17px] font-semibold leading-tight tracking-tight">
               Spent
             </div>
-            <div className="mt-px text-[10px] font-semibold leading-tight tracking-[0.08em] text-muted-foreground">
+            <div className="mt-px text-xs font-semibold leading-tight tracking-[0.08em] text-muted-foreground">
               {t("brandTagline")}
             </div>
           </div>

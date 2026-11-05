@@ -116,7 +116,7 @@ export function CategorizeReviewDialog({
           <div className="space-y-6 pb-4">
             {sortedExistingUsage.length > 0 && (
               <section>
-                <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
                   Using existing categories ({stats.toExisting})
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
@@ -140,7 +140,7 @@ export function CategorizeReviewDialog({
             {totalProposals > 0 ? (
               <section>
                 <div className="mb-3 flex items-baseline justify-between">
-                  <h3 className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
                     Proposed new categories ({totalProposals})
                   </h3>
                   <div className="flex gap-1.5">
@@ -268,7 +268,7 @@ function ProposalRow({
           <span className="text-sm font-bold tracking-tight">
             {proposal.name}
           </span>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {proposal.transactionIds.length} transaction
             {proposal.transactionIds.length === 1 ? "" : "s"}
           </span>

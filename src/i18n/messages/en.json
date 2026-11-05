@@ -38,7 +38,12 @@
     "starOnGitHub": "Star on GitHub",
     "brandTagline": "YOUR MONEY · OPEN SOURCE",
     "insights": "Insights",
-    "rules": "Rules"
+    "rules": "Rules",
+    "toggleSidebar": "Show or hide the menu",
+    "workspace": "Workspace",
+    "workspaces": "Workspaces",
+    "newWorkspace": "New workspace",
+    "manageWorkspaces": "Manage workspaces"
   },
   "home": {
     "pageTitle": "Home",
@@ -121,7 +126,22 @@
     "multiBankTitle": "Sync failed for {count} banks",
     "twoFaHelper": "Some banks (notably Yahav) block scraping when 2FA is on. Disable it on the bank side and try again.",
     "reconnectBank": "Reconnect bank",
-    "fallbackErrorMsg": "Sync failed"
+    "fallbackErrorMsg": "Sync failed",
+    "showDetails": "Technical details"
+  },
+  "syncErrors": {
+    "botBlocked": "The bank's bot protection blocked this sync. It usually clears after a few hours (often overnight). Wait and try again.",
+    "isracardIdMismatch": "Isracard rejected your ID and card combination. Check that the 'Last 6 digits of your card' field holds the last 6 digits of your card number, not your ID. You can fix it in the bank settings.",
+    "emptyResponse": "The bank returned an empty response. This is usually temporary rate limiting on their side. We'll retry automatically; if it keeps failing, wait a few minutes and try again.",
+    "network": "Network error reaching the bank. Check your connection and try again.",
+    "slowSite": "The bank's site took too long to respond. This is often temporary; try again in a minute.",
+    "invalidPassword": "The bank rejected the credentials. Check your ID, card last 6 digits and password.",
+    "changePassword": "The bank is asking you to change your password. Log in on the bank's website first.",
+    "accountBlocked": "The bank has blocked the account. Resolve this on the bank's website.",
+    "timeout": "The sync timed out. The bank's site may be slow or down. Try again.",
+    "twoFactor": "This account is asking for 2FA. For most banks, turn on 'This account requires 2FA' in the bank settings so Spent shows the browser and you can complete it. For One Zero, make sure the phone number is set.",
+    "unexpected": "The sync failed unexpectedly. Turn on 'Show browser during sync' in settings to see what's happening.",
+    "unexpectedHeadless": "The sync failed unexpectedly. The bank may have changed its login page. Try again later; if it keeps failing, update Spent."
   },
   "aiBanner": {
     "notConnected": "AI not connected",
@@ -816,6 +836,14 @@
     "add": "Add rule",
     "delete": "Delete",
     "empty": "No rules yet.",
-    "saveFailed": "Couldn't save the rule."
+    "saveFailed": "Couldn't save the rule.",
+    "condition": "Condition",
+    "arrow": "→",
+    "needValue": "Enter a value to match.",
+    "needTarget": "Choose a category or a type.",
+    "deleteRule": "Delete rule {rule}",
+    "deleted": "Rule deleted",
+    "undo": "Undo",
+    "emptyHint": "No rules yet. Add one above, for example: merchant contains \"Wolt\" → Restaurants."
   }
 }

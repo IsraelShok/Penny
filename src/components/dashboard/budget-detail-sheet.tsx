@@ -203,7 +203,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
             <Icon className="h-5 w-5" style={{ color: iconColor }} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
               {data.category.kind === "income"
                 ? "Income category"
                 : "Expense category"}
@@ -478,7 +478,7 @@ function ChildrenBreakdownSection({
         <h3 className="text-sm font-medium">
           Sub-categories · {children.length}
         </h3>
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        <span className="text-xs uppercase tracking-wide text-muted-foreground">
           {budgetSource === "own" ? "Own budget" : "Rolled up"}
         </span>
       </div>
@@ -501,7 +501,7 @@ function ChildrenBreakdownSection({
               <div className="flex shrink-0 items-center gap-3 text-xs tabular-nums">
                 <div className="text-end">
                   <div className="font-medium">{formatCurrency(c.spent)}</div>
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {c.budget > 0
                       ? `of ${formatCurrency(c.budget)}`
                       : c.budgetMode === "tracking"
@@ -632,12 +632,12 @@ function Stat({
 }) {
   return (
     <div>
-      <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+      <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
         {label}
       </div>
       <div className="mt-0.5 font-serif text-xl tabular-nums">{value}</div>
       {sublabel && (
-        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">
           {sublabel}
         </div>
       )}
@@ -701,7 +701,7 @@ function BudgetStat({
 
   return (
     <div>
-      <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+      <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
         Budget
       </div>
       {editing ? (
@@ -741,7 +741,7 @@ function BudgetStat({
         </button>
       )}
       {!editing && isAuto && amount > 0 && (
-        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">
           auto
         </div>
       )}
@@ -755,7 +755,7 @@ function Card({ children }: { children: React.ReactNode }) {
 
 function CardLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+    <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
       {children}
     </div>
   );

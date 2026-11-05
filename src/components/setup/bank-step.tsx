@@ -265,7 +265,7 @@ export function BankStep({ onComplete }: BankStepProps) {
                         <div className="truncate text-sm font-bold tracking-tight">
                           {integ.label}
                         </div>
-                        <div className="mt-0.5 text-[11px] text-muted-foreground">
+                        <div className="mt-0.5 text-xs text-muted-foreground">
                           {info.name}
                         </div>
                       </div>
@@ -306,7 +306,7 @@ export function BankStep({ onComplete }: BankStepProps) {
           </div>
         )}
 
-      <div className="mt-2 flex w-full items-center justify-between text-[10px] text-muted-foreground/80">
+      <div className="mt-2 flex w-full items-center justify-between text-xs text-muted-foreground/80">
         <span>🔐 AES-256-GCM · stored locally</span>
         <span>
           {integrations.length} of {BANK_PROVIDERS.length} providers connected
@@ -338,7 +338,7 @@ function PickerCard({
   return (
     <div className="w-full rounded-2xl border border-border bg-card p-5 text-start shadow-sm">
       <div className="mb-3 flex items-baseline justify-between">
-        <div className="text-[11px] font-bold tracking-tight">
+        <div className="text-xs font-bold tracking-tight">
           Supported providers · {total}
         </div>
         <FilterPills value={filter} onChange={onFilter} />
@@ -384,10 +384,10 @@ function PickerCard({
                       {p.name}
                     </span>
                     {isConnected && (
-                      <span className="text-[10px] text-primary">✓</span>
+                      <span className="text-xs text-primary">✓</span>
                     )}
                   </div>
-                  <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                  <div className="mt-0.5 truncate text-xs text-muted-foreground">
                     {p.blurb}
                   </div>
                 </div>
@@ -442,7 +442,7 @@ function FilterPills({
             key={o.id}
             type="button"
             onClick={() => onChange(o.id)}
-            className={`rounded-full px-3 py-1 text-[10px] font-medium transition-colors ${
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               active
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground"
@@ -631,12 +631,12 @@ function CredentialForm({
                 <div className="flex items-baseline justify-between">
                   <Label
                     htmlFor={`${info.id}-${field.key}`}
-                    className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                    className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
                   >
                     {field.label}
                   </Label>
                   {field.maxLength && (
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {value.length}/{field.maxLength}
                     </span>
                   )}
@@ -663,12 +663,12 @@ function CredentialForm({
                   className={field.numeric ? "font-mono" : undefined}
                 />
                 {field.hint && (
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {field.hint}
                   </p>
                 )}
                 {tooShort && (
-                  <p className="text-[11px] text-destructive">
+                  <p className="text-xs text-destructive">
                     Must be exactly {field.exactLength} digits.
                   </p>
                 )}
@@ -733,7 +733,7 @@ function CredentialForm({
             </Button>
           </div>
 
-          <div className="mt-2 flex items-start gap-2 rounded-md bg-muted/40 p-2 text-[11px] text-muted-foreground">
+          <div className="mt-2 flex items-start gap-2 rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">
             <span>🔐</span>
             <span>
               AES-256-GCM · stored on this machine only. Never sent to a server.
@@ -772,7 +772,7 @@ function RemoveButton({
       <button
         type="button"
         onClick={() => setConfirming(false)}
-        className="rounded-md px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent"
+        className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
       >
         Cancel
       </button>
@@ -785,7 +785,7 @@ function RemoveButton({
           onRemoved();
         }}
         disabled={removing}
-        className="rounded-md bg-destructive px-2 py-1 text-[11px] font-medium text-destructive-foreground"
+        className="rounded-md bg-destructive px-2 py-1 text-xs font-medium text-destructive-foreground"
       >
         {removing ? "..." : "Confirm"}
       </button>

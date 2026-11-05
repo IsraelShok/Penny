@@ -398,7 +398,7 @@ function PaceGauge({
           {formatCurrency(hasBudget ? budgetedSpent : periodTotal, "ILS", locale)}
         </div>
         {hasBudget && (
-          <div className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+          <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
             {t("ofBudget", { amount: formatCurrency(totalBudget, "ILS", locale) })}
           </div>
         )}

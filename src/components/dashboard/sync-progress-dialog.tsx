@@ -21,6 +21,7 @@ import {
 import { BANK_PROVIDERS } from "@/lib/types";
 import { ProviderBadge } from "@/components/setup/provider-badge";
 import { cn } from "@/lib/utils";
+import { useSyncErrorText } from "@/hooks/use-sync-error-text";
 
 type RowStatus =
   | "idle"
@@ -179,6 +180,7 @@ function ProviderRowView({
   const label = info?.name ?? row.provider;
   const color = info?.color ?? "#888";
   const isInteractive2fa = row.status === "awaiting-otp";
+  const errorText = useSyncErrorText();
 
   return (
     <div
@@ -212,7 +214,7 @@ function ProviderRowView({
 
         <div className="relative min-w-0 flex-1">
           <div className="truncate text-sm font-medium">{label}</div>
-          <div className="truncate text-[11px] text-muted-foreground">
+          <div className="truncate text-xs text-muted-foreground">
             {row.status === "idle" && "Waiting…"}
             {row.status === "running" && "Pulling transactions…"}
             {row.status === "awaiting-otp" &&
@@ -227,9 +229,12 @@ function ProviderRowView({
               (row.added === 0 && row.updated === 0
                 ? "Already up to date"
                 : `+${row.added} new${row.updated ? ` · ${row.updated} updated` : ""}`)}
-            {row.status === "error" &&
-              (row.errorMessage?.slice(0, 60) ?? "Failed")}
           </div>
+          {row.status === "error" && (
+            <div className="break-words text-xs text-muted-foreground">
+              {row.errorMessage ? errorText(row.errorMessage).message : "Failed"}
+            </div>
+          )}
         </div>
 
         <div className="relative">
@@ -298,7 +303,7 @@ function OtpInputArea({
         {submitting ? "Submitting…" : "Submit"}
       </Button>
       {error && (
-        <p className="absolute -bottom-5 start-0 text-[11px] text-destructive">
+        <p className="absolute -bottom-5 start-0 text-xs text-destructive">
           {error}
         </p>
       )}
@@ -479,7 +484,7 @@ function SummaryStat({
       >
         {value}
       </span>
-      <span className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+      <span className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
         {label}
       </span>
     </div>

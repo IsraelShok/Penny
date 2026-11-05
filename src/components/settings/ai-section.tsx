@@ -185,7 +185,7 @@ function AIForm({ settings }: { settings: AppSettings }) {
                           {m.sizeGb} GB
                         </span>
                         {m.recommended && (
-                          <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                          <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
                             {t("recommendedTag")}
                           </span>
                         )}

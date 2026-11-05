@@ -90,7 +90,7 @@ export function CategoryCard({ data, onClick }: CategoryCardProps) {
           <div className="min-w-0 flex-1">
             {parentName && (
               <div
-                className="text-[10px] font-bold uppercase tracking-[0.08em]"
+                className="text-xs font-bold uppercase tracking-[0.08em]"
                 style={{ color: shade(data.categoryColor) }}
               >
                 {parentName}
@@ -100,7 +100,7 @@ export function CategoryCard({ data, onClick }: CategoryCardProps) {
               <span className="font-medium leading-tight">{categoryName}</span>
               {data.isParent && data.childCount != null && (
                 <span
-                  className="rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums"
+                  className="rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums"
                   style={{
                     background: tint(data.categoryColor, 0.22),
                     color: shade(data.categoryColor),
@@ -112,7 +112,7 @@ export function CategoryCard({ data, onClick }: CategoryCardProps) {
               )}
               {data.needsReviewCount > 0 && (
                 <span
-                  className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums"
+                  className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums"
                   style={{
                     backgroundColor:
                       "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
@@ -125,12 +125,12 @@ export function CategoryCard({ data, onClick }: CategoryCardProps) {
                 </span>
               )}
               {data.isParent && data.budgetSource === "own" && !isTracking && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t("ownBudgetTag")}
                 </span>
               )}
               {data.isParent && data.budgetSource === "rollup" && !isTracking && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t("rolledUpTag")}
                 </span>
               )}

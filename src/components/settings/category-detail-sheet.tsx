@@ -378,7 +378,7 @@ function BudgetSection({
               />
             </InputGroup>
             {data ? (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Spent ₪{Math.round(data.spent).toLocaleString("en-IL")} this
                 month
                 {data.vsTypical && data.vsTypical.typical > 0 ? (
@@ -467,7 +467,7 @@ function GroupSection({
             ))}
           </SelectContent>
         </Select>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Use a parent group to roll spending up. Most users keep the defaults.
         </p>
       </div>
@@ -525,7 +525,7 @@ function DescriptionSection({ category }: { category: Category }) {
           className="block w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           disabled={mutation.isPending}
         />
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>Sent to the AI on every categorize.</span>
           <span className="tabular-nums">
             {value.length} / {DESCRIPTION_MAX}

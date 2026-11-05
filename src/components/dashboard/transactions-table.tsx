@@ -535,7 +535,7 @@ export function TransactionsTable({
                           <div className="font-medium">{txn.description}</div>
                           {txn.needsReview && (
                             <span
-                              className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                              className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium"
                               style={{
                                 backgroundColor:
                                   "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
@@ -619,7 +619,7 @@ export function TransactionsTable({
                               variant="outline"
                               onClick={() => handleApprove(txn.id)}
                               disabled={updatingId === txn.id}
-                              className="h-6 gap-1 px-2 text-[11px] font-medium"
+                              className="h-6 gap-1 px-2 text-xs font-medium"
                               style={{
                                 borderColor:
                                   "color-mix(in oklch, var(--status-on-track) 35%, transparent)",

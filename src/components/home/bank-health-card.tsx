@@ -6,6 +6,7 @@ import { CardShell, CardAction } from "./card-shell";
 import { formatLastSync } from "@/lib/formatters";
 import { translateProviderName, useFormatterLabels } from "@/lib/i18n-data";
 import type { HomeBankHealthItem } from "@/lib/types";
+import { useSyncErrorText } from "@/hooks/use-sync-error-text";
 
 interface Props {
   items: HomeBankHealthItem[];
@@ -52,12 +53,13 @@ function Row({ item }: { item: HomeBankHealthItem }) {
   const labels = useFormatterLabels();
   const { providerName, lastSyncAt, status, errorMessage, provider } = item;
   const displayName = translateProviderName(provider, providerName, tBanks);
+  const errorText = useSyncErrorText();
 
   return (
     <Link
       href="/settings/bank"
       className="flex items-center justify-between rounded-xl px-2 py-1.5 transition-colors hover:bg-accent/40"
-      title={errorMessage ?? undefined}
+      title={errorMessage ? errorText(errorMessage).message : undefined}
     >
       <div className="flex min-w-0 items-center gap-2.5">
         <StatusDot status={status} />
