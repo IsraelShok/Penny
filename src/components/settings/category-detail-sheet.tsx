@@ -101,6 +101,7 @@ function Body({
   allCategories: Category[];
   onClose: () => void;
 }) {
+  const td = useTranslations("settings.categoryDetail");
   const sameKind = allCategories.filter(
     (c) => c.kind === category.kind && c.id !== category.id
   );
@@ -136,8 +137,12 @@ function Body({
           <div className="min-w-0 flex-1">
             <SheetTitle>{category.name}</SheetTitle>
             <SheetDescription className="mt-0.5">
-              {category.kind === "expense" ? "Expense" : "Income"} category
-              {data?.parentName ? ` · in ${data.parentName}` : ""}
+              {category.kind === "expense"
+                ? td("expenseCategory")
+                : td("incomeCategory")}
+              {data?.parentName
+                ? td("inParent", { name: data.parentName })
+                : ""}
             </SheetDescription>
           </div>
         </div>
@@ -299,6 +304,7 @@ function BudgetSection({
   category: Category;
   data: CategoryWithData | null;
 }) {
+  const td = useTranslations("settings.categoryDetail");
   const queryClient = useQueryClient();
   const isBudgeted = category.budgetMode === "budgeted";
 
@@ -337,7 +343,7 @@ function BudgetSection({
   return (
     <section>
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        Budget
+        {td("budgetHeading")}
       </div>
       <div className="mt-3 rounded-xl border border-border bg-card p-4">
         <div className="flex items-start justify-between gap-4">
@@ -346,12 +352,12 @@ function BudgetSection({
               htmlFor={`mode-${category.id}`}
               className="text-sm font-medium"
             >
-              {isBudgeted ? "Budgeted" : "Tracking only"}
+              {isBudgeted ? td("budgeted") : td("trackingOnly")}
             </Label>
             <p className="text-xs text-muted-foreground">
               {isBudgeted
-                ? "Show progress vs a monthly target."
-                : "Show spending without a target."}
+                ? td("budgetedHint")
+                : td("trackingHint")}
             </p>
           </div>
           <Switch
@@ -365,7 +371,7 @@ function BudgetSection({
 
         {isBudgeted ? (
           <div className="mt-4 space-y-1.5">
-            <Label htmlFor={`budget-${category.id}`}>Monthly budget</Label>
+            <Label htmlFor={`budget-${category.id}`}>{td("monthlyBudget")}</Label>
             <InputGroup prefix="₪">
               <Input
                 id={`budget-${category.id}`}
@@ -379,15 +385,17 @@ function BudgetSection({
             </InputGroup>
             {data ? (
               <p className="text-xs text-muted-foreground">
-                Spent ₪{Math.round(data.spent).toLocaleString("en-IL")} this
-                month
+                {td("spentThisMonth", {
+                  amount: Math.round(data.spent).toLocaleString("en-IL"),
+                })}
                 {data.vsTypical && data.vsTypical.typical > 0 ? (
                   <>
                     {" "}
-                    · typical ≈ ₪
-                    {Math.round(data.vsTypical.typical).toLocaleString(
-                      "en-IL"
-                    )}
+                    {td("typical", {
+                      amount: Math.round(data.vsTypical.typical).toLocaleString(
+                        "en-IL"
+                      ),
+                    })}
                   </>
                 ) : null}
               </p>
@@ -406,6 +414,7 @@ function GroupSection({
   category: Category;
   eligibleParents: Category[];
 }) {
+  const td = useTranslations("settings.categoryDetail");
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: (parentId: number | null) =>
@@ -413,20 +422,18 @@ function GroupSection({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       queryClient.invalidateQueries({ queryKey: ["summary"] });
-      toast.success("Group updated");
+      toast.success(td("groupUpdated"));
     },
     onError: (err: Error) => {
       const reason = err.message;
       if (reason === "kind-mismatch") {
-        toast.error("Parent must be the same kind (expense or income).");
+        toast.error(td("errorKindMismatch"));
       } else if (reason === "not-leaf-target") {
-        toast.error("Parent must be a top-level category.");
+        toast.error(td("errorNotTopLevel"));
       } else if (reason === "child-has-children") {
-        toast.error(
-          "Can't move a category that already has sub-categories under it."
-        );
+        toast.error(td("errorHasChildren"));
       } else {
-        toast.error("Couldn't update parent.");
+        toast.error(td("errorUpdateParent"));
       }
     },
   });
@@ -436,10 +443,10 @@ function GroupSection({
   return (
     <section>
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        Group
+        {td("groupHeading")}
       </div>
       <div className="mt-3 rounded-xl border border-border bg-card p-4 space-y-2">
-        <Label>Parent group</Label>
+        <Label>{td("parentGroup")}</Label>
         <Select
           value={current}
           onValueChange={(v) => {
@@ -452,14 +459,14 @@ function GroupSection({
             <SelectValue>
               {(value: string) =>
                 value === NONE_VALUE
-                  ? "(no parent)"
+                  ? td("noParent")
                   : eligibleParents.find((p) => String(p.id) === value)?.name ??
-                    "(no parent)"
+                    td("noParent")
               }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={NONE_VALUE}>(no parent)</SelectItem>
+            <SelectItem value={NONE_VALUE}>{td("noParent")}</SelectItem>
             {eligibleParents.map((p) => (
               <SelectItem key={p.id} value={String(p.id)}>
                 {p.name}
@@ -468,7 +475,7 @@ function GroupSection({
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          Use a parent group to roll spending up. Most users keep the defaults.
+          {td("parentGroupHint")}
         </p>
       </div>
     </section>
@@ -476,6 +483,7 @@ function GroupSection({
 }
 
 function DescriptionSection({ category }: { category: Category }) {
+  const td = useTranslations("settings.categoryDetail");
   const queryClient = useQueryClient();
   const [value, setValue] = useState(category.description ?? "");
   useEffect(() => {
@@ -487,10 +495,10 @@ function DescriptionSection({ category }: { category: Category }) {
       updateCategoryDescription(category.id, next),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast.success("Description saved");
+      toast.success(td("descriptionSaved"));
     },
     onError: (err: Error) => {
-      toast.error(err.message || "Couldn't save description");
+      toast.error(err.message || td("descriptionSaveFailed"));
     },
   });
 
@@ -499,9 +507,7 @@ function DescriptionSection({ category }: { category: Category }) {
     const current = (category.description ?? "").trim();
     if (trimmed === current) return;
     if (trimmed.length > DESCRIPTION_MAX) {
-      toast.error(
-        `Description must be ${DESCRIPTION_MAX} characters or fewer.`
-      );
+      toast.error(td("descriptionTooLong", { max: DESCRIPTION_MAX }));
       return;
     }
     mutation.mutate(trimmed.length === 0 ? null : trimmed);
@@ -510,10 +516,10 @@ function DescriptionSection({ category }: { category: Category }) {
   return (
     <section>
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        AI hint
+        {td("aiHintHeading")}
       </div>
       <div className="mt-3 rounded-xl border border-border bg-card p-4 space-y-2">
-        <Label htmlFor={`desc-${category.id}`}>Description</Label>
+        <Label htmlFor={`desc-${category.id}`}>{td("description")}</Label>
         <textarea
           id={`desc-${category.id}`}
           value={value}
@@ -521,12 +527,12 @@ function DescriptionSection({ category }: { category: Category }) {
           onBlur={handleBlur}
           rows={4}
           maxLength={DESCRIPTION_MAX}
-          placeholder={`Describe what belongs in "${category.name}" — and what does NOT.`}
+          placeholder={td("descriptionPlaceholder", { name: category.name })}
           className="block w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           disabled={mutation.isPending}
         />
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Sent to the AI on every categorize.</span>
+          <span>{td("descriptionHint")}</span>
           <span className="tabular-nums">
             {value.length} / {DESCRIPTION_MAX}
           </span>

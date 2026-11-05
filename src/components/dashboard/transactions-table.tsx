@@ -348,6 +348,7 @@ export function TransactionsTable({
           <div className="flex items-center gap-2">
             <Input
               placeholder={t("search")}
+              aria-label={t("search")}
               value={search}
               onChange={(e) => {
                 onSearchChange(e.target.value);

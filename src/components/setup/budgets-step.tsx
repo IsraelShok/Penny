@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import {
   ShoppingBasket,
   UtensilsCrossed,
@@ -34,6 +35,7 @@ import {
 } from "@/components/ui/tooltip";
 import { getCategories, setBudgetModesBulk, updateBudget } from "@/lib/api";
 import type { Category } from "@/lib/types";
+import { translateCategoryName } from "@/lib/i18n-data";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   "shopping-basket": ShoppingBasket,
@@ -65,6 +67,7 @@ interface BudgetsStepProps {
 }
 
 export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
+  const t = useTranslations("setup");
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["categories", "expense"],
     queryFn: () => getCategories("expense"),
@@ -117,13 +120,13 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
     <div className="mx-auto w-full max-w-[520px] space-y-6">
       <header className="space-y-2">
         <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-          Step 4 of 5
+          {t("budgetsStep")}
         </div>
         <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
-          Set a budget for each category
+          {t("budgetsTitle")}
         </h1>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Type an amount for the ones you want to cap. Leave blank to just track.
+          {t("budgetsDescription")}
         </p>
       </header>
 
@@ -151,21 +154,24 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
-          {budgeted.length} of {categories.length} budgeted
+          {t("budgetsCount", {
+            budgeted: budgeted.length,
+            total: categories.length,
+          })}
         </span>
         {total > 0 && (
           <span className="font-bold tabular-nums text-foreground">
-            ₪ {total.toLocaleString()} / month
+            {t("budgetsTotal", { total: total.toLocaleString() })}
           </span>
         )}
       </div>
 
       <footer className="flex items-center justify-between pt-2">
         <Button variant="outline" onClick={onBack} disabled={saving}>
-          ← Back
+          {t("aiBackButton")}
         </Button>
         <Button onClick={() => finish(true)} disabled={saving || isLoading}>
-          {saving ? "Saving..." : "Continue →"}
+          {saving ? t("aiSavingButton") : t("aiContinueButton")}
         </Button>
       </footer>
 
@@ -176,7 +182,7 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
           disabled={saving}
           className="text-xs text-muted-foreground underline decoration-muted-foreground/30 underline-offset-4 transition-colors hover:text-foreground"
         >
-          Skip, auto-set from spending after first sync
+          {t("budgetsSkip")}
         </button>
       </div>
     </div>
@@ -192,6 +198,8 @@ function CategoryCell({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const tCat = useTranslations("categoriesSeeded");
+  const name = translateCategoryName(category.name, tCat);
   const Icon = ICON_MAP[category.icon ?? "circle-dot"] ?? CircleDot;
   const accent = shade(category.color);
   const filled = value.trim() !== "" && Number(value.trim()) > 0;
@@ -216,12 +224,12 @@ function CategoryCell({
         <TooltipTrigger
           render={
             <span className="min-w-0 flex-1 cursor-default truncate text-xs font-medium">
-              {category.name}
+              {name}
             </span>
           }
         />
         <TooltipContent side="top" sideOffset={6}>
-          {category.name}
+          {name}
         </TooltipContent>
       </Tooltip>
       <div className="flex items-baseline gap-0.5">

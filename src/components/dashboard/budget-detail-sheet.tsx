@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -140,6 +141,8 @@ function DetailSkeleton() {
 }
 
 function DetailContent({ data }: { data: CategoryDetail }) {
+  const tb = useTranslations("budgetDetail");
+  const tc = useTranslations("common");
   const queryClient = useQueryClient();
   const sameKindCategoriesQuery = useQuery({
     queryKey: ["categories", data.category.kind],
@@ -205,8 +208,8 @@ function DetailContent({ data }: { data: CategoryDetail }) {
           <div className="min-w-0 flex-1">
             <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
               {data.category.kind === "income"
-                ? "Income category"
-                : "Expense category"}
+                ? tb("incomeCategory")
+                : tb("expenseCategory")}
             </div>
             <SheetTitle className="truncate font-serif text-2xl font-normal">
               {data.category.name}
@@ -214,7 +217,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
           </div>
           {data.category.kind !== "income" && (
             <label className="flex shrink-0 cursor-pointer items-center gap-2 text-xs text-muted-foreground">
-              <span>Budget</span>
+              <span>{tb("budget")}</span>
               <Switch
                 size="sm"
                 checked={!isTracking}
@@ -226,9 +229,9 @@ function DetailContent({ data }: { data: CategoryDetail }) {
 
         {isTracking ? (
           <div className="mt-2 grid grid-cols-2 gap-3">
-            <Stat label="Spent" value={formatCurrency(data.spent)} />
+            <Stat label={tc("spent")} value={formatCurrency(data.spent)} />
             <Stat
-              label="Typical / month"
+              label={tb("typicalPerMonth")}
               value={
                 data.vsTypical && data.vsTypical.typical > 0
                   ? formatCurrency(data.vsTypical.typical)
@@ -236,7 +239,9 @@ function DetailContent({ data }: { data: CategoryDetail }) {
               }
               sublabel={
                 data.vsTypical && data.vsTypical.typical > 0
-                  ? `${Math.round(data.vsTypical.percentDiff) >= 0 ? "+" : ""}${Math.round(data.vsTypical.percentDiff)}% this month`
+                  ? tb("pctThisMonth", {
+                      pct: `${Math.round(data.vsTypical.percentDiff) >= 0 ? "+" : ""}${Math.round(data.vsTypical.percentDiff)}`,
+                    })
                   : undefined
               }
             />
@@ -244,14 +249,14 @@ function DetailContent({ data }: { data: CategoryDetail }) {
         ) : (
           <>
             <div className="mt-2 grid grid-cols-3 gap-3">
-              <Stat label="Spent" value={formatCurrency(data.spent)} />
+              <Stat label={tc("spent")} value={formatCurrency(data.spent)} />
               <BudgetStat
                 amount={data.budget}
                 isAuto={data.isAutoBudget}
                 onSave={handleSaveBudget}
               />
               <Stat
-                label="Left"
+                label={tb("left")}
                 value={formatCurrency(Math.max(0, data.budget - data.spent))}
               />
             </div>
@@ -291,7 +296,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
 
         <div className="grid grid-cols-2 gap-3">
           <Card>
-            <CardLabel>VS. LAST MONTH</CardLabel>
+            <CardLabel>{tb("vsLastMonth")}</CardLabel>
             <div className="mt-1 font-serif text-2xl tabular-nums">
               {data.prevSpent > 0
                 ? `${data.spent - data.prevSpent >= 0 ? "+" : "-"}${formatCurrency(Math.abs(data.spent - data.prevSpent))}`
@@ -304,31 +309,31 @@ function DetailContent({ data }: { data: CategoryDetail }) {
                   {data.vsLastMonth != null && (
                     <>
                       {" · "}
-                      {Math.abs(Math.round(data.vsLastMonth))}%{" "}
-                      {data.vsLastMonth < 0 ? "lower" : "higher"}
+                      {data.vsLastMonth < 0
+                        ? tb("pctLower", { pct: Math.abs(Math.round(data.vsLastMonth)) })
+                        : tb("pctHigher", { pct: Math.abs(Math.round(data.vsLastMonth)) })}
                     </>
                   )}
                 </>
               ) : (
-                "No spending last period"
+                tb("noSpendingLastPeriod")
               )}
             </div>
           </Card>
 
           <Card>
-            <CardLabel>AVG / TRANSACTION</CardLabel>
+            <CardLabel>{tb("avgPerTransaction")}</CardLabel>
             <div className="mt-1 font-serif text-2xl tabular-nums">
               {formatCurrency(data.avgPerTransaction)}
             </div>
             <div className="mt-0.5 text-xs text-muted-foreground">
-              {data.transactionCount} transaction
-              {data.transactionCount === 1 ? "" : "s"} this period
+              {tb("transactionsThisPeriod", { count: data.transactionCount })}
             </div>
           </Card>
         </div>
 
         <Card>
-          <CardLabel>DAILY SPEND THIS PERIOD</CardLabel>
+          <CardLabel>{tb("dailySpend")}</CardLabel>
           <div className="mt-2 h-32">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -384,22 +389,22 @@ function DetailContent({ data }: { data: CategoryDetail }) {
         <div>
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-sm font-medium">
-              Transactions · {data.transactionCount}
+              {tb("transactionsHeading", { count: data.transactionCount })}
             </h3>
             <Button
               size="sm"
               variant="ghost"
               className="h-7 gap-1 text-xs"
               disabled
-              title="Manual transaction entry not available yet"
+              title={tb("manualEntryUnavailable")}
             >
-              <Plus className="h-3.5 w-3.5" /> Add
+              <Plus className="h-3.5 w-3.5" /> {tc("add")}
             </Button>
           </div>
           <div className="overflow-hidden rounded-2xl border bg-card">
             {data.transactions.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
-                No transactions in this category for this period.
+                {tb("noTransactions")}
               </div>
             ) : (
               <ul className="divide-y">
@@ -423,7 +428,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
                           className="border-none p-0"
                           style={{ color: t.categoryColor ?? undefined }}
                         >
-                          {t.categoryName ?? "Uncategorized"}
+                          {t.categoryName ?? tb("uncategorized")}
                         </Badge>
                         <ChevronDown className="h-3 w-3 text-muted-foreground" />
                       </DropdownMenuTrigger>
@@ -465,10 +470,13 @@ function ChildrenBreakdownSection({
   budgetSource: "own" | "rollup" | "leaf";
   color: string;
 }) {
+  const tb = useTranslations("budgetDetail");
+  const td = useTranslations("dashboard");
+  const ts = useTranslations("settings.categories");
   const banner =
     budgetSource === "own"
-      ? "Budget set on this parent. Children's budgets are tracked individually but don't roll up here."
-      : "Budget rolled up from sub-categories. Set a budget on this parent to override.";
+      ? tb("bannerOwn")
+      : tb("bannerRollup");
   return (
     <div
       className="space-y-3 rounded-2xl p-4"
@@ -476,10 +484,10 @@ function ChildrenBreakdownSection({
     >
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-sm font-medium">
-          Sub-categories · {children.length}
+          {tb("subcategoriesHeading", { count: children.length })}
         </h3>
         <span className="text-xs uppercase tracking-wide text-muted-foreground">
-          {budgetSource === "own" ? "Own budget" : "Rolled up"}
+          {budgetSource === "own" ? td("ownBudgetTag") : td("rolledUpTag")}
         </span>
       </div>
       <p className="text-xs text-muted-foreground">{banner}</p>
@@ -503,10 +511,10 @@ function ChildrenBreakdownSection({
                   <div className="font-medium">{formatCurrency(c.spent)}</div>
                   <div className="text-xs text-muted-foreground">
                     {c.budget > 0
-                      ? `of ${formatCurrency(c.budget)}`
+                      ? td("ofBudget", { amount: formatCurrency(c.budget) })
                       : c.budgetMode === "tracking"
-                        ? "tracking"
-                        : "no budget"}
+                        ? ts("tracking")
+                        : ts("noBudget")}
                   </div>
                 </div>
                 {c.budget > 0 && (
@@ -542,6 +550,7 @@ function NeedsReviewSection({
   onChange: (id: number, categoryId: number) => void;
   color: string;
 }) {
+  const tb = useTranslations("budgetDetail");
   return (
     <div
       className="space-y-2 rounded-2xl p-4"
@@ -553,12 +562,11 @@ function NeedsReviewSection({
           style={{ color: "var(--status-heads-up)" }}
         />
         <h3 className="text-sm font-medium">
-          Needs review · {transactions.length}
+          {tb("needsReviewHeading", { count: transactions.length })}
         </h3>
       </div>
       <p className="text-xs text-muted-foreground">
-        The AI wasn&apos;t sure about these. Approve to keep, or pick a different
-        category. Either way, the choice is remembered for next time.
+        {tb("needsReviewHint")}
       </p>
       <ul className="mt-2 space-y-2">
         {transactions.map((t) => (
@@ -586,7 +594,7 @@ function NeedsReviewSection({
                       color: t.categoryColor ?? undefined,
                     }}
                   >
-                    {t.categoryName ?? "Uncategorized"}
+                    {t.categoryName ?? tb("uncategorized")}
                   </Badge>
                   <ChevronDown className="h-3 w-3 text-muted-foreground" />
                 </DropdownMenuTrigger>
@@ -611,7 +619,7 @@ function NeedsReviewSection({
                 onClick={() => onApprove(t.id)}
               >
                 <Check className="h-3.5 w-3.5" />
-                Approve
+                {tb("approve")}
               </Button>
             </div>
           </li>
@@ -654,6 +662,7 @@ function BudgetStat({
   isAuto: boolean;
   onSave: (amount: number | null) => Promise<void> | void;
 }) {
+  const tb = useTranslations("budgetDetail");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
@@ -702,7 +711,7 @@ function BudgetStat({
   return (
     <div>
       <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-        Budget
+        {tb("budget")}
       </div>
       {editing ? (
         <input
@@ -725,14 +734,14 @@ function BudgetStat({
             }
           }}
           className="mt-0.5 w-full rounded-md border border-border bg-background/70 px-1.5 py-0.5 font-serif text-xl tabular-nums outline-none focus:border-foreground/40 disabled:opacity-60"
-          placeholder="auto"
+          placeholder={tb("auto")}
         />
       ) : (
         <button
           type="button"
           onClick={startEdit}
           className="group mt-0.5 flex w-full cursor-pointer items-center gap-1.5 rounded-md text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          aria-label="Edit budget amount"
+          aria-label={tb("editBudgetAmount")}
         >
           <span className="font-serif text-xl tabular-nums">
             {amount > 0 ? formatCurrency(amount) : "—"}
@@ -742,7 +751,7 @@ function BudgetStat({
       )}
       {!editing && isAuto && amount > 0 && (
         <div className="text-xs uppercase tracking-wide text-muted-foreground">
-          auto
+          {tb("auto")}
         </div>
       )}
     </div>

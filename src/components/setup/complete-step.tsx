@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { listIntegrations, getSettings } from "@/lib/api";
 import { BANK_PROVIDERS } from "@/lib/types";
 import { ProviderBadge } from "./provider-badge";
+import { translateProviderName } from "@/lib/i18n-data";
 
 interface CompleteStepProps {
   onFinish: () => void;
@@ -21,6 +23,8 @@ interface ImportStep {
 }
 
 export function CompleteStep({ onFinish }: CompleteStepProps) {
+  const t = useTranslations("setup");
+  const tBanks = useTranslations("banks");
   const { data: integrations = [] } = useQuery({
     queryKey: ["integrations"],
     queryFn: listIntegrations,
@@ -32,10 +36,12 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
 
   const aiLabel =
     settings?.aiProvider === "claude"
-      ? "Claude (Anthropic)"
+      ? t("aiSummaryClaude")
       : settings?.aiProvider === "ollama"
-        ? `Ollama · ${settings?.ollamaModel ?? "local"}`
-        : "Manual categorization";
+        ? t("aiSummaryOllama", {
+            model: settings?.ollamaModel ?? t("aiSummaryOllamaFallback"),
+          })
+        : t("aiSummaryManual");
 
   return (
     <div className="mx-auto w-full max-w-[520px] space-y-7 text-center">
@@ -64,7 +70,7 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
 
       <div>
         <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-          Step 5 of 5 · Done
+          {t("completeStep")}
         </div>
         <motion.h1
           initial={{ y: 8, opacity: 0 }}
@@ -72,7 +78,7 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
           transition={{ delay: 0.15 }}
           className="mt-2 font-serif text-4xl leading-tight"
         >
-          You&apos;re all set 🌱
+          {t("completeTitle")}
         </motion.h1>
         <motion.p
           initial={{ y: 8, opacity: 0 }}
@@ -80,8 +86,7 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
           transition={{ delay: 0.22 }}
           className="mx-auto mt-2 max-w-md text-sm text-muted-foreground"
         >
-          When you click below, Spent will pull your transactions and bucket
-          them up. You can re-sync any time from the dashboard or settings.
+          {t("completeDescription")}
         </motion.p>
       </div>
 
@@ -92,17 +97,18 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
         className="rounded-2xl bg-card p-5 text-start"
       >
         <div className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-          Setup summary
+          {t("completeSummary")}
         </div>
 
         <div className="border-t border-border/40 py-3">
           <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            🏦 Connections · {integrations.length}
+            {t("completeConnections", { count: integrations.length })}
           </div>
           <div className="flex flex-wrap gap-1.5">
             {integrations.map((integ) => {
               const info = BANK_PROVIDERS.find((b) => b.id === integ.provider);
               if (!info) return null;
+              const name = translateProviderName(info.id, info.name, tBanks);
               return (
                 <span
                   key={integ.provider}
@@ -110,12 +116,12 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
                 >
                   <ProviderBadge
                     color={info.color}
-                    name={info.name}
+                    name={name}
                     domain={info.domain}
                     size={20}
                     radius={6}
                   />
-                  <span className="font-medium">{info.name}</span>
+                  <span className="font-medium">{name}</span>
                 </span>
               );
             })}
@@ -124,17 +130,20 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
 
         <div className="grid grid-cols-[100px_1fr] items-center gap-3 border-t border-border/40 py-3">
           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            🤖 AI
+            {t("completeAi")}
           </span>
           <span className="text-sm font-medium">{aiLabel}</span>
         </div>
 
         <div className="grid grid-cols-[100px_1fr] items-center gap-3 border-t border-border/40 py-3">
           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            🔒 Storage
+            {t("completeStorage")}
           </span>
           <span className="text-sm font-medium">
-            Local · <code className="text-xs">data/spent.db</code>
+            {t.rich("completeStorageValue", {
+              dbPath: "data/spent.db",
+              code: (chunks) => <code className="text-xs">{chunks}</code>,
+            })}
           </span>
         </div>
       </motion.div>
@@ -143,7 +152,7 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
 
       <div className="flex justify-center">
         <Button size="lg" onClick={onFinish}>
-          Open my budgets →
+          {t("completeOpenBudgets")}
         </Button>
       </div>
     </div>
@@ -151,11 +160,12 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
 }
 
 function ImportProgress() {
+  const t = useTranslations("setup");
   const [steps, setSteps] = useState<ImportStep[]>([
-    { id: "connect", label: "Connecting to providers", state: "active" },
-    { id: "fetch", label: "Ready to fetch 90 days of activity", state: "todo" },
-    { id: "cat", label: "Ready to categorize transactions", state: "todo" },
-    { id: "budgets", label: "Ready to suggest initial budgets", state: "todo" },
+    { id: "connect", label: t("completeImportConnecting"), state: "active" },
+    { id: "fetch", label: t("completeImportFetch"), state: "todo" },
+    { id: "cat", label: t("completeImportCategorize"), state: "todo" },
+    { id: "budgets", label: t("completeImportBudgets"), state: "todo" },
   ]);
 
   useEffect(() => {
@@ -245,7 +255,7 @@ function ImportProgress() {
           </span>
           {s.state === "active" && (
             <span className="ms-auto font-mono text-xs text-muted-foreground">
-              working...
+              {t("completeWorking")}
             </span>
           )}
         </div>

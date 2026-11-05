@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,27 +21,18 @@ import {
 } from "@/lib/api";
 import { ProviderBadge } from "./provider-badge";
 import { TwoFactorSection } from "./two-factor-section";
+import { translateProviderBlurb, translateProviderName } from "@/lib/i18n-data";
 
 type Sub = "pick" | "form" | "ready";
-
-const NUMBER_WORDS: Record<number, string> = {
-  1: "One",
-  2: "Two",
-  3: "Three",
-  4: "Four",
-  5: "Five",
-  6: "Six",
-  7: "Seven",
-  8: "Eight",
-  9: "Nine",
-  10: "Ten",
-};
 
 interface BankStepProps {
   onComplete: () => void;
 }
 
 export function BankStep({ onComplete }: BankStepProps) {
+  const t = useTranslations("setup");
+  const tCommon = useTranslations("common");
+  const tBanks = useTranslations("banks");
   const [filter, setFilter] = useState<"all" | BankKind>("all");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -121,8 +113,11 @@ export function BankStep({ onComplete }: BankStepProps) {
 
   const readyCountLabel =
     integrations.length === 1
-      ? "One account ready. Add another or move on."
-      : `${NUMBER_WORDS[integrations.length] ?? integrations.length} accounts ready. Add another or move on.`;
+      ? t("bankOneReady")
+      : t("bankManyReady", { count: integrations.length });
+  const selectedName = selected
+    ? translateProviderName(selected.id, selected.name, tBanks)
+    : "";
 
   return (
     <div className="mx-auto flex w-full max-w-[520px] flex-col gap-6">
@@ -137,20 +132,18 @@ export function BankStep({ onComplete }: BankStepProps) {
                 onClick={() => setSub("ready")}
                 className="self-start text-xs font-medium text-muted-foreground hover:text-foreground"
               >
-                ← back to connected accounts
+                {t("bankBackToConnected")}
               </button>
             )}
             <header className="space-y-2">
               <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                Step 1 of 5 · Accounts
+                {t("bankStep")}
               </div>
               <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
-                Which accounts should Spent watch?
+                {t("bankTitleQuestion")}
               </h1>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Add every bank and card you want to track. Credentials are
-                encrypted with AES-256 and stored on this machine only, never
-                leaving your computer.
+                {t("bankDescription")}
               </p>
             </header>
 
@@ -166,16 +159,16 @@ export function BankStep({ onComplete }: BankStepProps) {
             />
 
             <p className="text-xs italic text-muted-foreground">
-              Don&apos;t see your bank?{" "}
+              {t("bankDontSeeBankPrefix")}{" "}
               <a
                 href="https://github.com/Shaya16/Spent/issues"
                 target="_blank"
                 rel="noreferrer"
                 className="text-foreground underline decoration-primary underline-offset-2"
               >
-                Open an issue
+                {t("bankOpenIssueLink")}
               </a>{" "}
-              and we&apos;ll add a scraper.
+              {t("bankDontSeeBankSuffix")}
             </p>
           </div>
         )}
@@ -190,19 +183,19 @@ export function BankStep({ onComplete }: BankStepProps) {
               onClick={handleCloseForm}
               className="self-start text-xs font-medium text-muted-foreground hover:text-foreground"
             >
-              ← back to providers
+              {t("bankBackToProviders")}
             </button>
             <header className="space-y-2">
               <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                Step 1 of 5 · Connecting {selected.name}
+                {t("bankConnectingStep", { name: selectedName })}
               </div>
               <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
-                Sign in to {selected.name}
+                {t("bankSignInTitle", { name: selectedName })}
               </h1>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Same credentials you use at{" "}
-                <span className="text-foreground">{selected.domain}</span>.
-                They&apos;re encrypted locally, nothing leaves this machine.
+                {t("bankSignInDescriptionPrefix")}{" "}
+                <span className="text-foreground">{selected.domain}</span>
+                {t("bankSignInDescriptionSuffix")}
               </p>
             </header>
 
@@ -225,19 +218,19 @@ export function BankStep({ onComplete }: BankStepProps) {
           >
             <header className="space-y-2">
               <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                Step 1 of 5 · Accounts
+                {t("bankStep")}
               </div>
               <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
                 {readyCountLabel}
               </h1>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                You can always come back from Settings to add or remove accounts.
+                {t("bankReadyDescription")}
               </p>
             </header>
 
             <div className="w-full space-y-2 text-start">
               <div className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                Connected · {integrations.length}
+                {t("bankConnectedHeading", { count: integrations.length })}
               </div>
               <AnimatePresence initial={false}>
                 {integrations.map((integ) => {
@@ -245,6 +238,7 @@ export function BankStep({ onComplete }: BankStepProps) {
                     (p) => p.id === integ.provider
                   );
                   if (!info) return null;
+                  const infoName = translateProviderName(info.id, info.name, tBanks);
                   return (
                     <motion.div
                       key={integ.id}
@@ -256,7 +250,7 @@ export function BankStep({ onComplete }: BankStepProps) {
                     >
                       <ProviderBadge
                         color={info.color}
-                        name={info.name}
+                        name={infoName}
                         domain={info.domain}
                         size={36}
                         radius={9}
@@ -266,18 +260,18 @@ export function BankStep({ onComplete }: BankStepProps) {
                           {integ.label}
                         </div>
                         <div className="mt-0.5 text-xs text-muted-foreground">
-                          {info.name}
+                          {infoName}
                         </div>
                       </div>
                       <span className="rounded-full bg-primary/15 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-primary">
-                        ✓ Ready
+                        {t("bankReadyBadge")}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleEditCredential(integ.id)}
                         className="rounded-md px-2 py-1 text-xs font-medium hover:bg-accent"
                       >
-                        Edit
+                        {tCommon("edit")}
                       </button>
                       <RemoveButton
                         credentialId={integ.id}
@@ -294,22 +288,25 @@ export function BankStep({ onComplete }: BankStepProps) {
                 variant="outline"
                 onClick={() => setSub("pick")}
               >
-                + Add another account
+                {t("bankAddAnother")}
               </Button>
               <Button
                 onClick={onComplete}
                 disabled={integrations.length === 0}
               >
-                Continue to AI →
+                {t("bankContinueToAi")}
               </Button>
             </footer>
           </div>
         )}
 
       <div className="mt-2 flex w-full items-center justify-between text-xs text-muted-foreground/80">
-        <span>🔐 AES-256-GCM · stored locally</span>
+        <span>{t("bankEncryptedFooter")}</span>
         <span>
-          {integrations.length} of {BANK_PROVIDERS.length} providers connected
+          {t("bankProvidersConnected", {
+            connected: integrations.length,
+            total: BANK_PROVIDERS.length,
+          })}
         </span>
       </div>
     </div>
@@ -335,24 +332,26 @@ function PickerCard({
   onSearch: (v: string) => void;
   onPick: (id: string) => void;
 }) {
+  const t = useTranslations("setup");
+  const tBanks = useTranslations("banks");
   return (
     <div className="w-full rounded-2xl border border-border bg-card p-5 text-start shadow-sm">
       <div className="mb-3 flex items-baseline justify-between">
         <div className="text-xs font-bold tracking-tight">
-          Supported providers · {total}
+          {t("bankSupportedProviders", { count: total })}
         </div>
         <FilterPills value={filter} onChange={onFilter} />
       </div>
       <Input
         value={search}
         onChange={(e) => onSearch(e.target.value)}
-        placeholder="Search by name..."
+        placeholder={t("bankSearchPlaceholder")}
         className="mb-3"
       />
       <div className="flex flex-col gap-0.5">
         {providers.length === 0 ? (
           <div className="px-2 py-6 text-center text-xs text-muted-foreground">
-            No providers match.
+            {t("bankNoMatches")}
           </div>
         ) : (
           providers.map((p) => {
@@ -373,7 +372,7 @@ function PickerCard({
               >
                 <ProviderBadge
                   color={p.color}
-                  name={p.name}
+                  name={translateProviderName(p.id, p.name, tBanks)}
                   domain={p.domain}
                   size={36}
                   radius={9}
@@ -381,14 +380,14 @@ function PickerCard({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate text-sm font-bold tracking-tight">
-                      {p.name}
+                      {translateProviderName(p.id, p.name, tBanks)}
                     </span>
                     {isConnected && (
                       <span className="text-xs text-primary">✓</span>
                     )}
                   </div>
                   <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                    {p.blurb}
+                    {translateProviderBlurb(p.id, p.blurb, tBanks)}
                   </div>
                 </div>
                 <KindTag kind={p.kind} />
@@ -408,6 +407,7 @@ function PickerCard({
 }
 
 function KindTag({ kind }: { kind: BankKind }) {
+  const t = useTranslations("setup");
   const cls =
     kind === "bank"
       ? "bg-[color-mix(in_oklch,var(--primary)_12%,transparent)] text-[color-mix(in_oklch,var(--primary)_70%,black)]"
@@ -416,7 +416,7 @@ function KindTag({ kind }: { kind: BankKind }) {
     <span
       className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${cls}`}
     >
-      {kind === "bank" ? "Bank" : "Card"}
+      {kind === "bank" ? t("bankKindBank") : t("bankKindCard")}
     </span>
   );
 }
@@ -428,10 +428,11 @@ function FilterPills({
   value: "all" | BankKind;
   onChange: (v: "all" | BankKind) => void;
 }) {
+  const t = useTranslations("setup");
   const options: { id: "all" | BankKind; label: string }[] = [
-    { id: "all", label: "All" },
-    { id: "bank", label: "Banks" },
-    { id: "card", label: "Cards" },
+    { id: "all", label: t("bankFilterAll") },
+    { id: "bank", label: t("bankFilterBanks") },
+    { id: "card", label: t("bankFilterCards") },
   ];
   return (
     <div className="flex gap-0.5 rounded-full border border-border bg-background p-0.5">
@@ -471,6 +472,11 @@ function CredentialForm({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("setup");
+  const tCommon = useTranslations("common");
+  const tBanks = useTranslations("banks");
+  const tDetail = useTranslations("settings.bankDetail");
+  const name = translateProviderName(info.id, info.name, tBanks);
   const queryClient = useQueryClient();
   const [label, setLabel] = useState(initialLabel);
   const [savedCredentialId, setSavedCredentialId] = useState<number | null>(
@@ -551,7 +557,7 @@ function CredentialForm({
       }
     } catch {
       setStatus("testing-fail");
-      setErrorMsg("Connection test failed.");
+      setErrorMsg(t("bankConnectionTestFailed"));
     } finally {
       setTesting(false);
     }
@@ -571,7 +577,7 @@ function CredentialForm({
       setTimeout(onSaved, 500);
     } catch {
       setStatus("testing-fail");
-      setErrorMsg("Failed to save credentials.");
+      setErrorMsg(t("bankFailedToSaveCredentials"));
     } finally {
       setSaving(false);
     }
@@ -582,23 +588,23 @@ function CredentialForm({
       <div className="mb-5 flex items-center gap-3 border-b border-border/60 pb-4">
         <ProviderBadge
           color={info.color}
-          name={info.name}
+          name={name}
           domain={info.domain}
           size={44}
           radius={11}
         />
         <div className="min-w-0 flex-1">
           <div className="font-serif text-xl leading-tight tracking-tight">
-            {info.name}
+            {name}
           </div>
           <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-            {info.kind === "bank" ? "Bank" : "Credit cards"}
+            {info.kind === "bank" ? t("bankKindBank") : t("bankKindCardPlural")}
           </div>
         </div>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={tCommon("close")}
           className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
         >
           ✕
@@ -607,17 +613,17 @@ function CredentialForm({
 
       {!loaded ? (
         <div className="py-8 text-center text-sm text-muted-foreground">
-          Loading current values...
+          {tCommon("loadingValues")}
         </div>
       ) : (
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor={`${info.id}-label`}>Account label</Label>
+            <Label htmlFor={`${info.id}-label`}>{tDetail("accountLabel")}</Label>
             <Input
               id={`${info.id}-label`}
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder={`e.g. Personal card, ${info.name} (2)`}
+              placeholder={tDetail("accountLabelPlaceholder", { name })}
             />
           </div>
           {info.credentialFields.map((field) => {
@@ -637,7 +643,10 @@ function CredentialForm({
                   </Label>
                   {field.maxLength && (
                     <span className="text-xs text-muted-foreground">
-                      {value.length}/{field.maxLength}
+                      {t("bankCharCount", {
+                        current: value.length,
+                        max: field.maxLength,
+                      })}
                     </span>
                   )}
                 </div>
@@ -669,7 +678,7 @@ function CredentialForm({
                 )}
                 {tooShort && (
                   <p className="text-xs text-destructive">
-                    Must be exactly {field.exactLength} digits.
+                    {t("bankExactLengthError", { count: field.exactLength ?? 0 })}
                   </p>
                 )}
               </div>
@@ -690,7 +699,7 @@ function CredentialForm({
                 exit={{ opacity: 0 }}
                 className="rounded-md bg-primary/10 px-3 py-2 text-xs font-medium text-primary"
               >
-                ✓ Connection works. Click save to finish.
+                {t("bankConnectionWorks")}
               </motion.div>
             )}
             {status === "testing-fail" && (
@@ -710,7 +719,7 @@ function CredentialForm({
                 exit={{ opacity: 0 }}
                 className="rounded-md bg-primary/10 px-3 py-2 text-xs font-medium text-primary"
               >
-                ✓ Saved
+                {t("bankSavedFlash")}
               </motion.div>
             )}
           </AnimatePresence>
@@ -722,21 +731,25 @@ function CredentialForm({
               disabled={!valid || testing || saving}
               className="flex-1 rounded-full"
             >
-              {testing ? "Testing..." : "Test connection"}
+              {testing ? t("bankTesting") : t("bankTestConnection")}
             </Button>
             <Button
               onClick={handleSave}
               disabled={!valid || saving}
               className="flex-1 rounded-full"
             >
-              {saving ? "Saving..." : isEdit ? "Save changes" : "Save & continue"}
+              {saving
+                ? tCommon("saving")
+                : isEdit
+                  ? tCommon("saveChanges")
+                  : t("bankSaveAndContinue")}
             </Button>
           </div>
 
           <div className="mt-2 flex items-start gap-2 rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">
             <span>🔐</span>
             <span>
-              AES-256-GCM · stored on this machine only. Never sent to a server.
+              {t("bankAesNote")}
             </span>
           </div>
         </div>
@@ -752,6 +765,7 @@ function RemoveButton({
   credentialId: number;
   onRemoved: () => void;
 }) {
+  const tCommon = useTranslations("common");
   const [confirming, setConfirming] = useState(false);
   const [removing, setRemoving] = useState(false);
 
@@ -762,7 +776,7 @@ function RemoveButton({
         onClick={() => setConfirming(true)}
         className="rounded-md px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
       >
-        Remove
+        {tCommon("remove")}
       </button>
     );
   }
@@ -774,7 +788,7 @@ function RemoveButton({
         onClick={() => setConfirming(false)}
         className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
       >
-        Cancel
+        {tCommon("cancel")}
       </button>
       <button
         type="button"
@@ -787,7 +801,7 @@ function RemoveButton({
         disabled={removing}
         className="rounded-md bg-destructive px-2 py-1 text-xs font-medium text-destructive-foreground"
       >
-        {removing ? "..." : "Confirm"}
+        {removing ? "..." : tCommon("confirm")}
       </button>
     </div>
   );

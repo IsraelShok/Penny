@@ -61,7 +61,7 @@
   --card-foreground: #2C2A27;
   --popover: oklch(1 0 0);
   --popover-foreground: #2C2A27;
-  --primary: oklch(0.55 0.10 145);
+  --primary: oklch(0.52 0.10 145);
   --primary-foreground: oklch(0.98 0.012 90);
   --secondary: oklch(0.94 0.03 85);
   --secondary-foreground: #2C2A27;
@@ -72,27 +72,27 @@
   --destructive: oklch(0.58 0.18 30);
   --border: #ECE3D2;
   --input: #ECE3D2;
-  --ring: oklch(0.55 0.10 145);
+  --ring: oklch(0.52 0.10 145);
   /* Pastel chart palette - bumped chroma to match the L2 category lift */
   --chart-1: oklch(0.72 0.10 145); /* sage green - groceries */
   --chart-2: oklch(0.76 0.11 40);  /* coral - dining */
   --chart-3: oklch(0.80 0.10 80);  /* sand/amber - shopping */
   --chart-4: oklch(0.76 0.10 10);  /* rose - fun */
   --chart-5: oklch(0.74 0.10 230); /* sky - transport */
-  /* Status colors */
-  --status-on-track: oklch(0.68 0.10 145);
-  --status-heads-up: oklch(0.72 0.13 85);
-  --status-over: oklch(0.62 0.16 30);
-  --status-plenty-left: oklch(0.72 0.08 220);
+  /* Status colors - L 0.55 so they pass 4.5:1 as text on cards */
+  --status-on-track: oklch(0.55 0.10 145);
+  --status-heads-up: oklch(0.55 0.13 85);
+  --status-over: oklch(0.55 0.16 30);
+  --status-plenty-left: oklch(0.55 0.08 220);
   --radius: 0.875rem;
   --sidebar: oklch(0.95 0.025 85);
   --sidebar-foreground: #2C2A27;
-  --sidebar-primary: oklch(0.55 0.10 145);
+  --sidebar-primary: oklch(0.52 0.10 145);
   --sidebar-primary-foreground: oklch(0.98 0.012 90);
   --sidebar-accent: oklch(0.94 0.03 85);
   --sidebar-accent-foreground: #2C2A27;
   --sidebar-border: #ECE3D2;
-  --sidebar-ring: oklch(0.55 0.10 145);
+  --sidebar-ring: oklch(0.52 0.10 145);
 }
 
 .dark {
@@ -134,12 +134,12 @@
   --sidebar-ring: oklch(0.72 0.08 145);
 }
 
-/* Hebrew: use San Francisco everywhere (sans, serif headings, and mono).
+/* Hebrew: Rubik everywhere (sans and serif headings); mono falls back to Rubik for Hebrew glyphs.
    Higher specificity than next/font's class-based variable definitions. */
 html[lang="he"] {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Hebrew", "Helvetica Neue", "Arial Hebrew", Arial, sans-serif;
-  --font-serif: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Hebrew", "Helvetica Neue", "Arial Hebrew", Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "SF Hebrew", Menlo, monospace;
+  --font-sans: var(--font-rubik), "Arial Hebrew", Arial, sans-serif;
+  --font-serif: var(--font-rubik), "Arial Hebrew", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, var(--font-rubik), monospace;
 }
 
 @layer base {

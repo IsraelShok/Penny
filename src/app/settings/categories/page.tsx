@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+import { translateCategoryName } from "@/lib/i18n-data";
 import { ChevronRight, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -33,6 +35,9 @@ import {
 import type { Category, CategoryKind, CategoryWithData } from "@/lib/types";
 
 export default function CategoriesSettingsPage() {
+  const t = useTranslations("settings.categories");
+  const tc = useTranslations("common");
+  const tCat = useTranslations("categoriesSeeded");
   const { from, to } = getMonthRange();
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -60,9 +65,9 @@ export default function CategoriesSettingsPage() {
       .filter((c) =>
         search.trim().length === 0
           ? true
-          : c.name.toLowerCase().includes(search.toLowerCase())
+          : `${c.name} ${translateCategoryName(c.name, tCat)}`.toLowerCase().includes(search.toLowerCase())
       );
-  }, [categories, activeKind, search]);
+  }, [categories, activeKind, search, tCat]);
 
   const { parents, childrenByParent, orphans } = useMemo(() => {
     const parentIds = new Set<number>();
@@ -92,8 +97,8 @@ export default function CategoriesSettingsPage() {
   return (
     <>
       <SectionShell
-        title="Categories"
-        description="One place to set budgets, descriptions, and grouping. Click any category to edit it."
+        title={t("title")}
+        description={t("description")}
       >
         <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex rounded-full border border-border bg-card p-0.5">
@@ -101,21 +106,22 @@ export default function CategoriesSettingsPage() {
               active={activeKind === "expense"}
               onClick={() => setActiveKind("expense")}
             >
-              Expense
+              {t("tabExpense")}
             </KindTab>
             <KindTab
               active={activeKind === "income"}
               onClick={() => setActiveKind("income")}
             >
-              Income
+              {t("tabIncome")}
             </KindTab>
           </div>
           <div className="relative flex-1 min-w-[180px]">
-            <Search className="pointer-events-none absolute start-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/70" />
+            <Search aria-hidden className="pointer-events-none absolute start-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/70" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search categories…"
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
               className="ps-8"
             />
           </div>
@@ -124,18 +130,18 @@ export default function CategoriesSettingsPage() {
 
         {!categories ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            Loading…
+            {tc("loading")}
           </div>
         ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            No matching categories.
+            {t("noMatching")}
           </div>
         ) : (
           <div className="space-y-6">
             {parents.map((parent) => (
               <GroupBlock
                 key={parent.id}
-                title={parent.name}
+                title={translateCategoryName(parent.name, tCat)}
                 color={parent.color}
                 parent={parent}
                 onSelect={setOpenId}
@@ -153,7 +159,7 @@ export default function CategoriesSettingsPage() {
             ))}
             {orphans.length > 0 ? (
               <GroupBlock
-                title="Ungrouped"
+                title={t("ungrouped")}
                 color="#9ca3af"
                 onSelect={setOpenId}
                 dataById={dataByCategoryId}
@@ -192,6 +198,8 @@ function KindTab({
 }) {
   return (
     <button
+      type="button"
+      aria-pressed={active}
       onClick={onClick}
       className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
         active
@@ -218,6 +226,7 @@ function GroupBlock({
   children: React.ReactNode;
   onSelect: (id: number) => void;
 }) {
+  const t = useTranslations("settings.categories");
   return (
     <section>
       <div className="mb-2 flex items-center gap-2 px-1">
@@ -225,16 +234,16 @@ function GroupBlock({
           className="h-2 w-2 rounded-full"
           style={{ background: color }}
         />
-        <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           {title}
         </span>
         {parent ? (
           <button
             type="button"
             onClick={() => onSelect(parent.id)}
-            className="ms-auto text-[10px] uppercase tracking-[0.08em] text-muted-foreground/70 hover:text-foreground"
+            className="ms-auto text-xs uppercase tracking-[0.08em] text-muted-foreground/70 hover:text-foreground"
           >
-            Edit group
+            {t("editGroup")}
           </button>
         ) : null}
       </div>
@@ -254,6 +263,8 @@ function CategoryRow({
   data: CategoryWithData | null;
   onSelect: () => void;
 }) {
+  const t = useTranslations("settings.categories");
+  const tCat = useTranslations("categoriesSeeded");
   const description = category.description?.trim();
   return (
     <li>
@@ -268,10 +279,10 @@ function CategoryRow({
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 text-sm font-medium">
-            <span className="truncate">{category.name}</span>
+            <span className="truncate">{translateCategoryName(category.name, tCat)}</span>
           </div>
           {description ? (
-            <div className="mt-0.5 truncate text-xs text-muted-foreground">
+            <div dir="auto" className="mt-0.5 truncate text-start text-xs text-muted-foreground">
               {description}
             </div>
           ) : null}
@@ -279,12 +290,12 @@ function CategoryRow({
         <div className="hidden shrink-0 text-end sm:block">
           {data ? (
             <div className="text-xs tabular-nums text-muted-foreground">
-              ₪{Math.round(data.spent).toLocaleString("en-IL")} spent
+              {t("spentLabel", { amount: `₪${Math.round(data.spent).toLocaleString("en-IL")}` })}
             </div>
           ) : null}
         </div>
         <BudgetChip category={category} data={data} />
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 rtl:rotate-180" />
+        <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground/60 rtl:rotate-180" />
       </button>
     </li>
   );
@@ -297,28 +308,31 @@ function BudgetChip({
   category: Category;
   data: CategoryWithData | null;
 }) {
+  const t = useTranslations("settings.categories");
   if (category.budgetMode === "tracking") {
     return (
-      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-        tracking
+      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+        {t("tracking")}
       </span>
     );
   }
   if (!data || data.budget <= 0) {
     return (
-      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-        no budget
+      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+        {t("noBudget")}
       </span>
     );
   }
   return (
-    <span className="shrink-0 rounded-full bg-foreground/8 px-2 py-0.5 text-[11px] font-medium tabular-nums">
+    <span className="shrink-0 rounded-full bg-foreground/8 px-2 py-0.5 text-xs font-medium tabular-nums">
       ₪{Math.round(data.budget).toLocaleString("en-IL")}
     </span>
   );
 }
 
 function NewGroupDialog({ kind }: { kind: CategoryKind }) {
+  const t = useTranslations("settings.categories");
+  const tc = useTranslations("common");
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -334,12 +348,12 @@ function NewGroupDialog({ kind }: { kind: CategoryKind }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       queryClient.invalidateQueries({ queryKey: ["summary"] });
-      toast.success(`Created "${name.trim()}"`);
+      toast.success(t("createdToast", { name: name.trim() }));
       setName("");
       setOpen(false);
     },
     onError: (err: Error) => {
-      toast.error(err.message || "Couldn't create group");
+      toast.error(err.message || t("createGroupFailed"));
     },
   });
 
@@ -354,23 +368,23 @@ function NewGroupDialog({ kind }: { kind: CategoryKind }) {
       <DialogTrigger
         render={
           <Button variant="outline" size="sm" className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" />
-            New group
+            <Plus aria-hidden className="h-3.5 w-3.5" />
+            {t("newGroupButton")}
           </Button>
         }
       />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>New parent group</DialogTitle>
+          <DialogTitle>{t("newGroupDialogTitle")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="new-group-name">Name</Label>
+            <Label htmlFor="new-group-name">{t("newGroupName")}</Label>
             <Input
               id="new-group-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Food, Transport, Lifestyle"
+              placeholder={t("newGroupNamePlaceholder")}
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter" && name.trim().length > 0) {
@@ -380,30 +394,30 @@ function NewGroupDialog({ kind }: { kind: CategoryKind }) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Kind</Label>
+            <Label id="new-group-kind">{t("newGroupKind")}</Label>
             <Select
               value={k}
               onValueChange={(v) => v && setK(v as CategoryKind)}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="new-group-kind">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="expense">Expense</SelectItem>
-                <SelectItem value="income">Income</SelectItem>
+                <SelectItem value="expense">{t("tabExpense")}</SelectItem>
+                <SelectItem value="income">{t("tabIncome")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>
-            Cancel
+            {tc("cancel")}
           </Button>
           <Button
             onClick={() => mutation.mutate()}
             disabled={name.trim().length === 0 || mutation.isPending}
           >
-            {mutation.isPending ? "Creating…" : "Create"}
+            {mutation.isPending ? tc("creating") : t("createButton")}
           </Button>
         </DialogFooter>
       </DialogContent>

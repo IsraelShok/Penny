@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   listOllamaModels,
@@ -27,6 +28,7 @@ interface OllamaModelStatusProps {
 }
 
 export function OllamaModelStatus({ ollamaUrl, model }: OllamaModelStatusProps) {
+  const tSetup = useTranslations("setup");
   const [installed, setInstalled] = useState<string[] | null>(null);
   const [reachable, setReachable] = useState<boolean | null>(null);
   const [pullState, setPullState] = useState<PullState | null>(null);
@@ -86,7 +88,7 @@ export function OllamaModelStatus({ ollamaUrl, model }: OllamaModelStatusProps) 
           prev && !prev.includes(model) ? [...prev, model] : prev
         );
       } else if (event.type === "error") {
-        setPullError(event.data.message ?? "Failed to download the model.");
+        setPullError(event.data.message ?? tSetup("aiOllamaFailedDownload"));
         setPullState(null);
       }
     });
@@ -134,6 +136,9 @@ function ModelStatusInner({
   onPull,
   onCancel,
 }: ModelStatusInnerProps) {
+  const t = useTranslations("settings.ollamaStatus");
+  const tSetup = useTranslations("setup");
+  const tCommon = useTranslations("common");
   if (installed) {
     return (
       <div className="flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
@@ -151,8 +156,10 @@ function ModelStatusInner({
           />
         </svg>
         <span>
-          <span className="font-medium">{modelName}</span> is installed and
-          ready.
+          {t.rich("installedReady", {
+            model: modelName,
+            b: (chunks) => <span className="font-medium">{chunks}</span>,
+          })}
         </span>
       </div>
     );
@@ -175,14 +182,14 @@ function ModelStatusInner({
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium">
             {pullState.status === "starting"
-              ? "Starting download..."
+              ? tSetup("aiOllamaStartingDownload")
               : pullState.status}
           </span>
           <button
             onClick={onCancel}
             className="text-xs text-muted-foreground hover:text-foreground"
           >
-            Cancel
+            {tCommon("cancel")}
           </button>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -197,7 +204,7 @@ function ModelStatusInner({
           </span>
           <span>
             {speed}
-            {eta ? ` · ~${eta} left` : ""}
+            {eta ? t("etaLeft", { eta }) : ""}
           </span>
         </div>
       </div>
@@ -209,10 +216,9 @@ function ModelStatusInner({
       <div className="space-y-3 rounded-xl border border-border bg-card/60 p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
-            <div className="text-sm font-medium">Don&apos;t have Ollama yet?</div>
+            <div className="text-sm font-medium">{t("notInstalledTitle")}</div>
             <p className="text-xs text-muted-foreground">
-              Ollama is a free, local AI that runs on your machine. It takes
-              about a minute to install.
+              {t("notInstalledDescription")}
             </p>
           </div>
           <a
@@ -221,21 +227,17 @@ function ModelStatusInner({
             rel="noreferrer"
             className={buttonVariants({ size: "sm" })}
           >
-            Get Ollama
+            {t("getOllama")}
             <ExternalLink className="size-3.5" />
           </a>
         </div>
         <ol className="space-y-1 ps-5 text-xs text-muted-foreground list-decimal marker:text-muted-foreground/70">
-          <li>Download and run the installer from ollama.com.</li>
-          <li>Launch Ollama (it runs in the menu bar or system tray).</li>
-          <li>
-            Come back here. Spent auto-starts Ollama and lets you download
-            the model.
-          </li>
+          <li>{t("installStep1")}</li>
+          <li>{t("installStep2")}</li>
+          <li>{t("installStep3")}</li>
         </ol>
         <p className="text-xs text-destructive">
-          Couldn&apos;t reach Ollama at this URL. If you&apos;ve already
-          installed it, double-check the URL above.
+          {t("unreachable")}
         </p>
       </div>
     );
@@ -245,17 +247,17 @@ function ModelStatusInner({
     <div className="space-y-2 rounded-md border border-dashed bg-muted/20 p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <div className="text-sm font-medium">Model not installed</div>
+          <div className="text-sm font-medium">{t("modelNotInstalled")}</div>
           <p className="text-xs text-muted-foreground">
-            Download <span className="font-medium">{modelName}</span> now
-            {modelInfo
-              ? ` (~${modelInfo.sizeGb} GB, a few minutes depending on your connection)`
-              : ""}
-            . You only need to do this once.
+            {t.rich(modelInfo ? "downloadPromptWithSize" : "downloadPrompt", {
+              model: modelName,
+              size: modelInfo?.sizeGb ?? 0,
+              b: (chunks) => <span className="font-medium">{chunks}</span>,
+            })}
           </p>
         </div>
         <Button size="sm" onClick={onPull}>
-          Download
+          {t("download")}
         </Button>
       </div>
       {pullError && <p className="text-xs text-destructive">{pullError}</p>}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { BankStep } from "@/components/setup/bank-step";
 import { AIStep } from "@/components/setup/ai-step";
 import { MonthlyTargetStep } from "@/components/setup/monthly-target-step";
@@ -19,22 +20,23 @@ export type SetupMode = "first-run" | "new-workspace";
 type WizardStep = 0 | 1 | 2 | 3 | 4 | 5;
 
 const FIRST_RUN_STEPS = [
-  { n: 1 as const, label: "Connect" },
-  { n: 2 as const, label: "AI" },
-  { n: 5 as const, label: "Target" },
-  { n: 3 as const, label: "Budgets" },
-  { n: 4 as const, label: "Done" },
-];
+  { n: 1 as const, label: "stepConnect" },
+  { n: 2 as const, label: "stepAi" },
+  { n: 5 as const, label: "stepTarget" },
+  { n: 3 as const, label: "stepBudgets" },
+  { n: 4 as const, label: "stepDone" },
+] as const;
 
 const NEW_WORKSPACE_STEPS = [
-  { n: 0 as const, label: "Name" },
-  { n: 1 as const, label: "Connect" },
-  { n: 5 as const, label: "Target" },
-  { n: 3 as const, label: "Budgets" },
-  { n: 4 as const, label: "Done" },
-];
+  { n: 0 as const, label: "stepName" },
+  { n: 1 as const, label: "stepConnect" },
+  { n: 5 as const, label: "stepTarget" },
+  { n: 3 as const, label: "stepBudgets" },
+  { n: 4 as const, label: "stepDone" },
+] as const;
 
 export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
+  const t = useTranslations("setup");
   const router = useRouter();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<WizardStep>(
@@ -54,7 +56,7 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
       setStep(1);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to create workspace"
+        err instanceof Error ? err.message : t("workspaceCreateFailed")
       );
     } finally {
       setCreating(false);
@@ -77,7 +79,7 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
           rel="noreferrer"
           className="hidden text-xs text-muted-foreground hover:text-foreground md:inline"
         >
-          Docs ↗
+          {t("docs")}
         </a>
       </header>
 
@@ -132,6 +134,7 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
 }
 
 function BrandMark() {
+  const t = useTranslations("setup");
   return (
     <div className="flex items-center gap-2.5">
       <img
@@ -149,7 +152,7 @@ function BrandMark() {
           Spent
         </div>
         <div className="mt-1 text-[8px] font-bold tracking-[0.18em] text-muted-foreground">
-          YOUR MONEY · OPEN SOURCE
+          {t("brandTagline")}
         </div>
       </div>
     </div>
@@ -158,7 +161,7 @@ function BrandMark() {
 
 interface StepDef {
   n: WizardStep;
-  label: string;
+  label: (typeof FIRST_RUN_STEPS | typeof NEW_WORKSPACE_STEPS)[number]["label"];
 }
 
 function DotStepper({
@@ -168,6 +171,7 @@ function DotStepper({
   step: WizardStep;
   steps: ReadonlyArray<StepDef>;
 }) {
+  const t = useTranslations("setup");
   const currentIdx = steps.findIndex((s) => s.n === step);
   return (
     <div className="flex items-center gap-2">
@@ -176,7 +180,7 @@ function DotStepper({
           i < currentIdx ? "done" : i === currentIdx ? "active" : "todo";
         return (
           <div key={s.n} className="flex items-center gap-2">
-            <DotLabel label={s.label} state={state} />
+            <DotLabel label={t(s.label)} state={state} />
             {i < steps.length - 1 && (
               <motion.div
                 animate={{
