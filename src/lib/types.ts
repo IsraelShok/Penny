@@ -834,9 +834,24 @@ export interface AssetsPayload {
     /** 25% of unrealised gains on taxable holdings (not pension, study fund or provident). */
     deferredTax: number;
     netWorth: number;
-    /** Net worth that can fund early retirement: liquid assets minus liabilities and deferred tax. */
+    /** Net worth that can fund early retirement: liquid assets minus non-mortgage debt and deferred tax. */
     liquidNetWorth: number;
   };
   history: { date: string; netWorth: number }[];
   benchmarks: { symbol: string; change12m: number | null; changeYtd: number | null }[];
+}
+
+export interface FiPayload {
+  /** Averages over the last up-to-12 complete months that have transactions. */
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  monthsOfData: number;
+  netWorth: number;
+  liquidNetWorth: number;
+  hasAssets: boolean;
+  /** Spending per category, last 12 complete months vs the 12 before. */
+  inflation: {
+    rate: number | null;
+    categories: { categoryId: number; name: string; color: string; previous: number; current: number; change: number; weight: number }[];
+  };
 }

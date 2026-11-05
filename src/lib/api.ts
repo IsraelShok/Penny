@@ -21,6 +21,7 @@ import type {
   AssetsPayload,
   AssetInput,
   MarketsPayload,
+  FiPayload,
 } from "./types";
 import { getActiveWorkspaceIdSync } from "./workspace-store";
 
@@ -294,6 +295,10 @@ export function getSummary(params: {
 
 export function getOverview(period: string, offset: number) {
   return fetchJSON<OverviewPayload>(`/api/overview?period=${period}&offset=${offset}`);
+}
+
+export function getFi() {
+  return fetchJSON<FiPayload>(`/api/fi`);
 }
 
 export function getMarkets() {

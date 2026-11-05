@@ -8,6 +8,7 @@ import {
   PieChart,
   Landmark,
   LineChart,
+  Flag,
   Wallet,
   ArrowLeftRight,
   Lightbulb,
@@ -60,6 +61,12 @@ const NAV: NavDef[] = [
     labelKey: "markets",
     Icon: LineChart,
     match: (p: string) => p.startsWith("/markets"),
+  },
+  {
+    href: "/fi",
+    labelKey: "fi",
+    Icon: Flag,
+    match: (p: string) => p.startsWith("/fi"),
   },
   {
     href: "/budget",

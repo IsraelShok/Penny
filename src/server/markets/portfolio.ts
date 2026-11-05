@@ -33,11 +33,12 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
     return { ...r, currency, value, valueIls, gainIls, quote };
   });
 
-  let total = 0, liquid = 0, liabilities = 0, deferredTax = 0;
+  let total = 0, liquid = 0, liabilities = 0, mortgages = 0, deferredTax = 0;
   for (const a of assets) {
     const v = a.valueIls ?? 0;
     if (a.isLiability) {
       liabilities += v;
+      if (a.type === "mortgage") mortgages += v;
       continue;
     }
     total += v;
@@ -58,7 +59,8 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
       liabilities,
       deferredTax,
       netWorth: total - liabilities - deferredTax,
-      liquidNetWorth: liquid - liabilities - deferredTax,
+      // Mortgage payments are already in monthly spending, which the FI target funds; subtracting the balance too would count it twice.
+      liquidNetWorth: liquid - (liabilities - mortgages) - deferredTax,
     },
     history: netWorthHistory(workspaceId),
     benchmarks: BENCHMARKS.map((s) => {
