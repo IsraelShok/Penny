@@ -13,6 +13,7 @@ import { Sparkline } from "@/components/ui/sparkline";
 import { cn } from "@/lib/utils";
 import { AssetDialog } from "./asset-dialog";
 import { ImportDialog } from "./import-dialog";
+import { InvestmentsExtras } from "./investments-extras";
 import type { Asset, AssetsPayload } from "@/lib/types";
 
 const fmt = (n: number, locale: string, digits = 0) =>
@@ -125,6 +126,7 @@ function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => voi
 
       <HoldingsList title={t("assetsTitle")} assets={owned} onEdit={onEdit} />
       {owed.length > 0 && <HoldingsList title={t("liabilitiesTitle")} assets={owed} onEdit={onEdit} />}
+      <InvestmentsExtras data={data} />
     </>
   );
 }

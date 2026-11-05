@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { FiPayload } from "@/lib/types";
+import { FiExtras } from "./fi-extras";
 
 const RATES = [0.04, 0.035, 0.03];
 const fmt = (n: number, locale: string, digits = 0) =>
@@ -150,6 +151,7 @@ function Body({ data }: { data: FiPayload }) {
       <AggressiveSaving spend={spend} income={income} savings={savings} annualReturn={annualReturn} rate={plan.rate} />
       <Inflation data={data.inflation} />
       <CarCalculator rate={plan.rate} />
+      <FiExtras data={data} />
     </div>
   );
 }

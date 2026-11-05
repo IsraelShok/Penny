@@ -1,0 +1,43 @@
+import { describe, expect, it } from "vitest";
+import { debtPayoff, feeCost, goalMonthly, parsePlan, projectBalance } from "@/lib/plan";
+
+describe("fees", () => {
+  it("grows a balance without fees at the gross return", () => {
+    expect(projectBalance(100_000, 0, 10, 0.05, 0, 0)).toBeCloseTo(100_000 * 1.05 ** 10, -1);
+  });
+
+  it("costs money when fees are above the benchmark, nothing when below", () => {
+    const high = feeCost("pension", 300_000, 3_000, 30, 3, 0.5)!;
+    expect(high.cost).toBeGreaterThan(100_000);
+    expect(feeCost("pension", 300_000, 3_000, 30, 0.5, 0.1)!.cost).toBe(0);
+    expect(feeCost("stock", 1, 1, 1, 1, 1)).toBeNull();
+  });
+});
+
+describe("debtPayoff", () => {
+  it("pays a 0% loan in balance / payment months", () => {
+    expect(debtPayoff(12_000, 0, 1_000)).toEqual({ months: 12, interest: 0 });
+  });
+
+  it("charges interest and flags payments that never clear it", () => {
+    const r = debtPayoff(100_000, 6, 2_000)!;
+    expect(r.months).toBeGreaterThan(55);
+    expect(r.interest).toBeGreaterThan(10_000);
+    expect(debtPayoff(100_000, 12, 1_000)).toBeNull();
+  });
+});
+
+describe("goalMonthly", () => {
+  it("spreads the gap over the months left", () => {
+    expect(goalMonthly(120_000, 0, "2027-11", new Date(2026, 10, 5))).toBe(10_000);
+    expect(goalMonthly(100, 200, "2027-01", new Date(2026, 10, 5))).toBe(0);
+  });
+});
+
+describe("parsePlan", () => {
+  it("keeps good values and drops bad ones", () => {
+    const p = parsePlan({ monthStartDay: 10, birthYear: "1988", emergencyMonths: 99, allocation: { equity: 80 }, taxDone: { study_fund: 2026, "<bad>": 1 } });
+    expect(p).toMatchObject({ monthStartDay: 10, birthYear: 1988, emergencyMonths: 6, taxDone: { study_fund: 2026 } });
+    expect(p.allocation).toEqual({ equity: 80, bonds: 20, cash: 10 });
+  });
+});

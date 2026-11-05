@@ -18,6 +18,8 @@ const CURRENCIES = ["ILS", "USD", "EUR", "GBP"];
 const TICKER_TYPES: AssetType[] = ["stock", "fund", "bond", "crypto", "metal"];
 /** Not available before retirement age, as in HaExolidit's split. */
 const ILLIQUID_DEFAULT: AssetType[] = ["pension", "real_estate", "vehicle", "business"];
+/** Long-term savings with management fees and monthly deposits. */
+const SAVINGS_TYPES: AssetType[] = ["pension", "study_fund", "provident"];
 
 export function AssetDialog({ asset, onClose }: { asset: Asset | "new"; onClose: () => void }) {
   const t = useTranslations("investments");
@@ -34,11 +36,18 @@ export function AssetDialog({ asset, onClose }: { asset: Asset | "new"; onClose:
     manualValue: initial?.manualValue?.toString() ?? "",
     costBasis: initial?.costBasis?.toString() ?? "",
     liquid: initial?.liquid ?? true,
+    feeDeposit: initial?.feeDeposit?.toString() ?? "",
+    feeBalance: initial?.feeBalance?.toString() ?? "",
+    monthlyDeposit: initial?.monthlyDeposit?.toString() ?? "",
+    interestRate: initial?.interestRate?.toString() ?? "",
+    monthlyPayment: initial?.monthlyPayment?.toString() ?? "",
   });
+  const opt = (s: string) => (s.trim() === "" ? null : Number(s));
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
   const canPrice = TICKER_TYPES.includes(form.type);
   const priced = canPrice && form.priced;
   const isLiability = (LIABILITY_TYPES as readonly string[]).includes(form.type);
+  const hasFees = SAVINGS_TYPES.includes(form.type);
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -52,6 +61,11 @@ export function AssetDialog({ asset, onClose }: { asset: Asset | "new"; onClose:
         costBasis: form.costBasis ? Number(form.costBasis) : null,
         liquid: form.liquid,
         note: initial?.note ?? null,
+        feeDeposit: hasFees ? opt(form.feeDeposit) : null,
+        feeBalance: hasFees ? opt(form.feeBalance) : null,
+        monthlyDeposit: hasFees ? opt(form.monthlyDeposit) : null,
+        interestRate: isLiability ? opt(form.interestRate) : null,
+        monthlyPayment: isLiability ? opt(form.monthlyPayment) : null,
       };
       return initial ? updateAsset(initial.id, input).then(() => undefined) : createAssets([input]).then(() => undefined);
     },
@@ -139,6 +153,21 @@ export function AssetDialog({ asset, onClose }: { asset: Asset | "new"; onClose:
             </div>
           )}
 
+          {hasFees && (
+            <div className="grid grid-cols-3 gap-3">
+              <NumField id="asset-fee-balance" label={t("fieldFeeBalance")} value={form.feeBalance} onChange={(v) => set("feeBalance", v)} />
+              <NumField id="asset-fee-deposit" label={t("fieldFeeDeposit")} value={form.feeDeposit} onChange={(v) => set("feeDeposit", v)} />
+              <NumField id="asset-deposit" label={t("fieldMonthlyDeposit")} value={form.monthlyDeposit} onChange={(v) => set("monthlyDeposit", v)} />
+            </div>
+          )}
+
+          {isLiability && (
+            <div className="grid grid-cols-2 gap-3">
+              <NumField id="asset-rate" label={t("fieldInterestRate")} value={form.interestRate} onChange={(v) => set("interestRate", v)} />
+              <NumField id="asset-payment" label={t("fieldMonthlyPayment")} value={form.monthlyPayment} onChange={(v) => set("monthlyPayment", v)} />
+            </div>
+          )}
+
           {!isLiability && (
             <>
               <div className="space-y-1.5">
@@ -164,5 +193,14 @@ export function AssetDialog({ asset, onClose }: { asset: Asset | "new"; onClose:
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function NumField({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
   );
 }

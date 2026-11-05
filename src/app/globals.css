@@ -299,3 +299,11 @@ html[lang="he"] .font-serif,
 html[lang="he"] .text-display {
   letter-spacing: normal;
 }
+
+/* Printed reports (Overview → Print): content only, on white, no app chrome. */
+@media print {
+  [data-slot="sidebar"], [data-slot="sidebar-gap"], header.glass, .print-hidden { display: none !important; }
+  html, body, main { background: #fff !important; }
+  .wallet { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  [class*="rounded-"] { break-inside: avoid; }
+}

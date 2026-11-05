@@ -14,9 +14,17 @@ export function parseAssetInput(raw: unknown): AssetInput | string {
   const quantity = num(r.quantity);
   const manualValue = num(r.manualValue);
   const costBasis = num(r.costBasis);
-  for (const [k, v] of Object.entries({ quantity, manualValue, costBasis })) {
+  const extra = {
+    feeDeposit: num(r.feeDeposit),
+    feeBalance: num(r.feeBalance),
+    monthlyDeposit: num(r.monthlyDeposit),
+    interestRate: num(r.interestRate),
+    monthlyPayment: num(r.monthlyPayment),
+  };
+  for (const [k, v] of Object.entries({ quantity, manualValue, costBasis, ...extra })) {
     if (v !== null && (!Number.isFinite(v) || v < 0)) return `${k} must be a positive number for ${name}`;
   }
+  if ((extra.feeDeposit ?? 0) > 10 || (extra.feeBalance ?? 0) > 10 || (extra.interestRate ?? 0) > 100) return `fee or rate out of range for ${name}`;
   if (symbol && quantity === null) return `quantity is required with a symbol for ${name}`;
   if (!symbol && manualValue === null) return `a value or a symbol is required for ${name}`;
   return {
@@ -29,5 +37,6 @@ export function parseAssetInput(raw: unknown): AssetInput | string {
     costBasis,
     liquid: r.liquid !== false,
     note: typeof r.note === "string" && r.note.trim() ? r.note.trim().slice(0, 200) : null,
+    ...extra,
   };
 }

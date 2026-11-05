@@ -22,6 +22,7 @@ import type {
   AssetInput,
   MarketsPayload,
   FiPayload,
+  PlanPayload,
 } from "./types";
 import { getActiveWorkspaceIdSync } from "./workspace-store";
 
@@ -295,6 +296,31 @@ export function getSummary(params: {
 
 export function getOverview(period: string, offset: number) {
   return fetchJSON<OverviewPayload>(`/api/overview?period=${period}&offset=${offset}`);
+}
+
+export function getPlan() {
+  return fetchJSON<PlanPayload>(`/api/plan`);
+}
+
+export function savePlan(plan: PlanPayload["plan"]) {
+  return fetchJSON<PlanPayload["plan"]>(`/api/plan`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ plan }),
+  });
+}
+
+export function savePlanItem(kind: "goal" | "policy" | "netWorth", item: Record<string, unknown>) {
+  return fetchJSON<{ success: boolean }>(`/api/plan`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind, item }),
+  });
+}
+
+export function deletePlanItem(kind: "goal" | "policy" | "netWorth", key: number | string) {
+  const param = kind === "netWorth" ? `date=${encodeURIComponent(String(key))}` : `id=${key}`;
+  return fetchJSON<{ success: boolean }>(`/api/plan?kind=${kind}&${param}`, { method: "DELETE" });
 }
 
 export function getFi() {

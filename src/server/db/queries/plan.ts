@@ -1,0 +1,68 @@
+import "server-only";
+
+import { getDb } from "../index";
+import { getWorkspaceSetting, setWorkspaceSetting } from "./settings";
+import { parsePlan, type FinancialPlan } from "@/lib/plan";
+import type { Goal, InsurancePolicy } from "@/lib/types";
+
+const PLAN_KEY = "financial_plan";
+
+export function getPlan(workspaceId: number): FinancialPlan {
+  const raw = getWorkspaceSetting(workspaceId, PLAN_KEY);
+  try {
+    return parsePlan(raw ? JSON.parse(raw) : {});
+  } catch {
+    return parsePlan({});
+  }
+}
+
+export function savePlan(workspaceId: number, plan: FinancialPlan) {
+  setWorkspaceSetting(workspaceId, PLAN_KEY, JSON.stringify(plan));
+}
+
+export function listGoals(workspaceId: number): Goal[] {
+  return getDb()
+    .prepare(
+      `SELECT id, name, target_amount as targetAmount, target_date as targetDate, saved_amount as savedAmount
+       FROM goals WHERE workspace_id = ? ORDER BY target_date`
+    )
+    .all(workspaceId) as Goal[];
+}
+
+export function upsertGoal(workspaceId: number, g: Omit<Goal, "id"> & { id?: number }) {
+  const db = getDb();
+  if (g.id) {
+    return db
+      .prepare("UPDATE goals SET name = ?, target_amount = ?, target_date = ?, saved_amount = ? WHERE workspace_id = ? AND id = ?")
+      .run(g.name, g.targetAmount, g.targetDate, g.savedAmount, workspaceId, g.id).changes > 0;
+  }
+  db.prepare("INSERT INTO goals (workspace_id, name, target_amount, target_date, saved_amount) VALUES (?, ?, ?, ?, ?)")
+    .run(workspaceId, g.name, g.targetAmount, g.targetDate, g.savedAmount);
+  return true;
+}
+
+export function listPolicies(workspaceId: number): InsurancePolicy[] {
+  return getDb()
+    .prepare(
+      `SELECT id, name, kind, provider, monthly_premium as monthlyPremium
+       FROM insurance_policies WHERE workspace_id = ? ORDER BY kind, name`
+    )
+    .all(workspaceId) as InsurancePolicy[];
+}
+
+export function upsertPolicy(workspaceId: number, p: Omit<InsurancePolicy, "id"> & { id?: number }) {
+  const db = getDb();
+  if (p.id) {
+    return db
+      .prepare("UPDATE insurance_policies SET name = ?, kind = ?, provider = ?, monthly_premium = ? WHERE workspace_id = ? AND id = ?")
+      .run(p.name, p.kind, p.provider, p.monthlyPremium, workspaceId, p.id).changes > 0;
+  }
+  db.prepare("INSERT INTO insurance_policies (workspace_id, name, kind, provider, monthly_premium) VALUES (?, ?, ?, ?, ?)")
+    .run(workspaceId, p.name, p.kind, p.provider, p.monthlyPremium);
+  return true;
+}
+
+/** Table names are fixed here, never from input. */
+export function deleteRow(table: "goals" | "insurance_policies", workspaceId: number, id: number): boolean {
+  return getDb().prepare(`DELETE FROM ${table} WHERE workspace_id = ? AND id = ?`).run(workspaceId, id).changes > 0;
+}

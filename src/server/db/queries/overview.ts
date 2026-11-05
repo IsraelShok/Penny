@@ -20,16 +20,20 @@ export function getPeriodTotals(workspaceId: number, r: PeriodRange): OverviewTo
   return { ...row, net, savingsRate: row.income > 0 ? net / row.income : null };
 }
 
+/** Groups a date into its budget month when months start on `startDay`. */
+const monthOf = (startDay: number) => [`substr(date(t.date, ?), 1, 7)`, `-${startDay - 1} days`] as const;
+
 /** Income and expenses per YYYY-MM inside the range. */
-export function getMonthlyFlow(workspaceId: number, r: PeriodRange) {
+export function getMonthlyFlow(workspaceId: number, r: PeriodRange, startDay = 1) {
+  const [month, shift] = monthOf(startDay);
   const rows = getDb()
     .prepare(
-      `SELECT substr(t.date, 1, 7) as month,
+      `SELECT ${month} as month,
          COALESCE(SUM(CASE WHEN t.kind = 'income' THEN t.charged_amount END), 0) as income,
          COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN ABS(t.charged_amount) END), 0) as expenses
        FROM transactions t WHERE ${BASE} GROUP BY month`
     )
-    .all(workspaceId, r.from, r.to) as { month: string; income: number; expenses: number }[];
+    .all(shift, workspaceId, r.from, r.to) as { month: string; income: number; expenses: number }[];
   const byMonth = new Map(rows.map((x) => [x.month, x]));
   return r.months.map((m) => byMonth.get(m) ?? { month: m, income: 0, expenses: 0 });
 }
@@ -63,19 +67,21 @@ export function getCategoryRows(
   workspaceId: number,
   r: PeriodRange,
   previous: PeriodRange,
-  lastYear: PeriodRange
+  lastYear: PeriodRange,
+  startDay = 1
 ): OverviewCategoryRow[] {
   const db = getDb();
+  const [month, shift] = monthOf(startDay);
   const sumBy = (from: string, to: string, byMonth: boolean) =>
     db
       .prepare(
-        `SELECT COALESCE(c.parent_id, c.id) as key${byMonth ? ", substr(t.date, 1, 7) as month" : ""},
+        `SELECT COALESCE(c.parent_id, c.id) as key${byMonth ? `, ${month} as month` : ""},
            SUM(ABS(t.charged_amount)) as amount
          FROM transactions t JOIN categories c ON c.id = t.category_id
          WHERE ${BASE} AND t.kind = 'expense'
          GROUP BY key${byMonth ? ", month" : ""}`
       )
-      .all(workspaceId, from, to) as { key: number; month?: string; amount: number }[];
+      .all(...(byMonth ? [shift] : []), workspaceId, from, to) as { key: number; month?: string; amount: number }[];
 
   const current = sumBy(r.from, r.to, true);
   const prev = new Map(sumBy(previous.from, previous.to, false).map((x) => [x.key, x.amount]));

@@ -9,7 +9,8 @@ export interface AssetRow extends AssetInput {
 }
 
 const COLUMNS = `id, name, type, currency, symbol, quantity, manual_value as manualValue,
-  cost_basis as costBasis, liquid, is_liability as isLiability, note`;
+  cost_basis as costBasis, liquid, is_liability as isLiability, note, fee_deposit as feeDeposit,
+  fee_balance as feeBalance, monthly_deposit as monthlyDeposit, interest_rate as interestRate, monthly_payment as monthlyPayment`;
 
 const isLiabilityType = (t: AssetType) => (LIABILITY_TYPES as readonly string[]).includes(t);
 
@@ -23,12 +24,14 @@ export function listAssets(workspaceId: number): AssetRow[] {
 export function createAssets(workspaceId: number, inputs: AssetInput[]): number {
   const db = getDb();
   const stmt = db.prepare(
-    `INSERT INTO assets (workspace_id, name, type, currency, symbol, quantity, manual_value, cost_basis, liquid, is_liability, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO assets (workspace_id, name, type, currency, symbol, quantity, manual_value, cost_basis, liquid, is_liability, note,
+       fee_deposit, fee_balance, monthly_deposit, interest_rate, monthly_payment)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   db.transaction(() => {
     for (const a of inputs) {
-      stmt.run(workspaceId, a.name, a.type, a.currency, a.symbol, a.quantity, a.manualValue, a.costBasis, a.liquid ? 1 : 0, isLiabilityType(a.type) ? 1 : 0, a.note);
+      stmt.run(workspaceId, a.name, a.type, a.currency, a.symbol, a.quantity, a.manualValue, a.costBasis, a.liquid ? 1 : 0, isLiabilityType(a.type) ? 1 : 0, a.note,
+        a.feeDeposit, a.feeBalance, a.monthlyDeposit, a.interestRate, a.monthlyPayment);
     }
   })();
   return inputs.length;
@@ -39,10 +42,12 @@ export function updateAsset(workspaceId: number, id: number, a: AssetInput): boo
     getDb()
       .prepare(
         `UPDATE assets SET name = ?, type = ?, currency = ?, symbol = ?, quantity = ?, manual_value = ?,
-           cost_basis = ?, liquid = ?, is_liability = ?, note = ?
+           cost_basis = ?, liquid = ?, is_liability = ?, note = ?, fee_deposit = ?, fee_balance = ?,
+           monthly_deposit = ?, interest_rate = ?, monthly_payment = ?
          WHERE workspace_id = ? AND id = ?`
       )
-      .run(a.name, a.type, a.currency, a.symbol, a.quantity, a.manualValue, a.costBasis, a.liquid ? 1 : 0, isLiabilityType(a.type) ? 1 : 0, a.note, workspaceId, id)
+      .run(a.name, a.type, a.currency, a.symbol, a.quantity, a.manualValue, a.costBasis, a.liquid ? 1 : 0, isLiabilityType(a.type) ? 1 : 0, a.note,
+        a.feeDeposit, a.feeBalance, a.monthlyDeposit, a.interestRate, a.monthlyPayment, workspaceId, id)
       .changes > 0
   );
 }
@@ -59,8 +64,27 @@ export function saveSnapshots(date: string, values: { assetId: number; valueIls:
   db.transaction(() => values.forEach((v) => stmt.run(v.assetId, date, v.valueIls)))();
 }
 
-/** Net worth per snapshot date: assets minus liabilities, carrying each asset's last known value forward. */
-export function netWorthHistory(workspaceId: number): { date: string; netWorth: number }[] {
+export function saveManualNetWorth(workspaceId: number, date: string, netWorth: number) {
+  getDb()
+    .prepare("INSERT INTO net_worth_manual (workspace_id, date, net_worth) VALUES (?, ?, ?) ON CONFLICT(workspace_id, date) DO UPDATE SET net_worth = excluded.net_worth")
+    .run(workspaceId, date, netWorth);
+}
+
+export function deleteManualNetWorth(workspaceId: number, date: string): boolean {
+  return getDb().prepare("DELETE FROM net_worth_manual WHERE workspace_id = ? AND date = ?").run(workspaceId, date).changes > 0;
+}
+
+/** Hand-entered net worth for months before tracking, then tracked snapshots (tracked wins on the same date). */
+export function netWorthHistory(workspaceId: number): { date: string; netWorth: number; manual?: boolean }[] {
+  const tracked = trackedHistory(workspaceId);
+  const first = tracked[0]?.date ?? "9999";
+  const manual = (getDb()
+    .prepare("SELECT date, net_worth as netWorth FROM net_worth_manual WHERE workspace_id = ? AND date < ? ORDER BY date")
+    .all(workspaceId, first) as { date: string; netWorth: number }[]).map((m) => ({ ...m, manual: true }));
+  return [...manual, ...tracked];
+}
+
+function trackedHistory(workspaceId: number): { date: string; netWorth: number }[] {
   const rows = getDb()
     .prepare(
       `SELECT s.date, s.asset_id as assetId, s.value_ils as value, a.is_liability as isLiability

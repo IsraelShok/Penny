@@ -812,6 +812,13 @@ export interface AssetInput {
   costBasis: number | null;
   liquid: boolean;
   note: string | null;
+  /** Management fees, % a year (pension, study and provident funds). */
+  feeDeposit: number | null;
+  feeBalance: number | null;
+  monthlyDeposit: number | null;
+  /** Debts: yearly interest % and monthly payment. */
+  interestRate: number | null;
+  monthlyPayment: number | null;
 }
 
 export interface Asset extends AssetInput {
@@ -837,7 +844,7 @@ export interface AssetsPayload {
     /** Net worth that can fund early retirement: liquid assets minus non-mortgage debt and deferred tax. */
     liquidNetWorth: number;
   };
-  history: { date: string; netWorth: number }[];
+  history: { date: string; netWorth: number; manual?: boolean }[];
   benchmarks: { symbol: string; change12m: number | null; changeYtd: number | null }[];
 }
 
@@ -849,9 +856,39 @@ export interface FiPayload {
   netWorth: number;
   liquidNetWorth: number;
   hasAssets: boolean;
+  /** Cash and deposits, for the emergency fund and the cash forecast. */
+  cashReserve: number;
+  /** Unrealised losses on taxable holdings, which can offset gains this year. */
+  taxableLosses: number;
+  deferredTax: number;
   /** Spending per category, last 12 complete months vs the 12 before. */
   inflation: {
     rate: number | null;
     categories: { categoryId: number; name: string; color: string; previous: number; current: number; change: number; weight: number }[];
   };
+}
+
+export interface Goal {
+  id: number;
+  name: string;
+  targetAmount: number;
+  /** YYYY-MM */
+  targetDate: string;
+  savedAmount: number;
+}
+
+export const POLICY_KINDS = ["health", "life", "disability", "long_term_care", "home", "car", "travel", "other"] as const;
+
+export interface InsurancePolicy {
+  id: number;
+  name: string;
+  kind: (typeof POLICY_KINDS)[number];
+  provider: string | null;
+  monthlyPremium: number;
+}
+
+export interface PlanPayload {
+  plan: import("./plan").FinancialPlan;
+  goals: Goal[];
+  policies: InsurancePolicy[];
 }

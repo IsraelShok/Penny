@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ASSET_TYPES, type AssetInput, type AssetType } from "@/lib/types";
 
-const FIELDS = ["name", "symbol", "quantity", "value", "cost", "currency"] as const;
+const FIELDS = ["name", "symbol", "quantity", "value", "cost", "currency", "feeBalance", "feeDeposit", "deposit"] as const;
 type Field = (typeof FIELDS)[number];
 const NONE = "__none";
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -22,9 +22,13 @@ const GUESS: Record<Field, RegExp> = {
   name: /name|description|security|שם|נייר/i,
   symbol: /symbol|ticker|סימול|מספר נייר/i,
   quantity: /quantity|qty|shares|units|כמות/i,
-  value: /market value|value|שווי/i,
+  value: /market value|value|שווי|יתרה|צביר|סך החיסכון/i,
   cost: /cost|basis|עלות/i,
   currency: /currency|מטבע/i,
+  // Pension clearinghouse / Har HaKesef report headers.
+  feeBalance: /דמי ניהול.*(צביר|יתר)|fee.*balance/i,
+  feeDeposit: /דמי ניהול.*הפקד|fee.*deposit/i,
+  deposit: /הפקדה חודשית|הפקדות חודשיות|monthly deposit/i,
 };
 
 export function ImportDialog({ onClose }: { onClose: () => void }) {
@@ -32,7 +36,7 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
   const tc = useTranslations("common");
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<string[][]>([]);
-  const [map, setMap] = useState<Record<Field, number | null>>({ name: null, symbol: null, quantity: null, value: null, cost: null, currency: null });
+  const [map, setMap] = useState<Record<Field, number | null>>(Object.fromEntries(FIELDS.map((f) => [f, null])) as Record<Field, number | null>);
   const [type, setType] = useState<AssetType>("stock");
   const header = rows[0] ?? [];
   const body = rows.slice(1);
@@ -56,8 +60,13 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
         quantity: live ? Math.abs(quantity) : null,
         manualValue: live ? null : Math.abs(value!),
         costBasis: parseAmount(cell(r, "cost")),
-        liquid: true,
+        liquid: type !== "pension",
         note: null,
+        feeBalance: parseAmount(cell(r, "feeBalance")),
+        feeDeposit: parseAmount(cell(r, "feeDeposit")),
+        monthlyDeposit: parseAmount(cell(r, "deposit")),
+        interestRate: null,
+        monthlyPayment: null,
       }];
     });
   }, [body, map, type]);
@@ -89,6 +98,11 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
     ) as Record<Field, number | null>;
     // "Market value" also matches cost columns loosely; keep the two apart.
     if (guessed.value != null && guessed.value === guessed.cost) guessed.cost = null;
+    // A fee column can also mention balance or deposit; fees win over value and deposit.
+    for (const f of ["feeBalance", "feeDeposit"] as const) {
+      if (guessed[f] != null && guessed.value === guessed[f]) guessed.value = null;
+      if (guessed[f] != null && guessed.deposit === guessed[f]) guessed.deposit = null;
+    }
     setMap(guessed);
   }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { periodRange, previousPeriod, sameElapsed, samePeriodLastYear } from "@/lib/period";
+import { budgetToday, periodRange, previousPeriod, sameElapsed, samePeriodLastYear, shiftRange } from "@/lib/period";
 
 const nov5 = new Date(2026, 10, 5);
 
@@ -29,5 +29,14 @@ describe("sameElapsed", () => {
     const q4 = periodRange("quarter", nov5);
     expect(sameElapsed(previousPeriod(q4), q4, nov5)).toMatchObject({ from: "2026-07-01", to: "2026-08-05" });
     expect(sameElapsed(samePeriodLastYear(q4), q4, nov5).to).toBe("2025-11-05");
+  });
+});
+
+describe("month start day", () => {
+  it("moves the month to start on the 10th", () => {
+    // 5 Nov with months starting on the 10th is still the October budget month.
+    const today = budgetToday(nov5, 10);
+    expect(shiftRange(periodRange("month", today), 10)).toMatchObject({ from: "2026-10-10", to: "2026-11-09", months: ["2026-10"] });
+    expect(shiftRange(periodRange("quarter", today), 10)).toMatchObject({ from: "2026-10-10", to: "2027-01-09" });
   });
 });

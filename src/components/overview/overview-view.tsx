@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, CircleDot } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleDot, Printer } from "lucide-react";
 import { getOverview } from "@/lib/api";
 import { ICON_MAP } from "@/components/dashboard/category-card";
 import { CardShell } from "@/components/home/card-shell";
@@ -35,7 +35,13 @@ export function OverviewView() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {query.data && (
+        <div className="hidden print:block">
+          <p className="text-title font-semibold">{t("reportTitle")} · <PeriodLabel period={query.data.period} /></p>
+          <p className="text-caption">{t("reportGenerated", { date: new Date().toLocaleDateString() })}</p>
+        </div>
+      )}
+      <div className="print-hidden flex flex-wrap items-center justify-between gap-3">
         <div role="radiogroup" aria-label={t("periodPicker")} className="inline-flex rounded-xl bg-muted p-1">
           {KINDS.map((k) => (
             <button
@@ -72,6 +78,10 @@ export function OverviewView() {
           >
             <ChevronLeft className="size-4 rtl:hidden" aria-hidden />
             <ChevronRight className="hidden size-4 rtl:block" aria-hidden />
+          </Button>
+          <Button variant="outline" className="ms-2" onClick={() => window.print()} disabled={!query.data}>
+            <Printer className="size-4" aria-hidden />
+            {t("print")}
           </Button>
         </div>
       </div>

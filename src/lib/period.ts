@@ -60,3 +60,24 @@ export function sameElapsed(base: PeriodRange, current: PeriodRange, today: Date
   const to = `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}`;
   return to < base.to ? { ...base, to } : base;
 }
+
+const addDays = (iso: string, days: number) => {
+  const d = new Date(`${iso}T12:00:00`);
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+/**
+ * Months that start on `startDay` (salary or card-bill day): compute calendar periods on
+ * `budgetToday(today, startDay)`, then move their dates with `shiftRange`. Month keys stay the same.
+ */
+export function budgetToday(today: Date, startDay: number): Date {
+  const d = new Date(today);
+  d.setDate(d.getDate() - (startDay - 1));
+  return d;
+}
+
+export function shiftRange(r: PeriodRange, startDay: number): PeriodRange {
+  if (startDay <= 1) return r;
+  return { ...r, from: addDays(r.from, startDay - 1), to: addDays(r.to, startDay - 1) };
+}
