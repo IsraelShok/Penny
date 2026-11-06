@@ -8,26 +8,32 @@ const SECURITY_HEADERS = [
   { key: "X-Frame-Options", value: "DENY" },
   // Stop the browser from MIME-sniffing responses.
   { key: "X-Content-Type-Options", value: "nosniff" },
-  // Don't leak the originating URL on outbound links.
-  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  // Never tell a clicked-through site which local page (and its query) you came from.
+  { key: "Referrer-Policy", value: "no-referrer" },
   // Lock down browser capabilities this app never needs.
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=()",
+    value:
+      "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=(), display-capture=(), browsing-topics=(), interest-cohort=()",
   },
-  // CSP for a local-only app: only same-origin scripts/styles + Google
-  // fonts. Bank logos are bundled in public/banks. Inline styles allowed
-  // for shadcn/Tailwind.
-  // 'unsafe-inline' on scripts is necessary because Next dev injects them.
+  // Isolate the window from cross-origin popups and refuse to serve our responses into other sites.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+  { key: "X-DNS-Prefetch-Control", value: "off" },
+  // CSP for a local-only app: only same-origin scripts/styles. Fonts are self-hosted by next/font.
+  // Inline styles allowed for shadcn/Tailwind. Inline scripts are needed for Next's hydration
+  // payload (nonces would force every page dynamic); eval only in dev for HMR.
+  // The browser never calls Anthropic or Ollama directly - the server does - so connect-src stays 'self'.
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' data: https://fonts.gstatic.com",
+      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+      "style-src 'self' 'unsafe-inline'",
+      "font-src 'self' data:",
       "img-src 'self' data: blob:",
-      "connect-src 'self' https://api.anthropic.com http://localhost:11434 ws://127.0.0.1:* ws://localhost:*",
+      "connect-src 'self' ws://127.0.0.1:* ws://localhost:*",
+      "object-src 'none'",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

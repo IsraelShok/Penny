@@ -1,3 +1,4 @@
+import { redact, redactError } from "@/server/lib/redact";
 import {
   runAllWorkspaces,
   syncWorkspace,
@@ -97,10 +98,10 @@ export async function POST(request: Request) {
           });
         }
       } catch (error) {
-        console.error("[sync] unexpected error in sync route:", error);
+        console.error("[sync] unexpected error in sync route:", redactError(error));
         const message =
           error instanceof Error
-            ? error.message.replace(/\b\d{5,}\b/g, "[REDACTED]")
+            ? redact(error.message)
             : "An unexpected error occurred";
         send("error", { message });
       } finally {

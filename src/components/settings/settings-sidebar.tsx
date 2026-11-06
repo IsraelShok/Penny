@@ -14,6 +14,7 @@ import {
   ListFilter,
   Users,
   HeartHandshake,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -96,6 +97,12 @@ const GROUPS: NavGroup[] = [
   {
     titleKey: "groupAdvanced",
     items: [
+      {
+        href: "/settings/privacy",
+        labelKey: "privacy",
+        Icon: Lock,
+        match: (p) => p.startsWith("/settings/privacy"),
+      },
       {
         href: "/settings/data",
         labelKey: "data",

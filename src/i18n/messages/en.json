@@ -56,7 +56,8 @@
     "dailyGroup": "Every day",
     "planningGroup": "The big picture",
     "more": "More",
-    "search": "Search"
+    "search": "Search",
+    "privacyMode": "Privacy mode: hide amounts"
   },
   "home": {
     "pageTitle": "Home",
@@ -358,7 +359,8 @@
       "data": "Data & privacy",
       "rules": "Rules",
       "household": "Household",
-      "telegram": "Telegram"
+      "telegram": "Telegram",
+      "privacy": "Privacy & security"
     },
     "workspace": {
       "nameTitle": "Workspace name",
@@ -614,6 +616,31 @@
       "downloadPrompt": "Download <b>{model}</b> now. You only need to do this once.",
       "downloadPromptWithSize": "Download <b>{model}</b> now (~{size} GB, a few minutes depending on your connection). You only need to do this once.",
       "download": "Download"
+    },
+    "privacy": {
+      "title": "Privacy & security",
+      "description": "What is stored, where, and what leaves your computer.",
+      "modeTitle": "Privacy mode",
+      "modeDescription": "Blurs amounts and numbers on screen, for example while screen sharing or in a cafe. You can also turn it on from the button at the bottom of the menu.",
+      "modeLabel": "Hide amounts on screen",
+      "storedTitle": "What is stored",
+      "storedDescription": "Everything stays on this computer. No account, no cloud.",
+      "whereLabel": "Data folder:",
+      "storedTransactions": "Transactions, categories, budgets and goals - in the database file (spent.db).",
+      "storedCredentials": "Bank logins, the AI provider API key and the bot token - encrypted with AES-256-GCM.",
+      "storedKey": "The encryption key - in .encryption-key in the same folder, readable only by your user.",
+      "storedSettings": "Display preferences such as privacy mode and the collapsed menu - in the browser only.",
+      "leavesTitle": "What leaves your computer",
+      "leavesDescription": "Only what you turned on, and only to these places.",
+      "leavesBanks": "Banks and card companies - your login goes only to the bank's own site, during a sync.",
+      "leavesAi": "A cloud AI provider, if you chose one - the transaction description and amount only, without account, card or ID numbers. With local Ollama nothing leaves.",
+      "leavesTelegram": "Telegram, if you linked a bot - only the summaries you ask for, only to the linked chat.",
+      "leavesUpdate": "Update check against GitHub - none of your data, only whether a new version exists.",
+      "protectTitle": "Protect it further",
+      "protectBody": "Turn on disk encryption (BitLocker on Windows, FileVault on Mac). Anyone who can read the data folder can read your transactions. A backup of the folder includes the encryption key - keep it somewhere encrypted.",
+      "deleteTitle": "Delete your data",
+      "deleteDescription": "Delete all transactions and category memory in one step. Bank connections are removed separately on the Bank accounts page.",
+      "deleteCta": "Go to delete data"
     }
   },
   "setup": {

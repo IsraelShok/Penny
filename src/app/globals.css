@@ -233,6 +233,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Privacy mode: hide figures on screen (shoulder-surfing, screen sharing). Screen readers still read them. */
+html[data-privacy="on"] :is(.tabular-nums, .figure, [data-money], .recharts-text, .recharts-tooltip-wrapper) {
+  filter: blur(0.45em);
+  user-select: none;
+}
+@media print {
+  html[data-privacy="on"] :is(.tabular-nums, .figure, [data-money]) { filter: none; }
+}
+
 /* Hebrew: Heebo everywhere (sans and serif headings); mono falls back to Heebo for Hebrew glyphs.
    Higher specificity than next/font's class-based variable definitions. */
 html[lang="he"] {
