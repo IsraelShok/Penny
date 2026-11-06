@@ -80,7 +80,7 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
   return (
     <section aria-labelledby="today-title" aria-busy={state === "loading"} className="wallet mb-6 overflow-hidden rounded-3xl border border-white/10 p-6 shadow-sm sm:p-8 md:mb-8 lg:p-10">
       {gentle && (
-        <p className="mb-5 rounded-xl bg-white/10 px-4 py-3 text-sm text-muted-foreground">
+        <p className="mb-5 rounded-xl glass-tile px-4 py-3 text-sm text-muted-foreground">
           {t("gentleBanner")}{" "}
           <Link href="/settings/household" className="font-medium text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">{t("gentleSettings")}</Link>
         </p>
@@ -88,7 +88,7 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
       <h2 id="today-title" className="mb-4 text-footnote font-medium text-muted-foreground">{t("title")}</h2>
       <p role="status" className={cn("max-w-3xl text-2xl font-semibold leading-relaxed text-pretty sm:text-3xl", !gentle && ready && free != null && free < 0 && "text-status-heads-up")}>{sentence}</p>
       {state === "error" && (
-        <button type="button" onClick={() => { onRetry(); void retryPlan(); void cashQuery.refetch(); void suggestionsQuery.refetch(); }} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-5 text-sm font-semibold hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+        <button type="button" onClick={() => { onRetry(); void retryPlan(); void cashQuery.refetch(); void suggestionsQuery.refetch(); }} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full glass-tile px-5 text-sm font-semibold hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
           <RefreshCw className="size-4" aria-hidden />{common("tryAgain")}
         </button>
       )}
@@ -100,7 +100,7 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
         </details>
       )}
       {next && (
-        <Link href={next.href} className="mt-6 flex min-h-20 items-center justify-between gap-4 rounded-2xl bg-white/10 px-5 py-5 hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+        <Link href={next.href} className="mt-6 flex min-h-20 items-center justify-between gap-4 rounded-2xl glass-tile px-5 py-5 hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
           <span className="min-w-0">
             <span className="mb-1 block text-caption text-muted-foreground">{t(g("nextLabel"))}</span>
             <span className="block text-lg font-semibold">{next.label}</span>
@@ -110,8 +110,8 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
         </Link>
       )}
       {state === "done" && <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="size-5 shrink-0" aria-hidden />{t("allDone")}</p>}
-      {!gentle && ready && stats.length > 0 && <dl className="mt-8 grid gap-5 border-t border-white/10 pt-6 sm:grid-cols-3">
-        {stats.map((stat) => <div key={stat.label} className="min-w-0"><dt className="text-sm text-muted-foreground">{stat.label}</dt><dd className="figure mt-2 break-words text-3xl"><bdi>{stat.value}</bdi></dd></div>)}
+      {!gentle && ready && stats.length > 0 && <dl className="mt-6 grid gap-3 sm:grid-cols-3">
+        {stats.map((stat) => <div key={stat.label} className="glass-tile min-w-0 rounded-2xl px-5 py-4"><dt className="text-sm text-muted-foreground">{stat.label}</dt><dd className="figure mt-2 break-words text-3xl"><bdi>{stat.value}</bdi></dd></div>)}
       </dl>}
       {wellbeingQuery.data && wellbeingDue(wellbeingQuery.data, today) && (
         <Link href="/wellbeing" className="mt-6 me-6 inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-medium text-muted-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
