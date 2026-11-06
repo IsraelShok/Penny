@@ -11,6 +11,7 @@ import { PageWheelNav } from "./page-wheel-nav";
 import { AlertNotifier } from "./alert-notifier";
 import { CommandPalette } from "./command-palette";
 import { useTranslations } from "next-intl";
+import { InfoTip } from "@/components/ui/info-tip";
 
 /** Lives in the root layout so the collapsed state survives page changes. */
 export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; children: ReactNode }) {
@@ -56,13 +57,14 @@ export function PageHeader({
 
   return (
     <header className={`glass sticky top-0 z-20 transition-[box-shadow] duration-150 ${scrolled ? "shadow-[0_0.5px_0_var(--border)]" : ""}`}>
-      <div className="mx-auto flex min-h-14 max-w-[76rem] flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 md:px-6 lg:px-8">
-        <SidebarTrigger className="-ms-1 md:hidden" />
-        <div className={largeTitle ? "flex min-w-0 items-baseline gap-3" : "sr-only"}>
+      <div className="mx-auto grid min-h-14 max-w-[76rem] grid-cols-[1fr_auto_1fr] items-center gap-x-4 px-4 py-2 md:px-6 lg:px-8">
+        <SidebarTrigger className="-ms-1 justify-self-start md:hidden" />
+        <div className={largeTitle ? "col-start-2 flex min-w-0 items-center justify-center gap-1 text-center" : "sr-only"}>
           <h1 className="truncate text-[1.625rem] leading-8 font-bold tracking-tight">{title}</h1>
-          {meta && <p className="truncate text-footnote text-muted-foreground">{meta}</p>}
+          {/* Short context (a month) stays visible; anything longer hides behind the "i". */}
+          {meta && (meta.length > 24 ? <InfoTip text={meta} /> : <p className="truncate text-footnote text-muted-foreground">{meta}</p>)}
         </div>
-        <div className="ms-auto flex min-w-0 flex-wrap items-center justify-end gap-2">{actions}</div>
+        <div className="col-start-3 flex min-w-0 flex-wrap items-center justify-end gap-2">{actions}</div>
       </div>
     </header>
   );

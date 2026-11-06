@@ -136,14 +136,6 @@ function Body({ data }: { data: OverviewPayload }) {
   return (
     <>
       <ResilienceCard />
-      {/* The answer first, in words; the numbers follow. */}
-      {!empty && (
-        <p className="text-[1.375rem] leading-snug font-semibold text-balance">
-          {data.totals.net >= 0
-            ? t("answerSaved", { net: shekels(data.totals.net, locale), rate: data.totals.savingsRate == null ? 0 : Math.round(data.totals.savingsRate * 100) })
-            : t("answerShort", { amount: shekels(-data.totals.net, locale) })}
-        </p>
-      )}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label={t("income")} value={shekels(data.totals.income, locale)} cur={data.totals.income} prev={data.previous.income} ly={data.lastYear.income} goodWhenUp />
         <Stat label={t("expenses")} value={shekels(data.totals.expenses, locale)} cur={data.totals.expenses} prev={data.previous.expenses} ly={data.lastYear.expenses} />

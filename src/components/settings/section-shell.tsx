@@ -1,3 +1,4 @@
+import { InfoTip } from "@/components/ui/info-tip";
 import type { ReactNode } from "react";
 
 interface SectionShellProps {
@@ -13,11 +14,9 @@ export function SectionShell({
 }: SectionShellProps) {
   return (
     <div className="space-y-5">
-      <div>
+      <div className="flex items-center gap-1">
         <h2 className="text-xl font-bold tracking-tight">{title}</h2>
-        {description && (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        )}
+        {description && <InfoTip text={description} />}
       </div>
       <div className="space-y-4">{children}</div>
     </div>
@@ -38,11 +37,10 @@ export function SettingCard({
   return (
     <div className="rounded-2xl bg-card p-6">
       {(title || description) && (
-        <div className="mb-4">
+        <div className="mb-4 flex items-center gap-1">
           {title && <h3 className="font-medium">{title}</h3>}
-          {description && (
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-          )}
+          {/* Short notes stay inline; longer explanations go behind the "i". */}
+          {description && (title && description.length > 60 ? <InfoTip text={description} /> : <p className="text-sm text-muted-foreground">{description}</p>)}
         </div>
       )}
       {children}

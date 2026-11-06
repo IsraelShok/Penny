@@ -28,7 +28,8 @@
     "months": "months",
     "day": "day",
     "days": "days",
-    "perMonth": "/ month"
+    "perMonth": "/ month",
+    "moreInfo": "More info"
   },
   "nav": {
     "home": "Home",
