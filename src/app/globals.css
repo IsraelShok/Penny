@@ -209,18 +209,34 @@
   background: linear-gradient(135deg, #2a1fb8 0%, #3b2bd6 55%, #4a33e6 100%);
   color: var(--foreground);
 }
+/* "Silk": soft plum, magenta and periwinkle light pooled in the corners (ESH uses smoke; this is woven, not drifting). */
 .wallet::before {
   content: "";
   position: absolute;
-  inset: -40% -20% auto auto;
-  width: 70%;
-  aspect-ratio: 1;
-  border-radius: 9999px;
-  background: radial-gradient(circle, #8f6bff 0%, transparent 65%);
-  opacity: 0.55;
-  filter: blur(24px);
+  inset: -30%;
+  background:
+    radial-gradient(40% 50% at 85% 10%, #9b6bff 0%, transparent 70%),
+    radial-gradient(35% 45% at 10% 95%, #c04fe0 0%, transparent 70%),
+    radial-gradient(30% 40% at 60% 110%, #5b8cff 0%, transparent 70%);
+  opacity: 0.5;
+  filter: blur(30px);
+  z-index: -2;
+  pointer-events: none;
+}
+/* Silk threads: stretched fractal noise reads as fine, flowing sheen lines; soft-light keeps text contrast. */
+.wallet::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='400'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0025 0.018' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.6 -0.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  background-size: cover;
+  mix-blend-mode: soft-light;
+  opacity: 0.9;
   z-index: -1;
   pointer-events: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .wallet::before, .wallet::after { display: none; }
 }
 
 /* Tesla-style figures: big, thin, tight. */

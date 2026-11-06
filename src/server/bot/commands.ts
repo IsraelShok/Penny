@@ -3,6 +3,7 @@ import "server-only";
 import { loadInsights } from "../insights/data";
 import { forecastCards } from "../insights/forecast";
 import { getLastSyncRun } from "../db/queries/sync-runs";
+import { buildSnapshot, formatFull, formatShort } from "./snapshot";
 
 export interface BotConfig {
   chatId: number;
@@ -19,7 +20,15 @@ export interface BotDeps {
 
 const money = (n: number) => `₪${Math.round(n).toLocaleString("en-US")}`;
 
+/** Reply-keyboard labels; tapping one sends its text, mapped back to a command. */
+export const SHORT_LABEL = "תמונת מצב מצומצמת";
+export const FULL_LABEL = "תמונת מצב מלאה";
+const ALIASES: Record<string, string> = { [SHORT_LABEL]: "/short", [FULL_LABEL]: "/full", "קצר": "/short", "מלא": "/full" };
+
 const HELP = [
+  "בחרו תמונת מצב בכפתורים למטה, או:",
+  "/short - תמונת מצב מצומצמת",
+  "/full - תמונת מצב מלאה",
   "/month - this month's spending",
   "/subs - detected subscriptions",
   "/forecast - next 3 card bills",
@@ -62,11 +71,15 @@ export async function handleCommand(
   deps: BotDeps
 ): Promise<string | null> {
   if (fromChatId !== cfg.chatId) return null;
-  const cmd = text.trim().split(/\s+/)[0].toLowerCase().replace(/@.*$/, "");
+  const cmd = ALIASES[text.trim()] ?? text.trim().split(/\s+/)[0].toLowerCase().replace(/@.*$/, "");
   const workspaceId = deps.workspaceId;
   if (workspaceId === undefined) return "Spent is not set up yet. Finish setup in the app first.";
 
   switch (cmd) {
+    case "/short":
+      return formatShort(buildSnapshot(workspaceId, deps.today));
+    case "/full":
+      return formatFull(buildSnapshot(workspaceId, deps.today));
     case "/month": {
       const i = loadInsights(workspaceId, deps.today);
       const lines = i.topCategories.map((c) => `${c.name}: ${money(c.total)}`);

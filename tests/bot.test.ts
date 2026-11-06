@@ -94,3 +94,40 @@ describe("handleCommand", () => {
     expect(await cmd.handleCommand("hello", 42, cfg, deps())).toContain("/month");
   });
 });
+
+describe("snapshot commands", () => {
+  it("answers /short and its keyboard label with the same three-line snapshot", async () => {
+    const short = await cmd.handleCommand("/short", 42, cfg, deps());
+    expect(short).toContain("הוצאות החודש");
+    expect(await cmd.handleCommand(cmd.SHORT_LABEL, 42, cfg, deps())).toBe(short);
+  });
+
+  it("full snapshot extends the short one and ignores other chats", async () => {
+    const full = await cmd.handleCommand(cmd.FULL_LABEL, 42, cfg, deps());
+    expect(full).toContain("תמונת מצב");
+    expect(full).toContain("סנכרון אחרון");
+    expect(await cmd.handleCommand("/full", 7, cfg, deps())).toBeNull();
+  });
+});
+
+describe("formatShort", () => {
+  const base = { monthTotal: 1200, topCategories: [], bills: [], subs: [], lastSync: null };
+  const cash = { bank: 0, billsDue: 0, salaryExpected: 0, until: "2026-12-01", daysLeft: 25 };
+  it("says how much is missing when below zero, and handles no bank", async () => {
+    const { formatShort } = await import("@/server/bot/snapshot");
+    expect(formatShort({ ...base, cash: { ...cash, safeToSpend: -500 } })).toMatch(/חסרים ₪500/);
+    expect(formatShort({ ...base, cash: { ...cash, safeToSpend: null } })).toMatch(/אין יתרת בנק/);
+    expect(formatShort({ ...base, cash: { ...cash, safeToSpend: 2500 } })).toMatch(/₪100 ליום/);
+  });
+});
+
+describe("linkChat", () => {
+  it("links only with the issued code, once", async () => {
+    const c = await import("@/server/bot/config");
+    c.saveBot("123:abc", "penny_bot");
+    expect(c.linkChat("wrong", 9)).toBe(false);
+    expect(c.linkChat(c.getBotConfig().code!, 9)).toBe(true);
+    expect(c.getBotConfig()).toMatchObject({ chatId: 9, token: "123:abc", code: null });
+    c.clearBot();
+  });
+});

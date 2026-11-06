@@ -349,7 +349,8 @@
       "categories": "Categories",
       "data": "Data & privacy",
       "rules": "Rules",
-      "household": "Household"
+      "household": "Household",
+      "telegram": "Telegram"
     },
     "workspace": {
       "nameTitle": "Workspace name",
@@ -2444,5 +2445,25 @@
     "legacy_hint": "Where everything is, if it's ever needed",
     "import_title": "Import files",
     "import_hint": "Bank and card statements, without connecting a bank"
+  },
+  "telegram": {
+    "title": "Telegram bot",
+    "description": "A snapshot in Telegram, short or full, at the tap of a button.",
+    "step1Title": "Step 1: Create a bot",
+    "howBotFather": "In Telegram, open @BotFather and send /newbot.",
+    "howNewBot": "Pick a name and a username for the bot.",
+    "howCopy": "Copy the token it sends and paste it here.",
+    "tokenLabel": "Bot token",
+    "connect": "Connect",
+    "errorFormat": "That doesn't look like a bot token. Copy it again from BotFather.",
+    "errorRejected": "Telegram didn't accept the token. Check you copied all of it and that you're online.",
+    "privacy": "The token is stored encrypted on this computer only. The bot answers only the chat you link next.",
+    "step2Title": "Step 2: Link your chat",
+    "step2Hint": "Open the bot and press Start. That links your chat, and only yours.",
+    "open": "Open {name} in Telegram",
+    "waiting": "Waiting for Start…",
+    "linked": "Connected to {name}",
+    "linkedHint": "The bot has two buttons: short snapshot and full snapshot. You can also send /short or /full.",
+    "disconnect": "Disconnect bot"
   }
 }
