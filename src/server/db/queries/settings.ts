@@ -81,7 +81,7 @@ export function getAppSettings(workspaceId: number): AppSettings {
     autoSyncEnabled: getGlobalSetting("auto_sync_enabled") === "true",
     autoSyncTime:
       storedTime && AUTO_SYNC_TIME_RE.test(storedTime) ? storedTime : "06:00",
-    language: storedLang === "he" ? "he" : "en",
+    language: storedLang === "en" ? "en" : "he",
     displayName: getGlobalSetting("display_name") ?? "",
     household: readHousehold(workspaceId),
   };
