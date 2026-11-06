@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
 import { PrivacyModeSwitch } from "@/components/settings/privacy-mode-switch";
+import { AppLockCard } from "@/components/settings/app-lock-card";
+import { WipeCard } from "@/components/settings/wipe-card";
 import { Button } from "@/components/ui/button";
 import { dataDir } from "@/server/lib/data-dir";
 
@@ -15,6 +17,8 @@ export default async function PrivacySettingsPage() {
       <SettingCard title={t("modeTitle")} description={t("modeDescription")}>
         <PrivacyModeSwitch />
       </SettingCard>
+
+      <AppLockCard />
 
       <SettingCard title={t("storedTitle")} description={t("storedDescription")}>
         <p className="mb-3 text-sm">
@@ -47,6 +51,8 @@ export default async function PrivacySettingsPage() {
           {t("deleteCta")}
         </Button>
       </SettingCard>
+
+      <WipeCard />
     </SectionShell>
   );
 }

@@ -2,7 +2,9 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Search } from "lucide-react";
+import { Eye, EyeOff, Lock, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getLockStatus } from "@/components/settings/app-lock-card";
 import { usePrivacyMode } from "@/hooks/use-privacy-mode";
 import { OPEN_COMMAND_PALETTE } from "./command-palette";
 import { SidebarSync } from "./sidebar-sync";
@@ -106,6 +108,7 @@ export function AppSidebar() {
   const router = useRouter();
   const t = useTranslations("nav");
   const [privacy, togglePrivacy] = usePrivacyMode();
+  const lock = useQuery({ queryKey: ["lock"], queryFn: getLockStatus });
   const { toggleSidebar, setOpenMobile } = useSidebar();
   const { plan } = usePlan();
   // Settings lives as an icon by the workspace, but the wheel still reaches it last.
@@ -188,6 +191,18 @@ export function AppSidebar() {
         <IconButton label={t("privacyMode")} size="icon-sm" aria-pressed={privacy} onClick={togglePrivacy}>
           {privacy ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
         </IconButton>
+        {lock.data?.enabled && (
+          <IconButton
+            label={t("lockNow")}
+            size="icon-sm"
+            onClick={async () => {
+              await fetch("/api/lock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "lock" }) });
+              window.location.assign("/lock");
+            }}
+          >
+            <Lock className="size-4" aria-hidden />
+          </IconButton>
+        )}
         <IconButton label={t("toggleSidebar")} size="icon-sm" onClick={toggleSidebar}>
           <PanelLeftIcon className="size-4 rtl:rotate-180" aria-hidden />
         </IconButton>

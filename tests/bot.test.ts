@@ -131,3 +131,14 @@ describe("linkChat", () => {
     c.clearBot();
   });
 });
+
+describe("hide amounts in Telegram", () => {
+  it("replaces every amount with dots in all commands", async () => {
+    const hidden = { ...cfg, hideAmounts: true };
+    for (const c of ["/short", "/full", "/month", "/subs", "/forecast"]) {
+      const out = (await cmd.handleCommand(c, 42, hidden, deps()))!;
+      expect(out, c).not.toMatch(/₪\d/);
+    }
+    expect(await cmd.handleCommand("/month", 42, hidden, deps())).toContain("•••");
+  });
+});

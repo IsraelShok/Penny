@@ -4,7 +4,7 @@ import type { AIProvider } from "./types";
 import { ClaudeProvider } from "./providers/claude";
 import { OllamaProvider } from "./providers/ollama";
 import { getSetting } from "../db/queries/settings";
-import { decrypt } from "../lib/encryption";
+import { decrypt, isKeyLocked } from "../lib/encryption";
 
 export function createAIProvider(): AIProvider | null {
   const provider = getSetting("ai_provider");
@@ -14,7 +14,7 @@ export function createAIProvider(): AIProvider | null {
     const iv = getSetting("ai_api_key_iv");
     const authTag = getSetting("ai_api_key_auth_tag");
 
-    if (!encryptedKey || !iv || !authTag) return null;
+    if (!encryptedKey || !iv || !authTag || isKeyLocked()) return null;
 
     const apiKey = decrypt({
       encrypted: Buffer.from(encryptedKey, "hex"),

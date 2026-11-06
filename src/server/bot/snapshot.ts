@@ -28,28 +28,32 @@ export function buildSnapshot(ws: number, today: string): Snapshot {
   };
 }
 
-const money = (n: number) => `₪${Math.round(Math.abs(n)).toLocaleString("he-IL")}`;
+const showMoney = (n: number) => `₪${Math.round(Math.abs(n)).toLocaleString("he-IL")}`;
 const day = (iso: string) => new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso.slice(0, 10)}T12:00:00Z`));
 
-function freeLine(c: CashAhead): string {
+function freeLine(c: CashAhead, money: (n: number) => string): string {
   if (c.safeToSpend == null) return "עוד אין יתרת בנק מסונכרנת, אז אין סכום פנוי.";
   if (c.safeToSpend < 0) return `🔴 חסרים ${money(c.safeToSpend)} עד ${day(c.until)}.`;
   return `🟢 ${money(c.safeToSpend)} פנויים עד ${day(c.until)}, בערך ${money(c.safeToSpend / Math.max(1, c.daysLeft))} ליום.`;
 }
 
 /** Three lines: free money, month spend, next card bill. */
-export function formatShort(s: Snapshot): string {
+const moneyFor = (hide: boolean) => (hide ? () => "•••" : showMoney);
+
+export function formatShort(s: Snapshot, hide = false): string {
+  const money = moneyFor(hide);
   const next = s.bills[0];
   return [
-    freeLine(s.cash),
+    freeLine(s.cash, money),
     `הוצאות החודש: ${money(s.monthTotal)}`,
     next ? `חיוב אשראי הבא: ${money(next.total)} ב־${day(next.date)}` : null,
   ].filter(Boolean).join("\n");
 }
 
-export function formatFull(s: Snapshot): string {
+export function formatFull(s: Snapshot, hide = false): string {
+  const money = moneyFor(hide);
   const sections = [
-    `📊 תמונת מצב\n${formatShort(s)}`,
+    `📊 תמונת מצב\n${formatShort(s, hide)}`,
     s.topCategories.length ? `הקטגוריות הגדולות החודש:\n${s.topCategories.slice(0, 5).map((c) => `• ${c.name}: ${money(c.total)}`).join("\n")}` : null,
     s.bills.length ? `חיובי אשראי צפויים:\n${s.bills.slice(0, 3).map((b) => `• ${day(b.date)}${b.account ? ` (כרטיס ${b.account.slice(-4)})` : ""}: ${money(b.total)}`).join("\n")}` : null,
     s.subs.length ? `מנויים חודשיים: ${s.subs.length}, ביחד ${money(s.subs.reduce((t, x) => t + x.amount, 0))} בחודש` : null,

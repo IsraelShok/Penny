@@ -1,0 +1,43 @@
+import fs from "fs";
+import path from "path";
+import { NextResponse } from "next/server";
+import { checkSecret, endAllSessions, isLockEnabled, shred } from "@/server/lib/app-lock";
+import { keyPath, legacyKeyPath, lockFilePath, setKeyInMemory } from "@/server/lib/encryption";
+import { dataDir } from "@/server/lib/data-dir";
+import { withSession } from "../../lock/session-cookie";
+
+export const dynamic = "force-dynamic";
+
+const WIPE_WORD = "מחיקה";
+
+/** Deletes everything: the database (credentials, settings, AI keys, Telegram), the key or wrapped key, and logs. Back to first run. */
+export async function POST(request: Request) {
+  const { confirm, secret } = (await request.json().catch(() => ({}))) as { confirm?: unknown; secret?: unknown };
+  if (confirm !== WIPE_WORD) return NextResponse.json({ error: "confirm" }, { status: 400 });
+  if (isLockEnabled()) {
+    const check = await checkSecret(secret);
+    if (!check.ok) return NextResponse.json({ error: check.reason, retryAfter: check.retryAfter }, { status: check.reason === "wait" ? 429 : 401 });
+  }
+
+  // Stop background work that holds the bot token or would write to the database mid-wipe.
+  const bot = globalThis.__spentBot;
+  globalThis.__spentBot = undefined;
+  await bot?.stop().catch(() => undefined);
+  globalThis._db?.close();
+  globalThis._db = undefined;
+
+  const dir = dataDir();
+  const files = ["spent.db", "spent.db-wal", "spent.db-shm", ".app-lock.json.tmp"].map((f) => path.join(dir, f));
+  for (const f of [...files, keyPath(), legacyKeyPath(), lockFilePath()]) shred(f);
+  if (fs.existsSync(dir)) {
+    for (const f of fs.readdirSync(dir)) if (f.endsWith(".log")) fs.rmSync(path.join(dir, f), { force: true });
+  }
+  fs.rmSync(path.join(dir, "logs"), { recursive: true, force: true });
+  setKeyInMemory(undefined);
+  endAllSessions();
+
+  // Re-reads settings from the fresh database, where auto-sync is off.
+  const { reschedule } = await import("@/server/sync/scheduler");
+  reschedule();
+  return withSession(NextResponse.json({ ok: true }), request, null);
+}

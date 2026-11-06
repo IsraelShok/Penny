@@ -2,7 +2,7 @@ import "server-only";
 
 import crypto from "crypto";
 import { getGlobalSetting, setGlobalSetting, deleteGlobalSetting } from "../db/queries/settings";
-import { encrypt, decrypt } from "../lib/encryption";
+import { encrypt, decrypt, isKeyLocked } from "../lib/encryption";
 
 const TOKEN = "telegram_token";
 const CHAT = "telegram_chat_id";
@@ -13,7 +13,8 @@ const USERNAME = "telegram_bot_username";
 export function getBotConfig(): { token: string | null; chatId: number | null; username: string | null; code: string | null } {
   const raw = getGlobalSetting(TOKEN);
   let token = process.env.TELEGRAM_BOT_TOKEN || null;
-  if (raw) {
+  // While the app is locked the saved token cannot be read; the bot starts on unlock.
+  if (raw && !isKeyLocked()) {
     const d = JSON.parse(raw) as Record<"e" | "i" | "t", string>;
     token = decrypt({ encrypted: Buffer.from(d.e, "base64"), iv: Buffer.from(d.i, "base64"), authTag: Buffer.from(d.t, "base64") });
   }
@@ -38,6 +39,10 @@ export function linkChat(code: string, chatId: number): boolean {
   deleteGlobalSetting(CODE);
   return true;
 }
+
+const HIDE = "telegram_hide_amounts";
+export const getHideAmounts = () => getGlobalSetting(HIDE) === "true";
+export const setHideAmounts = (on: boolean) => setGlobalSetting(HIDE, on ? "true" : "false");
 
 export function clearBot(): void {
   for (const k of [TOKEN, CHAT, CODE, USERNAME]) deleteGlobalSetting(k);

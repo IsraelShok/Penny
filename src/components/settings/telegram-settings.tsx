@@ -7,10 +7,11 @@ import { CheckCircle2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Forward } from "@/components/ui/dir-chevron";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
 
-interface Status { connected: boolean; linked: boolean; username: string | null; code: string | null }
+interface Status { connected: boolean; linked: boolean; username: string | null; code: string | null; hideAmounts: boolean }
 
 const call = async (method: string, body?: unknown): Promise<Status> => {
   const res = await fetch("/api/telegram", { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
@@ -31,6 +32,7 @@ export function TelegramSettings() {
   });
   const save = useMutation({ mutationFn: () => call("POST", { token }), onSuccess: (d) => { setToken(""); qc.setQueryData(["telegram"], d); } });
   const remove = useMutation({ mutationFn: () => call("DELETE"), onSuccess: (d) => qc.setQueryData(["telegram"], d) });
+  const hide = useMutation({ mutationFn: (on: boolean) => call("PATCH", { hideAmounts: on }), onSuccess: (d) => qc.setQueryData(["telegram"], d) });
   const s = status.data;
 
   return (
@@ -39,6 +41,10 @@ export function TelegramSettings() {
         <SettingCard>
           <p className="flex items-center gap-2 font-medium"><CheckCircle2 className="size-5 text-status-on-track" aria-hidden />{t("linked", { name: `@${s.username ?? ""}` })}</p>
           <p className="mt-2 text-sm text-muted-foreground">{t("linkedHint")}</p>
+          <div className="mt-4 flex min-h-11 items-center justify-between gap-4">
+            <Label htmlFor="tg-hide" className="flex-1">{t("hideAmounts")}</Label>
+            <Switch id="tg-hide" checked={s.hideAmounts} onCheckedChange={(on) => hide.mutate(on)} disabled={hide.isPending} />
+          </div>
           <Button variant="outline" className="mt-5" onClick={() => remove.mutate()} disabled={remove.isPending}>{t("disconnect")}</Button>
         </SettingCard>
       ) : s?.connected && s.code ? (

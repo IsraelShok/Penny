@@ -8,6 +8,8 @@ import { buildSnapshot, formatFull, formatShort } from "./snapshot";
 export interface BotConfig {
   chatId: number;
   billingDay: number;
+  /** "Hide amounts in Telegram": amounts become dots, since messages sit on Telegram's servers. */
+  hideAmounts?: boolean;
 }
 
 export interface BotDeps {
@@ -18,7 +20,8 @@ export interface BotDeps {
   isSyncRunning?: () => boolean;
 }
 
-const money = (n: number) => `₪${Math.round(n).toLocaleString("en-US")}`;
+const showMoney = (n: number) => `₪${Math.round(n).toLocaleString("en-US")}`;
+export const HIDDEN_AMOUNT = "•••";
 
 /** Reply-keyboard labels; tapping one sends its text, mapped back to a command. */
 export const SHORT_LABEL = "תמונת מצב מצומצמת";
@@ -72,14 +75,16 @@ export async function handleCommand(
 ): Promise<string | null> {
   if (fromChatId !== cfg.chatId) return null;
   const cmd = ALIASES[text.trim()] ?? text.trim().split(/\s+/)[0].toLowerCase().replace(/@.*$/, "");
+  const money = cfg.hideAmounts ? () => HIDDEN_AMOUNT : showMoney;
+  const hide = !!cfg.hideAmounts;
   const workspaceId = deps.workspaceId;
   if (workspaceId === undefined) return "Spent is not set up yet. Finish setup in the app first.";
 
   switch (cmd) {
     case "/short":
-      return formatShort(buildSnapshot(workspaceId, deps.today));
+      return formatShort(buildSnapshot(workspaceId, deps.today), hide);
     case "/full":
-      return formatFull(buildSnapshot(workspaceId, deps.today));
+      return formatFull(buildSnapshot(workspaceId, deps.today), hide);
     case "/month": {
       const i = loadInsights(workspaceId, deps.today);
       const lines = i.topCategories.map((c) => `${c.name}: ${money(c.total)}`);

@@ -2,7 +2,8 @@ import "server-only";
 
 import { Bot } from "grammy";
 import { handleCommand, splitMessage, SHORT_LABEL, FULL_LABEL, type BotConfig } from "./commands";
-import { getBotConfig, linkChat } from "./config";
+import { getBotConfig, getHideAmounts, linkChat } from "./config";
+import { APP_LOCKED_MESSAGE, isKeyLocked } from "../lib/encryption";
 
 const HELP_INTRO = "בחרו תמונת מצב בכפתורים למטה.";
 import { listAllWorkspaceIds } from "../lib/workspace-context";
@@ -32,7 +33,11 @@ export function startBot(): void {
       if (code && linkChat(code, ctx.chat.id)) await ctx.reply(`מחובר. ${HELP_INTRO}`, { reply_markup: KEYBOARD });
       return;
     }
-    const cfg: BotConfig = { chatId, billingDay: Number(process.env.CARD_BILLING_DAY) || 10 };
+    if (ctx.chat.id === chatId && isKeyLocked()) {
+      await ctx.reply(APP_LOCKED_MESSAGE);
+      return;
+    }
+    const cfg: BotConfig = { chatId, billingDay: Number(process.env.CARD_BILLING_DAY) || 10, hideAmounts: getHideAmounts() };
     const reply = await handleCommand(text, ctx.chat.id, cfg, {
       workspaceId: listAllWorkspaceIds()[0],
       today: israelToday(),

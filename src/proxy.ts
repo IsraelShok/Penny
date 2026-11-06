@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isAllowedHost } from "@/lib/host-guard";
+import { isLockEnabled, SESSION_COOKIE, touchSession } from "@/server/lib/app-lock";
 
 /**
  * Same-origin enforcement for mutating API requests.
@@ -20,6 +21,9 @@ export function proxy(request: NextRequest) {
   if (!isAllowedHost(request.headers.get("host"))) {
     return new NextResponse("Forbidden: unexpected host", { status: 403 });
   }
+
+  const locked = lockGate(request);
+  if (locked) return locked;
 
   if (!request.nextUrl.pathname.startsWith("/api/")) {
     return NextResponse.next();
@@ -74,6 +78,21 @@ export function proxy(request: NextRequest) {
   }
 
   return NextResponse.next();
+}
+
+// Reachable without a session: the lock screen, its API, and static files.
+const LOCK_OPEN = new Set(["/lock", "/api/lock/unlock"]);
+const isStatic = (p: string) => !p.startsWith("/api/") && (p.startsWith("/_next/") || /\.[a-z0-9]+$/i.test(p));
+
+/** With the app lock on, everything else needs a live session cookie. */
+function lockGate(request: NextRequest): NextResponse | null {
+  const path = request.nextUrl.pathname;
+  if (LOCK_OPEN.has(path) || isStatic(path) || !isLockEnabled()) return null;
+  if (touchSession(request.cookies.get(SESSION_COOKIE)?.value)) return null;
+  if (path.startsWith("/api/")) return NextResponse.json({ error: "locked" }, { status: 401 });
+  const url = new URL("/lock", request.url);
+  if (path !== "/") url.searchParams.set("next", path);
+  return NextResponse.redirect(url);
 }
 
 export const config = {

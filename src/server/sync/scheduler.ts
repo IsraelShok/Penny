@@ -3,6 +3,7 @@ import "server-only";
 import { runAllWorkspaces } from "@/server/sync/orchestrator";
 import { getGlobalSetting } from "@/server/db/queries/settings";
 import { redactError } from "@/server/lib/redact";
+import { isKeyLocked } from "@/server/lib/encryption";
 
 interface SchedulerState {
   timeoutId: ReturnType<typeof setTimeout> | null;
@@ -123,6 +124,13 @@ async function fire(): Promise<void> {
 
   if (state.running) {
     console.warn("[scheduler] skip fire — previous run still in progress");
+    armNext();
+    return;
+  }
+
+  // After a restart with the app lock on, bank passwords stay wrapped until someone unlocks once.
+  if (isKeyLocked()) {
+    console.warn("[scheduler] skip fire — app is locked, will retry next slot");
     armNext();
     return;
   }

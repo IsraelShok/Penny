@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { clearBot, getBotConfig, saveBot } from "@/server/bot/config";
+import { clearBot, getBotConfig, getHideAmounts, saveBot, setHideAmounts } from "@/server/bot/config";
 import { restartBot } from "@/server/bot";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 /** Never returns the token itself. */
 export async function GET() {
   const { token, chatId, username, code } = getBotConfig();
-  return NextResponse.json({ connected: !!token, linked: !!chatId, username, code: chatId ? null : code });
+  return NextResponse.json({ connected: !!token, linked: !!chatId, username, code: chatId ? null : code, hideAmounts: getHideAmounts() });
 }
 
 export async function POST(request: Request) {
@@ -26,5 +26,12 @@ export async function POST(request: Request) {
 export async function DELETE() {
   clearBot();
   await restartBot();
+  return GET();
+}
+
+export async function PATCH(request: Request) {
+  const { hideAmounts } = (await request.json().catch(() => ({}))) as { hideAmounts?: unknown };
+  if (typeof hideAmounts !== "boolean") return NextResponse.json({ error: "invalid" }, { status: 400 });
+  setHideAmounts(hideAmounts);
   return GET();
 }

@@ -13,6 +13,7 @@ describe("encryption key location", () => {
   let cwd: string;
 
   beforeEach(() => {
+    globalThis.__pennyDataKey = undefined;
     cwd = fs.mkdtempSync(path.join(os.tmpdir(), "spent-cwd-"));
     dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "spent-data-"));
     vi.spyOn(process, "cwd").mockReturnValue(cwd);

@@ -2,7 +2,7 @@ import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
 import { getSetting } from "../db/queries/settings";
-import { decrypt } from "../lib/encryption";
+import { decrypt, isKeyLocked } from "../lib/encryption";
 import { normalizeOllamaUrl } from "@/lib/url-guard";
 
 const SYSTEM = `You answer questions about a person's own household money, using ONLY the aggregated JSON data given.
@@ -36,7 +36,7 @@ export async function askAI(question: string, context: unknown): Promise<string 
     const encrypted = getSetting("ai_api_key_encrypted");
     const iv = getSetting("ai_api_key_iv");
     const authTag = getSetting("ai_api_key_auth_tag");
-    if (!encrypted || !iv || !authTag) return null;
+    if (!encrypted || !iv || !authTag || isKeyLocked()) return null;
     const apiKey = decrypt({ encrypted: Buffer.from(encrypted, "hex"), iv: Buffer.from(iv, "hex"), authTag: Buffer.from(authTag, "hex") });
     const res = await new Anthropic({ apiKey }).messages.create({
       model: "claude-haiku-4-5-20251001",

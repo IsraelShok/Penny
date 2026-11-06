@@ -1,4 +1,5 @@
 import { saveAccountBalances } from "../db/queries/assets";
+import { APP_LOCKED_MESSAGE, isKeyLocked } from "../lib/encryption";
 import { redactError } from "../lib/redact";
 import "server-only";
 
@@ -345,7 +346,8 @@ export async function syncWorkspace(
     });
     markSyncHeartbeat();
 
-    const credentials = getBankCredentials(workspaceId, meta.id);
+    const locked = isKeyLocked();
+    const credentials = locked ? null : getBankCredentials(workspaceId, meta.id);
     if (!credentials) {
       send("provider-done", {
         workspaceId,
@@ -356,7 +358,7 @@ export async function syncWorkspace(
         ok: false,
         added: 0,
         updated: 0,
-        errorMessage: `No credentials configured for ${meta.label}`,
+        errorMessage: locked ? APP_LOCKED_MESSAGE : `No credentials configured for ${meta.label}`,
       });
       results.push({
         provider,
@@ -365,7 +367,7 @@ export async function syncWorkspace(
         ok: false,
         added: 0,
         updated: 0,
-        errorMessage: "No credentials",
+        errorMessage: locked ? APP_LOCKED_MESSAGE : "No credentials",
       });
       continue;
     }

@@ -17,13 +17,20 @@ Legend: **Fixed** = changed in this commit. **OK** = already in place. **Open** 
 | DNS rebinding: `src/proxy.ts` rejects any `Host` not in the localhost list (`src/lib/host-guard.ts`, `SPENT_ALLOWED_HOSTS` to extend) | OK |
 | CSRF: every POST/PUT/PATCH/DELETE under `/api` needs an `Origin` (or `Referer`) equal to the host; `Origin: null` is rejected | OK, now tested (`tests/proxy.test.ts`) |
 | Cross-site reads and side-effect GETs (`<img src=/api/...>`): any `/api` request with `Sec-Fetch-Site: cross-site` or `same-site` is rejected | **Fixed** |
-| No session/cookie auth, so there is no cookie to steal; the Host + Origin checks are the boundary | OK |
+| Host + Origin checks are the boundary when the app lock is off | OK |
+| App lock (optional, off by default) | **Built** |
 
-A LAN self-hoster who adds a host to `SPENT_ALLOWED_HOSTS` exposes the app without any login.
-**Open:** an app lock (passphrase hashed with scrypt, signed HttpOnly session cookie checked in
-`proxy.ts`, auto-lock after idle). It is the next most valuable item, required before anyone runs
-Penny on a LAN. Not built here because it touches every route and the setup flow; the proxy is the
-single place to add it.
+**App lock** (`src/server/lib/app-lock.ts`, Settings, Privacy & security). Passphrase of 8+ characters
+or a 6+ digit PIN, hashed with `crypto.scrypt` (N=2^15, r=8, p=1, random 16-byte salt) and compared with
+`timingSafeEqual`. When on, `src/proxy.ts` lets through only `/lock`, `/api/lock/unlock` and static
+assets; pages redirect to `/lock`, `/api` answers 401. The session is a random 32-byte token in an
+HttpOnly, SameSite=Strict, Path=/ cookie (Secure over https), kept only in server memory with an idle
+expiry of 5, 15 (default) or 60 minutes that each request refreshes. A restart ends every session.
+Failed unlocks back off exponentially (1s, 2s, 4s ... up to 15 min, in memory). Changing or turning off
+the lock needs the current passphrase. "נעילה עכשיו" in the sidebar footer ends the session at once.
+Trade-offs: a forgotten passphrase cannot be recovered (only a full wipe); the lock is per server, not
+per browser; an in-page fetch after idle expiry gets 401 until the next navigation shows the lock screen.
+A LAN self-hoster who adds a host to `SPENT_ALLOWED_HOSTS` should turn the lock on.
 
 ## 2. XSS and browser hardening (`next.config.ts`)
 
@@ -45,11 +52,22 @@ key in `<data>/.encryption-key` (mode 600 enforced on POSIX; Windows relies on p
 The key sits next to the database, so a copy of the data folder (backup, synced folder, stolen disk)
 decrypts everything. Status: OK for a casual disk reader, weak for backups.
 
-**Open, recommended order:**
-1. Store the key in the OS keychain (Windows DPAPI/Credential Manager, macOS Keychain, libsecret) with
-   the file as fallback; this keeps backups of the data folder useless without the user's OS login.
-2. Optional passphrase: derive a key-encryption key with `crypto.scrypt` (N=2^17, r=8, p=1, 16-byte salt)
-   and wrap the data key with it; unlock on app start. Ties in with the app lock in section 1.
+**Key wrapping: Built.** With the app lock on, the data key is wrapped with AES-256-GCM under a key
+derived from the passphrase (scrypt, N=2^15, its own salt, separate from the hash salt) and stored in
+`<data>/.app-lock.json`; the plaintext `.encryption-key` (and a legacy `./data` copy) is overwritten
+with random bytes and deleted. Unlocking unwraps the key into process memory only. Changing the
+passphrase re-wraps with fresh salts; turning the lock off writes the plaintext key file back, so the
+app behaves exactly as before. Users who never turn the lock on see no change.
+Trade-off: **scheduled sync and the bot need one unlock after every restart.** Until then nothing
+decrypts: the scheduler skips the slot and tries the next one, a sync reports
+"האפליקציה נעולה — פתחו אותה כדי לסנכרן", AI with a cloud key is skipped, a bot token saved in settings
+cannot be read so the bot starts on unlock (a bot from `TELEGRAM_BOT_TOKEN` answers that the app is
+locked). "Lock now" keeps the key in memory so scheduled sync keeps working; only a restart forgets it.
+Overwriting before unlink is best effort on SSDs and copy-on-write file systems; disk encryption still
+matters. Older backups of the data folder still hold the old plaintext key.
+
+**Open:** store the key in the OS keychain (Windows DPAPI/Credential Manager, macOS Keychain, libsecret)
+as an alternative for users who do not want a passphrase.
 
 ## 4. Database at rest
 
@@ -75,7 +93,8 @@ Errors are logged as `name: message` only, no stacks.
 | Only the linked chat gets answers (`handleCommand` returns null for others) | OK |
 | Token encrypted in settings | OK |
 | Rate limit: Telegram itself rate-limits; non-owner chats get no reply, so there is nothing to brute force once linked | OK |
-| Summaries include amounts. **Open:** a "hide amounts in Telegram" setting (send percentages and categories only); messages sit on Telegram's servers. |
+| "הסתרת סכומים בטלגרם" (Settings, Telegram, off by default) replaces every amount in bot replies with "•••"; messages sit on Telegram's servers | **Built** |
+| While the app is locked after a restart, the bot answers only that the app is locked | **Built** |
 
 ## 7. AI providers (`src/server/ai`)
 
@@ -101,8 +120,12 @@ on export. The privacy page already warns that a folder backup contains the key.
 ## 10. Deletion
 
 Settings, Data has "delete everything" for transactions, sync history and category memory; bank
-connections are removed per bank. The new Privacy & security page links to it. **Open:** one wipe that
-also removes credentials, the bot, AI keys and the key file.
+connections are removed per bank. The new Privacy & security page links to it.
+**Full wipe: Built.** "מחיקת כל הנתונים" on Privacy & security (type "מחיקה", plus the passphrase when
+locked) stops the bot, closes and deletes the database files (`spent.db`, `-wal`, `-shm`: every table,
+including credentials, settings, AI keys and Telegram), the key file or wrapped key, and `*.log` /
+`logs/` in the data folder, then returns to first run (migrations recreate an empty database).
+Files are overwritten before unlink, best effort as above.
 
 ## 11. Dependencies (`npm audit --omit=dev`, 2026-11-06)
 

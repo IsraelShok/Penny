@@ -57,7 +57,8 @@
     "planningGroup": "The big picture",
     "more": "More",
     "search": "Search",
-    "privacyMode": "Privacy mode: hide amounts"
+    "privacyMode": "Privacy mode: hide amounts",
+    "lockNow": "Lock now"
   },
   "home": {
     "pageTitle": "Home",
@@ -640,7 +641,28 @@
       "protectBody": "Turn on disk encryption (BitLocker on Windows, FileVault on Mac). Anyone who can read the data folder can read your transactions. A backup of the folder includes the encryption key - keep it somewhere encrypted.",
       "deleteTitle": "Delete your data",
       "deleteDescription": "Delete all transactions and category memory in one step. Bank connections are removed separately on the Bank accounts page.",
-      "deleteCta": "Go to delete data"
+      "deleteCta": "Go to delete data",
+      "lockTitle": "App lock",
+      "lockDescription": "Asks for a passphrase to open Penny and locks after idle time. The encryption key is stored wrapped with the passphrase, so a copy of the data folder does not expose bank logins. After a restart, unlock once so scheduled sync and the bot can work. Forgot it? The only way back is to delete everything.",
+      "lockOn": "Lock is on",
+      "lockOff": "Lock is off",
+      "lockSecret": "New passphrase",
+      "lockCurrent": "Current passphrase",
+      "lockNew": "New passphrase (optional)",
+      "lockHint": "At least 8 characters, or a PIN of 6 or more digits.",
+      "lockIdle": "Lock after idle",
+      "lockMinutes": "{count} min",
+      "lockEnable": "Turn on lock",
+      "lockSave": "Save",
+      "lockDisable": "Turn off lock",
+      "lockError_wrong": "Wrong passphrase.",
+      "lockError_wait": "Too many tries. Try again shortly.",
+      "lockError_weak": "Too short: at least 8 characters, or a 6-digit PIN.",
+      "lockError_failed": "Something went wrong. Try again.",
+      "wipeTitle": "Delete all data",
+      "wipeDescription": "Deletes everything: transactions, bank connections and logins, settings, AI keys, the bot, the encryption key and logs. Penny returns to a fresh install. This cannot be undone.",
+      "wipeConfirm": "To confirm, type \"{word}\"",
+      "wipeCta": "Delete all data"
     }
   },
   "setup": {
@@ -2546,7 +2568,8 @@
     "waiting": "Waiting for Start…",
     "linked": "Connected to {name}",
     "linkedHint": "The bot has two buttons: short snapshot and full snapshot. You can also send /short or /full.",
-    "disconnect": "Disconnect bot"
+    "disconnect": "Disconnect bot",
+    "hideAmounts": "Hide amounts in Telegram"
   },
   "categoryDescriptions": {
     "Groceries": "",
@@ -2656,5 +2679,12 @@
     "youBody": "Answer the get-to-know-you questions again any time, or turn on simple mode.",
     "youCta": "Let's get to know you",
     "simpleCta": "Simple mode and display"
+  },
+  "lock": {
+    "title": "Penny is locked",
+    "label": "Passphrase or PIN",
+    "submit": "Unlock",
+    "wrong": "Not right. You can try again in {seconds} seconds.",
+    "wait": "Too many tries. Try again in {seconds} seconds."
   }
 }

@@ -9,12 +9,12 @@ const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 
 // The key lives next to the database, so a Docker volume or SPENT_DATA_DIR keeps both together.
-function keyPath(): string {
+export function keyPath(): string {
   return path.join(dataDir(), ".encryption-key");
 }
 
 // Before SPENT_DATA_DIR applied to the key, it was always written to ./data.
-function legacyKeyPath(): string {
+export function legacyKeyPath(): string {
   return path.join(process.cwd(), "data", ".encryption-key");
 }
 
@@ -56,13 +56,40 @@ function getOrCreateKey(): Buffer {
   return key;
 }
 
-let cachedKey: Buffer | null = null;
+/** With the app lock on, only the passphrase-wrapped key is on disk (see app-lock.ts). */
+export function lockFilePath(): string {
+  return path.join(dataDir(), ".app-lock.json");
+}
 
-function getKey(): Buffer {
-  if (!cachedKey) {
-    cachedKey = getOrCreateKey();
+export const APP_LOCKED_MESSAGE = "האפליקציה נעולה — פתחו אותה כדי לסנכרן";
+
+export class AppLockedError extends Error {
+  constructor() {
+    super(APP_LOCKED_MESSAGE);
+    this.name = "AppLockedError";
   }
-  return cachedKey;
+}
+
+// On globalThis so the proxy, route handlers and background jobs share one unwrapped key.
+declare global {
+  var __pennyDataKey: Buffer | undefined;
+}
+
+/** True when the lock is on and the key has not been unwrapped since the last restart. */
+export function isKeyLocked(): boolean {
+  return !globalThis.__pennyDataKey && fs.existsSync(lockFilePath());
+}
+
+export function getKey(): Buffer {
+  if (!globalThis.__pennyDataKey) {
+    if (fs.existsSync(lockFilePath())) throw new AppLockedError();
+    globalThis.__pennyDataKey = getOrCreateKey();
+  }
+  return globalThis.__pennyDataKey;
+}
+
+export function setKeyInMemory(key: Buffer | undefined): void {
+  globalThis.__pennyDataKey = key;
 }
 
 export interface EncryptedData {
