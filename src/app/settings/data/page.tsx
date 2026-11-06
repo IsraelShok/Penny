@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
 import { WorkspaceDangerCard } from "@/components/settings/workspace-controls";
+import { StatementImportCard } from "@/components/settings/statement-import-card";
 import { BANK_PROVIDERS } from "@/lib/types";
 import { translateProviderName } from "@/lib/i18n-data";
 
@@ -52,6 +53,7 @@ export default function DataSettingsPage() {
           <code>data/spent.db</code> · <code>data/.encryption-key</code>
         </div>
       </SettingCard>
+      <StatementImportCard />
       <ExcludedMerchantsCard />
       <DangerZone />
       <WorkspaceDangerCard />

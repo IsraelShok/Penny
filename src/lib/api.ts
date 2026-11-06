@@ -935,3 +935,15 @@ export function logCashExpense(amount: number, description: string) {
 export function deleteCashExpense(id: number) {
   return fetchJSON<{ success: boolean }>(`/api/transactions/cash?id=${id}`, { method: "DELETE" });
 }
+
+export function importStatement(account: string, rows: { date: string; description: string; amount: number }[], dryRun = false) {
+  return fetchJSON<{ ready: number; duplicates: number; added: number; batchId: number | null }>(`/api/import`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ account, rows, dryRun }),
+  });
+}
+
+export function undoStatementImport(batchId: number) {
+  return fetchJSON<{ removed: number }>(`/api/import?batch=${batchId}`, { method: "DELETE" });
+}

@@ -11,9 +11,13 @@ export interface AssetRow extends AssetInput {
 const COLUMNS = `id, name, type, currency, symbol, quantity, manual_value as manualValue,
   cost_basis as costBasis, liquid, is_liability as isLiability, note, fee_deposit as feeDeposit,
   fee_balance as feeBalance, monthly_deposit as monthlyDeposit, interest_rate as interestRate, monthly_payment as monthlyPayment,
-  fund_id as fundId, fund_source as fundSource`;
+  fund_id as fundId, fund_source as fundSource, city, street, rooms, size_m2 as sizeM2,
+  purchase_price as purchasePrice, purchase_month as purchaseMonth`;
 
 const isLiabilityType = (t: AssetType) => (LIABILITY_TYPES as readonly string[]).includes(t);
+
+const homeValues = (a: AssetInput) =>
+  [a.city ?? null, a.street ?? null, a.rooms ?? null, a.sizeM2 ?? null, a.purchasePrice ?? null, a.purchaseMonth ?? null];
 
 export function listAssets(workspaceId: number): AssetRow[] {
   const rows = getDb()
@@ -26,13 +30,14 @@ export function createAssets(workspaceId: number, inputs: AssetInput[]): number 
   const db = getDb();
   const stmt = db.prepare(
     `INSERT INTO assets (workspace_id, name, type, currency, symbol, quantity, manual_value, cost_basis, liquid, is_liability, note,
-       fee_deposit, fee_balance, monthly_deposit, interest_rate, monthly_payment, fund_id, fund_source)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       fee_deposit, fee_balance, monthly_deposit, interest_rate, monthly_payment, fund_id, fund_source,
+       city, street, rooms, size_m2, purchase_price, purchase_month)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   db.transaction(() => {
     for (const a of inputs) {
       stmt.run(workspaceId, a.name, a.type, a.currency, a.symbol, a.quantity, a.manualValue, a.costBasis, a.liquid ? 1 : 0, isLiabilityType(a.type) ? 1 : 0, a.note,
-        a.feeDeposit, a.feeBalance, a.monthlyDeposit, a.interestRate, a.monthlyPayment, a.fundId ?? null, a.fundSource ?? null);
+        a.feeDeposit, a.feeBalance, a.monthlyDeposit, a.interestRate, a.monthlyPayment, a.fundId ?? null, a.fundSource ?? null, ...homeValues(a));
     }
   })();
   return inputs.length;
@@ -44,11 +49,12 @@ export function updateAsset(workspaceId: number, id: number, a: AssetInput): boo
       .prepare(
         `UPDATE assets SET name = ?, type = ?, currency = ?, symbol = ?, quantity = ?, manual_value = ?,
            cost_basis = ?, liquid = ?, is_liability = ?, note = ?, fee_deposit = ?, fee_balance = ?,
-           monthly_deposit = ?, interest_rate = ?, monthly_payment = ?, fund_id = ?, fund_source = ?
+           monthly_deposit = ?, interest_rate = ?, monthly_payment = ?, fund_id = ?, fund_source = ?,
+           city = ?, street = ?, rooms = ?, size_m2 = ?, purchase_price = ?, purchase_month = ?
          WHERE workspace_id = ? AND id = ?`
       )
       .run(a.name, a.type, a.currency, a.symbol, a.quantity, a.manualValue, a.costBasis, a.liquid ? 1 : 0, isLiabilityType(a.type) ? 1 : 0, a.note,
-        a.feeDeposit, a.feeBalance, a.monthlyDeposit, a.interestRate, a.monthlyPayment, a.fundId ?? null, a.fundSource ?? null, workspaceId, id)
+        a.feeDeposit, a.feeBalance, a.monthlyDeposit, a.interestRate, a.monthlyPayment, a.fundId ?? null, a.fundSource ?? null, ...homeValues(a), workspaceId, id)
       .changes > 0
   );
 }

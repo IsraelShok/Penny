@@ -35,6 +35,7 @@ export function AssetDialog({
   onSaved?: () => void;
 }) {
   const t = useTranslations("investments");
+  const tp = useTranslations("property");
   const tc = useTranslations("common");
   const queryClient = useQueryClient();
   const initial = asset === "new" ? (preset ? ({ ...preset, symbol: preset.symbol ?? null } as Partial<Asset>) : null) : asset;
@@ -55,6 +56,12 @@ export function AssetDialog({
     monthlyPayment: initial?.monthlyPayment?.toString() ?? "",
     fundId: initial?.fundId ?? null,
     fundSource: initial?.fundSource ?? null,
+    city: initial?.city ?? "",
+    street: initial?.street ?? "",
+    rooms: initial?.rooms?.toString() ?? "",
+    sizeM2: initial?.sizeM2?.toString() ?? "",
+    purchasePrice: initial?.purchasePrice?.toString() ?? "",
+    purchaseMonth: initial?.purchaseMonth ?? "",
   });
   const opt = (s: string) => (s.trim() === "" ? null : Number(s));
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
@@ -62,6 +69,7 @@ export function AssetDialog({
   const priced = canPrice && form.priced;
   const isLiability = (LIABILITY_TYPES as readonly string[]).includes(form.type);
   const hasFees = SAVINGS_TYPES.includes(form.type);
+  const isHome = form.type === "real_estate";
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -82,6 +90,14 @@ export function AssetDialog({
         monthlyPayment: isLiability ? opt(form.monthlyPayment) : null,
         fundId: hasFees ? form.fundId : null,
         fundSource: hasFees ? form.fundSource : null,
+        ...(isHome && {
+          city: form.city || null,
+          street: form.street || null,
+          rooms: opt(form.rooms),
+          sizeM2: opt(form.sizeM2),
+          purchasePrice: opt(form.purchasePrice),
+          purchaseMonth: form.purchaseMonth || null,
+        }),
       };
       return asset !== "new" ? updateAsset(asset.id, input).then(() => undefined) : createAssets([input]).then(() => undefined);
     },
@@ -193,6 +209,30 @@ export function AssetDialog({
               <NumField id="asset-fee-deposit" label={t("fieldFeeDeposit")} value={form.feeDeposit} onChange={(v) => set("feeDeposit", v)} />
               <NumField id="asset-deposit" label={t("fieldMonthlyDeposit")} value={form.monthlyDeposit} onChange={(v) => set("monthlyDeposit", v)} />
             </div>
+          )}
+
+          {isHome && (
+            <fieldset className="space-y-3 rounded-xl border border-border p-3">
+              <legend className="px-1 text-footnote font-medium">{tp("detailsTitle")}</legend>
+              <div className="grid grid-cols-2 gap-3">
+                <NumField id="home-price" label={tp("purchasePrice")} value={form.purchasePrice} onChange={(v) => set("purchasePrice", v)} />
+                <div className="space-y-1.5">
+                  <Label htmlFor="home-month">{tp("purchaseMonth")}</Label>
+                  <Input id="home-month" type="month" dir="ltr" value={form.purchaseMonth} onChange={(e) => set("purchaseMonth", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="home-city">{tp("city")}</Label>
+                  <Input id="home-city" maxLength={60} value={form.city} onChange={(e) => set("city", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="home-street">{tp("street")}</Label>
+                  <Input id="home-street" maxLength={80} value={form.street} onChange={(e) => set("street", e.target.value)} />
+                </div>
+                <NumField id="home-rooms" label={tp("rooms")} value={form.rooms} onChange={(v) => set("rooms", v)} />
+                <NumField id="home-size" label={tp("sizeM2")} value={form.sizeM2} onChange={(v) => set("sizeM2", v)} />
+              </div>
+              <p className="text-caption text-pretty text-muted-foreground">{tp("detailsHint")}</p>
+            </fieldset>
           )}
 
           {isLiability && (

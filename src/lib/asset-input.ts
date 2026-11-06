@@ -21,7 +21,20 @@ export function parseAssetInput(raw: unknown): AssetInput | string {
     interestRate: num(r.interestRate),
     monthlyPayment: num(r.monthlyPayment),
   };
-  for (const [k, v] of Object.entries({ quantity, manualValue, costBasis, ...extra })) {
+  const str = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);
+  // Home details, only on real estate.
+  const home = r.type === "real_estate"
+    ? {
+        city: str(r.city, 60),
+        street: str(r.street, 80),
+        rooms: num(r.rooms),
+        sizeM2: num(r.sizeM2),
+        purchasePrice: num(r.purchasePrice),
+        purchaseMonth: typeof r.purchaseMonth === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(r.purchaseMonth) ? r.purchaseMonth : null,
+      }
+    : {};
+  for (const [k, v] of Object.entries({ quantity, manualValue, costBasis, ...extra, ...home })) {
+    if (typeof v === "string") continue;
     if (v !== null && (!Number.isFinite(v) || v < 0)) return `${k} must be a positive number for ${name}`;
   }
   if ((extra.feeDeposit ?? 0) > 10 || (extra.feeBalance ?? 0) > 10 || (extra.interestRate ?? 0) > 100) return `fee or rate out of range for ${name}`;
@@ -40,5 +53,6 @@ export function parseAssetInput(raw: unknown): AssetInput | string {
     ...extra,
     fundId: Number.isInteger(Number(r.fundId)) && Number(r.fundId) > 0 ? Number(r.fundId) : null,
     fundSource: r.fundSource === "gemel" || r.fundSource === "pension" ? r.fundSource : null,
+    ...home,
   };
 }

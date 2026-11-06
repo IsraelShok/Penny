@@ -8,6 +8,8 @@ import { toLocalISODate } from "../lib/date-utils";
 import type { Asset, AssetsPayload, AssetType, Fund, FundSource } from "@/lib/types";
 import { loadFunds } from "./funds";
 import { compareFund } from "@/lib/funds";
+import { indexRevaluation } from "@/lib/property";
+import { loadDwellingIndex } from "./property";
 
 /** Israeli capital gains tax on realised profit. */
 const CAPITAL_GAINS_TAX = 0.25;
@@ -32,6 +34,13 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
     return fund && list ? compareFund(fund, list) : null;
   };
 
+  // Public CBS dwelling price index, only fetched when a home has a purchase price and month.
+  const homeIndex = rows.some((r) => r.type === "real_estate" && r.purchasePrice && r.purchaseMonth) ? await loadDwellingIndex() : [];
+  const estimateOf = (r: (typeof rows)[number]) => {
+    const e = r.type === "real_estate" && r.purchasePrice && r.purchaseMonth ? indexRevaluation(r.purchasePrice, r.purchaseMonth, homeIndex) : null;
+    return e ? { method: "index" as const, ...e } : null;
+  };
+
   const assets: Asset[] = rows.map((r) => {
     const quote = r.symbol ? quotes.get(r.symbol.trim().toUpperCase()) ?? null : null;
     // A live price wins; the quote's own currency (e.g. USD for AAPL) overrides the row's.
@@ -42,7 +51,7 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
     const costRate = fxRate(r.currency, quotes);
     const gainIls =
       valueIls != null && r.costBasis != null && costRate != null ? valueIls - r.costBasis * costRate : null;
-    return { ...r, currency, value, valueIls, gainIls, quote, fund: fundOf(r) };
+    return { ...r, currency, value, valueIls, gainIls, quote, fund: fundOf(r), estimate: estimateOf(r) };
   });
 
   // Synced bank balances, as cash (an overdrawn account counts as a short-term debt).

@@ -12,6 +12,7 @@ import { IL } from "@/lib/il-defaults";
 import { renewalIn, RENEWAL_HEADS_UP_DAYS } from "@/lib/renewals";
 import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import { CardShell } from "@/components/home/card-shell";
+import { TakeHome } from "@/components/fi/take-home";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ export function FiExtras({ data }: { data: FiPayload }) {
       <PlanSettings plan={plan} />
       <Goals goals={goals} />
       <Tax data={data} plan={plan} />
+      <TakeHome />
       <Insurance policies={policies} monthlyExpenses={data.monthlyExpenses} />
     </>
   );

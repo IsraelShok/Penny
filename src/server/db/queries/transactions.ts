@@ -972,3 +972,60 @@ export function insertCashExpense(workspaceId: number, amount: number, descripti
 export function deleteCashExpense(workspaceId: number, id: number): boolean {
   return getDb().prepare("DELETE FROM transactions WHERE workspace_id = ? AND id = ? AND provider = 'cash'").run(workspaceId, id).changes > 0;
 }
+
+// ---- Statement file import ---------------------------------------------------
+
+/** Stored rows per "date|amount|description" for one account label, over the given date range. */
+export function countStoredForImport(workspaceId: number, account: string, from: string, to: string): Map<string, number> {
+  const rows = getDb()
+    .prepare(
+      `SELECT substr(date, 1, 10) AS date, charged_amount AS amount, description, COUNT(*) AS n FROM transactions
+       WHERE workspace_id = ? AND account_number = ? AND substr(date, 1, 10) BETWEEN ? AND ?
+       GROUP BY substr(date, 1, 10), charged_amount, description`
+    )
+    .all(workspaceId, account, from, to) as { date: string; amount: number; description: string; n: number }[];
+  return new Map(rows.map((r) => [`${r.date}|${r.amount}|${r.description}`, r.n]));
+}
+
+/**
+ * Inserts one imported statement as its own placeholder sync run (provider 'file'), so the
+ * run id is the batch id: rules apply to it like a sync, and undo deletes exactly this batch.
+ */
+export function insertFileImport(
+  workspaceId: number,
+  account: string,
+  rows: { date: string; description: string; amount: number; seq: number }[]
+): { batchId: number; added: number } {
+  const db = getDb();
+  return db.transaction(() => {
+    const runId = Number(
+      db
+        .prepare("INSERT INTO sync_runs (workspace_id, provider, started_at, completed_at, status, scrape_from_date) VALUES (?, 'file', '1970-01-01', '1970-01-01', 'completed', '1970-01-01')")
+        .run(workspaceId).lastInsertRowid
+    );
+    const stmt = db.prepare(
+      `INSERT INTO transactions (workspace_id, account_number, date, processed_date, original_amount, original_currency,
+         charged_amount, charged_currency, description, type, status, provider, sync_run_id, dedup_hash, dedup_sequence, kind)
+       VALUES (?, ?, ?, ?, ?, 'ILS', ?, 'ILS', ?, 'normal', 'completed', 'file', ?, ?, ?, ?)
+       ON CONFLICT(workspace_id, dedup_hash, dedup_sequence) DO NOTHING`
+    );
+    let added = 0;
+    for (const r of rows) {
+      const hash = computeDedupHash({ accountNumber: account, date: r.date, originalAmount: r.amount, originalCurrency: "ILS", description: r.description });
+      // A statement has no provider type, so classify it like a bank row: transfer patterns, else sign.
+      const kind = detectKind(r.description, "hapoalim", r.amount);
+      added += stmt.run(workspaceId, account, r.date, r.date, r.amount, r.amount, r.description, runId, hash, r.seq, kind).changes;
+    }
+    return { batchId: runId, added };
+  })();
+}
+
+/** Undo for one import: removes only that batch's rows (provider 'file'). */
+export function deleteFileImport(workspaceId: number, batchId: number): number {
+  const db = getDb();
+  return db.transaction(() => {
+    const n = db.prepare("DELETE FROM transactions WHERE workspace_id = ? AND sync_run_id = ? AND provider = 'file'").run(workspaceId, batchId).changes;
+    db.prepare("DELETE FROM sync_runs WHERE workspace_id = ? AND id = ? AND provider = 'file'").run(workspaceId, batchId);
+    return n;
+  })();
+}

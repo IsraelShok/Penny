@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { FileUp, Pencil, Plus, RotateCw, Trash2 } from "lucide-react";
-import { createAssets, deleteAsset, getAssets } from "@/lib/api";
+import { createAssets, deleteAsset, getAssets, updateAsset } from "@/lib/api";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
@@ -254,6 +254,7 @@ function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[
                 {a.quote?.stale && <> · {t("stalePrice")}</>}
                 {a.source === "bank" && <> · {t("fromBank")}</>}
               </p>
+              {a.estimate && <HomeEstimate asset={a} />}
             </div>
             {a.quote && a.quote.series.length > 1 && (
               <Sparkline values={a.quote.series} color="var(--chart-1)" label={t("priceTrend", { name: a.name })} fitToRange className="hidden h-7 w-20 sm:block" />
@@ -287,6 +288,33 @@ function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[
         ))}
       </ul>
     </CardShell>
+  );
+}
+
+/** Index-based estimate for a home, with one click to use it as the value (and Undo). */
+function HomeEstimate({ asset }: { asset: Asset }) {
+  const t = useTranslations("property");
+  const ti = useTranslations("investments");
+  const locale = useLocale();
+  const queryClient = useQueryClient();
+  const e = asset.estimate!;
+  const save = (manualValue: number | null) => updateAsset(asset.id, { ...asset, manualValue }).then(() => queryClient.invalidateQueries({ queryKey: ["assets"] }));
+  const apply = useMutation({
+    mutationFn: () => save(e.value),
+    onSuccess: () => toast.success(t("applied"), { action: { label: ti("undo"), onClick: () => void save(asset.manualValue) } }),
+    onError: () => toast.error(ti("saveFailed")),
+  });
+  const [y, m] = e.indexMonth.split("-").map(Number);
+  return (
+    <div className="mt-1 text-caption text-pretty text-muted-foreground">
+      {t("estimateIndex", { value: shekels(e.value, locale), change: pct(e.change), month: new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(y, m - 1, 15)) })}
+      {" · "}{t("estimateOnly")}
+      {asset.manualValue !== e.value && !asset.symbol && (
+        <button type="button" className="ms-2 min-h-6 font-medium text-primary hover:underline disabled:opacity-50" disabled={apply.isPending} onClick={() => apply.mutate()}>
+          {t("apply")}
+        </button>
+      )}
+    </div>
   );
 }
 

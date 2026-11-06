@@ -18,4 +18,30 @@ export const IL = {
   primeRate: 4.75,
   /** Typical prime-track mortgage rate (prime − 0.5), Nov 2026. A reference for comparison, not an offer. */
   typicalMortgageRate: 4.25,
+  /**
+   * Monthly income-tax brackets [upTo, rate] for 2026: indexation stays frozen, but the 2026 budget
+   * widened the 20% bracket to ₪19,000 and the 31% bracket to ₪25,100. Top 50% includes the 3% surtax.
+   * Sources (checked Nov 2026): simplecalc.co.il/guides/tax-brackets, mechushav.co.il/guide-madregot-mas.html.
+   */
+  taxBracketsMonthly: [[7_010, 0.1], [10_060, 0.14], [19_000, 0.2], [25_100, 0.31], [46_690, 0.35], [60_130, 0.47], [Infinity, 0.5]],
+  /** Credit points for a resident: 2.25 (man), 2.75 (woman). Income Tax Ordinance §34, §36. */
+  creditPoints: { man: 2.25, woman: 2.75 },
+  /** Credit for employee pension deposits: 35% of up to 7% of salary, salary capped (ITA, 2025 figure). */
+  pensionCredit: { rate: 0.35, ofSalary: 0.07, salaryCeiling: 9_700 },
+  /**
+   * Bituach Leumi + health tax, 2026. Rates unchanged from 2025. From 2026 the reduced-rate band is
+   * indexed to the CPI from ₪7,522 (not 60% of the average wage): ₪7,703. Ceiling ₪51,910.
+   * Source: btl.gov.il circulars for 2026 (בל/651, "מקדמות ודמי ביטוח לעצמאים 2026").
+   */
+  bituach: {
+    reducedUpTo: 7_703,
+    ceiling: 51_910,
+    /** [reduced, full] — national insurance + health tax combined. */
+    employee: [0.0104 + 0.0323, 0.07 + 0.0517],
+    selfEmployed: [0.0287 + 0.0323, 0.1283 + 0.0517],
+  },
+  /** Mandatory pension for the self-employed (Pension Law §6B, 2017): 4.45% up to half the avg wage, 12.55% up to the full avg wage. Avg wage 2026: ₪13,769 (btl.gov.il). */
+  selfEmployedPension: { averageWage: 13_769, lowRate: 0.0445, highRate: 0.1255 },
+  /** VAT 18% since 1 Jan 2025 (was 17%). Bimonthly report due by the 15th of the following month. */
+  vat: { rate: 0.18, dueDay: 15 },
 } as const;

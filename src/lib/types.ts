@@ -941,3 +941,26 @@ export interface TransactionWithCategory {
   owner?: string | null;
   tags?: string[];
 }
+
+// Home details for real_estate assets (merged into AssetInput / Asset above).
+export interface AssetInput {
+  city?: string | null;
+  street?: string | null;
+  rooms?: number | null;
+  sizeM2?: number | null;
+  purchasePrice?: number | null;
+  /** "YYYY-MM" */
+  purchaseMonth?: string | null;
+}
+
+/** "index" = purchase price revalued by the CBS dwelling price index. */
+export interface PropertyEstimate {
+  method: "index";
+  value: number;
+  change: number;
+  indexMonth: string;
+}
+
+export interface Asset {
+  estimate?: PropertyEstimate | null;
+}
