@@ -6,6 +6,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInsights, listIntegrations, type InsightsPayload } from "@/lib/api";
 import { shekels } from "@/lib/money";
+import { BalanceForecastCard } from "./balance-forecast-card";
+import { RecurringCalendar } from "./recurring-calendar";
 
 
 export function InsightsView() {
@@ -21,6 +23,8 @@ export function InsightsView() {
 
   return (
     <div className="grid gap-6">
+      <BalanceForecastCard />
+      <RecurringCalendar data={data} today={new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date())} />
       <Card>
         <CardHeader>
           <CardTitle>{t("forecast")}</CardTitle>

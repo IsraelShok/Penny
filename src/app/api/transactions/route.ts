@@ -47,6 +47,7 @@ export async function GET(request: Request) {
     kind: parseKind(searchParams.get("kind")),
     provider: searchParams.get("provider") ?? undefined,
     credentialIds: credentialIds.length > 0 ? credentialIds : undefined,
+    needsReview: searchParams.get("needsReview") === "1",
   });
 
   return NextResponse.json(result);

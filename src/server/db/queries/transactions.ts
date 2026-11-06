@@ -161,6 +161,8 @@ interface QueryParams {
   /** @deprecated Use credentialIds */
   credentialId?: number;
   credentialIds?: number[];
+  /** Review inbox: flagged by AI, or an expense/income with no category yet. */
+  needsReview?: boolean;
 }
 
 function appendCredentialIdsFilter(
@@ -239,6 +241,9 @@ export function queryTransactions(
         ? [params.credentialId]
         : undefined;
   appendCredentialIdsFilter(conditions, values, credentialIds, "t.");
+  if (params.needsReview) {
+    conditions.push("(t.needs_review = 1 OR (t.category_id IS NULL AND t.kind != 'transfer'))");
+  }
 
   const where = `WHERE ${conditions.join(" AND ")}`;
 

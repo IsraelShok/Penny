@@ -78,6 +78,15 @@ export async function PATCH(
 
   const numericId = Number(id);
 
+  // Undo for an approve: puts the row back in the review inbox (merchant memory stays).
+  if (body.approve === false) {
+    if (!getTransactionContext(workspaceId, numericId)) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+    setTransactionNeedsReview(workspaceId, numericId, true);
+    return NextResponse.json({ success: true });
+  }
+
   if (body.approve === true) {
     const ctx = getTransactionContext(workspaceId, numericId);
     if (!ctx) {

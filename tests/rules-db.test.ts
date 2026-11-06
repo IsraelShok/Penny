@@ -56,3 +56,31 @@ describe("createRule validation", () => {
     expect(() => q.createRule(ws, { field: "merchant", op: "contains", value: "x", categoryId: foreign })).toThrow(/category/i);
   });
 });
+
+describe("previewRule / applyRuleToPast", () => {
+  it("counts matches, skips rows the user categorized, and applies to the rest", async () => {
+    const { insertTransactions } = await import("@/server/db/queries/transactions");
+    const cred = (db.prepare("SELECT id FROM bank_credentials LIMIT 1").get() as { id: number }).id;
+    const base = { accountNumber: "1", type: "normal" as const, date: "2026-09-01T00:00:00.000Z", processedDate: "2026-10-10T00:00:00.000Z", originalCurrency: "ILS", status: "completed" as const };
+    insertTransactions(ws, [
+      { ...base, originalAmount: -30, chargedAmount: -30, description: "סופר פארם רמת גן" },
+      { ...base, originalAmount: -40, chargedAmount: -40, description: "סופר פארם חיפה" },
+      { ...base, originalAmount: -45, chargedAmount: -45, description: "סופר פארם אילת" },
+    ], "isracard", cred, run);
+    const [cat, other] = (db.prepare("SELECT id FROM categories WHERE workspace_id = ? AND kind = 'expense' LIMIT 2").all(ws) as { id: number }[]).map((r) => r.id);
+    db.prepare("UPDATE transactions SET category_id = ?, category_source = 'user' WHERE description = 'סופר פארם אילת'").run(other);
+    db.prepare("UPDATE transactions SET needs_review = 1 WHERE description LIKE 'סופר פארם%'").run();
+    const rule = { field: "merchant" as const, op: "contains" as const, value: "סופר פארם", categoryId: cat };
+
+    const p = q.previewRule(ws, rule);
+    expect(p.count).toBe(2);
+    expect(p.sample).toHaveLength(2);
+    expect(p.sample).not.toContain("סופר פארם אילת");
+
+    expect(q.applyRuleToPast(ws, rule)).toBe(2);
+    const rows = db.prepare("SELECT description, category_id, needs_review FROM transactions WHERE description LIKE 'סופר פארם%' ORDER BY id").all() as { description: string; category_id: number; needs_review: number }[];
+    expect(rows.map((r) => r.category_id)).toEqual([cat, cat, other]);
+    expect(rows.map((r) => r.needs_review)).toEqual([0, 0, 1]);
+    expect(q.previewRule(ws, rule).count).toBe(0);
+  });
+});

@@ -12,6 +12,8 @@ import { CategoryGrid } from "./category-grid";
 import { PeriodSelector } from "./period-selector";
 import { SyncButton } from "./sync-button";
 import { CategorizeButton } from "./categorize-button";
+import { BudgetFromAverage } from "./budget-from-average";
+import { PlanVsActual } from "./plan-vs-actual";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CategoryViewMode } from "@/lib/types";
@@ -98,7 +100,10 @@ export function Dashboard() {
           monthLabel={monthLabel}
         />
 
-        <div className="flex items-center justify-end">
+        {summary && from === getMonthRange(new Date()).from && <PlanVsActual summary={summary} />}
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <BudgetFromAverage modes={new Map((summary?.categoriesWithData ?? []).map((c) => [c.categoryId, c.budgetMode]))} />
           <Tabs
             value={viewMode}
             onValueChange={(v) =>

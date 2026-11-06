@@ -298,6 +298,10 @@ export function getOverview(period: string, offset: number) {
   return fetchJSON<OverviewPayload>(`/api/overview?period=${period}&offset=${offset}`);
 }
 
+export function getBalanceForecast() {
+  return fetchJSON<{ forecast: import("./balance-forecast").BalanceForecast | null }>(`/api/balance-forecast`);
+}
+
 export function getCashAhead() {
   return fetchJSON<import("./cash-ahead").CashAhead>(`/api/cash-ahead`);
 }
@@ -807,4 +811,38 @@ export async function deleteRule(id: number) {
 
 export function searchFunds(source: "gemel" | "pension", q: string) {
   return fetchJSON<{ funds: import("./types").Fund[] }>(`/api/funds?source=${source}&q=${encodeURIComponent(q)}`);
+}
+
+export function getBudgetSuggestions() {
+  return fetchJSON<import("./budget-suggest").BudgetSuggestion[]>("/api/budgets/suggest");
+}
+
+export function getReviewInbox() {
+  return fetchJSON<{ transactions: TransactionWithCategory[]; total: number }>(
+    "/api/transactions?needsReview=1&limit=200&sort=date&order=desc"
+  );
+}
+
+export function unapproveTransaction(id: number) {
+  return fetchJSON<{ success: boolean }>(`/api/transactions/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ approve: false }),
+  });
+}
+
+export function previewRule(rule: Omit<Rule, "id">) {
+  return fetchJSON<{ count: number; sample: string[] }>("/api/rules/preview", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rule }),
+  });
+}
+
+export function createRuleWithPast(rule: Omit<Rule, "id">, applyToPast: boolean) {
+  return fetchJSON<{ id: number; applied: number }>("/api/rules", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...rule, applyToPast }),
+  });
 }

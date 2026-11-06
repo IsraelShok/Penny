@@ -24,7 +24,7 @@ const OPS_BY_FIELD: Record<Rule["field"], Rule["op"][]> = {
   amount: ["gt", "lt"],
 };
 
-export function createRule(workspaceId: number, rule: NewRule): number {
+export function validateRule(workspaceId: number, rule: NewRule): void {
   if (!OPS_BY_FIELD[rule.field]?.includes(rule.op)) {
     throw new Error(`The ${rule.op} operator cannot be used on ${rule.field}`);
   }
@@ -40,6 +40,10 @@ export function createRule(workspaceId: number, rule: NewRule): number {
   ) {
     throw new Error("Unknown category");
   }
+}
+
+export function createRule(workspaceId: number, rule: NewRule): number {
+  validateRule(workspaceId, rule);
   return getDb()
     .prepare(
       `INSERT INTO rules (workspace_id, field, op, value, category_id, kind)
@@ -86,4 +90,45 @@ export function applyRulesToSyncRun(workspaceId: number, syncRunId: number): num
     }
   })();
   return changed;
+}
+
+type PastRow = { id: number; description: string; chargedAmount: number; accountNumber: string };
+
+// Skips rows with category_source = 'user': hand-picked categories, and rows an earlier rule already set (rules mark theirs 'user' too, so first rule keeps winning).
+function matchPast(workspaceId: number, rule: NewRule): PastRow[] {
+  const rows = getDb()
+    .prepare(
+      `SELECT id, description, charged_amount as chargedAmount, account_number as accountNumber
+       FROM transactions
+       WHERE workspace_id = ? AND category_source IS NOT 'user'
+       ORDER BY date DESC, id DESC`
+    )
+    .all(workspaceId) as PastRow[];
+  const asRule = [{ ...rule, id: 0 }];
+  return rows.filter((row) => applyRules(row, asRule));
+}
+
+export function previewRule(workspaceId: number, rule: NewRule): { count: number; sample: string[] } {
+  const hits = matchPast(workspaceId, rule);
+  return { count: hits.length, sample: [...new Set(hits.map((h) => h.description))].slice(0, 5) };
+}
+
+/** Applies one rule to existing transactions it matches (see matchPast for what is skipped). Returns how many rows changed. */
+export function applyRuleToPast(workspaceId: number, rule: NewRule): number {
+  const hits = matchPast(workspaceId, rule);
+  const db = getDb();
+  const update = db.prepare(
+    `UPDATE transactions
+     SET category_id = COALESCE(?, category_id),
+         category_source = CASE WHEN ? IS NULL THEN category_source ELSE 'user' END,
+         kind = COALESCE(?, kind),
+         needs_review = CASE WHEN ? IS NULL THEN needs_review ELSE 0 END,
+         updated_at = datetime('now')
+     WHERE id = ? AND workspace_id = ?`
+  );
+  const cat = rule.categoryId ?? null;
+  db.transaction(() => {
+    for (const row of hits) update.run(cat, cat, rule.kind ?? null, cat, row.id, workspaceId);
+  })();
+  return hits.length;
 }

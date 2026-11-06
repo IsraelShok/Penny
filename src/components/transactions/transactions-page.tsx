@@ -12,6 +12,7 @@ import { PeriodSelector } from "@/components/dashboard/period-selector";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { KpiCards } from "./kpi-cards";
 import { WidgetsRow } from "./widgets-row";
+import { ReviewInbox } from "./review-inbox";
 import {
   getCategories,
   getTransactions,
@@ -34,6 +35,8 @@ import type { Locale } from "@/i18n/routing";
 
 export function TransactionsPage() {
   const t = useTranslations("transactions");
+  const tReview = useTranslations("review");
+  const [view, setView] = useState<"review" | "all">("all");
   const locale = useLocale() as Locale;
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [search, setSearch] = useState("");
@@ -129,7 +132,17 @@ export function TransactionsPage() {
       />
 
       <div className="space-y-6 p-4 md:p-6 lg:p-8">
-        {summaryQuery.isError || transactionsQuery.isError || integrationsQuery.isError ? <DataState error onRetry={() => { void summaryQuery.refetch(); void transactionsQuery.refetch(); void integrationsQuery.refetch(); }} />
+        <Segmented
+          label={tReview("viewLabel")}
+          value={view}
+          options={[
+            { value: "review", label: tReview("tab") },
+            { value: "all", label: tReview("tabAll") },
+          ]}
+          onChange={setView}
+        />
+        {view === "review" ? <ReviewInbox /> :
+        summaryQuery.isError || transactionsQuery.isError || integrationsQuery.isError ? <DataState error onRetry={() => { void summaryQuery.refetch(); void transactionsQuery.refetch(); void integrationsQuery.refetch(); }} />
         : summaryInitialLoading || tableInitialLoading || integrationsQuery.isPending ? <DataState loading />
         : transactionsQuery.data?.total === 0 && !search && !categoryFilter.length && !accountFilter.length && kind === "all" ? <DataState period={integrationsQuery.data?.some((bank) => bank.lastSyncAt)} />
         : <>

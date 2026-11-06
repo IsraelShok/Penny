@@ -8,7 +8,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createRule, deleteRule, getCategories, listRules } from "@/lib/api";
+import { createRule, createRuleWithPast, deleteRule, getCategories, listRules, previewRule } from "@/lib/api";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { Rule } from "@/server/rules/engine";
 
@@ -26,6 +26,24 @@ export function RulesView() {
   const [kind, setKind] = useState("");
   const [error, setError] = useState(false);
   const [missing, setMissing] = useState<"needValue" | "needTarget" | null>(null);
+  const [applyToPast, setApplyToPast] = useState(true);
+  const [fetchedPreview, setPreview] = useState<{ count: number; sample: string[] } | null>(null);
+
+  // Live count of existing transactions the draft rule would change; debounced, and cleared while the draft is incomplete or invalid.
+  const draftReady = Boolean(value.trim() && (categoryId || kind));
+  useEffect(() => {
+    if (!draftReady) return;
+    let stale = false;
+    const timer = setTimeout(() => {
+      previewRule({ field, op, value, categoryId: categoryId ? Number(categoryId) : undefined, kind: (kind || undefined) as Rule["kind"] })
+        .then((p) => !stale && setPreview(p))
+        .catch(() => !stale && setPreview(null));
+    }, 300);
+    return () => {
+      stale = true;
+      clearTimeout(timer);
+    };
+  }, [draftReady, field, op, value, categoryId, kind]);
 
   const refresh = useCallback(() => {
     listRules().then(setRules).catch(() => setError(true));
@@ -35,6 +53,8 @@ export function RulesView() {
     refresh();
     getCategories("expense").then((c) => setCategories(c)).catch(() => {});
   }, [refresh]);
+
+  const preview = draftReady ? fetchedPreview : null;
 
   const ops: Rule["op"][] = field === "amount" ? ["gt", "lt"] : ["contains", "equals", "regex"];
 
@@ -48,13 +68,17 @@ export function RulesView() {
       return;
     }
     try {
-      await createRule({
-        field,
-        op,
-        value,
-        categoryId: categoryId ? Number(categoryId) : undefined,
-        kind: (kind || undefined) as Rule["kind"],
-      });
+      const { applied } = await createRuleWithPast(
+        {
+          field,
+          op,
+          value,
+          categoryId: categoryId ? Number(categoryId) : undefined,
+          kind: (kind || undefined) as Rule["kind"],
+        },
+        applyToPast
+      );
+      if (applied > 0) toast(t("appliedPast", { count: applied }));
       setValue("");
       refresh();
     } catch {
@@ -156,6 +180,18 @@ export function RulesView() {
                   <option key={k} value={k}>{t(k)}</option>
                 ))}
               </select>
+            </div>
+            <div className="grid gap-2 sm:col-span-2">
+              <p role="status" className="text-footnote text-muted-foreground">
+                {preview ? t("previewCount", { count: preview.count }) : null}
+                {preview && preview.sample.length > 0 ? (
+                  <span className="block">{t("previewSample")} {preview.sample.map((d, i) => <bdi key={i}>{i ? ", " : ""}{d}</bdi>)}</span>
+                ) : null}
+              </p>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" className="size-4" checked={applyToPast} onChange={(e) => setApplyToPast(e.target.checked)} />
+                {t("applyToPast")}
+              </label>
             </div>
             <div className="sm:col-span-2">
               <IconButton label={t("add")} variant="default" type="submit"><Plus className="size-4" aria-hidden /></IconButton>
