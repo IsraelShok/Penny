@@ -9,6 +9,7 @@ import { getPlan, savePlan, savePlanItem } from "@/lib/api";
 import { goalMonthly, type FinancialPlan } from "@/lib/plan";
 import { fmt, shekels } from "@/lib/money";
 import { IL } from "@/lib/il-defaults";
+import { renewalIn, RENEWAL_HEADS_UP_DAYS } from "@/lib/renewals";
 import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
@@ -176,7 +177,7 @@ function Goals({ goals }: { goals: Goal[] }) {
         </ul>
       )}
       <form
-        className="grid grid-cols-2 items-end gap-3 md:grid-cols-[2fr_1fr_1fr_1fr_auto]"
+        className="grid grid-cols-2 items-end gap-3 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]"
         onSubmit={(e) => {
           e.preventDefault();
           add.mutate();
@@ -254,17 +255,29 @@ function Tax({ data, plan }: { data: FiPayload; plan: FinancialPlan }) {
 
 function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[]; monthlyExpenses: number }) {
   const t = useTranslations("plan");
+  const tr = useTranslations("debts2");
   const locale = useLocale();
   const queryClient = useQueryClient();
-  const [draft, setDraft] = useState({ name: "", kind: "health" as InsurancePolicy["kind"], provider: "", monthlyPremium: "" });
+  const [draft, setDraft] = useState({ name: "", kind: "health" as InsurancePolicy["kind"], provider: "", monthlyPremium: "", renewalMonth: "" });
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["plan"] });
   const add = useMutation({
     mutationFn: () => savePlanItem("policy", draft),
     onSuccess: () => {
-      setDraft({ ...draft, name: "", provider: "", monthlyPremium: "" });
+      setDraft({ ...draft, name: "", provider: "", monthlyPremium: "", renewalMonth: "" });
       refresh();
     },
     onError: (e: Error) => toast.error(e.message || t("saveFailed")),
+  });
+  const setRenewal = useMutation({
+    mutationFn: ({ p, month }: { p: InsurancePolicy; month: string }) => savePlanItem("policy", { ...p, renewalMonth: month || null }),
+    onSuccess: refresh,
+    onError: (e: Error) => toast.error(e.message || t("saveFailed")),
+  });
+  const today = new Date();
+  const soon = policies.filter((p) => {
+    if (!p.renewalMonth) return false;
+    const r = renewalIn(p.renewalMonth, today);
+    return r.months >= 0 && r.days <= RENEWAL_HEADS_UP_DAYS;
   });
   const remove = useUndoableDelete<InsurancePolicy & Record<string, unknown>>("policy", "plan", (p) => p.id, (p) => p.name);
   const total = policies.reduce((s, p) => s + p.monthlyPremium, 0);
@@ -282,6 +295,9 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
         )}
       </div>
       {duplicates.length > 0 && <p className="mt-2 text-footnote text-status-heads-up" role="status">{t("insuranceDuplicates", { kinds: duplicates.join(", ") })}</p>}
+      {soon.length > 0 && (
+        <p className="mt-2 text-footnote text-status-heads-up" role="status">{tr("renewalSoon", { names: soon.map((p) => p.name).join(", ") })}</p>
+      )}
       {policies.length > 0 && (
         <ul className="mt-4 divide-y divide-border">
           {policies.map((p) => (
@@ -289,8 +305,24 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
               <span className="min-w-0">
                 <span className="block truncate font-medium">{p.name}</span>
                 <span className="text-caption text-muted-foreground">{t(`policy_${p.kind}`)}{p.provider ? ` · ${p.provider}` : ""}</span>
+                {p.renewalMonth && (
+                  <span className="block text-caption text-muted-foreground tabular-nums">
+                    {(() => {
+                      const m = renewalIn(p.renewalMonth, today).months;
+                      return m < 0 ? tr("renewalPassed") : m === 0 ? tr("renewsThisMonth") : tr("renewsIn", { months: m });
+                    })()}
+                  </span>
+                )}
               </span>
               <span className="flex items-center gap-1">
+                <Input
+                  type="month"
+                  dir="ltr"
+                  className="h-8 w-36 text-caption tabular-nums"
+                  aria-label={tr("renewalFor", { name: p.name })}
+                  defaultValue={p.renewalMonth ?? ""}
+                  onBlur={(e) => e.target.value !== (p.renewalMonth ?? "") && setRenewal.mutate({ p, month: e.target.value })}
+                />
                 <span className="tabular-nums">{shekels(p.monthlyPremium, locale)}</span>
                 <Button variant="ghost" size="icon" aria-label={t("removePolicy", { name: p.name })} onClick={() => remove.mutate(p as InsurancePolicy & Record<string, unknown>)}>
                   <Trash2 className="size-4" aria-hidden />
@@ -327,6 +359,10 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
         <div className="space-y-1.5">
           <Label htmlFor="pol-premium">{t("policyPremium")}</Label>
           <Input id="pol-premium" required type="number" min="0" step="any" dir="ltr" value={draft.monthlyPremium} onChange={(e) => setDraft({ ...draft, monthlyPremium: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="pol-renewal">{tr("renewalLabel")}</Label>
+          <Input id="pol-renewal" type="month" dir="ltr" className="tabular-nums" value={draft.renewalMonth} onChange={(e) => setDraft({ ...draft, renewalMonth: e.target.value })} />
         </div>
         <IconButton label={t("add")} variant="default" type="submit" disabled={add.isPending}><Plus className="size-4" aria-hidden /></IconButton>
       </form>

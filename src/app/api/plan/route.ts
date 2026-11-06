@@ -51,7 +51,10 @@ export async function POST(request: Request) {
     const kind = POLICY_KINDS.find((k) => k === item.kind);
     const monthlyPremium = amount(item.monthlyPremium);
     if (!name || !kind || monthlyPremium == null) return bad("policy needs a name, a kind and a monthly premium");
-    const ok = upsertPolicy(ws, { id, name, kind, provider: text(item.provider, 60), monthlyPremium });
+    const rm = item.renewalMonth;
+    if (rm != null && rm !== "" && !(typeof rm === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(rm))) return bad("renewal month must be YYYY-MM");
+    const renewalMonth = typeof rm === "string" && rm ? rm : null;
+    const ok = upsertPolicy(ws, { id, name, kind, provider: text(item.provider, 60), monthlyPremium, renewalMonth });
     return ok ? NextResponse.json({ success: true }) : NextResponse.json({ error: "not found" }, { status: 404 });
   }
   if (body?.kind === "netWorth") {

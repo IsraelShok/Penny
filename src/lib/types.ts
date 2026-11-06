@@ -894,6 +894,8 @@ export interface InsurancePolicy {
   kind: (typeof POLICY_KINDS)[number];
   provider: string | null;
   monthlyPremium: number;
+  /** YYYY-MM the policy renews, if known. */
+  renewalMonth?: string | null;
 }
 
 export interface PlanPayload {

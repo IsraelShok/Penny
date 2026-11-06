@@ -44,8 +44,8 @@ export function upsertGoal(workspaceId: number, g: Omit<Goal, "id"> & { id?: num
 export function listPolicies(workspaceId: number): InsurancePolicy[] {
   return getDb()
     .prepare(
-      `SELECT id, name, kind, provider, monthly_premium as monthlyPremium
-       FROM insurance_policies WHERE workspace_id = ? ORDER BY kind, name`
+      `SELECT id, name, kind, provider, monthly_premium as monthlyPremium, renewal_month as renewalMonth
+       FROM insurance_policies WHERE workspace_id = ? ORDER BY renewal_month IS NULL, renewal_month, kind, name`
     )
     .all(workspaceId) as InsurancePolicy[];
 }
@@ -54,11 +54,11 @@ export function upsertPolicy(workspaceId: number, p: Omit<InsurancePolicy, "id">
   const db = getDb();
   if (p.id) {
     return db
-      .prepare("UPDATE insurance_policies SET name = ?, kind = ?, provider = ?, monthly_premium = ? WHERE workspace_id = ? AND id = ?")
-      .run(p.name, p.kind, p.provider, p.monthlyPremium, workspaceId, p.id).changes > 0;
+      .prepare("UPDATE insurance_policies SET name = ?, kind = ?, provider = ?, monthly_premium = ?, renewal_month = ? WHERE workspace_id = ? AND id = ?")
+      .run(p.name, p.kind, p.provider, p.monthlyPremium, p.renewalMonth ?? null, workspaceId, p.id).changes > 0;
   }
-  db.prepare("INSERT INTO insurance_policies (workspace_id, name, kind, provider, monthly_premium) VALUES (?, ?, ?, ?, ?)")
-    .run(workspaceId, p.name, p.kind, p.provider, p.monthlyPremium);
+  db.prepare("INSERT INTO insurance_policies (workspace_id, name, kind, provider, monthly_premium, renewal_month) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(workspaceId, p.name, p.kind, p.provider, p.monthlyPremium, p.renewalMonth ?? null);
   return true;
 }
 

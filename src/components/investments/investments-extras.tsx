@@ -8,6 +8,7 @@ import { Check, Plus, Trash2 } from "lucide-react";
 import { getPlan, savePlan, savePlanItem } from "@/lib/api";
 import { ALLOCATION_CLASSES, BENCHMARK_FEES, CLASS_OF, debtPayoff, feeCost, type AllocationClass, type FinancialPlan } from "@/lib/plan";
 import { shekels } from "@/lib/money";
+import { amortizationSchedule, refinanceCheck, referenceRate, REFINANCE_GAP } from "@/lib/loans";
 import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
@@ -110,6 +111,7 @@ function FeesCard({ assets, years }: { assets: Asset[]; years: number | null }) 
 
 function DebtsCard({ assets }: { assets: Asset[] }) {
   const t = useTranslations("plan");
+  const td = useTranslations("debts2");
   const locale = useLocale();
   const [extra, setExtra] = useState("10000");
   // Avalanche: the highest rate first saves the most interest.
@@ -137,7 +139,8 @@ function DebtsCard({ assets }: { assets: Asset[] }) {
             {debts.map((d, i) => {
               const payoff = d.interestRate != null && d.monthlyPayment ? debtPayoff(d.valueIls!, d.interestRate, d.monthlyPayment) : undefined;
               return (
-                <li key={d.id} className="flex items-baseline justify-between gap-3 py-2.5 text-footnote">
+                <li key={d.id} className="py-2.5 text-footnote">
+                  <div className="flex items-baseline justify-between gap-3">
                   <span className="min-w-0">
                     <span className="flex items-center gap-2 font-medium">
                       <span className="truncate">{d.name}</span>
@@ -152,6 +155,8 @@ function DebtsCard({ assets }: { assets: Asset[] }) {
                     </span>
                   </span>
                   <span className="shrink-0 font-semibold tabular-nums">{shekels(d.valueIls!, locale)}</span>
+                  </div>
+                  {payoff && <LoanDetails debt={d} t={td} locale={locale} />}
                 </li>
               );
             })}
@@ -166,6 +171,45 @@ function DebtsCard({ assets }: { assets: Asset[] }) {
         </>
       )}
     </CardShell>
+  );
+}
+
+function LoanDetails({ debt, t, locale }: { debt: Asset; t: ReturnType<typeof useTranslations>; locale: string }) {
+  const balance = debt.valueIls!, rate = debt.interestRate!, payment = debt.monthlyPayment!;
+  const ref = referenceRate(debt.type);
+  const refi = rate - ref >= REFINANCE_GAP ? refinanceCheck(balance, rate, payment, ref) : null;
+  const rows = amortizationSchedule(balance, rate, payment);
+  return (
+    <>
+      {refi && refi.interestSaved > 0 && (
+        <p className="mt-1.5 text-caption text-pretty">
+          {t("refinance", { rate, ref, amount: shekels(refi.interestSaved, locale), months: refi.monthsSaved })}
+        </p>
+      )}
+      <details className="mt-1.5">
+        <summary className="cursor-pointer text-caption text-primary">{t("schedule")}</summary>
+        <table className="mt-2 w-full text-caption tabular-nums">
+          <thead className="text-muted-foreground">
+            <tr>
+              <th className="py-1 text-start font-normal">{t("year")}</th>
+              <th className="py-1 text-end font-normal">{t("interest")}</th>
+              <th className="py-1 text-end font-normal">{t("principal")}</th>
+              <th className="py-1 text-end font-normal">{t("balance")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.year} className="border-t border-border">
+                <td className="py-1">{r.year}</td>
+                <td className="py-1 text-end">{shekels(r.interest, locale)}</td>
+                <td className="py-1 text-end">{shekels(r.principal, locale)}</td>
+                <td className="py-1 text-end">{shekels(r.balance, locale)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+    </>
   );
 }
 

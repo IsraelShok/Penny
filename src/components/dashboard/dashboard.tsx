@@ -14,6 +14,7 @@ import { SyncButton } from "./sync-button";
 import { CategorizeButton } from "./categorize-button";
 import { BudgetFromAverage } from "./budget-from-average";
 import { PlanVsActual } from "./plan-vs-actual";
+import { PeriodicCard } from "./periodic-card";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CategoryViewMode } from "@/lib/types";
@@ -125,6 +126,7 @@ export function Dashboard() {
           to={to}
           viewMode={viewMode}
         />
+        <PeriodicCard />
         <AINotConnectedBanner />
         </>}
       </div>

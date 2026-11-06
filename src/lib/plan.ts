@@ -89,6 +89,16 @@ export interface FinancialPlan {
   wheelPaging: boolean;
   /** Weekly check-in: ISO week key of the last one done, and how many weeks in a row. */
   checkin: { lastWeek: string | null; streak: number };
+  /** Life events for the FI projection (up to 12). */
+  events: LifeEvent[];
+}
+
+/** A future change: a one-off amount (negative = cost) and a monthly cost change from that year on (positive = spend more). */
+export interface LifeEvent {
+  name: string;
+  year: number;
+  amount: number;
+  monthlyChange: number;
 }
 
 export const DEFAULT_PLAN: FinancialPlan = {
@@ -101,6 +111,12 @@ export const DEFAULT_PLAN: FinancialPlan = {
   simpleMode: false,
   wheelPaging: false,
   checkin: { lastWeek: null, streak: 0 },
+  events: [],
+};
+
+const finite = (v: unknown, limit: number) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.max(-limit, Math.min(limit, Math.round(n))) : 0;
 };
 
 const int = (v: unknown, min: number, max: number, fallback: number) => {
@@ -127,6 +143,15 @@ export function parsePlan(raw: unknown): FinancialPlan {
       lastWeek: typeof c.lastWeek === "string" && /^\d{4}-W\d{2}$/.test(c.lastWeek) ? c.lastWeek : null,
       streak: int(c.streak, 0, 1000, 0),
     },
+    events: (Array.isArray(r.events) ? r.events : [])
+      .filter((e): e is Record<string, unknown> => !!e && typeof e === "object")
+      .slice(0, 12)
+      .map((e) => ({
+        name: String(e.name ?? "").slice(0, 40),
+        year: int(e.year, 2000, 2150, new Date().getFullYear()),
+        amount: finite(e.amount, 100_000_000),
+        monthlyChange: finite(e.monthlyChange, 1_000_000),
+      })),
   };
 }
 

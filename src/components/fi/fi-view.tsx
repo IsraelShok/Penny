@@ -1,11 +1,15 @@
 "use client";
 
 import { usePlan } from "@/hooks/use-plan";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { getFi } from "@/lib/api";
-import { carCost, fiNumber, yearsToTarget, type CarInputs } from "@/lib/fi";
+import { carCost, fiNumber, fiOdds, yearsToTarget, yearsToTargetWithEvents, type CarInputs } from "@/lib/fi";
+import { brokerOutcome, fundSwitch, gemelVsBroker } from "@/lib/tools";
+import type { LifeEvent } from "@/lib/plan";
+import { Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { CardShell } from "@/components/home/card-shell";
 import { RotateCw } from "lucide-react";
@@ -77,8 +81,11 @@ interface Plan {
 }
 
 function Body({ data }: { data: FiPayload }) {
-  const simple = usePlan().plan.simpleMode;
+  const { plan: saved, update } = usePlan();
+  const simple = saved.simpleMode;
   const t = useTranslations("fi");
+  const tt = useTranslations("tools");
+  const thisYear = new Date().getFullYear();
   const locale = useLocale();
   // Empty fields fall back to the figures from your own data.
   const [plan, setPlan] = useStored<Plan>("fi-plan", { spend: "", income: "", savings: "", returnPct: "5", rate: 0.04 });
@@ -91,7 +98,13 @@ function Body({ data }: { data: FiPayload }) {
   const annualReturn = num(plan.returnPct, 5) / 100;
   const target = fiNumber(spend * 12, plan.rate);
   const monthlySaving = income - spend;
-  const years = yearsToTarget(savings, Math.max(0, monthlySaving), annualReturn, target);
+  const plainYears = yearsToTarget(savings, Math.max(0, monthlySaving), annualReturn, target);
+  const events = saved.events;
+  const years = events.length ? yearsToTargetWithEvents(savings, Math.max(0, monthlySaving), annualReturn, target, events, thisYear) : plainYears;
+  const age = saved.birthYear ? thisYear - saved.birthYear : null;
+  const horizon = age != null ? Math.max(1, saved.retirementAge - age) : 20;
+  // React Compiler memoizes this; the seeded run is deterministic anyway.
+  const odds =(Number.isFinite(target) ? fiOdds(savings, Math.max(0, monthlySaving), annualReturn, target, horizon, events, thisYear) : null);
   const progress = target > 0 && Number.isFinite(target) ? Math.min(1, Math.max(0, savings / target)) : 0;
   const savingsRate = income > 0 ? monthlySaving / income : null;
 
@@ -106,6 +119,14 @@ function Body({ data }: { data: FiPayload }) {
             ? t("neverHint")
             : t("heroHint", { target: shekels(target, locale), rate: Math.round(plan.rate * 1000) / 10 })}
         </p>
+        {odds && (
+          <p className="mt-2 text-footnote tabular-nums">
+            {age != null ? tt("oddsByAge", { age: saved.retirementAge, pct: Math.round(odds.probability * 100) }) : tt("oddsInYears", { years: horizon, pct: Math.round(odds.probability * 100) })}{" "}
+            {odds.p10 != null && odds.p90 != null && (
+              <span className="text-muted-foreground">{tt("oddsRange", { good: fmt(odds.p10, locale, 0), bad: fmt(odds.p90, locale, 0) })}</span>
+            )}
+          </p>
+        )}
         <div className="mt-8">
           <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={t("progressLabel")}>
             <div className="h-full rounded-full bg-foreground" style={{ width: `${progress * 100}%` }} />
@@ -146,6 +167,8 @@ function Body({ data }: { data: FiPayload }) {
           <CarCalculator rate={plan.rate} />
         </>
       )}
+      <LifeEvents events={events} plainYears={plainYears} years={years} onSave={(e) => update({ events: e })} />
+      {!simple && <Calculators returnPct={annualReturn} />}
       <FiExtras data={data} />
     </div>
   );
@@ -275,5 +298,145 @@ function CarCalculator({ rate }: { rate: number }) {
         <p className="mt-5 text-footnote text-muted-foreground">{t("carEmpty")}</p>
       )}
     </CardShell>
+  );
+}
+
+const PRESETS: { key: string; amount: number; monthlyChange: number }[] = [
+  { key: "apartment", amount: -400_000, monthlyChange: 0 },
+  { key: "child", amount: -20_000, monthlyChange: 2_000 },
+  { key: "sabbatical", amount: -120_000, monthlyChange: 0 },
+  { key: "mortgageEnd", amount: 0, monthlyChange: -6_500 },
+  { key: "car", amount: -150_000, monthlyChange: 500 },
+];
+
+function LifeEvents({ events, plainYears, years, onSave }: { events: LifeEvent[]; plainYears: number | null; years: number | null; onSave: (e: LifeEvent[]) => void }) {
+  const tt = useTranslations("tools");
+  const locale = useLocale();
+  // Typing edits a local copy; it is saved when a field loses focus, so the plan isn't written on every key.
+  const [rows, setRows] = useState(events);
+  useEffect(() => setRows(events), [events]); // eslint-disable-line react-hooks/set-state-in-effect -- follow saved plan
+  const edit = (i: number, k: keyof LifeEvent, v: string) => setRows(rows.map((r, j) => (j === i ? { ...r, [k]: k === "name" ? v : Number(v) || 0 } : r)));
+  const add = (r: LifeEvent) => onSave([...rows, r].slice(0, 12));
+  const delta = years == null || plainYears == null ? null : years - plainYears;
+
+  return (
+    <CardShell label={tt("eventsTitle")} className="lg:col-span-2">
+      <p className="text-footnote text-pretty">
+        {!events.length
+          ? tt("eventsEmpty")
+          : years == null
+            ? tt("eventsNever")
+            : delta == null || Math.abs(delta) < 0.05
+              ? tt("eventsNoEffect")
+              : delta > 0
+                ? tt("eventsDelay", { years: fmt(delta, locale, 1) })
+                : tt("eventsSooner", { years: fmt(-delta, locale, 1) })}
+      </p>
+      {rows.length > 0 && (
+        <ul className="mt-4 space-y-3">
+          {rows.map((r, i) => (
+            <li key={i} className="grid grid-cols-[1fr_5rem_7rem_7rem_auto] items-end gap-2" onBlur={() => onSave(rows)}>
+              <EventInput id={`ev-name-${i}`} label={tt("eventName")} value={r.name} onChange={(v) => edit(i, "name", v)} text />
+              <EventInput id={`ev-year-${i}`} label={tt("eventYear")} value={String(r.year)} onChange={(v) => edit(i, "year", v)} />
+              <EventInput id={`ev-amount-${i}`} label={tt("eventAmount")} value={String(r.amount)} onChange={(v) => edit(i, "amount", v)} />
+              <EventInput id={`ev-monthly-${i}`} label={tt("eventMonthly")} value={String(r.monthlyChange)} onChange={(v) => edit(i, "monthlyChange", v)} />
+              <IconButton label={tt("eventRemove", { name: r.name || "" })} variant="ghost" onClick={() => onSave(rows.filter((_, j) => j !== i))}><X className="size-4" aria-hidden /></IconButton>
+            </li>
+          ))}
+        </ul>
+      )}
+      {rows.length < 12 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {PRESETS.map((p) => (
+            <Button key={p.key} type="button" variant="outline" size="sm" onClick={() => add({ name: tt(`preset_${p.key}`), year: new Date().getFullYear() + 2, amount: p.amount, monthlyChange: p.monthlyChange })}>
+              <Plus className="size-3.5" aria-hidden />
+              {tt(`preset_${p.key}`)}
+            </Button>
+          ))}
+          <Button type="button" variant="ghost" size="sm" onClick={() => add({ name: "", year: new Date().getFullYear() + 1, amount: 0, monthlyChange: 0 })}>
+            <Plus className="size-3.5" aria-hidden />
+            {tt("eventCustom")}
+          </Button>
+        </div>
+      )}
+      <p className="mt-3 text-caption text-muted-foreground">{tt("eventsNote")}</p>
+    </CardShell>
+  );
+}
+
+function EventInput({ id, label, value, onChange, text }: { id: string; label: string; value: string; onChange: (v: string) => void; text?: boolean }) {
+  return (
+    <div className="min-w-0 space-y-1">
+      <Label htmlFor={id} className="text-caption text-muted-foreground">{label}</Label>
+      <Input id={id} type={text ? "text" : "number"} inputMode={text ? undefined : "numeric"} dir={text ? undefined : "ltr"} maxLength={40} value={value} onChange={(e) => onChange(e.target.value)} className="tabular-nums" />
+    </div>
+  );
+}
+
+type CalcKind = "switch" | "gemel" | "broker";
+
+function Calculators({ returnPct }: { returnPct: number }) {
+  const tt = useTranslations("tools");
+  const locale = useLocale();
+  const [kind, setKind] = useState<CalcKind>("switch");
+  const [v, setV] = useStored<Record<string, string>>("fi-tools", {
+    balance: "200000", monthly: "2000", years: "20",
+    curDeposit: "1", curBalance: "0.8", altDeposit: "0", altBalance: "0.3",
+    initial: "50000", inflation: "2", gemelFee: "0.65", etfFee: "0.1", custody: "0",
+    invest: "2000", trades: "1", aTrade: "5", aPct: "0", aCustody: "0", bTrade: "0", bPct: "0.1", bCustody: "15",
+  });
+  const n = (k: string) => Number(v[k]) || 0;
+  const field = (k: string, suffix?: string) => <Field key={k} id={`tool-${k}`} label={tt(`f_${k}`)} value={v[k] ?? ""} onChange={(x) => setV({ ...v, [k]: x })} suffix={suffix} />;
+  const r = returnPct;
+
+  let fields: ReactNode[] = [];
+  let result: ReactNode = null;
+  if (kind === "switch") {
+    fields = [field("balance"), field("monthly"), field("years"), field("curDeposit", "%"), field("curBalance", "%"), field("altDeposit", "%"), field("altBalance", "%")];
+    const s = fundSwitch(n("balance"), n("monthly"), n("years"), r, { depositPct: n("curDeposit"), balancePct: n("curBalance") }, { depositPct: n("altDeposit"), balancePct: n("altBalance") });
+    result = <p className="text-footnote">{tt(s.diff >= 0 ? "switchGain" : "switchLoss", { amount: shekels(Math.abs(s.diff), locale), years: n("years") })}</p>;
+  } else if (kind === "gemel") {
+    fields = [field("initial"), field("monthly"), field("years"), field("inflation", "%"), field("gemelFee", "%"), field("etfFee", "%"), field("custody")];
+    const g = gemelVsBroker({ initial: n("initial"), monthly: n("monthly"), years: n("years"), grossReturn: r, inflation: n("inflation") / 100, gemelFeePct: n("gemelFee"), etfFeePct: n("etfFee"), custodyMonthly: n("custody") });
+    result = (
+      <dl className="space-y-2 text-footnote tabular-nums">
+        <ResultRow label={tt("gemelLump")} value={shekels(g.gemelLump, locale)} />
+        <ResultRow label={tt("gemelAnnuity")} value={shekels(g.gemelAnnuity, locale)} />
+        <ResultRow label={tt("brokerNet")} value={shekels(g.broker, locale)} />
+        <ResultRow label={tt("deposited")} value={shekels(g.deposited, locale)} />
+      </dl>
+    );
+  } else {
+    fields = [field("invest"), field("trades"), field("aTrade"), field("aPct", "%"), field("aCustody"), field("bTrade"), field("bPct", "%"), field("bCustody")];
+    const a = brokerOutcome({ perTrade: n("aTrade"), pct: n("aPct"), custodyMonthly: n("aCustody") }, n("invest"), n("trades"), 10, r);
+    const b = brokerOutcome({ perTrade: n("bTrade"), pct: n("bPct"), custodyMonthly: n("bCustody") }, n("invest"), n("trades"), 10, r);
+    result = (
+      <>
+        <p className="text-footnote">{Math.abs(a.value - b.value) < 1 ? tt("brokersEqual") : tt("brokerWins", { name: a.value > b.value ? "A" : "B", amount: shekels(Math.abs(a.value - b.value), locale) })}</p>
+        <dl className="mt-2 space-y-2 text-footnote tabular-nums">
+          <ResultRow label={tt("brokerFees", { name: "A" })} value={shekels(a.fees, locale)} />
+          <ResultRow label={tt("brokerFees", { name: "B" })} value={shekels(b.fees, locale)} />
+        </dl>
+      </>
+    );
+  }
+
+  return (
+    <CardShell label={tt("calcTitle")} className="lg:col-span-3">
+      <Segmented label={tt("calcTitle")} value={kind} onChange={setKind} options={(["switch", "gemel", "broker"] as const).map((k) => ({ value: k, label: tt(`calc_${k}`) }))} />
+      <p className="mt-3 text-caption text-pretty text-muted-foreground">{tt(`calcHint_${kind}`, { ret: fmt(r * 100, locale, 1) })}</p>
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">{fields}</div>
+      <div className="mt-5" aria-live="polite">{result}</div>
+      <p className="mt-4 text-caption text-muted-foreground">{tt("notAdvice")}</p>
+    </CardShell>
+  );
+}
+
+function ResultRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-semibold">{value}</dd>
+    </div>
   );
 }

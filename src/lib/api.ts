@@ -846,3 +846,27 @@ export function createRuleWithPast(rule: Omit<Rule, "id">, applyToPast: boolean)
     body: JSON.stringify({ ...rule, applyToPast }),
   });
 }
+
+export function getPeriodic() {
+  return fetchJSON<import("./periodic").PeriodicPayload>(`/api/periodic`);
+}
+
+export function savePeriodic(item: Record<string, unknown>) {
+  return fetchJSON<{ success: boolean }>(`/api/periodic`, {
+    method: item.id ? "PUT" : "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ item }),
+  });
+}
+
+export function dismissPeriodicSuggestion(autoKey: string) {
+  return fetchJSON<{ success: boolean }>(`/api/periodic`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dismiss: autoKey }),
+  });
+}
+
+export function deletePeriodic(id: number) {
+  return fetchJSON<{ success: boolean }>(`/api/periodic?id=${id}`, { method: "DELETE" });
+}

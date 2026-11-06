@@ -14,4 +14,8 @@ export const IL = {
   /** Years back a tax refund can be claimed (form 135). */
   taxRefundYears: 6,
   bankOfIsraelRate: 3.25,
+  /** Prime = Bank of Israel rate + 1.5. */
+  primeRate: 4.75,
+  /** Typical prime-track mortgage rate (prime − 0.5), Nov 2026. A reference for comparison, not an offer. */
+  typicalMortgageRate: 4.25,
 } as const;
