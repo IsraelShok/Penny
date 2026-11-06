@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { translateCategoryName } from "@/lib/i18n-data";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import type { BudgetMode } from "@/lib/types";
 /** Paamonim step one: build the budget from what you really spend. */
 export function BudgetFromAverage({ modes }: { modes: Map<number, BudgetMode> }) {
   const t = useTranslations("budgetPlan");
+  const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -107,7 +109,7 @@ export function BudgetFromAverage({ modes }: { modes: Map<number, BudgetMode> })
                         onChange={(e) => setRow(r.categoryId, e.target.checked ? String(r.suggested) : null)}
                       />
                       <label htmlFor={`${id}-check`} className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">{r.name}</span>
+                        <span className="block truncate text-sm font-medium">{translateCategoryName(r.name, tCat)}</span>
                         <span className="block text-xs text-muted-foreground tabular-nums">
                           {t("averageLine", { amount: shekels(r.average, locale) })}
                           {r.currentBudget != null && ` · ${t("currentLine", { amount: shekels(r.currentBudget, locale) })}`}

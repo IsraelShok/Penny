@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { translateCategoryName } from "@/lib/i18n-data";
 import { CardShell } from "@/components/home/card-shell";
 import { projectMonthEnd } from "@/lib/budget-suggest";
 import { shekels } from "@/lib/money";
@@ -9,6 +10,7 @@ import type { DashboardSummary } from "@/lib/types";
 /** Planned vs actual for the current month, answer first. */
 export function PlanVsActual({ summary }: { summary: DashboardSummary }) {
   const t = useTranslations("budgetPlan");
+  const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale();
   // Top-level rows only (parents carry their children's rollup), so nothing counts twice.
   const rows = summary.categoriesWithData.filter((c) => c.parentId == null && c.budget > 0);
@@ -51,7 +53,7 @@ export function PlanVsActual({ summary }: { summary: DashboardSummary }) {
             const diff = c.spent - c.budget;
             return (
               <tr key={c.categoryId}>
-                <th scope="row" className="py-2 text-start font-normal">{c.categoryName}</th>
+                <th scope="row" className="py-2 text-start font-normal">{translateCategoryName(c.categoryName, tCat)}</th>
                 <td className="py-2 text-end tabular-nums">{shekels(c.budget, locale)}</td>
                 <td className="py-2 text-end tabular-nums">{shekels(c.spent, locale)}</td>
                 {/* Words, not only color, say which way it went. */}

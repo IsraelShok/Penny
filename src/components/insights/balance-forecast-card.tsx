@@ -61,7 +61,7 @@ export function BalanceForecastCard() {
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <div className="mt-2 flex justify-between text-xs text-muted-foreground tabular-nums" aria-hidden>
+      <div dir="ltr" className="mt-2 flex justify-between text-xs text-muted-foreground tabular-nums" aria-hidden>
         <span>{t("today")}</span>
         <span>{date(end.date)}</span>
       </div>
