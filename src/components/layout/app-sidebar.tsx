@@ -1,6 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
+import { OPEN_COMMAND_PALETTE } from "./command-palette";
+import { SidebarSync } from "./sidebar-sync";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
@@ -120,6 +124,22 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent className="pt-3" onWheel={onWheel}>
+        <SidebarGroup className="pb-0">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => { setOpenMobile(false); window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE)); }}
+                tooltip={`${t("search")} (Ctrl K)`}
+                aria-keyshortcuts="Control+K Meta+K /"
+                aria-haspopup="dialog"
+              >
+                <Search />
+                <span className="flex-1">{t("search")}</span>
+                <kbd dir="ltr" className="rounded border border-sidebar-border px-1.5 text-[0.6875rem] text-muted-foreground group-data-[collapsible=icon]:hidden">Ctrl K</kbd>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
         {[{ label: "dailyGroup", items: [NAV[0], NAV[5], NAV[4]] }, { label: "planningGroup", items: [NAV[1], NAV[2], NAV[3], NAV[6]] }].map((group) => (
         <SidebarGroup key={group.label}>
           <SidebarGroupLabel>{t(group.label)}</SidebarGroupLabel>
@@ -148,7 +168,9 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="flex-row items-center gap-1 group-data-[collapsible=icon]:flex-col">
+      <SidebarFooter className="gap-2">
+        <Suspense fallback={null}><SidebarSync /></Suspense>
+        <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
         <div className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none">
           <WorkspaceSwitcher />
         </div>
@@ -164,6 +186,7 @@ export function AppSidebar() {
         <IconButton label={t("toggleSidebar")} size="icon-sm" onClick={toggleSidebar}>
           <PanelLeftIcon className="size-4 rtl:rotate-180" aria-hidden />
         </IconButton>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

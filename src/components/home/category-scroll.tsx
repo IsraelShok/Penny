@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { shekels } from "@/lib/money";
 import { CircleDot } from "lucide-react";
 import { ICON_MAP } from "@/components/dashboard/category-card";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { Sparkline } from "@/components/ui/sparkline";
 import type { HomeCategoryBlock } from "@/lib/types";
 
-const shekels = (n: number, locale: string) =>
-  `₪${Math.round(n).toLocaleString(locale === "he" ? "he-IL" : "en-US")}`;
 
 /** One block per category, each with a header that sticks under the page header while its block scrolls by. */
 export function CategoryScroll({ items }: { items: HomeCategoryBlock[] }) {

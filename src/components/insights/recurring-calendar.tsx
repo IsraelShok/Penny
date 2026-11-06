@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { AlertTriangle, TrendingUp } from "lucide-react";
 import { CardShell } from "@/components/home/card-shell";
 import type { InsightsPayload } from "@/lib/api";
 import { addDays, chargesBetween, monthDay, nthCharge } from "@/lib/balance-forecast";
@@ -72,7 +73,7 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
               <ul aria-hidden className="grid gap-0.5">
                 {items.map((it, k) => (
                   <li key={k} className="min-w-0">
-                    <span className="block truncate">{it.flag === "late" ? "⚠ " : it.flag === "up" ? "↑ " : ""}{it.name}</span>
+                    <span className="flex min-w-0 items-center gap-0.5">{it.flag === "late" ? <AlertTriangle className="size-3.5 shrink-0" aria-hidden /> : it.flag === "up" ? <TrendingUp className="size-3.5 shrink-0" aria-hidden /> : null}<span className="truncate">{it.name}</span></span>
                     <span className="block tabular-nums text-muted-foreground">{money(it.amount)}</span>
                     {it.flag && <span className="block text-[var(--status-heads-up)]">{flagText(it.flag)}</span>}
                   </li>

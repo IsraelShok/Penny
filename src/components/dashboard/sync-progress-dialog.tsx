@@ -98,7 +98,7 @@ export function SyncProgressDialog({
       >
         <div className="px-6 pt-6 pb-2">
           <HeroDots done={done} warning={Boolean(aiWarning)} />
-          <DialogTitle className="mt-4 text-center font-serif text-2xl font-normal">
+          <DialogTitle className="mt-4 text-center font-semibold text-2xl">
             {done
               ? aiWarning
                 ? t("titleSkipped")
@@ -129,7 +129,7 @@ export function SyncProgressDialog({
         </div>
 
         {summary && (
-          <div className="mx-6 mb-4 mt-2 overflow-hidden rounded-xl bg-card p-4">
+          <div className="mx-6 mb-4 mt-2 overflow-hidden rounded-2xl bg-card p-4">
             <div className="flex items-center justify-around gap-3 text-center">
               <SummaryStat label={t("statNew")} value={summary.added} accent />
               <Divider />
@@ -493,7 +493,7 @@ function SummaryStat({
     <div className="flex flex-1 flex-col">
       <span
         className={cn(
-          "font-serif text-2xl tabular-nums",
+          "font-semibold text-2xl tabular-nums",
           accent && "text-[var(--status-on-track)]",
           "motion-safe:animate-[countIn_450ms_cubic-bezier(0.3,1.6,0.4,1)_forwards]"
         )}

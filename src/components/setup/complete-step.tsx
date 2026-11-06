@@ -77,7 +77,7 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
           initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.15 }}
-          className="mt-2 font-serif text-4xl leading-tight"
+          className="mt-2 font-semibold text-4xl leading-tight"
         >
           {t("completeTitle")}
         </motion.h1>

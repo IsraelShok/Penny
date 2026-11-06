@@ -39,7 +39,7 @@ export function CashFlowCard({ data }: Props) {
               {t("cashFlowNet")}
             </span>
             <span
-              className={`font-serif text-2xl tabular-nums ${
+              className={`font-semibold text-2xl tabular-nums ${
                 netPositive
                   ? "text-[var(--status-on-track)]"
                   : "text-[var(--status-over)]"

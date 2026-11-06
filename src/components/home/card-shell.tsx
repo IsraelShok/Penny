@@ -30,9 +30,9 @@ export function CardShell({ label, wallet, action, children, className, id }: Ca
       {(label || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
           {label && (
-            <h3 className="text-footnote font-semibold text-muted-foreground">
+            <h2 className="text-footnote font-semibold text-muted-foreground">
               {label}
-            </h3>
+            </h2>
           )}
           {action && (
             <div className="text-footnote text-primary">{action}</div>

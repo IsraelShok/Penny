@@ -34,7 +34,7 @@ export function MoreHub() {
               <li key={href}>
                 <Link
                   href={href}
-                  className="flex h-full items-start gap-4 rounded-[1.375rem] bg-card p-5 transition-[background-color] duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  className="flex h-full items-start gap-4 rounded-2xl bg-card p-5 transition-[background-color] duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                   <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary" aria-hidden>
                     <Icon className="size-5" />

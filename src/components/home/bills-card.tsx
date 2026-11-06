@@ -1,12 +1,11 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { shekels } from "@/lib/money";
 import { CreditCard, Repeat } from "lucide-react";
 import { CardShell, CardAction } from "./card-shell";
 import type { InsightsPayload } from "@/lib/api";
 
-const shekels = (n: number, locale: string) =>
-  `₪${Math.round(n).toLocaleString(locale === "he" ? "he-IL" : "en-US")}`;
 
 const monthly = (s: InsightsPayload["series"][number]) =>
   s.cadence === "weekly" ? s.expectedAmount * 4.33 : s.cadence === "yearly" ? s.expectedAmount / 12 : s.expectedAmount;

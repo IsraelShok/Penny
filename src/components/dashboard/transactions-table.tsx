@@ -369,7 +369,7 @@ export function TransactionsTable({
     <Card className="rounded-2xl bg-card shadow-none">
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
-          <CardTitle className="font-serif text-2xl font-normal">
+          <CardTitle className="font-semibold text-2xl">
             {t("pageTitle")}
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -549,9 +549,9 @@ export function TransactionsTable({
                       <TableCell>
                         <div style={{ color: directionColor }}>
                           {isIncome ? (
-                            <ArrowUpRight className="h-4 w-4" />
+                            <ArrowUpRight className="h-4 w-4" aria-label={t("rowIncome")} />
                           ) : (
-                            <ArrowDownRight className="h-4 w-4" />
+                            <ArrowDownRight className="h-4 w-4" aria-label={t("rowExpense")} />
                           )}
                         </div>
                       </TableCell>
@@ -632,7 +632,7 @@ export function TransactionsTable({
                                     ? {
                                         borderColor: txn.categoryColor + "40",
                                         backgroundColor: txn.categoryColor + "15",
-                                        color: txn.categoryColor,
+                                        color: "var(--foreground)",
                                       }
                                     : undefined
                                 }
@@ -685,7 +685,7 @@ export function TransactionsTable({
                         className="text-end font-medium tabular-nums"
                         style={{ color: directionColor }}
                       >
-                        {formatCurrency(txn.chargedAmount, "ILS", locale)}
+                        <bdi>{isIncome ? "+" : ""}{formatCurrency(txn.chargedAmount, "ILS", locale)}</bdi>
                       </TableCell>
                       <TableCell className="text-end">
                         <DropdownMenu>

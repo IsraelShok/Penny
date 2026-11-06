@@ -141,7 +141,7 @@ export function BankStep({ onComplete }: BankStepProps) {
               <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                 {t("bankStep")}
               </div>
-              <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
+              <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight">
                 {t("bankTitleQuestion")}
               </h1>
               <p className="text-sm leading-relaxed text-muted-foreground">
@@ -191,7 +191,7 @@ export function BankStep({ onComplete }: BankStepProps) {
               <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                 {t("bankConnectingStep", { name: selectedName })}
               </div>
-              <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
+              <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight">
                 {t("bankSignInTitle", { name: selectedName })}
               </h1>
               <p className="text-sm leading-relaxed text-muted-foreground">
@@ -222,7 +222,7 @@ export function BankStep({ onComplete }: BankStepProps) {
               <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                 {t("bankStep")}
               </div>
-              <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
+              <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight">
                 {readyCountLabel}
               </h1>
               <p className="text-sm leading-relaxed text-muted-foreground">
@@ -448,10 +448,11 @@ function FilterPills({
             key={o.id}
             type="button"
             onClick={() => onChange(o.id)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            aria-pressed={active}
+            className={`min-h-11 rounded-full px-3.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring ${
               active
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary/10 font-semibold text-primary"
+                : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
             }`}
           >
             {o.label}
@@ -599,7 +600,7 @@ function CredentialForm({
           radius={11}
         />
         <div className="min-w-0 flex-1">
-          <div className="font-serif text-xl leading-tight tracking-tight">
+          <div className="font-semibold text-xl leading-tight tracking-tight">
             {name}
           </div>
           <div className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">

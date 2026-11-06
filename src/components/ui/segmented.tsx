@@ -45,7 +45,7 @@ export function Segmented<T extends string | number>({
             data-value={o.value}
             onClick={() => onChange(o.value)}
             className={cn(
-              "min-h-9 rounded-full px-3.5 text-sm font-medium tabular-nums transition-[background-color,color] duration-150 focus-visible:outline-2 focus-visible:outline-ring",
+              "min-h-11 rounded-full px-3.5 text-sm font-medium tabular-nums transition-[background-color,color] duration-150 focus-visible:outline-2 focus-visible:outline-ring",
               selected ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
             )}
           >

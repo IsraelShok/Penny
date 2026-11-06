@@ -166,7 +166,7 @@ export function CategoryGrid({
             </div>
             {hasUncategorized ? (
               <>
-                <h3 className="font-serif text-2xl">
+                <h3 className="font-semibold text-2xl">
                   {t("emptyUncategorizedTitle")}
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -175,7 +175,7 @@ export function CategoryGrid({
               </>
             ) : (
               <>
-                <h3 className="font-serif text-2xl">{t("emptyNoSpendTitle")}</h3>
+                <h3 className="font-semibold text-2xl">{t("emptyNoSpendTitle")}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {t("emptyNoSpendBody")}
                 </p>
@@ -200,7 +200,7 @@ export function CategoryGrid({
                 <button
                   key={f.id}
                   onClick={() => setFilter(f.id)}
-                  className={`inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring ${
+                  className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring ${
                     active
                       ? "bg-primary/10 font-semibold text-primary"
                       : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"

@@ -47,7 +47,11 @@ export function CommandPalette() {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName));
+      if (e.key === "/" && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setOpen(true);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setOpen((o) => !o);
       }
@@ -114,17 +118,10 @@ export function CommandPalette() {
 
   return (
     <>
-    <div className="search-dock pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 mx-auto w-auto max-w-2xl print:hidden">
-      <button type="button" aria-label={t("title")} aria-haspopup="dialog" aria-expanded={open} onClick={() => { setQ(""); setActive(0); setOpen(true); }} className="pointer-events-auto flex min-h-14 w-full items-center gap-3 rounded-2xl border border-border bg-popover px-5 py-3 text-start text-sm shadow-xl shadow-black/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
-        <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-        <span className="flex-1 text-muted-foreground">{t("dockHint")}</span>
-        <kbd dir="ltr" className="hidden rounded-md border border-border px-2 py-1 text-xs text-muted-foreground sm:inline">Ctrl / ⌘ K</kbd>
-      </button>
-    </div>
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setQ(""); setAsked(null); } }}>
-      <DialogContent showCloseButton={false} className="top-auto bottom-[max(1rem,env(safe-area-inset-bottom))] flex max-h-[calc(100dvh-2rem)] translate-y-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl data-open:animate-none data-closed:animate-none">
+      <DialogContent showCloseButton={false} className="top-[12vh] flex max-h-[76dvh] translate-y-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl data-open:animate-none data-closed:animate-none">
         <DialogTitle className="sr-only">{t("title")}</DialogTitle>
-        <div className="order-2 flex shrink-0 items-center gap-3 border-t border-border px-5">
+        <div className="flex shrink-0 items-center gap-3 border-b border-border px-5">
           <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
             autoFocus
@@ -163,6 +160,8 @@ export function CommandPalette() {
               : <p role="status" className="text-footnote text-muted-foreground">{tAsk("loading")}</p>}
           </div>
         ) : (
+        <>
+        <p role="status" className="sr-only">{t("count", { n: results.length })}</p>
         <ul id="palette-list" ref={listRef} role="listbox" className="order-1 min-h-0 max-h-[min(24rem,55dvh)] overflow-y-auto overscroll-contain p-1.5">
           {results.length === 0 && <li className="px-3 py-6 text-center text-footnote text-muted-foreground">{t("none")}</li>}
           {results.map((c, i) => (
@@ -181,6 +180,7 @@ export function CommandPalette() {
             </li>
           ))}
         </ul>
+        </>
         )}
         <p className="order-3 shrink-0 border-t border-border px-5 py-2 text-caption text-muted-foreground">{t("footer")}</p>
       </DialogContent>

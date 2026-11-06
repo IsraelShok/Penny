@@ -4,13 +4,13 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { DataState } from "@/components/ui/data-state";
 import { addSettlement, getSettle, setSplitRule, undoSettlement, type SettleCounterpart } from "@/lib/api";
 import { shekels } from "@/lib/money";
 import type { SplitRule } from "@/lib/settle";
 
 const field = "h-9 rounded-lg border border-border/60 bg-background px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring";
-const button = "h-9 rounded-lg px-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring";
 
 /** "התחשבנות": one card per member money is shared with. */
 export function SettleLedger() {
@@ -79,12 +79,12 @@ function CounterpartCard({ c }: { c: SettleCounterpart }) {
         <label className="grid gap-1 text-xs text-muted-foreground">{t("amountPaid")}
           <input type="number" min={0} step="0.01" inputMode="decimal" placeholder={String(Math.round(Math.abs(c.balance)))} value={amount} onChange={(e) => setAmount(e.target.value)} className={`${field} w-28`} />
         </label>
-        <button type="submit" className={`${button} bg-primary text-primary-foreground`}>{t("settleUp")}</button>
+        <Button type="submit" size="sm">{t("settleUp")}</Button>
       </form>
       {last && (
         <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {t("lastSettle", { date: last.date, amount: money(last.amount) })}
-          <button type="button" className="rounded underline focus-visible:outline-2 focus-visible:outline-ring" onClick={() => void run(() => undoSettlement(last.id), t("undone"))}>{t("undo")}</button>
+          <Button variant="link" size="sm" className="h-auto px-0 text-xs" onClick={() => void run(() => undoSettlement(last.id), t("undone"))}>{t("undo")}</Button>
         </p>
       )}
 
@@ -104,11 +104,11 @@ function CounterpartCard({ c }: { c: SettleCounterpart }) {
         <div className="mt-2 grid gap-3">
           <label className="flex flex-wrap items-center gap-2 text-sm">{t("myShare")}
             <input type="number" min={0} max={100} value={share} onChange={(e) => setShare(e.target.value)} className={`${field} w-20`} />%
-            <button type="button" className={`${button} bg-muted`} onClick={() => {
+            <Button variant="outline" size="sm" onClick={() => {
               const n = Number(share);
               if (share === "" || !(n >= 0 && n <= 100)) return void toast.error(t("invalidShare"));
               void saveRule({ myShare: n, support: c.rule.support });
-            }}>{t("save")}</button>
+            }}>{t("save")}</Button>
           </label>
           <p className="text-xs text-muted-foreground">{t("payerHint")}</p>
           <fieldset className="grid gap-2 rounded-xl border border-border/60 p-3">
@@ -126,12 +126,12 @@ function CounterpartCard({ c }: { c: SettleCounterpart }) {
               <label className="grid gap-1 text-xs text-muted-foreground">{t("start")}
                 <input type="month" value={support.start} onChange={(e) => setSupport({ ...support, start: e.target.value })} className={field} />
               </label>
-              <button type="button" className={`${button} bg-muted`} onClick={() => {
+              <Button variant="outline" size="sm" onClick={() => {
                 if (!(support.monthly > 0) || !support.start) return void toast.error(t("invalidAmount"));
                 void saveRule({ myShare: c.rule.myShare, support });
-              }}>{t("save")}</button>
+              }}>{t("save")}</Button>
               {c.rule.support && (
-                <button type="button" className={`${button} text-muted-foreground`} onClick={() => void saveRule({ myShare: c.rule.myShare, support: null })}>{t("removeSupport")}</button>
+                <Button variant="ghost" size="sm" onClick={() => void saveRule({ myShare: c.rule.myShare, support: null })}>{t("removeSupport")}</Button>
               )}
             </div>
           </fieldset>

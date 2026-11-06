@@ -100,7 +100,7 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
         <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           {t("budgetsStep")}
         </div>
-        <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
+        <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight">
           {t("budgetsTitle")}
         </h1>
         <p className="text-sm leading-relaxed text-muted-foreground">

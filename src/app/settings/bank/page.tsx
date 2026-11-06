@@ -11,6 +11,7 @@ import {
   CircleCheck,
   CircleAlert,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import {
   DropdownMenu,
@@ -137,7 +138,7 @@ export default function BankSettingsPage() {
           </div>
         </div>
 
-        {isPending ? <p role="status">{t("loading")}</p> : isError ? <div role="alert"><p>{t("loadFailed")}</p><button type="button" className="mt-3 min-h-11 rounded-lg border px-4" onClick={() => void refetch()}>{t("retry")}</button></div> : integrations.length === 0 ? (
+        {isPending ? <p role="status">{t("loading")}</p> : isError ? <div role="alert"><p>{t("loadFailed")}</p><Button variant="outline" className="mt-3" onClick={() => void refetch()}>{t("retry")}</Button></div> : integrations.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             {t.rich("noneConnectedPrompt", {
               addBankBold: (chunks) => <b>{chunks}</b>,

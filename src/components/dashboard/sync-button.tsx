@@ -13,11 +13,13 @@ import {
 } from "./sync-progress-dialog";
 
 interface SyncButtonProps {
+  /** Off in the collapsed sidebar, where only the icon fits. */
+  showLabel?: boolean;
   onComplete: () => void;
   autoStart?: boolean;
 }
 
-export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
+export function SyncButton({ onComplete, autoStart = false, showLabel = true }: SyncButtonProps) {
   const t = useTranslations("dashboard");
   const errorText = useSyncErrorText();
   const [syncing, setSyncing] = useState(false);
@@ -177,7 +179,7 @@ export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
   return (
     <>
       <IconButton
-        showLabel
+        showLabel={showLabel}
         label={syncing ? t("syncing") : t("syncAndCategorize")}
         variant="default"
         size="icon-sm"

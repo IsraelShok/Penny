@@ -211,7 +211,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
                 ? tb("incomeCategory")
                 : tb("expenseCategory")}
             </div>
-            <SheetTitle className="truncate font-serif text-2xl font-normal">
+            <SheetTitle className="truncate font-semibold text-2xl">
               {data.category.name}
             </SheetTitle>
           </div>
@@ -297,7 +297,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
         <div className="grid grid-cols-2 gap-3">
           <Card>
             <CardLabel>{tb("vsLastMonth")}</CardLabel>
-            <div className="mt-1 font-serif text-2xl tabular-nums">
+            <div className="mt-1 font-semibold text-2xl tabular-nums">
               {data.prevSpent > 0
                 ? `${data.spent - data.prevSpent >= 0 ? "+" : "-"}${formatCurrency(Math.abs(data.spent - data.prevSpent))}`
                 : "—"}
@@ -323,7 +323,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
 
           <Card>
             <CardLabel>{tb("avgPerTransaction")}</CardLabel>
-            <div className="mt-1 font-serif text-2xl tabular-nums">
+            <div className="mt-1 font-semibold text-2xl tabular-nums">
               {formatCurrency(data.avgPerTransaction)}
             </div>
             <div className="mt-0.5 text-xs text-muted-foreground">
@@ -632,7 +632,7 @@ function Stat({
       <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
         {label}
       </div>
-      <div className="mt-0.5 font-serif text-xl tabular-nums">{value}</div>
+      <div className="mt-0.5 font-semibold text-xl tabular-nums">{value}</div>
       {sublabel && (
         <div className="text-xs uppercase tracking-wide text-muted-foreground">
           {sublabel}
@@ -722,7 +722,7 @@ function BudgetStat({
               cancel();
             }
           }}
-          className="mt-0.5 w-full rounded-md border border-border bg-background/70 px-1.5 py-0.5 font-serif text-xl tabular-nums outline-none focus:border-foreground/40 disabled:opacity-60"
+          className="mt-0.5 w-full rounded-md border border-border bg-background/70 px-1.5 py-0.5 font-semibold text-xl tabular-nums outline-none focus:border-foreground/40 disabled:opacity-60"
           placeholder={tb("auto")}
         />
       ) : (
@@ -732,7 +732,7 @@ function BudgetStat({
           className="group mt-0.5 flex w-full cursor-pointer items-center gap-1.5 rounded-md text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label={tb("editBudgetAmount")}
         >
-          <span className="font-serif text-xl tabular-nums">
+          <span className="font-semibold text-xl tabular-nums">
             {amount > 0 ? formatCurrency(amount) : "—"}
           </span>
           <Pencil className="h-3 w-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />

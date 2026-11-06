@@ -34,7 +34,7 @@ export function HistoricalTrendCard({ data }: Props) {
       <div className="flex flex-1 flex-col justify-between gap-4">
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="font-serif text-2xl tabular-nums">
+            <span className="font-semibold text-2xl tabular-nums">
               {formatCurrency(active.total)}
             </span>
             <span className="text-xs text-muted-foreground">

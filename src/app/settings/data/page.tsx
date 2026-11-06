@@ -150,7 +150,7 @@ function DangerZone() {
               />
             </div>
             <div>
-              <DialogTitle className="font-serif text-xl font-normal">
+              <DialogTitle className="font-semibold text-xl">
                 {t("confirmDialogTitle")}
               </DialogTitle>
               <DialogDescription className="mt-1 text-xs">

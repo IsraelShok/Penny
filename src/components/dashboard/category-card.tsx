@@ -19,6 +19,8 @@ import {
   Home,
   Sparkles,
   CircleDot,
+  TrendingDown,
+  Minus,
   HelpCircle,
   Coffee,
   PawPrint,
@@ -94,8 +96,7 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
           <div className="min-w-0 flex-1">
             {parentName && (
               <div
-                className="text-xs font-bold uppercase tracking-[0.08em]"
-                style={{ color: shade(data.categoryColor) }}
+                className="text-xs font-semibold text-muted-foreground"
               >
                 {parentName}
               </div>
@@ -107,7 +108,7 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
                   className="rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums"
                   style={{
                     background: tint(data.categoryColor, 0.22),
-                    color: shade(data.categoryColor),
+                    color: "var(--foreground)",
                   }}
                   title={t("subcategoriesTooltip", { count: data.childCount })}
                 >
@@ -161,11 +162,11 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
 
       <div className="mt-4">
         <div className="flex items-baseline gap-1.5">
-          <span className="font-serif text-3xl tabular-nums">
+          <span className="font-semibold text-3xl tabular-nums">
             {shekels(data.spent, locale)}
           </span>
           {!isTracking && data.budget > 0 && (
-            <span className="font-serif text-base tabular-nums text-muted-foreground">
+            <span className="font-semibold text-base tabular-nums text-muted-foreground">
               / {shekels(data.budget, locale)}
             </span>
           )}
@@ -236,11 +237,13 @@ function VsTypical({
     return null;
   }
   const rounded = Math.round(vsTypical.percentDiff);
-  const arrow = Math.abs(rounded) < 5 ? "≈" : rounded > 0 ? "↑" : "↓";
+  const flat = Math.abs(rounded) < 5;
+  const Arrow = flat ? Minus : rounded > 0 ? TrendingUp : TrendingDown;
   const accent = shade(color);
   return (
     <span className="flex items-center gap-1 tabular-nums">
-      <span style={{ color: accent }}>{arrow}</span>
+      <Arrow className="size-3.5" style={{ color: accent }} aria-hidden />
+      <span className="sr-only">{flat ? "≈" : rounded > 0 ? "+" : "−"}</span>
       {Math.abs(rounded) >= 5 && <span>{Math.abs(rounded)}%</span>}
       <span>{t("vsTypical", { amount: shekels(vsTypical.typical, locale) })}</span>
     </span>

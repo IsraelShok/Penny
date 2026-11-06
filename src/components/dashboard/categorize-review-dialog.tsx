@@ -108,7 +108,7 @@ export function CategorizeReviewDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[85vh] max-w-2xl gap-0 overflow-hidden p-0">
         <DialogHeader className="px-6 pb-3 pt-6">
-          <DialogTitle className="font-serif text-2xl tracking-tight">
+          <DialogTitle className="font-semibold text-2xl tracking-tight">
             {t("title")}
           </DialogTitle>
           <DialogDescription>

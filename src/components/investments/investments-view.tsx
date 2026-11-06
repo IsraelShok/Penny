@@ -5,7 +5,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { FileUp, Pencil, Plus, RotateCw, Trash2 } from "lucide-react";
+import { ChevronDown, FileUp, Pencil, Plus, RotateCw, Trash2 } from "lucide-react";
+import { fmt, shekels } from "@/lib/money";
 import { createAssets, deleteAsset, getAssets, updateAsset } from "@/lib/api";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
@@ -19,10 +20,6 @@ import { InvestmentsExtras } from "./investments-extras";
 import { MarketsView } from "@/components/markets/markets-view";
 import type { Asset, AssetsPayload } from "@/lib/types";
 
-const fmt = (n: number, locale: string, digits = 0) =>
-  n.toLocaleString(locale === "he" ? "he-IL" : "en-US", { maximumFractionDigits: digits, minimumFractionDigits: digits });
-// LTR isolate keeps the sign in front of the amount inside Hebrew text.
-const shekels = (n: number, locale: string) => `⁦${n < 0 ? "−" : ""}₪${fmt(Math.abs(n), locale)}⁩`;
 const pct = (n: number) => `${n >= 0 ? "+" : "−"}${(Math.abs(n) * 100).toFixed(1)}%`;
 
 /** Allocation colours: the three brand tones first, then neutral steps. */
@@ -76,7 +73,7 @@ export function InvestmentsView() {
       {!simple && <section id="markets" className="scroll-mt-20 rounded-2xl border border-border/60 bg-card p-5">
         <button type="button" aria-expanded={marketsOpen} aria-controls="market-details" onClick={() => setMarketsOpen(!marketsOpen)} className="flex min-h-11 w-full items-center justify-between gap-4 text-start font-semibold focus-visible:outline-2 focus-visible:outline-ring">
           <span>{t("marketsTitle")}<span className="mt-1 block text-sm font-normal text-muted-foreground">{t("marketsHint")}</span></span>
-          <span aria-hidden>{marketsOpen ? "−" : "+"}</span>
+          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", marketsOpen && "rotate-180")} aria-hidden />
         </button>
         <div id="market-details" hidden={!marketsOpen}>{marketsOpen && <div className="pt-6"><MarketsView /></div>}</div>
       </section>}
@@ -128,7 +125,7 @@ function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => voi
       </div>
 
       {missing.length > 0 && (
-        <p className="rounded-xl bg-card px-4 py-3 text-footnote text-status-heads-up" role="status">
+        <p className="rounded-2xl bg-card px-4 py-3 text-footnote text-status-heads-up" role="status">
           {t("missingPrices", { names: missing.map((a) => a.name).join(", ") })}
         </p>
       )}

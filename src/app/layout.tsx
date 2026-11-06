@@ -29,7 +29,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Spent",
+  title: "Penny",
   description: "Personal finance tracker with AI-powered categorization",
 };
 

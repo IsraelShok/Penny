@@ -119,12 +119,7 @@ export function SettingsSidebar() {
   const t = (k: string) => (k.includes(".") ? tRoot(k) : tSidebar(k));
   return (
     <aside className="hidden w-56 shrink-0 border-e border-border/40 bg-card/30 md:flex md:flex-col">
-      <div className="px-5 pt-6 pb-3">
-        <div className="mt-1 text-xs text-muted-foreground">
-          {t("subtitle")}
-        </div>
-      </div>
-      <nav className="flex-1 overflow-y-auto px-2 pb-6">
+      <nav className="flex-1 overflow-y-auto px-2 pt-4 pb-6">
         {GROUPS.map((group) => (
           <div key={group.titleKey} className="mt-3">
             <div className="px-3 pb-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">

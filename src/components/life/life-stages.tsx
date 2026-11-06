@@ -42,7 +42,7 @@ export function LifeStages() {
     const done = (progress[s.id] ?? []).length;
     const isOpen = open === s.id;
     return (
-      <li key={s.id} className="overflow-hidden rounded-[1.375rem] bg-card">
+      <li key={s.id} className="overflow-hidden rounded-2xl bg-card">
         <button
           type="button"
           aria-expanded={isOpen}

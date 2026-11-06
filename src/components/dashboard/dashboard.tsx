@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { DataState } from "@/components/ui/data-state";
 import { getSummary, getTransactions, listIntegrations, getBudgetMoves } from "@/lib/api";
@@ -12,8 +12,6 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { HeroCard } from "./hero-card";
 import { CategoryGrid } from "./category-grid";
 import { PeriodSelector } from "./period-selector";
-import { SyncButton } from "./sync-button";
-import { CategorizeButton } from "./categorize-button";
 import { BudgetFromAverage } from "./budget-from-average";
 import { PeriodicCard } from "./periodic-card";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
@@ -38,7 +36,6 @@ export function Dashboard() {
   const locale = useLocale() as Locale;
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<CategoryViewMode>("collapsed");
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     setViewMode(readViewMode());
@@ -59,14 +56,6 @@ export function Dashboard() {
     queryKey: ["summary", from, to],
     queryFn: () => getSummary({ from, to }),
   });
-
-  const handleSyncComplete = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["summary"] });
-    queryClient.invalidateQueries({ queryKey: ["transactions"] });
-    queryClient.invalidateQueries({ queryKey: ["settings"] });
-    queryClient.invalidateQueries({ queryKey: ["budget-period"] });
-    queryClient.invalidateQueries({ queryKey: ["integrations"] });
-  }, [queryClient]);
 
   const monthLabel = formatMonthLabel(selectedDate, locale);
   const month = from.slice(0, 7);
@@ -92,8 +81,6 @@ export function Dashboard() {
               onPrev={() => setSelectedDate((d) => addMonths(d, -1))}
               onNext={() => setSelectedDate((d) => addMonths(d, 1))}
             />
-            <CategorizeButton onApplied={handleSyncComplete} />
-            <SyncButton onComplete={handleSyncComplete} />
           </>
         }
       />

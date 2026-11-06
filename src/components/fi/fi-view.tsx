@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { getFi } from "@/lib/api";
+import { fmt, shekels } from "@/lib/money";
 import { useGentle } from "@/hooks/use-gentle";
 import { carCost, fiNumber, fiOdds, yearsToTarget, yearsToTargetWithEvents, type CarInputs } from "@/lib/fi";
 import { amendment190, bracketTax, brokerOutcome, fundSwitch, gemelVsBroker, rentVsBuy } from "@/lib/tools";
@@ -57,10 +58,6 @@ function useTab(): [Tab, (t: Tab) => void] {
 }
 
 const RATES = [0.04, 0.035, 0.03];
-const fmt = (n: number, locale: string, digits = 0) =>
-  n.toLocaleString(locale === "he" ? "he-IL" : "en-US", { maximumFractionDigits: digits, minimumFractionDigits: digits });
-// LTR isolate keeps the sign in front of the amount inside Hebrew text.
-const shekels = (n: number, locale: string) => `⁦${n < 0 ? "−" : ""}₪${fmt(Math.abs(n), locale)}⁩`;
 
 /** Per-viewer convenience: remember what was typed. Falls back silently where storage is blocked. */
 function useStored<T>(key: string, initial: T): [T, (v: T) => void] {
@@ -98,8 +95,8 @@ export function FiView() {
   if (!query.data) {
     return (
       <div className="grid gap-4 md:grid-cols-3">
-        <Skeleton className="h-64 rounded-[1.375rem] md:col-span-2" />
-        <Skeleton className="h-64 rounded-[1.375rem]" />
+        <Skeleton className="h-64 rounded-2xl md:col-span-2" />
+        <Skeleton className="h-64 rounded-2xl" />
       </div>
     );
   }

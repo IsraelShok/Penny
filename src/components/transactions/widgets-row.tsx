@@ -76,7 +76,7 @@ function TopMerchants({ merchants, loading }: TopMerchantsProps) {
                 <span className="text-xs text-muted-foreground">
                   {m.count} {m.count === 1 ? t("txnsOne") : t("txnsOther")}
                 </span>
-                <span className="font-serif text-base tabular-nums">
+                <span className="font-semibold text-base tabular-nums">
                   {formatCurrency(m.total, "ILS", locale)}
                 </span>
               </div>
@@ -146,7 +146,7 @@ function PendingReview({ count, loading }: PendingReviewProps) {
             <HelpCircle className="h-4 w-4" />
           </div>
         </div>
-        <div className="mt-2 font-serif text-3xl tabular-nums">
+        <div className="mt-2 font-semibold text-3xl tabular-nums">
           {loading ? <span className="text-muted-foreground">—</span> : count}
         </div>
         <div className="mt-0.5 text-xs text-muted-foreground">
@@ -246,7 +246,7 @@ function OutlierRow({
             {txn.description}
           </div>
           <div
-            className="shrink-0 font-serif text-base tabular-nums"
+            className="shrink-0 font-semibold text-base tabular-nums"
             style={{ color }}
           >
             {formatCurrency(txn.chargedAmount, "ILS", locale)}

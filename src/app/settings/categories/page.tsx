@@ -3,7 +3,9 @@
 import { Forward } from "@/components/ui/dir-chevron";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { shekels } from "@/lib/money";
+import { Segmented } from "@/components/ui/segmented";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { Plus, Search, X } from "lucide-react";
 import { toast } from "sonner";
@@ -102,22 +104,15 @@ export default function CategoriesSettingsPage() {
         description={t("description")}
       >
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-full bg-card p-0.5">
-            <KindTab
-              active={activeKind === "expense"}
-              onClick={() => setActiveKind("expense")}
-            >
-              {t("tabExpense")}
-            </KindTab>
-            <KindTab
-              active={activeKind === "income"}
-              onClick={() => setActiveKind("income")}
-            >
-              {t("tabIncome")}
-            </KindTab>
-          </div>
+          <Segmented
+            className="rounded-full bg-card p-0.5"
+            label={t("title")}
+            value={activeKind}
+            onChange={setActiveKind}
+            options={[{ value: "expense", label: t("tabExpense") }, { value: "income", label: t("tabIncome") }]}
+          />
           <div className="relative flex-1 min-w-[180px]">
-            <Search aria-hidden className="pointer-events-none absolute start-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/70" />
+            <Search aria-hidden className="pointer-events-none absolute start-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -188,31 +183,6 @@ export default function CategoriesSettingsPage() {
   );
 }
 
-function KindTab({
-  active,
-  children,
-  onClick,
-}: {
-  active: boolean;
-  children: React.ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-        active
-          ? "bg-foreground text-background"
-          : "text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 function GroupBlock({
   title,
   color,
@@ -242,7 +212,7 @@ function GroupBlock({
           <button
             type="button"
             onClick={() => onSelect(parent.id)}
-            className="ms-auto text-xs uppercase tracking-[0.08em] text-muted-foreground/70 hover:text-foreground"
+            className="ms-auto text-xs uppercase tracking-[0.08em] text-muted-foreground hover:text-foreground"
           >
             {t("editGroup")}
           </button>
@@ -267,6 +237,7 @@ function CategoryRow({
   const t = useTranslations("settings.categories");
   const tCat = useTranslations("categoriesSeeded");
   const tDesc = useTranslations("categoryDescriptions");
+  const locale = useLocale();
   const stored = category.description?.trim();
   // Seeded descriptions are English (the categorizer reads them); show the translation unless the user wrote their own.
   const translated = tDesc.has(category.name) ? tDesc(category.name) : "";
@@ -295,7 +266,7 @@ function CategoryRow({
         <div className="hidden shrink-0 text-end sm:block">
           {data ? (
             <div className="text-xs tabular-nums text-muted-foreground">
-              {t("spentLabel", { amount: `₪${Math.round(data.spent).toLocaleString("en-IL")}` })}
+              {t("spentLabel", { amount: shekels(Math.round(data.spent), locale) })}
             </div>
           ) : null}
         </div>
@@ -313,6 +284,7 @@ function BudgetChip({
   category: Category;
   data: CategoryWithData | null;
 }) {
+  const locale = useLocale();
   const t = useTranslations("settings.categories");
   if (category.budgetMode === "tracking") {
     return (
@@ -330,7 +302,7 @@ function BudgetChip({
   }
   return (
     <span className="shrink-0 rounded-full bg-foreground/8 px-2 py-0.5 text-xs font-medium tabular-nums">
-      ₪{Math.round(data.budget).toLocaleString("en-IL")}
+      {shekels(Math.round(data.budget), locale)}
     </span>
   );
 }

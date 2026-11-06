@@ -90,7 +90,7 @@ export function OverviewView() {
           >
             <Forward />
           </Button>
-          <IconButton showLabel label={t("print")} variant="outline" className="ms-2" onClick={() => window.print()} disabled={!query.data}>
+          <IconButton label={t("print")} variant="ghost" className="ms-2" onClick={() => window.print()} disabled={!query.data}>
             <Printer className="size-4" aria-hidden />
           </IconButton>
         </div>

@@ -93,7 +93,7 @@ function Done({ streak }: { streak: number }) {
   const free = cash?.safeToSpend;
   const date = cash ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(new Date(`${cash.until}T12:00:00`)) : "";
   return (
-    <div className="rounded-[1.375rem] bg-card p-8 text-center" role="status">
+    <div className="rounded-2xl bg-card p-8 text-center" role="status">
       {!gentle && <PartyPopper className="mx-auto mb-4 size-10 text-status-on-track" aria-hidden />}
       <p className="text-title font-semibold">{t(g("doneTitle"))}</p>
       {!gentle && free != null && free >= 0 && (
@@ -107,7 +107,7 @@ function Done({ streak }: { streak: number }) {
 
 function StepCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-[1.375rem] bg-card p-7">
+    <section className="rounded-2xl bg-card p-7">
       <h2 className="text-title font-semibold">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>

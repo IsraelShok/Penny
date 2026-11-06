@@ -12,6 +12,7 @@ import { getRecap } from "@/lib/api";
 import { lastCompleteMonth, shiftMonth, type MonthRecap, type YearRecap } from "@/lib/recap";
 import { shekels } from "@/lib/money";
 import { translateCategoryName } from "@/lib/i18n-data";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { saveCardAsPng } from "./card-image";
@@ -146,9 +147,9 @@ export function RecapStory() {
           </div>
 
           <div className="mt-5 flex items-center justify-between gap-3">
-            <button type="button" onClick={() => go(at - 1)} disabled={at === 0} className="inline-flex min-h-11 items-center gap-1 rounded-xl px-4 text-sm font-semibold hover:bg-accent disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-ring">
+            <Button variant="ghost" size="lg" onClick={() => go(at - 1)} disabled={at === 0} className="gap-1 px-4 font-semibold">
               <Back />{t("prev")}
-            </button>
+            </Button>
             <div className="flex items-center gap-1">
               {cards.map((c, i) => (
                 <button key={c.title + i} type="button" onClick={() => go(i)} aria-label={t("goTo", { n: i + 1, title: c.title })} aria-current={i === at ? "step" : undefined}
@@ -157,9 +158,9 @@ export function RecapStory() {
                 </button>
               ))}
             </div>
-            <button type="button" onClick={() => go(at + 1)} disabled={at === total - 1} className="inline-flex min-h-11 items-center gap-1 rounded-xl px-4 text-sm font-semibold hover:bg-accent disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-ring">
+            <Button variant="ghost" size="lg" onClick={() => go(at + 1)} disabled={at === total - 1} className="gap-1 px-4 font-semibold">
               {t("next")}<Forward />
-            </button>
+            </Button>
           </div>
 
           <div className="mt-4 flex justify-center">

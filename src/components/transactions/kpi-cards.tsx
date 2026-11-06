@@ -84,7 +84,7 @@ function KpiCard({
           {label}
         </div>
       <div
-        className="mt-2 font-serif text-3xl tabular-nums"
+        className="mt-2 font-semibold text-3xl tabular-nums"
         style={{ color }}
       >
         {loading ? (

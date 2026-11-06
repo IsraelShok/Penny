@@ -1,5 +1,6 @@
 "use client";
 
+import { shekels } from "@/lib/money";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -179,7 +180,7 @@ function MonthlyTargetCard({
           {typicalMonthly != null ? (
             <p className="text-xs text-muted-foreground">
               {t("typicalLast3", {
-                amount: formatCurrency(typicalMonthly, "ILS", locale),
+                amount: shekels(typicalMonthly, locale),
               })}
             </p>
           ) : (

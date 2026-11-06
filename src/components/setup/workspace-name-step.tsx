@@ -36,7 +36,7 @@ export function WorkspaceNameStep({
       <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
         {t("workspaceStep")}
       </div>
-      <h1 className="max-w-[440px] font-serif text-4xl leading-[1.08] tracking-tight">
+      <h1 className="max-w-[440px] font-semibold text-4xl leading-[1.08] tracking-tight">
         {t("workspaceTitle")}
       </h1>
       <p className="max-w-[380px] text-sm leading-relaxed text-muted-foreground">
@@ -70,7 +70,7 @@ export function WorkspaceNameStep({
             autoFocus
             disabled={submitting}
             placeholder={t("workspaceExample")}
-            className="mt-2 w-full border-0 bg-transparent p-0 font-serif text-2xl leading-tight tracking-tight text-foreground outline-none placeholder:text-muted-foreground/40"
+            className="mt-2 w-full border-0 bg-transparent p-0 font-semibold text-2xl leading-tight tracking-tight text-foreground outline-none placeholder:text-muted-foreground/40"
           />
         </div>
 

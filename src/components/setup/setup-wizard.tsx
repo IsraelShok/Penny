@@ -150,7 +150,7 @@ function BrandMark() {
         className="hidden h-8 w-auto dark:block"
       />
       <div>
-        <div className="font-serif text-lg font-semibold leading-none tracking-tight">
+        <div className="font-semibold text-lg leading-none tracking-tight">
           Spent
         </div>
         <div className="mt-1 text-[8px] font-bold tracking-[0.18em] text-muted-foreground">

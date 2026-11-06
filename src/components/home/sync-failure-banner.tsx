@@ -80,7 +80,7 @@ export function SyncFailureBanner({ items, className }: Props) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="font-serif text-base leading-tight tracking-tight">
+        <div className="font-semibold text-base leading-tight tracking-tight">
           {headline}
         </div>
         <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">

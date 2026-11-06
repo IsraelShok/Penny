@@ -37,7 +37,7 @@ export function MonthlyTargetStep({ onComplete, onBack }: MonthlyTargetStepProps
         <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           {t("targetStep")}
         </div>
-        <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">
+        <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight">
           {t("targetTitle")}
         </h1>
         <p className="text-sm leading-relaxed text-muted-foreground">

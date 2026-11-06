@@ -107,36 +107,36 @@
   --card-foreground: #14122b;
   --popover: #ffffff;
   --popover-foreground: #14122b;
-  --primary: #3d2fd3;
+  --primary: #2f22b0;
   --primary-foreground: #ffffff;
   --secondary: #eeecfb;
   --secondary-foreground: #14122b;
   --muted: #eeecfb;
-  --muted-foreground: #5f5b78;
+  --muted-foreground: #454160;
   --accent: #eeecfb;
   --accent-foreground: #14122b;
   --action: #3d2fd3;
   --gold: #000000;
   --destructive: #d70015;
   --border: #e4e1f4;
-  --input: #d6d2ee;
-  --ring: #3d2fd3;
+  --input: #7f7aa3;
+  --ring: #2f22b0;
   --chart-1: #4b3be0;
   --chart-2: #b3aee0;
   --chart-3: #34c759;
   --chart-4: #d9d6f0;
   --chart-5: #ff9500;
-  --status-on-track: #1e7a34;
-  --status-heads-up: #c93400;
-  --status-over: #d70015;
-  --status-plenty-left: #3d2fd3;
+  --status-on-track: #105a24;
+  --status-heads-up: #9a2800;
+  --status-over: #a8000f;
+  --status-plenty-left: #2f22b0;
   --radius: 0.875rem;
   /* iOS segmented control: tertiary fill track, white thumb. */
   --segmented: #76728f1f;
   --segmented-thumb: #ffffff;
   --sidebar: #f4f3fb;
   --sidebar-foreground: #14122b;
-  --sidebar-primary: #3d2fd3;
+  --sidebar-primary: #2f22b0;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #e8e5fa;
   --sidebar-accent-foreground: #14122b;
@@ -151,20 +151,20 @@
   --card-foreground: #f4f3fb;
   --popover: #1d1a36;
   --popover-foreground: #f4f3fb;
-  --primary: #8b80ff;
+  --primary: #aaa2ff;
   --primary-foreground: #0b0a1a;
   --secondary: #221f3d;
   --secondary-foreground: #f4f3fb;
   --muted: #221f3d;
-  --muted-foreground: #a6a2c2;
+  --muted-foreground: #bdb9d6;
   --accent: #221f3d;
   --accent-foreground: #f4f3fb;
   --action: #8b80ff;
   --gold: #ffffff;
   --destructive: #ff453a;
   --border: #2c2850;
-  --input: #3a3563;
-  --ring: #8b80ff;
+  --input: #6e68a3;
+  --ring: #aaa2ff;
   --chart-1: #8b80ff;
   --chart-2: #5a5580;
   --chart-3: #30d158;
@@ -172,14 +172,14 @@
   --chart-5: #ff9f0a;
   --status-on-track: #30d158;
   --status-heads-up: #ff9f0a;
-  --status-over: #ff453a;
-  --status-plenty-left: #8b80ff;
+  --status-over: #ff8a80;
+  --status-plenty-left: #aaa2ff;
   --segmented: #7676803d;
   --segmented-thumb: #3a3563;
   --sidebar: #0b0a1a;
   --sidebar-foreground: #f4f3fb;
-  --sidebar-primary: #8b80ff;
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary: #aaa2ff;
+  --sidebar-primary-foreground: #0b0a1a;
   --sidebar-accent: #16142b;
   --sidebar-accent-foreground: #f4f3fb;
   --sidebar-border: transparent;
@@ -343,13 +343,10 @@ html[lang="he"] .text-display {
   [class*="rounded-"] { break-inside: avoid; }
 }
 
-/* Shared page rhythm and clearance for the persistent search dock. */
-#main-content { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); min-width: 0; }
-#main-content > :is(div, section):not(.search-dock) { width: 100%; max-width: 76rem; margin-inline: auto; }
-#main-content { scroll-margin-bottom: 7rem; }
-html { scroll-padding-bottom: 7rem; }
+/* Shared page rhythm. */
+#main-content { padding-bottom: env(safe-area-inset-bottom); min-width: 0; }
+#main-content > :is(div, section) { width: 100%; max-width: 76rem; margin-inline: auto; }
 
-@media print { .search-dock { display: none; } }
 
 /* ESH-style frosted tile for things laid over the indigo hero (stats, next step). Solid fallback without blur. */
 @utility glass-tile {

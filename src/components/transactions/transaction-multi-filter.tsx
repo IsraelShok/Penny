@@ -41,7 +41,7 @@ export function TransactionMultiFilter({
     <Popover>
       <PopoverTrigger
         className={cn(
-          "flex h-8 min-w-[160px] max-w-[220px] items-center justify-between gap-1 rounded-lg border border-input bg-transparent py-2 pe-2 ps-2.5 text-sm transition-colors outline-none select-none hover:bg-accent/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30",
+          "flex h-8 min-w-[160px] max-w-[220px] items-center justify-between gap-1 rounded-lg border border-input bg-transparent py-2 pe-2 ps-2.5 text-sm transition-colors outline-none select-none hover:bg-accent/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring dark:bg-input/30",
           triggerClassName
         )}
         title={triggerTitle}

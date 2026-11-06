@@ -124,7 +124,7 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
   }[verdict];
 
   return (
-    <section className="rounded-[1.375rem] bg-card p-6 md:p-8" aria-label={monthLabel}>
+    <section className="rounded-2xl bg-card p-6 md:p-8" aria-label={monthLabel}>
       <p className="text-footnote text-muted-foreground">
         {todayPhrase} · {daysUntilPayday} {daysUntilPayday === 1 ? t("daysOne") : t("daysOther")} {t("untilPayday")}
       </p>

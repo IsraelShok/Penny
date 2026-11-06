@@ -1,13 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { getActivity, getHome, getInsights, getSettings } from "@/lib/api";
+import { getHome, getInsights, getSettings } from "@/lib/api";
 import { PageHeader } from "@/components/layout/app-shell";
-import { SyncButton } from "@/components/dashboard/sync-button";
-import { CategorizeButton } from "@/components/dashboard/categorize-button";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { ThisMonthCard } from "./this-month-card";
 import { CashFlowCard } from "./cash-flow-card";
@@ -24,7 +22,6 @@ import { RecentTransactionsCard } from "./recent-transactions-card";
 import { TopMerchantsCard } from "./top-merchants-card";
 import { NeedsAttentionCard } from "./needs-attention-card";
 import { BankHealthCard } from "./bank-health-card";
-import { SyncStatusPill } from "./sync-status-pill";
 import { SyncFailureBanner } from "./sync-failure-banner";
 import { CardError, CardSkeleton } from "./card-shell";
 import type { HomePayload, HomeSection } from "@/lib/types";
@@ -70,58 +67,11 @@ export function HomePage() {
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const { data: insights } = useQuery({ queryKey: ["insights"], queryFn: getInsights });
 
-  const [activityPopoverOpen, setActivityPopoverOpen] = useState(false);
-  const { data: activity } = useQuery({
-    queryKey: ["activity"],
-    queryFn: getActivity,
-    refetchInterval: (q) => {
-      const a = q.state.data;
-      if (activityPopoverOpen) return 3000;
-      if (a?.sync.active) return 3000;
-      return 15000;
-    },
-    refetchIntervalInBackground: false,
-  });
-
-  const handleActivityOpenChange = useCallback(
-    (open: boolean) => {
-      setActivityPopoverOpen(open);
-      if (open) queryClient.invalidateQueries({ queryKey: ["activity"] });
-    },
-    [queryClient]
-  );
-
-  const handleSyncOrCategorizeComplete = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["home"] });
-    queryClient.invalidateQueries({ queryKey: ["summary"] });
-    queryClient.invalidateQueries({ queryKey: ["transactions"] });
-    queryClient.invalidateQueries({ queryKey: ["settings"] });
-    queryClient.invalidateQueries({ queryKey: ["activity"] });
-    queryClient.invalidateQueries({ queryKey: ["insights"] });
-    // Balances and patterns change with every sync.
-    ["cash-ahead", "suggestions", "assets"].forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
-  }, [queryClient]);
-
   return (
     <>
       <PageHeader
         title={t("pageTitle")}
         largeTitle={false}
-        actions={
-          <>
-            <SyncStatusPill
-              items={data?.bankHealth ?? null}
-              nextScheduledSync={data?.nextScheduledSync ?? null}
-              activity={activity ?? null}
-              onOpenChange={handleActivityOpenChange}
-            />
-            <CategorizeButton onApplied={handleSyncOrCategorizeComplete} />
-            <SyncButton
-              onComplete={handleSyncOrCategorizeComplete}
-              autoStart={autoStartSync}
-            />
-          </>
-        }
       />
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
