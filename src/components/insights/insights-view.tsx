@@ -8,6 +8,7 @@ import { getInsights, listIntegrations, type InsightsPayload } from "@/lib/api";
 import { shekels } from "@/lib/money";
 import { BalanceForecastCard } from "./balance-forecast-card";
 import { RecurringCalendar } from "./recurring-calendar";
+import { TagReport } from "./tag-report";
 
 
 export function InsightsView() {
@@ -25,6 +26,7 @@ export function InsightsView() {
     <div className="grid gap-6">
       <BalanceForecastCard />
       <RecurringCalendar data={data} today={new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date())} />
+      <TagReport />
       <Card>
         <CardHeader>
           <CardTitle>{t("forecast")}</CardTitle>

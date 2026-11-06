@@ -934,3 +934,10 @@ export interface FundComparison {
   /** 1 = best 5-year return among peers. */
   rank5y: number | null;
 }
+
+// Tags and owner on a transaction (declaration-merged into the interface above).
+export interface TransactionWithCategory {
+  /** Household member id or "shared"; null = not set. */
+  owner?: string | null;
+  tags?: string[];
+}

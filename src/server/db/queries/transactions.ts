@@ -163,6 +163,8 @@ interface QueryParams {
   credentialIds?: number[];
   /** Review inbox: flagged by AI, or an expense/income with no category yet. */
   needsReview?: boolean;
+  /** Only rows carrying this tag. */
+  tag?: string;
 }
 
 function appendCredentialIdsFilter(
@@ -192,7 +194,8 @@ const TRANSACTION_LIST_FROM = `
 
 const TRANSACTION_LIST_SELECT = `
   SELECT t.*, c.name AS category_name, c.color AS category_color,
-         bc.label AS account_label
+         bc.label AS account_label,
+         (SELECT group_concat(tag, char(31)) FROM transaction_tags tt WHERE tt.transaction_id = t.id) AS tags_concat
   ${TRANSACTION_LIST_FROM}`;
 
 export function queryTransactions(
@@ -243,6 +246,10 @@ export function queryTransactions(
   appendCredentialIdsFilter(conditions, values, credentialIds, "t.");
   if (params.needsReview) {
     conditions.push("(t.needs_review = 1 OR (t.category_id IS NULL AND t.kind != 'transfer'))");
+  }
+  if (params.tag) {
+    conditions.push("EXISTS (SELECT 1 FROM transaction_tags tt WHERE tt.transaction_id = t.id AND tt.tag = ?)");
+    values.push(params.tag);
   }
 
   const where = `WHERE ${conditions.join(" AND ")}`;
@@ -578,6 +585,8 @@ interface TransactionRow {
   kind: string;
   needs_review: number;
   is_excluded: number;
+  owner?: string | null;
+  tags_concat?: string | null;
   created_at: string;
   updated_at: string;
   category_name?: string | null;
@@ -617,6 +626,8 @@ function mapTransactionRow(row: unknown): TransactionWithCategory {
     updatedAt: r.updated_at,
     categoryName: r.category_name ?? null,
     categoryColor: r.category_color ?? null,
+    owner: r.owner ?? null,
+    tags: r.tags_concat ? r.tags_concat.split("\u001f") : [],
   };
 }
 
@@ -867,4 +878,97 @@ export function saveSyncTransactions(
       .run(workspaceId, credentialId, ...accounts, ...keep).changes;
     return { ...result, prunedPending };
   })();
+}
+
+// ---- Tags, owners, cash wallet ---------------------------------------------
+
+export function setTransactionTags(workspaceId: number, id: number, tags: string[]): boolean {
+  const db = getDb();
+  const exists = db.prepare("SELECT 1 FROM transactions WHERE workspace_id = ? AND id = ?").get(workspaceId, id);
+  if (!exists) return false;
+  const insert = db.prepare("INSERT OR IGNORE INTO transaction_tags (workspace_id, transaction_id, tag) VALUES (?, ?, ?)");
+  db.transaction(() => {
+    db.prepare("DELETE FROM transaction_tags WHERE workspace_id = ? AND transaction_id = ?").run(workspaceId, id);
+    for (const tag of tags) insert.run(workspaceId, id, tag);
+  })();
+  return true;
+}
+
+export function setTransactionOwner(workspaceId: number, id: number, owner: string | null): boolean {
+  return getDb()
+    .prepare("UPDATE transactions SET owner = ?, updated_at = datetime('now') WHERE workspace_id = ? AND id = ?")
+    .run(owner, workspaceId, id).changes > 0;
+}
+
+/** Every tagged, counted transaction (for tag totals and breakdowns). */
+export function getTagRows(workspaceId: number): import("@/lib/tags").TagRow[] {
+  return getDb()
+    .prepare(
+      `SELECT tt.tag, t.charged_amount AS amount, t.date, c.name AS category
+       FROM transaction_tags tt
+       JOIN transactions t ON t.id = tt.transaction_id
+       LEFT JOIN categories c ON c.id = t.category_id
+       WHERE tt.workspace_id = ? AND t.is_excluded = 0 AND t.kind != 'transfer'`
+    )
+    .all(workspaceId) as import("@/lib/tags").TagRow[];
+}
+
+export function getOwnerRows(workspaceId: number, from: string, to: string): import("@/lib/tags").OwnerRow[] {
+  return getDb()
+    .prepare(
+      `SELECT charged_amount AS amount, owner, account_number AS accountNumber
+       FROM transactions
+       WHERE workspace_id = ? AND date >= ? AND date <= ? AND kind = 'expense' AND is_excluded = 0 AND charged_amount < 0`
+    )
+    .all(workspaceId, from, to) as import("@/lib/tags").OwnerRow[];
+}
+
+export function getAccountNumbers(workspaceId: number): { accountNumber: string; label: string | null; provider: string }[] {
+  return getDb()
+    .prepare(
+      `SELECT t.account_number AS accountNumber, MAX(bc.label) AS label, MAX(t.provider) AS provider
+       FROM transactions t LEFT JOIN bank_credentials bc ON bc.id = t.credential_id
+       WHERE t.workspace_id = ? AND t.provider != 'cash'
+       GROUP BY t.account_number ORDER BY t.account_number`
+    )
+    .all(workspaceId) as { accountNumber: string; label: string | null; provider: string }[];
+}
+
+/** Candidate rows for the cash wallet; walletBalance() does the exact classification. */
+export function getWalletRows(workspaceId: number, from: string): import("@/lib/tags").WalletRow[] {
+  return getDb()
+    .prepare(
+      `SELECT t.charged_amount AS amount, t.description, c.name AS categoryName, t.provider
+       FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
+       WHERE t.workspace_id = ? AND t.date >= ? AND t.charged_amount < 0 AND t.is_excluded = 0
+         AND (t.provider = 'cash' OR c.name = 'Cash & ATM' OR t.description LIKE '%כספומט%'
+              OR t.description LIKE '%משיכת מזומן%' OR t.description LIKE '%ATM%')`
+    )
+    .all(workspaceId, from) as import("@/lib/tags").WalletRow[];
+}
+
+/** Logs cash spending as a manual expense (provider 'cash', account 'cash'). Returns the new id. */
+export function insertCashExpense(workspaceId: number, amount: number, description: string, date: string, owner: string | null): number {
+  const db = getDb();
+  // transactions.sync_run_id is NOT NULL, so cash rows share one placeholder run per workspace,
+  // dated 1970 so it never shows up as the "latest sync".
+  let run = db.prepare("SELECT id FROM sync_runs WHERE workspace_id = ? AND provider = 'cash' LIMIT 1").get(workspaceId) as { id: number } | undefined;
+  if (!run) {
+    const r = db
+      .prepare("INSERT INTO sync_runs (workspace_id, provider, started_at, completed_at, status, scrape_from_date) VALUES (?, 'cash', '1970-01-01', '1970-01-01', 'completed', '1970-01-01')")
+      .run(workspaceId);
+    run = { id: Number(r.lastInsertRowid) };
+  }
+  const r = db
+    .prepare(
+      `INSERT INTO transactions (workspace_id, account_number, date, processed_date, original_amount, original_currency,
+         charged_amount, charged_currency, description, type, status, provider, sync_run_id, dedup_hash, kind, owner)
+       VALUES (?, 'cash', ?, ?, ?, 'ILS', ?, 'ILS', ?, 'normal', 'completed', 'cash', ?, ?, 'expense', ?)`
+    )
+    .run(workspaceId, date, date, -amount, -amount, description, run.id, `cash:${crypto.randomUUID()}`, owner);
+  return Number(r.lastInsertRowid);
+}
+
+export function deleteCashExpense(workspaceId: number, id: number): boolean {
+  return getDb().prepare("DELETE FROM transactions WHERE workspace_id = ? AND id = ? AND provider = 'cash'").run(workspaceId, id).changes > 0;
 }

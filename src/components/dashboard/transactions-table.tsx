@@ -49,6 +49,7 @@ import {
   approveTransactionCategory,
   getCategories,
   setTransactionExcluded,
+  setTransactionOwner,
 } from "@/lib/api";
 import { toast } from "sonner";
 import { translateCategoryName, translateProviderName } from "@/lib/i18n-data";
@@ -77,6 +78,10 @@ import type {
 } from "@/lib/types";
 import { BANK_PROVIDERS } from "@/lib/types";
 import type { Locale } from "@/i18n/routing";
+import type { HouseholdMember } from "@/lib/household";
+import type { AccountOwners } from "@/lib/tags";
+import { TagChips } from "@/components/transactions/tag-chips";
+import { OwnerPicker } from "@/components/transactions/owner-picker";
 
 type Kind = "expense" | "income" | "transfer";
 
@@ -98,6 +103,11 @@ interface TransactionsTableProps {
   sortOrder: SortOrder;
   onSortChange: (field: TransactionSortField) => void;
   isFetching?: boolean;
+  /** Tags and owners; optional so other callers keep working. */
+  allTags?: string[];
+  onTagClick?: (tag: string) => void;
+  members?: HouseholdMember[];
+  accountOwners?: AccountOwners;
 }
 
 const PAGE_SIZE = 50;
@@ -120,7 +130,12 @@ export function TransactionsTable({
   sortOrder,
   onSortChange,
   isFetching = false,
+  allTags = [],
+  onTagClick,
+  members = [],
+  accountOwners = {},
 }: TransactionsTableProps) {
+  const tTags = useTranslations("tags");
   const t = useTranslations("transactions");
   const tCat = useTranslations("categoriesSeeded");
   const tBanks = useTranslations("banks");
@@ -178,6 +193,16 @@ export function TransactionsTable({
       queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleOwnerChange = async (txnId: number, owner: string | null) => {
+    try {
+      await setTransactionOwner(txnId, owner);
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["owners"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed");
     }
   };
 
@@ -576,6 +601,22 @@ export function TransactionsTable({
                               })}
                             </div>
                           )}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {onTagClick && (
+                            <TagChips id={txn.id} tags={txn.tags ?? []} allTags={allTags} onFilter={onTagClick} />
+                          )}
+                          {members.length >= 2 && (
+                            <div className="mt-1">
+                              <OwnerPicker
+                                label={tTags("ownerLabel")}
+                                value={txn.owner ?? null}
+                                fallback={accountOwners[txn.accountNumber] ?? null}
+                                members={members}
+                                onChange={(owner) => void handleOwnerChange(txn.id, owner)}
+                              />
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">

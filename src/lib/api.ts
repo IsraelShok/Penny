@@ -870,3 +870,68 @@ export function dismissPeriodicSuggestion(autoKey: string) {
 export function deletePeriodic(id: number) {
   return fetchJSON<{ success: boolean }>(`/api/periodic?id=${id}`, { method: "DELETE" });
 }
+
+export function getResilience() {
+  return fetchJSON<import("./resilience").Resilience & { ageOfMoney: number | null }>(`/api/resilience`);
+}
+
+export function getRecap(query: { month?: string; year?: number }) {
+  const q = query.year ? `year=${query.year}` : query.month ? `month=${query.month}` : "";
+  return fetchJSON<{ mode: "month"; recap: import("./recap").MonthRecap } | { mode: "year"; recap: import("./recap").YearRecap }>(`/api/recap?${q}`);
+}
+
+// ---- Tags, owners, cash wallet ----
+
+export function setTransactionTags(id: number, tags: string[]) {
+  return fetchJSON<{ success: boolean }>(`/api/transactions/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tags }),
+  });
+}
+
+export function setTransactionOwner(id: number, owner: string | null) {
+  return fetchJSON<{ success: boolean }>(`/api/transactions/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ owner }),
+  });
+}
+
+export function getTagReport(tag?: string) {
+  return fetchJSON<{ tags: import("./tags").TagTotal[]; breakdown: { category: string | null; total: number }[] }>(
+    `/api/transactions/tags${tag ? `?tag=${encodeURIComponent(tag)}` : ""}`
+  );
+}
+
+export function getOwners(from: string, to: string) {
+  return fetchJSON<{
+    accountOwners: import("./tags").AccountOwners;
+    accounts: { accountNumber: string; label: string | null; provider: string }[];
+    summary: import("./tags").OwnerSummary;
+  }>(`/api/transactions/owners?from=${from}&to=${to}`);
+}
+
+export function setAccountOwner(accountNumber: string, owner: string | null) {
+  return fetchJSON<{ accountOwners: import("./tags").AccountOwners }>(`/api/transactions/owners`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ accountNumber, owner }),
+  });
+}
+
+export function getCashWallet() {
+  return fetchJSON<{ days: number; withdrawn: number; logged: number; balance: number }>(`/api/transactions/cash`);
+}
+
+export function logCashExpense(amount: number, description: string) {
+  return fetchJSON<{ id: number }>(`/api/transactions/cash`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount, description }),
+  });
+}
+
+export function deleteCashExpense(id: number) {
+  return fetchJSON<{ success: boolean }>(`/api/transactions/cash?id=${id}`, { method: "DELETE" });
+}

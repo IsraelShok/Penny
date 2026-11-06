@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, CircleDot, Printer, RotateCw } from "lucide-
 import { getOverview, listIntegrations } from "@/lib/api";
 import { ICON_MAP } from "@/components/dashboard/category-card";
 import { CardShell } from "@/components/home/card-shell";
+import { ResilienceCard } from "@/components/overview/resilience-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataState } from "@/components/ui/data-state";
 import { Button } from "@/components/ui/button";
@@ -133,6 +134,7 @@ function Body({ data }: { data: OverviewPayload }) {
 
   return (
     <>
+      <ResilienceCard />
       {/* The answer first, in words; the numbers follow. */}
       {!empty && (
         <p className="text-[1.375rem] leading-snug font-semibold text-balance">

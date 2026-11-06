@@ -13,6 +13,11 @@ import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { KpiCards } from "./kpi-cards";
 import { WidgetsRow } from "./widgets-row";
 import { ReviewInbox } from "./review-inbox";
+import { CashWalletCard } from "./cash-wallet-card";
+import { OwnerSummary } from "./owner-summary";
+import { useHousehold } from "@/hooks/use-household";
+import { X } from "lucide-react";
+import { getOwners, getTagReport } from "@/lib/api";
 import {
   getCategories,
   getTransactions,
@@ -46,6 +51,10 @@ export function TransactionsPage() {
   const [kind, setKind] = useState<TransactionKindFilter>("all");
   const [sortField, setSortField] = useState<TransactionSortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const tTags = useTranslations("tags");
+  const { household } = useHousehold();
+  const members = household.members;
 
   const filterOptions: { value: TransactionKindFilter; label: string }[] = [
     { value: "all", label: t("filterAll") },
@@ -81,9 +90,12 @@ export function TransactionsPage() {
       kind,
       sortField,
       sortOrder,
+      tagFilter,
     ],
     queryFn: () =>
       getTransactions({
+        // `tag` is passed through as a query param by getTransactions.
+        ...({ tag: tagFilter ?? undefined } as object),
         from,
         to,
         search: search || undefined,
@@ -110,6 +122,13 @@ export function TransactionsPage() {
       kind === "income" ? getCategories("income") : getCategories("expense"),
   });
 
+  const tagsQuery = useQuery({ queryKey: ["tags"], queryFn: () => getTagReport() });
+  const ownersQuery = useQuery({
+    queryKey: ["owners", from, to],
+    queryFn: () => getOwners(from, to),
+    enabled: members.length >= 2,
+  });
+
   const monthLabel = formatMonthLabel(selectedDate, locale);
 
   const summaryInitialLoading =
@@ -132,6 +151,7 @@ export function TransactionsPage() {
       />
 
       <div className="space-y-6 p-4 md:p-6 lg:p-8">
+        <CashWalletCard />
         <Segmented
           label={tReview("viewLabel")}
           value={view}
@@ -144,8 +164,9 @@ export function TransactionsPage() {
         {view === "review" ? <ReviewInbox /> :
         summaryQuery.isError || transactionsQuery.isError || integrationsQuery.isError ? <DataState error onRetry={() => { void summaryQuery.refetch(); void transactionsQuery.refetch(); void integrationsQuery.refetch(); }} />
         : summaryInitialLoading || tableInitialLoading || integrationsQuery.isPending ? <DataState loading />
-        : transactionsQuery.data?.total === 0 && !search && !categoryFilter.length && !accountFilter.length && kind === "all" ? <DataState period={integrationsQuery.data?.some((bank) => bank.lastSyncAt)} />
+        : transactionsQuery.data?.total === 0 && !search && !categoryFilter.length && !accountFilter.length && !tagFilter && kind === "all" ? <DataState period={integrationsQuery.data?.some((bank) => bank.lastSyncAt)} />
         : <>
+        {members.length >= 2 && <OwnerSummary members={members} from={from} to={to} />}
         <KpiCards summary={summaryQuery.data} loading={summaryInitialLoading} />
 
 
@@ -163,7 +184,22 @@ export function TransactionsPage() {
           />
         </div>
 
+        {tagFilter && (
+          <button
+            type="button"
+            onClick={() => { setTagFilter(null); setPage(0); }}
+            className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm focus-visible:outline-2 focus-visible:outline-ring"
+            aria-label={tTags("clearFilter", { tag: tagFilter })}
+          >
+            #{tagFilter} <X className="size-3.5" aria-hidden />
+          </button>
+        )}
+
         <TransactionsTable
+          allTags={(tagsQuery.data?.tags ?? []).map((x) => x.tag)}
+          onTagClick={(tag) => { setTagFilter(tag); setPage(0); }}
+          members={members}
+          accountOwners={ownersQuery.data?.accountOwners}
           transactions={transactionsQuery.data?.transactions ?? []}
           total={transactionsQuery.data?.total ?? 0}
           categories={categoriesQuery.data ?? []}

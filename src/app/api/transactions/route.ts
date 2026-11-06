@@ -48,6 +48,7 @@ export async function GET(request: Request) {
     provider: searchParams.get("provider") ?? undefined,
     credentialIds: credentialIds.length > 0 ? credentialIds : undefined,
     needsReview: searchParams.get("needsReview") === "1",
+    tag: searchParams.get("tag") ?? undefined,
   });
 
   return NextResponse.json(result);

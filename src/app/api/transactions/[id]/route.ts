@@ -4,7 +4,11 @@ import {
   setTransactionKind,
   setTransactionNeedsReview,
   getTransactionContext,
+  setTransactionTags,
+  setTransactionOwner,
 } from "@/server/db/queries/transactions";
+import { getAppSettings } from "@/server/db/queries/settings";
+import { isValidOwner, normalizeTag } from "@/lib/tags";
 import { recordMerchantCategory } from "@/server/lib/merchant-memory";
 import { recordCorrection } from "@/server/db/queries/category-corrections";
 import { getAllCategories } from "@/server/db/queries/categories";
@@ -74,9 +78,35 @@ export async function PATCH(
   const body = (await request.json().catch(() => ({}))) as {
     kind?: unknown;
     approve?: unknown;
+    tags?: unknown;
+    owner?: unknown;
   };
 
   const numericId = Number(id);
+
+  if (body.tags !== undefined || body.owner !== undefined) {
+    let tags: string[] | undefined;
+    if (body.tags !== undefined) {
+      if (!Array.isArray(body.tags) || body.tags.length > 20) {
+        return NextResponse.json({ error: "tags must be a list of up to 20" }, { status: 400 });
+      }
+      const clean = body.tags.map(normalizeTag);
+      if (clean.some((t) => t == null)) {
+        return NextResponse.json({ error: "invalid tag" }, { status: 400 });
+      }
+      tags = [...new Set(clean as string[])];
+    }
+    if (body.owner !== undefined && body.owner !== null) {
+      const memberIds = getAppSettings(workspaceId).household.members.map((m) => m.id);
+      if (!isValidOwner(body.owner, memberIds)) {
+        return NextResponse.json({ error: "owner must be a household member or shared" }, { status: 400 });
+      }
+    }
+    const found =
+      (tags === undefined || setTransactionTags(workspaceId, numericId, tags)) &&
+      (body.owner === undefined || setTransactionOwner(workspaceId, numericId, body.owner as string | null));
+    return found ? NextResponse.json({ success: true }) : NextResponse.json({ error: "not found" }, { status: 404 });
+  }
 
   // Undo for an approve: puts the row back in the review inbox (merchant memory stays).
   if (body.approve === false) {

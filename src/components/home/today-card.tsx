@@ -7,6 +7,7 @@ import { ArrowLeft, CheckCircle2, RefreshCw } from "lucide-react";
 import { getCashAhead, getSuggestions } from "@/lib/api";
 import { isoWeek } from "@/lib/plan";
 import { todayState } from "@/lib/today-state";
+import { lastCompleteMonth } from "@/lib/recap";
 import { shekels } from "@/lib/money";
 import { usePlan } from "@/hooks/use-plan";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
   onRetry: () => void;
 }) {
   const t = useTranslations("today");
+  const tRecap = useTranslations("recap");
   const common = useTranslations("common");
   const locale = useLocale();
   const { plan, loaded, failed: planFailed, retry: retryPlan } = usePlan();
@@ -98,6 +100,12 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
       {ready && stats.length > 0 && <dl className="mt-8 grid gap-5 border-t border-white/10 pt-6 sm:grid-cols-3">
         {stats.map((stat) => <div key={stat.label} className="min-w-0"><dt className="text-sm text-muted-foreground">{stat.label}</dt><dd className="figure mt-2 break-words text-3xl"><bdi>{stat.value}</bdi></dd></div>)}
       </dl>}
+      {Number(today.slice(8)) <= 7 && (
+        <Link href="/recap" className="mt-6 inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-medium text-muted-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+          {tRecap("todayLink", { month: new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(new Date(`${lastCompleteMonth(today)}-15T12:00:00Z`)) })}
+          <ArrowLeft className="size-4 shrink-0 ltr:rotate-180" aria-hidden />
+        </Link>
+      )}
     </section>
   );
 }

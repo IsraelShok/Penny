@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { CalendarCheck, Moon, RefreshCw, Search, Settings2, Sun, Zap, X } from "lucide-react";
+import { CalendarCheck, Moon, RefreshCw, Search, Settings2, Sparkles, Sun, Zap, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { usePlan } from "@/hooks/use-plan";
@@ -28,6 +28,7 @@ export function CommandPalette() {
   const t = useTranslations("palette");
   const tNav = useTranslations("nav");
   const tSettings = useTranslations("settings.sidebar");
+  const tRecap = useTranslations("recap");
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const { plan, update } = usePlan();
@@ -57,6 +58,7 @@ export function CommandPalette() {
     return [
       ...[...NAV, ...FOOTER_NAV].map((p) => ({ id: p.href, label: tNav(p.labelKey), hint: t("page"), Icon: p.Icon, run: go(p.href) })),
       { id: "checkin", label: t("checkin"), hint: t("action"), Icon: CalendarCheck, run: go("/checkin") },
+      { id: "recap", label: tRecap("palette"), hint: t("page"), Icon: Sparkles, run: go("/recap") },
       { id: "sync", label: t("sync"), hint: t("action"), Icon: RefreshCw, run: go("/?sync=1") },
       ...SETTINGS.map((s) => ({ id: `settings-${s}`, label: tSettings(s), hint: t("settings"), Icon: Settings2, run: go(`/settings/${s}`) })),
       {
@@ -68,7 +70,7 @@ export function CommandPalette() {
       },
       { id: "simple", label: plan.simpleMode ? t("simpleOff") : t("simpleOn"), hint: t("action"), Icon: Zap, run: () => { void update({ simpleMode: !plan.simpleMode }).catch(() => toast.error(t("saveFailed"))); } },
     ];
-  }, [router, t, tNav, tSettings, resolvedTheme, setTheme, plan.simpleMode, update]);
+  }, [router, t, tNav, tSettings, tRecap, resolvedTheme, setTheme, plan.simpleMode, update]);
 
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const results = commands.filter((c) => words.every((w) => `${c.label} ${c.hint ?? ""}`.toLowerCase().includes(w)));
