@@ -15,7 +15,8 @@ import { Greeting } from "./greeting";
 import { MarketStrip } from "@/components/markets/markets-view";
 import { SuggestionsCard } from "./suggestions-card";
 import { NextBillCard, SubscriptionsCard } from "./bills-card";
-import { SafeToSpendCard } from "./safe-to-spend-card";
+import { TodayCard } from "./today-card";
+import { MoreSection } from "./more-section";
 import { CategoryScroll } from "./category-scroll";
 import { HistoricalTrendCard } from "./historical-trend-card";
 import { RecentTransactionsCard } from "./recent-transactions-card";
@@ -122,21 +123,23 @@ export function HomePage() {
         }
       />
 
-      <div className="p-4 md:p-6 lg:p-8">
+      <div className="mx-auto w-full max-w-6xl p-4 md:p-6 lg:p-8">
         <SyncFailureBanner
           items={data?.bankHealth ?? null}
           className="mb-4 md:mb-5 lg:mb-6"
         />
-        <AINotConnectedBanner className="mb-4 md:mb-5 lg:mb-6" />
         <Greeting name={settings?.displayName} />
+        <TodayCard home={data} bills={insights?.forecast} homePending={isLoading} homeFailed={isError} onRetry={() => { void queryClient.invalidateQueries({ queryKey: ["home"] }); }} />
+        <MoreSection>
+        <SuggestionsCard limit={1} />
+        {/* A setup nudge, not today's business: it waits under "more". */}
+        <AINotConnectedBanner className="mb-4 md:mb-5 lg:mb-6" />
         <MarketStrip />
-        <SuggestionsCard />
         <div className="grid grid-cols-12 gap-3 md:gap-4">
           {renderSection("thisMonth", data, isLoading, isError, ROW_1, skeletonLabels)}
           <div className="col-span-12 grid gap-3 sm:grid-cols-2 md:gap-4 lg:col-span-4 lg:grid-cols-1">
             {insights ? (
               <>
-                <SafeToSpendCard />
                 <NextBillCard data={insights} />
                 <SubscriptionsCard data={insights} />
               </>
@@ -155,6 +158,7 @@ export function HomePage() {
           {renderSection("topMerchants", data, isLoading, isError, ROW_2_SIDE, skeletonLabels)}
           {renderSection("bankHealth", data, isLoading, isError, FULL, skeletonLabels)}
         </div>
+        </MoreSection>
       </div>
     </>
   );
@@ -168,6 +172,10 @@ function renderSection(
   spanClass: string,
   skeletonLabels: Record<HomeSection, string>
 ) {
+  if (isError) {
+    return <div key={section} className={spanClass}><CardError label={skeletonLabels[section]} /></div>;
+  }
+
   if (isLoading || !data) {
     return (
       <div key={section} className={spanClass}>

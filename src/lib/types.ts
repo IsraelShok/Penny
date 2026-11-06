@@ -1,3 +1,4 @@
+import type { Household } from "./household";
 export interface Workspace {
   id: number;
   name: string;
@@ -306,6 +307,7 @@ export interface AppSettings {
   autoSyncTime: string;
   language: "en" | "he";
   displayName: string;
+  household: Household;
 }
 
 export type BankProvider =

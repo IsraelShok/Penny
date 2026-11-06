@@ -1,0 +1,156 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
+import { CalendarCheck, Moon, RefreshCw, Search, Settings2, Sun, Zap, X } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { usePlan } from "@/hooks/use-plan";
+import { cn } from "@/lib/utils";
+import { FOOTER_NAV, NAV } from "./app-sidebar";
+
+interface Command {
+  id: string;
+  label: string;
+  hint?: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  run: () => void;
+}
+
+export const OPEN_COMMAND_PALETTE = "spent:open-command-palette";
+
+const SETTINGS = ["general", "appearance", "bank", "ai", "categories", "rules", "data"] as const;
+
+/** Ctrl+K (⌘K on Mac): jump to any page, settings section or common action by typing a few letters. */
+export function CommandPalette() {
+  const t = useTranslations("palette");
+  const tNav = useTranslations("nav");
+  const tSettings = useTranslations("settings.sidebar");
+  const router = useRouter();
+  const { setTheme, resolvedTheme } = useTheme();
+  const { plan, update } = usePlan();
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [active, setActive] = useState(0);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setOpen((o) => !o);
+      }
+    }
+    const show = () => { setQ(""); setActive(0); setOpen(true); };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener(OPEN_COMMAND_PALETTE, show);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(OPEN_COMMAND_PALETTE, show);
+    };
+  }, []);
+
+  const commands = useMemo<Command[]>(() => {
+    const go = (href: string) => () => router.push(href);
+    return [
+      ...[...NAV, ...FOOTER_NAV].map((p) => ({ id: p.href, label: tNav(p.labelKey), hint: t("page"), Icon: p.Icon, run: go(p.href) })),
+      { id: "checkin", label: t("checkin"), hint: t("action"), Icon: CalendarCheck, run: go("/checkin") },
+      { id: "sync", label: t("sync"), hint: t("action"), Icon: RefreshCw, run: go("/?sync=1") },
+      ...SETTINGS.map((s) => ({ id: `settings-${s}`, label: tSettings(s), hint: t("settings"), Icon: Settings2, run: go(`/settings/${s}`) })),
+      {
+        id: "theme",
+        label: resolvedTheme === "dark" ? t("light") : t("dark"),
+        hint: t("action"),
+        Icon: resolvedTheme === "dark" ? Sun : Moon,
+        run: () => setTheme(resolvedTheme === "dark" ? "light" : "dark"),
+      },
+      { id: "simple", label: plan.simpleMode ? t("simpleOff") : t("simpleOn"), hint: t("action"), Icon: Zap, run: () => { void update({ simpleMode: !plan.simpleMode }).catch(() => toast.error(t("saveFailed"))); } },
+    ];
+  }, [router, t, tNav, tSettings, resolvedTheme, setTheme, plan.simpleMode, update]);
+
+  const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const results = commands.filter((c) => words.every((w) => `${c.label} ${c.hint ?? ""}`.toLowerCase().includes(w)));
+  const current = Math.min(active, Math.max(0, results.length - 1));
+
+  useEffect(() => {
+    if (!open) return;
+    listRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
+  }, [current, open]);
+
+  function choose(c: Command | undefined) {
+    if (!c) return;
+    setOpen(false);
+    setQ("");
+    setActive(0);
+    c.run();
+  }
+
+  return (
+    <>
+    <div className="search-dock pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 mx-auto w-auto max-w-2xl print:hidden">
+      <button type="button" aria-label={t("title")} aria-haspopup="dialog" aria-expanded={open} onClick={() => { setQ(""); setActive(0); setOpen(true); }} className="pointer-events-auto flex min-h-14 w-full items-center gap-3 rounded-2xl border border-border bg-popover px-5 py-3 text-start text-sm shadow-xl shadow-black/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
+        <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+        <span className="flex-1 text-muted-foreground">{t("dockHint")}</span>
+        <kbd dir="ltr" className="hidden rounded-md border border-border px-2 py-1 text-xs text-muted-foreground sm:inline">Ctrl / ⌘ K</kbd>
+      </button>
+    </div>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQ(""); }}>
+      <DialogContent showCloseButton={false} className="top-auto bottom-[max(1rem,env(safe-area-inset-bottom))] flex max-h-[calc(100dvh-2rem)] translate-y-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl data-open:animate-none data-closed:animate-none">
+        <DialogTitle className="sr-only">{t("title")}</DialogTitle>
+        <div className="order-2 flex shrink-0 items-center gap-3 border-t border-border px-5">
+          <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+          <input
+            autoFocus
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setActive(0);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setActive((a) => Math.min(a + 1, results.length - 1));
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setActive((a) => Math.max(a - 1, 0));
+              } else if (e.key === "Enter") {
+                e.preventDefault();
+                choose(results[current]);
+              }
+            }}
+            placeholder={t("placeholder")}
+            aria-label={t("title")}
+            aria-controls="palette-list"
+            aria-activedescendant={results[current] ? `palette-${results[current].id}` : undefined}
+            role="combobox"
+            aria-expanded
+            className="h-16 min-w-0 w-full bg-transparent text-[0.9375rem] outline-none placeholder:text-muted-foreground"
+          />
+          <button type="button" aria-label={t("close")} onClick={() => setOpen(false)} className="grid min-h-11 min-w-11 place-items-center rounded-lg hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"><X className="size-4" aria-hidden /></button>
+        </div>
+        <ul id="palette-list" ref={listRef} role="listbox" className="order-1 min-h-0 max-h-[min(24rem,55dvh)] overflow-y-auto overscroll-contain p-1.5">
+          {results.length === 0 && <li className="px-3 py-6 text-center text-footnote text-muted-foreground">{t("none")}</li>}
+          {results.map((c, i) => (
+            <li
+              key={c.id}
+              id={`palette-${c.id}`}
+              role="option"
+              aria-selected={i === current}
+              onMouseMove={() => setActive(i)}
+              onClick={() => choose(c)}
+              className={cn("flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-footnote", i === current && "bg-accent")}
+            >
+              <c.Icon className="size-4 shrink-0 text-muted-foreground" />
+              <span className="flex-1 truncate font-medium">{c.label}</span>
+              {c.hint && <span className="text-caption text-muted-foreground">{c.hint}</span>}
+            </li>
+          ))}
+        </ul>
+        <p className="order-3 shrink-0 border-t border-border px-5 py-2 text-caption text-muted-foreground">{t("footer")}</p>
+      </DialogContent>
+    </Dialog>
+    </>
+  );
+}

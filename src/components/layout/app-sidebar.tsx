@@ -21,12 +21,14 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { IconButton } from "@/components/ui/icon-button";
+import { usePlan } from "@/hooks/use-plan";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 
 interface NavDef {
@@ -97,14 +99,15 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("nav");
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, setOpenMobile } = useSidebar();
+  const { plan } = usePlan();
   // Settings lives as an icon by the workspace, but the wheel still reaches it last.
   const pages = [...NAV, ...FOOTER_NAV];
   const lastWheel = useRef(0);
 
   // Wheel over the menu steps through the pages, top to bottom.
   function onWheel(e: React.WheelEvent) {
-    if (Math.abs(e.deltaY) < 4) return;
+    if (!plan.wheelPaging || Math.abs(e.deltaY) < 4) return;
     const now = e.timeStamp;
     if (now - lastWheel.current < WHEEL_COOLDOWN_MS) return;
     lastWheel.current = now;
@@ -116,16 +119,18 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent className="pt-3" onWheel={onWheel}>
-        <SidebarGroup>
+        {[{ label: "dailyGroup", items: [NAV[0], NAV[5], NAV[4], NAV[6]] }, { label: "planningGroup", items: [NAV[1], NAV[2], NAV[3]] }].map((group) => (
+        <SidebarGroup key={group.label}>
+          <SidebarGroupLabel>{t(group.label)}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV.map((item) => {
+              {group.items.map((item) => {
                 const label = t(item.labelKey);
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       render={
-                        <Link href={item.href}>
+                        <Link href={item.href} onClick={() => setOpenMobile(false)} aria-current={item.match(pathname) ? "page" : undefined}>
                           <item.Icon />
                           <span>{label}</span>
                         </Link>
@@ -139,6 +144,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="flex-row items-center gap-1 group-data-[collapsible=icon]:flex-col">

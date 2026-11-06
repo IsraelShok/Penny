@@ -40,7 +40,7 @@ export default function BankSettingsPage() {
   const tBanks = useTranslations("banks");
   const labels = useFormatterLabels();
 
-  const { data: integrations = [] } = useQuery({
+  const { data: integrations = [], isPending, isError, refetch } = useQuery({
     queryKey: ["integrations"],
     queryFn: listIntegrations,
   });
@@ -92,7 +92,7 @@ export default function BankSettingsPage() {
             ) : null}
           </div>
           <div className="flex items-center gap-2">
-            <IconButton
+            <IconButton showLabel
               label={anySyncing ? t("syncing") : t("syncAll")}
               variant="outline"
               onClick={handleSyncAll}
@@ -104,7 +104,7 @@ export default function BankSettingsPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
-                    <IconButton label={t("addBank")} variant="default">
+                    <IconButton showLabel label={t("addBank")} variant="default">
                       <Plus className="size-4" aria-hidden />
                     </IconButton>
                   }
@@ -137,7 +137,7 @@ export default function BankSettingsPage() {
           </div>
         </div>
 
-        {integrations.length === 0 ? (
+        {isPending ? <p role="status">{t("loading")}</p> : isError ? <div role="alert"><p>{t("loadFailed")}</p><button type="button" className="mt-3 min-h-11 rounded-lg border px-4" onClick={() => void refetch()}>{t("retry")}</button></div> : integrations.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             {t.rich("noneConnectedPrompt", {
               addBankBold: (chunks) => <b>{chunks}</b>,
@@ -286,7 +286,7 @@ function SyncShortButton({
     );
   }
   return (
-    <IconButton label={t("syncShort")} className="shrink-0" onClick={onClick}>
+    <IconButton showLabel label={t("syncShort")} className="shrink-0" onClick={onClick}>
       <RefreshCw className="size-4" aria-hidden />
     </IconButton>
   );

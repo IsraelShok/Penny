@@ -22,7 +22,7 @@ const ICONS: Record<Suggestion["type"], typeof Shield> = {
 const INFO: Suggestion["type"][] = ["fees", "interest", "fx", "duplicate", "price", "fxMarkup", "taxRefund"];
 
 /** What the rules noticed in your transactions, each one click to add or dismiss. Hidden when there is nothing. */
-export function SuggestionsCard() {
+export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; empty?: React.ReactNode } = {}) {
   const t = useTranslations("suggestions");
   const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale();
@@ -50,7 +50,7 @@ export function SuggestionsCard() {
   });
 
   const items = query.data?.suggestions ?? [];
-  if (items.length === 0) return null;
+  if (items.length === 0) return <>{empty}</>;
 
   function onAccept(s: Suggestion) {
     if (s.type === "debt") setDialog({ key: s.key, preset: { name: s.name, type: s.debtType, monthlyPayment: Math.round(s.monthly) } });
@@ -76,9 +76,9 @@ export function SuggestionsCard() {
   };
 
   return (
-    <CardShell label={t("title")} action={<NotifyToggle />} className="mb-6 h-auto md:mb-8">
+    <CardShell label={t("title")} action={<NotifyToggle />} className="mb-6 h-auto scroll-mt-20 md:mb-8" id="suggestions">
       <ul className="divide-y divide-border">
-        {items.slice(0, 6).map((s) => {
+        {items.slice(0, limit).map((s) => {
           const Icon = ICONS[s.type];
           return (
             <li key={s.key} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
@@ -100,7 +100,7 @@ export function SuggestionsCard() {
           );
         })}
       </ul>
-      {items.length > 6 && <p className="mt-3 text-caption text-muted-foreground">{t("more", { count: items.length - 6 })}</p>}
+      {items.length > limit && <p className="mt-3 text-caption text-muted-foreground">{t("more", { count: items.length - limit })}</p>}
       {dialog && (
         <AssetDialog
           asset="new"

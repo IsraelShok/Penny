@@ -61,8 +61,8 @@
   --text-title--line-height: 1.75rem;
   --text-headline: 1.0625rem;
   --text-headline--line-height: 1.375rem;
-  --text-footnote: 0.8125rem;
-  --text-footnote--line-height: 1.125rem;
+  --text-footnote: 0.875rem;
+  --text-footnote--line-height: 1.375rem;
   --text-caption: 0.75rem;
   --text-caption--line-height: 1rem;
 }
@@ -145,7 +145,7 @@
 }
 
 .dark {
-  --background: #000000;
+  --background: #111214;
   --foreground: #ffffff;
   --card: #1c1c1e;
   --card-foreground: #ffffff;
@@ -156,7 +156,7 @@
   --secondary: #2c2c2e;
   --secondary-foreground: #ffffff;
   --muted: #2c2c2e;
-  --muted-foreground: #98989d;
+  --muted-foreground: #b0b0b8;
   --accent: #2c2c2e;
   --accent-foreground: #ffffff;
   --action: #0a84ff;
@@ -176,7 +176,7 @@
   --status-plenty-left: #0a84ff;
   --segmented: #7676803d;
   --segmented-thumb: #636366;
-  --sidebar: #000000;
+  --sidebar: #17181b;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #0a84ff;
   --sidebar-primary-foreground: #ffffff;
@@ -193,7 +193,7 @@
   --card-foreground: #ffffff;
   --foreground: #ffffff;
   --muted: #3a3a3c;
-  --muted-foreground: #98989d;
+  --muted-foreground: #b0b0b8;
   --border: #38383a;
   --primary: #0a84ff;
   --chart-1: #0a84ff;
@@ -312,3 +312,11 @@ html[lang="he"] .text-display {
   .wallet { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   [class*="rounded-"] { break-inside: avoid; }
 }
+
+/* Shared page rhythm and clearance for the persistent search dock. */
+#main-content { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); min-width: 0; }
+#main-content > :is(div, section):not(.search-dock) { width: 100%; max-width: 76rem; margin-inline: auto; }
+#main-content { scroll-margin-bottom: 7rem; }
+html { scroll-padding-bottom: 7rem; }
+
+@media print { .search-dock { display: none; } }

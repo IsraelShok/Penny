@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { usePlan } from "@/hooks/use-plan";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, CircleDot, Printer, RotateCw } from "lucide-react";
-import { getOverview } from "@/lib/api";
+import { getOverview, listIntegrations } from "@/lib/api";
 import { ICON_MAP } from "@/components/dashboard/category-card";
 import { CardShell } from "@/components/home/card-shell";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataState } from "@/components/ui/data-state";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
 import { IconButton } from "@/components/ui/icon-button";
@@ -28,8 +30,23 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
 
 export function OverviewView() {
   const t = useTranslations("overview");
-  const [kind, setKind] = useState<PeriodKind>("quarter");
+  const [kind, setKindState] = useState<PeriodKind>("quarter");
+  // Come back to the period you were looking at.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("overview-period") as PeriodKind | null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- read once after hydration
+      if (saved && KINDS.includes(saved)) setKindState(saved);
+    } catch {}
+  }, []);
+  const setKind = (k: PeriodKind) => {
+    setKindState(k);
+    try {
+      localStorage.setItem("overview-period", k);
+    } catch {}
+  };
   const [offset, setOffset] = useState(0);
+  const integrations = useQuery({ queryKey: ["integrations"], queryFn: listIntegrations });
   const query = useQuery({
     queryKey: ["overview", kind, offset],
     queryFn: () => getOverview(kind, offset),
@@ -71,7 +88,7 @@ export function OverviewView() {
             <ChevronLeft className="size-4 rtl:hidden" aria-hidden />
             <ChevronRight className="hidden size-4 rtl:block" aria-hidden />
           </Button>
-          <IconButton label={t("print")} variant="outline" className="ms-2" onClick={() => window.print()} disabled={!query.data}>
+          <IconButton showLabel label={t("print")} variant="outline" className="ms-2" onClick={() => window.print()} disabled={!query.data}>
             <Printer className="size-4" aria-hidden />
           </IconButton>
         </div>
@@ -80,7 +97,7 @@ export function OverviewView() {
       {query.isError ? (
         <CardShell>
           <p className="text-footnote text-muted-foreground">{t("error")}</p>
-          <IconButton label={t("retry")} variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}>
+          <IconButton showLabel label={t("retry")} variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}>
             <RotateCw className="size-4" aria-hidden />
           </IconButton>
         </CardShell>
@@ -89,6 +106,8 @@ export function OverviewView() {
           {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-32 rounded-2xl" />)}
           <Skeleton className="h-64 rounded-2xl md:col-span-4" />
         </div>
+      ) : query.data.totals.income === 0 && query.data.totals.expenses === 0 ? (
+        <DataState period={integrations.data?.some((bank) => Boolean(bank.lastSyncAt)) ?? false} />
       ) : (
         <Body data={query.data} />
       )}
@@ -108,6 +127,7 @@ function Body({ data }: { data: OverviewPayload }) {
   const t = useTranslations("overview");
   const locale = useLocale();
   const empty = data.totals.income === 0 && data.totals.expenses === 0;
+  const simple = usePlan().plan.simpleMode;
   // Future and not-yet-synced months would drag the average down.
   const avgMonthly = data.totals.expenses / Math.max(1, data.monthly.filter((m) => m.expenses > 0).length);
 
@@ -126,24 +146,26 @@ function Body({ data }: { data: OverviewPayload }) {
         <>
           {data.monthly.length > 1 && <FlowChart monthly={data.monthly} />}
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className={cn("grid gap-4", !simple && "md:grid-cols-2")}>
             <SplitCard
               title={t("ruleTitle")}
               hint={t("ruleHint")}
               parts={(["need", "want", "saving"] as const).map((k) => ({ key: k, label: t(k), value: data.byNeed[k], color: NEED_COLORS[k] }))}
               uncategorized={data.uncategorized}
             />
-            <SplitCard
-              title={t("costTitle")}
-              parts={(["fixed", "variable", "unplanned"] as const).map((k) => ({ key: k, label: t(k), value: data.byCost[k], color: COST_COLORS[k] }))}
-              uncategorized={data.uncategorized}
-            />
+            {!simple && (
+              <SplitCard
+                title={t("costTitle")}
+                parts={(["fixed", "variable", "unplanned"] as const).map((k) => ({ key: k, label: t(k), value: data.byCost[k], color: COST_COLORS[k] }))}
+                uncategorized={data.uncategorized}
+              />
+            )}
           </div>
 
           <CategoryList data={data} />
-          {data.period.months.length > 1 && <YearTable data={data} />}
+          {!simple && data.period.months.length > 1 && <YearTable data={data} />}
 
-          <p className="px-1 text-footnote text-muted-foreground" title={t("lifeCostHint")}>
+          <p hidden={simple} className="px-1 text-footnote text-muted-foreground" title={t("lifeCostHint")}>
             <span className="font-medium text-foreground">{t("lifeCost", { amount: fmt(avgMonthly * 300, locale) })}</span>
             {" · "}
             {t("lifeCostHint")}

@@ -1,56 +1,16 @@
 "use client";
-
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Plug, Sparkles } from "lucide-react";
-import { IconButton } from "@/components/ui/icon-button";
 import { getSettings } from "@/lib/api";
 import { cn } from "@/lib/utils";
-
-interface AINotConnectedBannerProps {
-  className?: string;
-}
-
-export function AINotConnectedBanner({ className }: AINotConnectedBannerProps) {
+export function AINotConnectedBanner({ className }: { className?: string }) {
   const t = useTranslations("aiBanner");
-  const { data } = useQuery({
-    queryKey: ["settings"],
-    queryFn: getSettings,
-    staleTime: 60_000,
-  });
-
+  const { data } = useQuery({ queryKey: ["settings"], queryFn: getSettings, staleTime: 60_000 });
   if (!data || data.aiProvider !== "none") return null;
-
-  return (
-    <div
-      role="status"
-      className={cn(
-        "flex flex-col gap-3 rounded-[1.375rem] bg-card p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5",
-        className
-      )}
-    >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
-        <Sparkles className="h-5 w-5" strokeWidth={1.75} />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="font-serif text-base leading-tight tracking-tight">
-          {t("notConnected")}
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">{t("description")}</p>
-      </div>
-
-      <IconButton
-        label={t("connectAi")}
-        variant="default"
-        size="icon-sm"
-        nativeButton={false}
-        className="self-start sm:self-auto"
-        render={<Link href="/settings/ai" />}
-      >
-        <Plug className="size-3.5" aria-hidden />
-      </IconButton>
-    </div>
-  );
+  return <details className={cn("rounded-xl border border-border/60 px-4 py-3 text-sm", className)}>
+    <summary className="cursor-pointer rounded-md py-1 text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring">{t("optionalTitle")}</summary>
+    <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">{t("manualHint")}</p>
+    <Link href="/settings/ai" className="mt-2 inline-flex min-h-11 items-center rounded-lg text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring">{t("connectAi")}</Link>
+  </details>;
 }

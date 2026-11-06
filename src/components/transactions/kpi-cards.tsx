@@ -12,7 +12,7 @@ interface KpiCardsProps {
 }
 
 const INCOME_TINT = "color-mix(in oklch, var(--status-on-track) 12%, transparent)";
-const EXPENSE_TINT = "color-mix(in oklch, var(--status-over) 12%, transparent)";
+const EXPENSE_TINT = "color-mix(in oklch, var(--status-heads-up) 12%, transparent)";
 
 export function KpiCards({ summary, loading }: KpiCardsProps) {
   const t = useTranslations("transactions");
@@ -22,7 +22,7 @@ export function KpiCards({ summary, loading }: KpiCardsProps) {
   const net = summary?.net ?? 0;
   const incomeCount = summary?.income.count ?? 0;
   const expenseCount = summary?.expense.count ?? 0;
-  const netPositive = net >= 0;
+  const netPositive = net > 0;
 
   const countMeta = (count: number): string => {
     const label = count === 1 ? t("kpiTransactionOne") : t("kpiTransactionOther");
@@ -36,8 +36,8 @@ export function KpiCards({ summary, loading }: KpiCardsProps) {
         amount={income}
         meta={countMeta(incomeCount)}
         icon={<ArrowUpRight className="h-4 w-4" />}
-        color="var(--status-on-track)"
-        iconBg={INCOME_TINT}
+        color="var(--foreground)"
+        iconBg="var(--muted)"
         loading={loading}
         locale={locale}
       />
@@ -46,15 +46,15 @@ export function KpiCards({ summary, loading }: KpiCardsProps) {
         amount={expense}
         meta={countMeta(expenseCount)}
         icon={<ArrowDownRight className="h-4 w-4" />}
-        color="var(--status-over)"
-        iconBg={EXPENSE_TINT}
+        color="var(--foreground)"
+        iconBg="var(--muted)"
         loading={loading}
         locale={locale}
       />
       <KpiCard
-        label={netPositive ? t("kpiNetSaved") : t("kpiNetOverspend")}
+        label={net >= 0 ? t("kpiNetSaved") : t("kpiNetOverspend")}
         amount={Math.abs(net)}
-        meta={netPositive ? t("kpiIncomeExceeded") : t("kpiExpensesExceeded")}
+        meta={net === 0 ? t("kpiBalanced") : netPositive ? t("kpiIncomeExceeded") : t("kpiExpensesExceeded")}
         icon={
           net === 0 ? (
             <Minus className="h-4 w-4" />
@@ -68,8 +68,8 @@ export function KpiCards({ summary, loading }: KpiCardsProps) {
           net === 0
             ? "var(--muted-foreground)"
             : netPositive
-              ? "var(--status-on-track)"
-              : "var(--status-over)"
+              ? "var(--foreground)"
+              : "var(--status-heads-up)"
         }
         iconBg={
           net === 0
@@ -109,7 +109,7 @@ function KpiCard({
   return (
     <div className="rounded-2xl bg-card p-5">
       <div className="flex items-center justify-between">
-        <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        <div className="text-sm font-medium text-muted-foreground">
           {label}
         </div>
         <div
@@ -129,7 +129,7 @@ function KpiCard({
           formatCurrency(amount, "ILS", locale)
         )}
       </div>
-      <div className="mt-0.5 text-xs text-muted-foreground">{meta}</div>
+      <div className="mt-1 text-sm text-muted-foreground">{!loading && meta}</div>
     </div>
   );
 }

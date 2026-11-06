@@ -50,13 +50,12 @@ export function ThisMonthCard({ data }: Props) {
 
   return (
     <CardShell
-      wallet
       label={t("thisMonthLabel", { month: monthLabel })}
       action={<CardAction href="/budget">{t("budgetDetail")}</CardAction>}
     >
       <Link
         href="/budget"
-        className="group -m-2 flex flex-1 flex-col gap-5 rounded-2xl p-2 outline-none transition-colors hover:bg-white/5 focus-visible:bg-white/10"
+        className="group -m-2 flex flex-1 flex-col gap-5 rounded-2xl p-2 outline-none transition-colors hover:bg-accent/40 focus-visible:bg-accent/50"
       >
         <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
           <div className="flex flex-col">

@@ -3,6 +3,7 @@ import "server-only";
 import { getDb } from "../index";
 import { normalizeOllamaUrl, OLLAMA_URL_ERROR } from "@/lib/url-guard";
 import type { AppSettings } from "@/lib/types";
+import { EMPTY_HOUSEHOLD, parseHousehold, type Household } from "@/lib/household";
 
 // Global settings live in the `settings` table and apply to every workspace.
 // Currently: ai_provider, ai_ollama_url, ai_ollama_model, plus the encrypted
@@ -82,7 +83,18 @@ export function getAppSettings(workspaceId: number): AppSettings {
       storedTime && AUTO_SYNC_TIME_RE.test(storedTime) ? storedTime : "06:00",
     language: storedLang === "he" ? "he" : "en",
     displayName: getGlobalSetting("display_name") ?? "",
+    household: readHousehold(workspaceId),
   };
+}
+
+function readHousehold(workspaceId: number): Household {
+  const raw = getWorkspaceSetting(workspaceId, "household");
+  if (!raw) return EMPTY_HOUSEHOLD;
+  try {
+    return parseHousehold(JSON.parse(raw));
+  } catch {
+    return EMPTY_HOUSEHOLD;
+  }
 }
 
 export function updateAppSettings(
@@ -148,6 +160,13 @@ export function updateAppSettings(
     }
     if (settings.displayName !== undefined) {
       setGlobalSetting("display_name", String(settings.displayName).trim().slice(0, 40));
+    }
+    if (settings.household !== undefined) {
+      setWorkspaceSetting(
+        workspaceId,
+        "household",
+        JSON.stringify(parseHousehold(settings.household))
+      );
     }
   });
   update();

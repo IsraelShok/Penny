@@ -83,6 +83,12 @@ export interface FinancialPlan {
   allocation: Record<AllocationClass, number>;
   /** Yearly tax checklist, keyed by item, value = year last done. */
   taxDone: Record<string, number>;
+  /** Hide advanced analysis and keep only the essentials. */
+  simpleMode: boolean;
+  /** Scrolling past a page's end opens the next page. Off by default: nothing should move by surprise. */
+  wheelPaging: boolean;
+  /** Weekly check-in: ISO week key of the last one done, and how many weeks in a row. */
+  checkin: { lastWeek: string | null; streak: number };
 }
 
 export const DEFAULT_PLAN: FinancialPlan = {
@@ -92,6 +98,9 @@ export const DEFAULT_PLAN: FinancialPlan = {
   emergencyMonths: 6,
   allocation: { equity: 70, bonds: 20, cash: 10 },
   taxDone: {},
+  simpleMode: false,
+  wheelPaging: false,
+  checkin: { lastWeek: null, streak: 0 },
 };
 
 const int = (v: unknown, min: number, max: number, fallback: number) => {
@@ -104,6 +113,7 @@ export function parsePlan(raw: unknown): FinancialPlan {
   const r = (raw ?? {}) as Record<string, unknown>;
   const a = (r.allocation ?? {}) as Record<string, unknown>;
   const t = (r.taxDone ?? {}) as Record<string, unknown>;
+  const c = (r.checkin ?? {}) as Record<string, unknown>;
   return {
     monthStartDay: int(r.monthStartDay, 1, 28, DEFAULT_PLAN.monthStartDay),
     birthYear: r.birthYear == null || r.birthYear === "" ? null : int(r.birthYear, 1920, 2015, 0) || null,
@@ -111,5 +121,29 @@ export function parsePlan(raw: unknown): FinancialPlan {
     emergencyMonths: int(r.emergencyMonths, 1, 24, DEFAULT_PLAN.emergencyMonths),
     allocation: Object.fromEntries(ALLOCATION_CLASSES.map((c) => [c, int(a[c], 0, 100, DEFAULT_PLAN.allocation[c])])) as Record<AllocationClass, number>,
     taxDone: Object.fromEntries(Object.entries(t).filter(([k, v]) => /^[a-z_]{1,30}$/.test(k) && Number.isInteger(v)).slice(0, 20)) as Record<string, number>,
+    simpleMode: r.simpleMode === true,
+    wheelPaging: r.wheelPaging === true,
+    checkin: {
+      lastWeek: typeof c.lastWeek === "string" && /^\d{4}-W\d{2}$/.test(c.lastWeek) ? c.lastWeek : null,
+      streak: int(c.streak, 0, 1000, 0),
+    },
   };
+}
+
+/** ISO week key, e.g. "2026-W45". */
+export function isoWeek(d: Date): string {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((t.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
+  return `${t.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+/** Record a finished check-in: the streak grows if last week was done too, else starts over. */
+export function completeCheckin(c: FinancialPlan["checkin"], today: Date): FinancialPlan["checkin"] {
+  const now = isoWeek(today);
+  if (c.lastWeek === now) return c;
+  const lastWeek = isoWeek(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7));
+  return { lastWeek: now, streak: c.lastWeek === lastWeek ? c.streak + 1 : 1 };
 }

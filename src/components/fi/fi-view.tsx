@@ -1,5 +1,6 @@
 "use client";
 
+import { usePlan } from "@/hooks/use-plan";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -76,6 +77,7 @@ interface Plan {
 }
 
 function Body({ data }: { data: FiPayload }) {
+  const simple = usePlan().plan.simpleMode;
   const t = useTranslations("fi");
   const locale = useLocale();
   // Empty fields fall back to the figures from your own data.
@@ -137,9 +139,13 @@ function Body({ data }: { data: FiPayload }) {
         </form>
       </CardShell>
 
-      <AggressiveSaving spend={spend} income={income} savings={savings} annualReturn={annualReturn} rate={plan.rate} />
-      <Inflation data={data.inflation} />
-      <CarCalculator rate={plan.rate} />
+      {!simple && (
+        <>
+          <AggressiveSaving spend={spend} income={income} savings={savings} annualReturn={annualReturn} rate={plan.rate} />
+          <Inflation data={data.inflation} />
+          <CarCalculator rate={plan.rate} />
+        </>
+      )}
       <FiExtras data={data} />
     </div>
   );

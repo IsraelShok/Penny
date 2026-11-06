@@ -11,6 +11,7 @@ import {
   Layers,
   ShieldAlert,
   ListFilter,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,12 @@ const GROUPS: NavGroup[] = [
         labelKey: "general",
         Icon: SlidersHorizontal,
         match: (p) => p === "/settings/general" || p === "/settings",
+      },
+      {
+        href: "/settings/household",
+        labelKey: "household",
+        Icon: Users,
+        match: (p) => p.startsWith("/settings/household"),
       },
       {
         href: "/settings/appearance",
@@ -97,9 +104,6 @@ export function SettingsSidebar() {
   return (
     <aside className="hidden w-56 shrink-0 border-e border-border/40 bg-card/30 md:flex md:flex-col">
       <div className="px-5 pt-6 pb-3">
-        <div className="font-serif text-xl leading-none tracking-tight">
-          {t("title")}
-        </div>
         <div className="mt-1 text-xs text-muted-foreground">
           {t("subtitle")}
         </div>
@@ -107,7 +111,7 @@ export function SettingsSidebar() {
       <nav className="flex-1 overflow-y-auto px-2 pb-6">
         {GROUPS.map((group) => (
           <div key={group.titleKey} className="mt-3">
-            <div className="px-3 pb-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
+            <div className="px-3 pb-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               {t(group.titleKey)}
             </div>
             <ul className="space-y-0.5">
@@ -117,8 +121,9 @@ export function SettingsSidebar() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      aria-current={active ? "page" : undefined}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-colors",
+                        "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors",
                         active
                           ? "bg-sidebar-accent text-sidebar-accent-foreground"
                           : "text-foreground/80 hover:bg-sidebar-accent/60 hover:text-foreground"
@@ -151,6 +156,7 @@ export function SettingsMobileNav() {
             <Link
               key={item.href}
               href={item.href}
+                      aria-current={active ? "page" : undefined}
               className={cn(
                 "flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors",
                 active

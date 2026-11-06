@@ -1,5 +1,6 @@
 "use client";
 
+import { DataState } from "@/components/ui/data-state";
 import { Segmented } from "@/components/ui/segmented";
 
 import { useState } from "react";
@@ -128,13 +129,13 @@ export function TransactionsPage() {
       />
 
       <div className="space-y-6 p-4 md:p-6 lg:p-8">
-        <AINotConnectedBanner />
+        {summaryQuery.isError || transactionsQuery.isError || integrationsQuery.isError ? <DataState error onRetry={() => { void summaryQuery.refetch(); void transactionsQuery.refetch(); void integrationsQuery.refetch(); }} />
+        : summaryInitialLoading || tableInitialLoading || integrationsQuery.isPending ? <DataState loading />
+        : transactionsQuery.data?.total === 0 && !search && !categoryFilter.length && !accountFilter.length && kind === "all" ? <DataState period={integrationsQuery.data?.some((bank) => bank.lastSyncAt)} />
+        : <>
         <KpiCards summary={summaryQuery.data} loading={summaryInitialLoading} />
 
-        <WidgetsRow
-          summary={summaryQuery.data}
-          loading={summaryInitialLoading}
-        />
+
 
         <div className="w-fit">
           <Segmented
@@ -179,6 +180,9 @@ export function TransactionsPage() {
           page={page}
           onPageChange={setPage}
         />
+        <details className="rounded-xl border border-border/60 p-4"><summary className="cursor-pointer py-2 font-medium">{t("moreDetails")}</summary><div className="pt-4"><WidgetsRow summary={summaryQuery.data} loading={summaryInitialLoading} /></div></details>
+        <AINotConnectedBanner />
+        </>}
       </div>
     </>
   );

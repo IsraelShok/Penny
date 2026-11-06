@@ -1,11 +1,12 @@
 "use client";
 
+import { usePlan } from "@/hooks/use-plan";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { FileUp, Pencil, Plus, RotateCw, Trash2 } from "lucide-react";
-import { deleteAsset, getAssets } from "@/lib/api";
+import { createAssets, deleteAsset, getAssets } from "@/lib/api";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
@@ -30,16 +31,18 @@ const ALLOC_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var
 export function InvestmentsView() {
   const t = useTranslations("investments");
   const [editing, setEditing] = useState<Asset | "new" | null>(null);
+  const simple = usePlanSimple();
   const [importing, setImporting] = useState(false);
+  const [marketsOpen, setMarketsOpen] = useState(false);
   const query = useQuery({ queryKey: ["assets"], queryFn: getAssets });
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div className="flex flex-wrap justify-end gap-2">
-        <IconButton label={t("importCsv")} variant="outline" onClick={() => setImporting(true)}>
+      <div className={cn("flex flex-wrap justify-end gap-2", query.data?.assets.length === 0 && "hidden")}>
+        <IconButton showLabel label={t("importCsv")} variant="outline" onClick={() => setImporting(true)}>
           <FileUp className="size-4" aria-hidden />
         </IconButton>
-        <IconButton label={t("addAsset")} variant="default" onClick={() => setEditing("new")}>
+        <IconButton showLabel label={t("addAsset")} variant="default" onClick={() => setEditing("new")}>
           <Plus className="size-4" aria-hidden />
         </IconButton>
       </div>
@@ -47,7 +50,7 @@ export function InvestmentsView() {
       {query.isError ? (
         <CardShell>
           <p className="text-footnote text-muted-foreground">{t("loadFailed")}</p>
-          <IconButton label={t("retry")} variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}><RotateCw className="size-4" aria-hidden /></IconButton>
+          <IconButton showLabel label={t("retry")} variant="outline" className="mt-3 self-start" onClick={() => query.refetch()}><RotateCw className="size-4" aria-hidden /></IconButton>
         </CardShell>
       ) : !query.data ? (
         <div className="grid gap-4 md:grid-cols-3">
@@ -60,9 +63,9 @@ export function InvestmentsView() {
           <div className="mx-auto max-w-md py-8 text-center">
             <h2 className="text-title font-semibold">{t("emptyTitle")}</h2>
             <p className="mt-2 text-footnote text-pretty text-muted-foreground">{t("emptyBody")}</p>
-            <div className="mt-5 flex justify-center gap-2">
-              <IconButton label={t("addAsset")} variant="default" onClick={() => setEditing("new")}><Plus className="size-4" aria-hidden /></IconButton>
-              <IconButton label={t("importCsv")} variant="outline" onClick={() => setImporting(true)}><FileUp className="size-4" aria-hidden /></IconButton>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <IconButton showLabel label={t("addAsset")} variant="default" onClick={() => setEditing("new")}><Plus className="size-4" aria-hidden /></IconButton>
+              <IconButton showLabel label={t("importCsv")} variant="outline" onClick={() => setImporting(true)}><FileUp className="size-4" aria-hidden /></IconButton>
             </div>
           </div>
         </CardShell>
@@ -70,10 +73,13 @@ export function InvestmentsView() {
         <Body data={query.data} onEdit={setEditing} />
       )}
 
-      <section id="markets" aria-labelledby="markets-title" className="scroll-mt-20 pt-4">
-        <h2 id="markets-title" className="mb-4 px-1 text-title font-semibold">{t("marketsTitle")}</h2>
-        <MarketsView />
-      </section>
+      {!simple && <section id="markets" className="scroll-mt-20 rounded-2xl border border-border/60 bg-card p-5">
+        <button type="button" aria-expanded={marketsOpen} aria-controls="market-details" onClick={() => setMarketsOpen(!marketsOpen)} className="flex min-h-11 w-full items-center justify-between gap-4 text-start font-semibold focus-visible:outline-2 focus-visible:outline-ring">
+          <span>{t("marketsTitle")}<span className="mt-1 block text-sm font-normal text-muted-foreground">{t("marketsHint")}</span></span>
+          <span aria-hidden>{marketsOpen ? "−" : "+"}</span>
+        </button>
+        <div id="market-details" hidden={!marketsOpen}>{marketsOpen && <div className="pt-6"><MarketsView /></div>}</div>
+      </section>}
 
       {editing && <AssetDialog asset={editing} onClose={() => setEditing(null)} />}
       {importing && <ImportDialog onClose={() => setImporting(false)} />}
@@ -131,7 +137,7 @@ function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => voi
 
       <HoldingsList title={t("assetsTitle")} assets={owned} onEdit={onEdit} />
       {owed.length > 0 && <HoldingsList title={t("liabilitiesTitle")} assets={owed} onEdit={onEdit} />}
-      <InvestmentsExtras data={data} />
+      {!usePlanSimple() && <InvestmentsExtras data={data} />}
     </>
   );
 }
@@ -213,11 +219,18 @@ function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[
   const t = useTranslations("investments");
   const locale = useLocale();
   const queryClient = useQueryClient();
+  // Delete at once and offer Undo, instead of asking "are you sure?" first.
   const remove = useMutation({
-    mutationFn: (id: number) => deleteAsset(id),
-    onSuccess: () => {
+    mutationFn: (a: Asset) => deleteAsset(a.id),
+    onSuccess: (_, a) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
-      toast.success(t("deleted"));
+      toast.success(t("deletedName", { name: a.name }), {
+        action: {
+          label: t("undo"),
+          onClick: () =>
+            void createAssets([a]).then(() => queryClient.invalidateQueries({ queryKey: ["assets"] })),
+        },
+      });
     },
     onError: () => toast.error(t("deleteFailed")),
   });
@@ -262,9 +275,7 @@ function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[
                 size="icon"
                 aria-label={t("deleteAsset", { name: a.name })}
                 disabled={remove.isPending}
-                onClick={() => {
-                  if (window.confirm(t("confirmDelete", { name: a.name }))) remove.mutate(a.id);
-                }}
+                onClick={() => remove.mutate(a)}
               >
                 <Trash2 className="size-4" aria-hidden />
               </Button>
@@ -275,3 +286,5 @@ function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[
     </CardShell>
   );
 }
+
+const usePlanSimple = () => usePlan().plan.simpleMode;

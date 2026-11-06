@@ -1,5 +1,8 @@
 "use client";
 
+import { Switch } from "@/components/ui/switch";
+import { usePlan } from "@/hooks/use-plan";
+
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -112,6 +115,33 @@ export default function AppearanceSettingsPage() {
           })}
         </div>
       </SettingCard>
+
+      <ComfortCard />
     </SectionShell>
+  );
+}
+
+/** Focus settings: fewer moving parts for people who lose their place easily. */
+function ComfortCard() {
+  const t = useTranslations("settings.appearance");
+  const { plan, update, loaded } = usePlan();
+  const rows = [
+    { key: "simpleMode", label: t("simpleMode"), hint: t("simpleModeHint") },
+    { key: "wheelPaging", label: t("wheelPaging"), hint: t("wheelPagingHint") },
+  ] as const;
+  return (
+    <SettingCard title={t("comfortTitle")} description={t("comfortDescription")}>
+      <div className="divide-y divide-border">
+        {rows.map((r) => (
+          <label key={r.key} className="flex cursor-pointer items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+            <span>
+              <span className="block font-medium">{r.label}</span>
+              <span className="text-xs text-muted-foreground">{r.hint}</span>
+            </span>
+            <Switch checked={plan[r.key]} disabled={!loaded} onCheckedChange={(v) => update({ [r.key]: v })} />
+          </label>
+        ))}
+      </div>
+    </SettingCard>
   );
 }

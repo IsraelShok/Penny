@@ -15,13 +15,15 @@ interface CardShellProps {
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  id?: string;
 }
 
-export function CardShell({ label, wallet, action, children, className }: CardShellProps) {
+export function CardShell({ label, wallet, action, children, className, id }: CardShellProps) {
   return (
     <div
+      id={id}
       className={cn(
-        "flex h-full flex-col rounded-[1.375rem] bg-card p-7",
+        "flex h-full flex-col rounded-2xl border border-border/60 bg-card p-5 sm:p-6",
         wallet && "wallet",
         className
       )}
@@ -51,11 +53,12 @@ export function CardAction({ href, children }: { href: string; children: string 
           <Link
             href={href}
             aria-label={children}
-            className="-m-1 inline-flex rounded-full p-1 hover:text-foreground"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-medium hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
           />
         }
       >
-        <ChevronRight className="size-4 rtl:rotate-180" aria-hidden />
+        <span>{children.replace(/\s*[←→]\s*$/, "")}</span>
+        <ChevronRight className="size-4 shrink-0 rtl:rotate-180" aria-hidden />
       </TooltipTrigger>
       <TooltipContent>{children}</TooltipContent>
     </Tooltip>

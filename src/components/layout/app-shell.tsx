@@ -9,6 +9,8 @@ import {
 import { AppSidebar } from "./app-sidebar";
 import { PageWheelNav } from "./page-wheel-nav";
 import { AlertNotifier } from "./alert-notifier";
+import { CommandPalette } from "./command-palette";
+import { useTranslations } from "next-intl";
 
 /** Lives in the root layout so the collapsed state survives page changes. */
 export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; children: ReactNode }) {
@@ -16,13 +18,16 @@ export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; c
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const t = useTranslations("nav");
   return (
     <>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-background focus:px-5 focus:py-3 focus:outline-2">{t("skipToContent")}</a>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset id="main-content" tabIndex={-1}>
         {children}
         <PageWheelNav />
         <AlertNotifier />
+        <CommandPalette />
       </SidebarInset>
     </>
   );
@@ -54,18 +59,20 @@ export function PageHeader({
       <header
         className={`glass sticky top-0 z-20 transition-[box-shadow] duration-150 ${scrolled ? "shadow-[0_0.5px_0_var(--border)]" : ""}`}
       >
-        <div className="relative flex h-14 items-center justify-between gap-4 px-4 md:h-16 md:px-6 lg:px-8">
+        <div className="relative mx-auto flex min-h-14 max-w-[76rem] flex-wrap items-center justify-between gap-3 px-4 py-2 md:min-h-16 md:px-6 lg:px-8">
           <SidebarTrigger className="-ms-1 md:hidden" />
           <span
             aria-hidden
-            className={`pointer-events-none absolute inset-x-0 mx-auto w-fit max-w-[50%] truncate text-headline font-semibold transition-opacity duration-150 ${scrolled ? "opacity-100" : "opacity-0"}`}
+            className={`pointer-events-none hidden min-w-0 flex-1 truncate md:block text-headline font-semibold transition-opacity duration-150 ${scrolled ? "opacity-100" : "opacity-0"}`}
           >
             {title}
           </span>
-          {actions && <div className="ms-auto flex shrink-0 items-center gap-2">{actions}</div>}
+          <div className="ms-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
+            {actions}
+          </div>
         </div>
       </header>
-      <div className={largeTitle ? "px-4 pb-1 md:px-6 lg:px-8" : "sr-only"}>
+      <div className={largeTitle ? "mx-auto w-full max-w-[76rem] px-4 pb-1 pt-3 md:px-6 lg:px-8" : "sr-only"}>
         <h1 className="text-[2.125rem] leading-[2.5rem] font-bold tracking-tight">{title}</h1>
         {meta && <p className="mt-0.5 text-footnote text-muted-foreground">{meta}</p>}
       </div>

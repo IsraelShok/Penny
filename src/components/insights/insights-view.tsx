@@ -1,25 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { DataState } from "@/components/ui/data-state";
 import { useLocale, useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getInsights, type InsightsPayload } from "@/lib/api";
+import { getInsights, listIntegrations, type InsightsPayload } from "@/lib/api";
 import { shekels } from "@/lib/money";
 
-const money = (n: number) => `₪${Math.round(n).toLocaleString("en-US")}`;
 
 export function InsightsView() {
   const t = useTranslations("insights");
   const locale = useLocale();
-  const [data, setData] = useState<InsightsPayload | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    getInsights().then(setData).catch(() => setFailed(true));
-  }, []);
-
-  if (failed) return <p role="alert">{t("couldntLoad")}</p>;
-  if (!data) return null;
+  const money = (n: number) => shekels(Math.round(n), locale);
+  const query = useQuery({ queryKey: ["insights"], queryFn: getInsights });
+  const banks = useQuery({ queryKey: ["integrations"], queryFn: listIntegrations });
+  const data = query.data;
+  if (query.isError || banks.isError) return <DataState error onRetry={() => { void query.refetch(); void banks.refetch(); }} />;
+  if (!data || banks.isPending) return <DataState loading />;
+  if (!banks.data?.some((bank) => bank.lastSyncAt) && data.forecast.length === 0 && data.series.length === 0 && data.installments.plans.length === 0) return <DataState />;
 
   return (
     <div className="grid gap-6">
@@ -28,6 +26,7 @@ export function InsightsView() {
           <CardTitle>{t("forecast")}</CardTitle>
         </CardHeader>
         <CardContent>
+          {data.forecast.length === 0 && <p className="text-sm leading-relaxed text-muted-foreground">{t("noForecast")}</p>}
           <ul className="grid gap-3">
             {data.forecast.map((f) => (
               <li key={`${f.account}|${f.date}`} className="flex flex-wrap items-baseline justify-between gap-x-4">
@@ -119,7 +118,7 @@ function OpenInstallments({ data, locale }: { data: InsightsPayload["installment
                 <span className="flex w-full flex-1 items-end" aria-hidden>
                   <span className="w-full rounded-t-sm bg-primary/70" style={{ height: `${(m.total / peak) * 100}%` }} />
                 </span>
-                <span className="text-[10px] text-muted-foreground" aria-hidden>{label}</span>
+                <span className="text-xs text-muted-foreground" aria-hidden>{label}</span>
                 <span className="sr-only">{label}: {shekels(m.total, locale)}</span>
               </li>
             );

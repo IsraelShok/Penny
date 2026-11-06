@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { debtPayoff, feeCost, goalMonthly, parsePlan, projectBalance } from "@/lib/plan";
+import { completeCheckin, debtPayoff, feeCost, goalMonthly, isoWeek, parsePlan, projectBalance } from "@/lib/plan";
 
 describe("fees", () => {
   it("grows a balance without fees at the gross return", () => {
@@ -39,5 +39,23 @@ describe("parsePlan", () => {
     const p = parsePlan({ monthStartDay: 10, birthYear: "1988", emergencyMonths: 99, allocation: { equity: 80 }, taxDone: { study_fund: 2026, "<bad>": 1 } });
     expect(p).toMatchObject({ monthStartDay: 10, birthYear: 1988, emergencyMonths: 6, taxDone: { study_fund: 2026 } });
     expect(p.allocation).toEqual({ equity: 80, bonds: 20, cash: 10 });
+  });
+});
+
+describe("weekly check-in", () => {
+  it("names ISO weeks", () => {
+    expect(isoWeek(new Date(2026, 10, 5))).toBe("2026-W45");
+    expect(isoWeek(new Date(2027, 0, 1))).toBe("2026-W53");
+  });
+
+  it("grows the streak only for consecutive weeks", () => {
+    const today = new Date(2026, 10, 5);
+    expect(completeCheckin({ lastWeek: "2026-W44", streak: 3 }, today)).toEqual({ lastWeek: "2026-W45", streak: 4 });
+    expect(completeCheckin({ lastWeek: "2026-W40", streak: 3 }, today)).toEqual({ lastWeek: "2026-W45", streak: 1 });
+    expect(completeCheckin({ lastWeek: "2026-W45", streak: 4 }, today)).toEqual({ lastWeek: "2026-W45", streak: 4 });
+  });
+
+  it("defaults wheel paging and simple mode off", () => {
+    expect(parsePlan({})).toMatchObject({ simpleMode: false, wheelPaging: false, checkin: { lastWeek: null, streak: 0 } });
   });
 });

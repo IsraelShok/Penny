@@ -509,7 +509,7 @@ export function TransactionsTable({
                   const isIncome = txn.chargedAmount > 0;
                   const directionColor = isIncome
                     ? "var(--status-on-track)"
-                    : "var(--status-over)";
+                    : "var(--foreground)";
                   const categoryKind: Kind = isIncome ? "income" : "expense";
                   const categoryName = txn.categoryName
                     ? translateCategoryName(txn.categoryName, tCat)

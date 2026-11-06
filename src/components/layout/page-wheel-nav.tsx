@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { FOOTER_NAV, NAV } from "./app-sidebar";
+import { usePlan } from "@/hooks/use-plan";
 
 /** Wheel distance past the end of a page before it moves on, so a normal scroll never jumps by accident. */
 const THRESHOLD = 600;
@@ -19,7 +20,8 @@ export function PageWheelNav() {
   const router = useRouter();
   const t = useTranslations("nav");
   const pages = [...NAV, ...FOOTER_NAV];
-  const index = pages.findIndex((p) => p.match(pathname));
+  const { plan } = usePlan();
+  const index = plan.wheelPaging ? pages.findIndex((p) => p.match(pathname)) : -1;
   const [pull, setPull] = useState(0);
   const pullRef = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);

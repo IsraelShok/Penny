@@ -3,7 +3,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { getSummary } from "@/lib/api";
+import { DataState } from "@/components/ui/data-state";
+import { getSummary, getTransactions, listIntegrations } from "@/lib/api";
 import { getMonthRange, formatMonthLabel, addMonths } from "@/lib/formatters";
 import { PageHeader } from "@/components/layout/app-shell";
 import { HeroCard } from "./hero-card";
@@ -59,10 +60,14 @@ export function Dashboard() {
     queryClient.invalidateQueries({ queryKey: ["summary"] });
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
     queryClient.invalidateQueries({ queryKey: ["settings"] });
+    queryClient.invalidateQueries({ queryKey: ["budget-period"] });
+    queryClient.invalidateQueries({ queryKey: ["integrations"] });
   }, [queryClient]);
 
   const monthLabel = formatMonthLabel(selectedDate, locale);
   const summary = summaryQuery.data;
+  const period = useQuery({ queryKey: ["budget-period", from, to], queryFn: () => getTransactions({ from, to, limit: 1 }) });
+  const banks = useQuery({ queryKey: ["integrations"], queryFn: listIntegrations });
 
   return (
     <>
@@ -83,7 +88,10 @@ export function Dashboard() {
       />
 
       <div className="space-y-6 p-4 md:p-6 lg:p-8">
-        <AINotConnectedBanner />
+        {summaryQuery.isError || period.isError || banks.isError ? <DataState error onRetry={() => { void summaryQuery.refetch(); void period.refetch(); void banks.refetch(); }} />
+        : summaryQuery.isPending || period.isPending || banks.isPending ? <DataState loading />
+        : period.data?.total === 0 ? <DataState period={banks.data?.some((bank) => bank.lastSyncAt)} />
+        : <>
         <HeroCard
           data={summary}
           loading={summaryQuery.isLoading}
@@ -112,6 +120,8 @@ export function Dashboard() {
           to={to}
           viewMode={viewMode}
         />
+        <AINotConnectedBanner />
+        </>}
       </div>
     </>
   );

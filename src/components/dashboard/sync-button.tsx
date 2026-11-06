@@ -177,6 +177,7 @@ export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
   return (
     <>
       <IconButton
+        showLabel
         label={syncing ? t("syncing") : t("syncAndCategorize")}
         variant="default"
         size="icon-sm"
