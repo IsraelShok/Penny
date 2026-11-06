@@ -40,12 +40,12 @@ export function CategorizeButton({ onApplied }: CategorizeButtonProps) {
     <>
       <IconButton
         label={mutation.isPending ? t("thinking") : t("categorize")}
-        variant="outline"
+        variant="ghost"
         size="icon-sm"
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending}
       >
-        {mutation.isPending ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Tags className="size-3.5" aria-hidden />}
+        {mutation.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Tags className="size-4" aria-hidden />}
       </IconButton>
 
       {preview && (

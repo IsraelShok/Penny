@@ -181,12 +181,12 @@ export function SyncButton({ onComplete, autoStart = false, showLabel = true }: 
       <IconButton
         showLabel={showLabel}
         label={syncing ? t("syncing") : t("syncAndCategorize")}
-        variant="default"
+        variant={showLabel ? "default" : "ghost"}
         size="icon-sm"
         onClick={handleSync}
         disabled={syncing}
       >
-        <RefreshCw className={`size-3.5 ${syncing ? "animate-spin" : ""}`} aria-hidden />
+        <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} aria-hidden />
       </IconButton>
 
       <SyncProgressDialog
