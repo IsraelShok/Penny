@@ -39,7 +39,7 @@ export function TopMerchantsCard({ items }: Props) {
               <div className="flex items-center gap-2">
                 <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
-                    className="h-full bg-foreground/70"
+                    className="h-full bg-chart-1"
                     style={{ width: `${widthPct}%` }}
                   />
                 </div>

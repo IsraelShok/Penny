@@ -98,7 +98,7 @@ function BarChart({
               fill="currentColor"
               opacity={opacity}
               rx={0.6}
-              className="cursor-pointer text-foreground transition-opacity"
+              className="cursor-pointer text-chart-1 transition-opacity"
               onMouseEnter={() => onHover(i)}
             />
           );
