@@ -9,6 +9,7 @@ import { getOwners } from "@/lib/api";
 import { useHousehold } from "@/hooks/use-household";
 import { homeTeasers, type HomeTeaser } from "@/lib/home-layout";
 import { shouldShowWelcome } from "@/lib/household";
+import { usePlan } from "@/hooks/use-plan";
 
 const monthStart = () => new Date().toISOString().slice(0, 8) + "01";
 const today = () => new Date().toISOString().slice(0, 10);
@@ -17,11 +18,12 @@ const ils = (n: number) => new Intl.NumberFormat("he-IL", { style: "currency", c
 const card =
   "flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card px-5 py-4 transition-colors duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
-/** "Three minutes" prompt, shown once while the household profile is empty. */
+/** Calm "let's get to know you" invite on first run; never blocks Home. Reopen any time from More or Help. */
 export function WelcomePrompt() {
   const t = useTranslations("welcome");
   const { household, loading, save } = useHousehold();
-  if (loading || !shouldShowWelcome(household)) return null;
+  const { plan, loaded, update } = usePlan();
+  if (loading || !loaded || plan.profile.onboarded || !shouldShowWelcome(household)) return null;
   return (
     <div className="mb-4 flex items-center gap-2 rounded-2xl border border-border/60 bg-card p-2 md:mb-5">
       <Link href="/welcome" className="min-w-0 flex-1 rounded-xl px-3 py-2 hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
@@ -31,8 +33,8 @@ export function WelcomePrompt() {
       <button
         type="button"
         aria-label={t("dismiss")}
-        onClick={() => save({ welcomeDismissed: true })}
-        className="rounded-full p-2 text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+        onClick={() => { save({ welcomeDismissed: true }); void update({ profile: { ...plan.profile, onboarded: true } }).catch(() => {}); }}
+        className="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
       >
         <X className="size-4" aria-hidden />
       </button>

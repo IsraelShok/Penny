@@ -1,5 +1,6 @@
 "use client";
 
+import { WhatIs } from "@/components/help/what-is";
 import { CardAction } from "@/components/home/card-shell";
 import { useLocale, useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -131,10 +132,11 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
 
       <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="figure text-5xl"><bdi>{money(spent)}</bdi></span>
-        {hasBudget && <span className="text-headline text-muted-foreground">{t("ofBudget", { amount: money(totalBudget) })}</span>}
+        {hasBudget && <span className="text-headline text-muted-foreground">{t("ofBudget", { amount: money(totalBudget) })} <WhatIs concept="budget" /></span>}
         <span className="ms-auto rounded-full px-3 py-1 text-footnote font-semibold" style={{ color: tone, backgroundColor: `color-mix(in oklch, ${tone} 12%, transparent)` }}>
           {word}
         </span>
+        <WhatIs concept="pace" className="-ms-2" />
       </div>
 
       {hasBudget && (
@@ -147,7 +149,7 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
           <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">
             <div><dt className="text-muted-foreground">{left >= 0 ? t("heroLeft") : t("heroOver")}</dt><dd className="mt-0.5 font-semibold tabular-nums"><bdi>{money(Math.abs(left))}</bdi></dd></div>
             <div><dt className="text-muted-foreground">{t("heroPerDay")}</dt><dd className="mt-0.5 font-semibold tabular-nums"><bdi>{left > 0 && daysUntilPayday > 0 ? money(left / daysUntilPayday) : "—"}</bdi></dd></div>
-            <div><dt className="text-muted-foreground">{t("heroForecast")}</dt><dd className="mt-0.5 font-semibold tabular-nums"><bdi>{forecast != null ? money(forecast) : "—"}</bdi></dd></div>
+            <div><dt className="text-muted-foreground">{t("heroForecast")} <WhatIs concept="forecast" /></dt><dd className="mt-0.5 font-semibold tabular-nums"><bdi>{forecast != null ? money(forecast) : "—"}</bdi></dd></div>
           </dl>
         </div>
       )}

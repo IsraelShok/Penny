@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { CalendarCheck, Compass, FileHeart, FileUp, HeartPulse, MessageCircleQuestion, Route, Sparkles } from "lucide-react";
+import { CalendarCheck, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, Sparkles } from "lucide-react";
 
 /** Everything that isn't daily, in one calm place: the menu stays short, nothing gets lost. */
 const GROUPS = [
@@ -15,6 +15,10 @@ const GROUPS = [
     { href: "/ask", key: "ask", Icon: MessageCircleQuestion },
     { href: "/journey", key: "journey", Icon: Route },
     { href: "/life", key: "life", Icon: Compass },
+  ] },
+  { key: "help", items: [
+    { href: "/help", key: "help", Icon: LifeBuoy },
+    { href: "/welcome", key: "welcome", Icon: HandHeart },
   ] },
   { key: "documents", items: [
     { href: "/settings/legacy", key: "legacy", Icon: FileHeart },

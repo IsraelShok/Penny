@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { CalendarCheck, HeartHandshake, Milestone, MessageCircleQuestion, Moon, RefreshCw, Search, Settings2, Sparkles, Sun, Zap, X } from "lucide-react";
+import { CalendarCheck, HandHeart, HeartHandshake, LifeBuoy, Milestone, MessageCircleQuestion, Moon, RefreshCw, Search, Settings2, Sparkles, Sun, Zap, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { usePlan } from "@/hooks/use-plan";
@@ -74,6 +74,8 @@ export function CommandPalette() {
       { id: "ask-page", label: tAsk("title"), hint: t("page"), Icon: MessageCircleQuestion, run: go("/ask") },
       { id: "life", label: tLife("title"), hint: t("page"), Icon: Milestone, run: go("/life") },
       { id: "wellbeing", label: tWell("palette"), hint: t("page"), Icon: HeartHandshake, run: go("/wellbeing") },
+      { id: "help", label: t("help"), hint: t("page"), Icon: LifeBuoy, run: go("/help") },
+      { id: "welcome", label: t("welcome"), hint: t("page"), Icon: HandHeart, run: go("/welcome") },
       { id: "sync", label: t("sync"), hint: t("action"), Icon: RefreshCw, run: go("/?sync=1") },
       ...SETTINGS.map((s) => ({ id: `settings-${s}`, label: tSettings(s), hint: t("settings"), Icon: Settings2, run: go(`/settings/${s}`) })),
       {

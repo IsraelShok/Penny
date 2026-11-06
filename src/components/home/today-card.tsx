@@ -1,5 +1,6 @@
 "use client";
 
+import { WhatIs } from "@/components/help/what-is";
 import { Forward } from "@/components/ui/dir-chevron";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -85,7 +86,7 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
           <Link href="/settings/household" className="font-medium text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">{t("gentleSettings")}</Link>
         </p>
       )}
-      <h2 id="today-title" className="mb-4 text-footnote font-medium text-muted-foreground">{t("title")}</h2>
+      <h2 id="today-title" className="mb-4 text-footnote font-medium text-muted-foreground">{t("title")} <WhatIs concept="free" /></h2>
       <p role="status" className={cn("max-w-3xl text-2xl font-semibold leading-relaxed text-pretty sm:text-3xl", !gentle && ready && free != null && free < 0 && "text-status-heads-up")}>{sentence}</p>
       {state === "error" && (
         <button type="button" onClick={() => { onRetry(); void retryPlan(); void cashQuery.refetch(); void suggestionsQuery.refetch(); }} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full glass-tile px-5 text-sm font-semibold hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">

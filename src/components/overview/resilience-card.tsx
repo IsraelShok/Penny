@@ -1,5 +1,6 @@
 "use client";
 
+import { WhatIs } from "@/components/help/what-is";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { getResilience } from "@/lib/api";
@@ -38,7 +39,7 @@ export function ResilienceCard() {
         </svg>
         <div className="min-w-0 space-y-1">
           <p className="text-headline font-semibold">
-            {t("title")} · <span>{t(`band_${data.band}`)}</span>
+            {t("title")} <WhatIs concept="resilience" /> · <span>{t(`band_${data.band}`)}</span>
           </p>
           <p className="text-footnote text-muted-foreground">{t(`sentence_${data.band}`)}</p>
           {room && <p className="text-footnote">
