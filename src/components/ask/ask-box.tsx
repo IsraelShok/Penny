@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Search } from "lucide-react";
@@ -30,9 +31,9 @@ export function AskBox() {
       <form onSubmit={(e) => { e.preventDefault(); void ask(q); }} className="flex items-center gap-2 rounded-2xl border border-border bg-popover px-4 shadow-sm">
         <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("placeholder")} aria-label={t("title")} className="h-14 min-w-0 flex-1 bg-transparent text-[0.9375rem] outline-none placeholder:text-muted-foreground" />
-        <button type="submit" disabled={state === "loading"} className="min-h-10 rounded-xl bg-primary px-4 text-footnote font-semibold text-primary-foreground disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        <Button type="submit" disabled={state === "loading"}>
           {t("submit")}
-        </button>
+        </Button>
       </form>
       <ExampleChips examples={t.raw("examples") as string[]} onPick={(e) => void ask(e)} />
       <div className="rounded-2xl border border-border bg-card p-5">

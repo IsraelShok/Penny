@@ -1,9 +1,10 @@
 "use client";
 
+import { Forward } from "@/components/ui/dir-chevron";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, X } from "lucide-react";
+import { X } from "lucide-react";
 import { getOwners } from "@/lib/api";
 import { useHousehold } from "@/hooks/use-household";
 import { homeTeasers, type HomeTeaser } from "@/lib/home-layout";
@@ -81,7 +82,7 @@ export function HomeTeasers() {
             <span className="block text-subheadline font-medium">{content[k].title}</span>
             <span className="block text-footnote text-muted-foreground">{content[k].body}</span>
           </span>
-          <ChevronLeft className="size-4 shrink-0 text-muted-foreground ltr:rotate-180" aria-hidden />
+          <Forward className="text-muted-foreground" />
         </Link>
       ))}
     </div>

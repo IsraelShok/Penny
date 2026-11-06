@@ -1,11 +1,12 @@
 "use client";
 
+import { Forward, Back } from "@/components/ui/dir-chevron";
 import { usePlan } from "@/hooks/use-plan";
 import { useGentle } from "@/hooks/use-gentle";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, CircleDot, Printer, RotateCw } from "lucide-react";
+import { CircleDot, Printer, RotateCw } from "lucide-react";
 import { getOverview, listIntegrations } from "@/lib/api";
 import { ICON_MAP } from "@/components/dashboard/category-card";
 import { CardShell } from "@/components/home/card-shell";
@@ -75,8 +76,7 @@ export function OverviewView() {
         />
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" aria-label={t("prev")} onClick={() => setOffset((o) => o + 1)}>
-            <ChevronRight className="size-4 rtl:hidden" aria-hidden />
-            <ChevronLeft className="hidden size-4 rtl:block" aria-hidden />
+            <Back />
           </Button>
           <span className="min-w-28 text-center text-headline font-semibold tabular-nums" aria-live="polite">
             {query.data ? <PeriodLabel period={query.data.period} /> : "…"}
@@ -88,8 +88,7 @@ export function OverviewView() {
             disabled={offset === 0}
             onClick={() => setOffset((o) => Math.max(0, o - 1))}
           >
-            <ChevronLeft className="size-4 rtl:hidden" aria-hidden />
-            <ChevronRight className="hidden size-4 rtl:block" aria-hidden />
+            <Forward />
           </Button>
           <IconButton showLabel label={t("print")} variant="outline" className="ms-2" onClick={() => window.print()} disabled={!query.data}>
             <Printer className="size-4" aria-hidden />

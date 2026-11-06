@@ -1,10 +1,11 @@
 "use client";
 
+import { Forward } from "@/components/ui/dir-chevron";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, Check, PlugZap, Plus } from "lucide-react";
+import { Check, PlugZap, Plus } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -298,7 +299,7 @@ export function BankStep({ onComplete }: BankStepProps) {
                 onClick={onComplete}
                 disabled={integrations.length === 0}
               >
-                <ArrowLeft className="size-4 ltr:rotate-180" aria-hidden />
+                <Forward />
               </IconButton>
             </footer>
           </div>

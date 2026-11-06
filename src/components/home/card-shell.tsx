@@ -1,12 +1,11 @@
 "use client";
 
+import { Forward } from "@/components/ui/dir-chevron";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronRight } from "lucide-react";
 
 interface CardShellProps {
   label?: string;
@@ -47,21 +46,13 @@ export function CardShell({ label, wallet, action, children, className, id }: Ca
 
 export function CardAction({ href, children }: { href: string; children: string }) {
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Link
-            href={href}
-            aria-label={children}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-medium hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
-          />
-        }
-      >
-        <span>{children.replace(/\s*[←→]\s*$/, "")}</span>
-        <ChevronRight className="size-4 shrink-0 rtl:rotate-180" aria-hidden />
-      </TooltipTrigger>
-      <TooltipContent>{children}</TooltipContent>
-    </Tooltip>
+    <Link
+      href={href}
+      className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+    >
+      {children}
+      <Forward />
+    </Link>
   );
 }
 

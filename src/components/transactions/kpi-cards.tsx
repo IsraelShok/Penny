@@ -1,7 +1,6 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import type { TransactionsSummary } from "@/lib/api";
 import type { Locale } from "@/i18n/routing";
@@ -10,9 +9,6 @@ interface KpiCardsProps {
   summary?: TransactionsSummary;
   loading: boolean;
 }
-
-const INCOME_TINT = "color-mix(in oklch, var(--status-on-track) 12%, transparent)";
-const EXPENSE_TINT = "color-mix(in oklch, var(--status-heads-up) 12%, transparent)";
 
 export function KpiCards({ summary, loading }: KpiCardsProps) {
   const t = useTranslations("transactions");
@@ -35,9 +31,7 @@ export function KpiCards({ summary, loading }: KpiCardsProps) {
         label={t("kpiIncome")}
         amount={income}
         meta={countMeta(incomeCount)}
-        icon={<ArrowUpRight className="h-4 w-4" />}
         color="var(--foreground)"
-        iconBg="var(--muted)"
         loading={loading}
         locale={locale}
       />
@@ -45,9 +39,7 @@ export function KpiCards({ summary, loading }: KpiCardsProps) {
         label={t("kpiExpenses")}
         amount={expense}
         meta={countMeta(expenseCount)}
-        icon={<ArrowDownRight className="h-4 w-4" />}
         color="var(--foreground)"
-        iconBg="var(--muted)"
         loading={loading}
         locale={locale}
       />
@@ -55,28 +47,12 @@ export function KpiCards({ summary, loading }: KpiCardsProps) {
         label={net >= 0 ? t("kpiNetSaved") : t("kpiNetOverspend")}
         amount={Math.abs(net)}
         meta={net === 0 ? t("kpiBalanced") : netPositive ? t("kpiIncomeExceeded") : t("kpiExpensesExceeded")}
-        icon={
-          net === 0 ? (
-            <Minus className="h-4 w-4" />
-          ) : netPositive ? (
-            <ArrowUpRight className="h-4 w-4" />
-          ) : (
-            <ArrowDownRight className="h-4 w-4" />
-          )
-        }
         color={
           net === 0
             ? "var(--muted-foreground)"
             : netPositive
               ? "var(--foreground)"
               : "var(--status-heads-up)"
-        }
-        iconBg={
-          net === 0
-            ? "color-mix(in oklch, var(--muted-foreground) 12%, transparent)"
-            : netPositive
-              ? INCOME_TINT
-              : EXPENSE_TINT
         }
         loading={loading}
         locale={locale}
@@ -89,9 +65,7 @@ interface KpiCardProps {
   label: string;
   amount: number;
   meta: string;
-  icon: React.ReactNode;
   color: string;
-  iconBg: string;
   loading: boolean;
   locale: Locale;
 }
@@ -100,25 +74,15 @@ function KpiCard({
   label,
   amount,
   meta,
-  icon,
   color,
-  iconBg,
   loading,
   locale,
 }: KpiCardProps) {
   return (
     <div className="rounded-2xl bg-card p-5">
-      <div className="flex items-center justify-between">
-        <div className="text-sm font-medium text-muted-foreground">
+      <div className="text-sm font-medium text-muted-foreground">
           {label}
         </div>
-        <div
-          className="flex h-7 w-7 items-center justify-center rounded-full"
-          style={{ backgroundColor: iconBg, color }}
-        >
-          {icon}
-        </div>
-      </div>
       <div
         className="mt-2 font-serif text-3xl tabular-nums"
         style={{ color }}

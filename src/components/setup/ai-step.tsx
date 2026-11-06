@@ -1,8 +1,9 @@
 "use client";
 
+import { Forward, Back } from "@/components/ui/dir-chevron";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Download } from "lucide-react";
+import { Check, Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
@@ -233,10 +234,10 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
 
       <footer className="flex items-center justify-between pt-2">
         <IconButton label={t("aiBackButton")} variant="outline" onClick={onBack}>
-          <ArrowRight className="size-4 ltr:rotate-180" aria-hidden />
+          <Back />
         </IconButton>
         <IconButton label={saving ? t("aiSavingButton") : t("aiContinueButton")} variant="default" onClick={handleSave} disabled={!canContinue || saving}>
-          <ArrowLeft className="size-4 ltr:rotate-180" aria-hidden />
+          <Forward />
         </IconButton>
       </footer>
     </div>
@@ -299,7 +300,7 @@ function ProviderRow({
           <Check className="h-3 w-3" strokeWidth={3} />
         </span>
       ) : (
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 rtl:rotate-180" />
+        <Forward className="text-muted-foreground/60" />
       )}
     </button>
   );

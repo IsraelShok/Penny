@@ -1,10 +1,11 @@
 "use client";
 
+import { Forward } from "@/components/ui/dir-chevron";
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, Check, PartyPopper } from "lucide-react";
+import { Check, PartyPopper } from "lucide-react";
 import { getCashAhead, getHome, getTransactionsSummary } from "@/lib/api";
 import { completeCheckin } from "@/lib/plan";
 import { shekels } from "@/lib/money";
@@ -71,7 +72,7 @@ export function Checkin() {
         {step < STEPS - 1 ? (
           <Button onClick={() => setStep(step + 1)}>
             {t("next")}
-            <ArrowLeft className="size-4 ltr:rotate-180" aria-hidden />
+            <Forward />
           </Button>
         ) : (
           <Button onClick={finish} disabled={saving}>

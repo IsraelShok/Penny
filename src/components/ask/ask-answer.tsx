@@ -1,8 +1,8 @@
 "use client";
 
+import { Forward } from "@/components/ui/dir-chevron";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { ChevronLeft } from "lucide-react";
 import type { AskAnswer } from "@/lib/ask";
 
 /** Sentence first, then the key numbers, then up to 5 supporting rows. */
@@ -38,7 +38,7 @@ export function AskAnswerView({ answer, onExample, onNavigate }: { answer: AskAn
       {answer.link && (
         <Link href={answer.link.href} onClick={onNavigate} className="inline-flex min-h-11 w-fit items-center gap-1 rounded-lg text-footnote font-medium text-primary focus-visible:outline-2 focus-visible:outline-ring">
           {answer.link.label}
-          <ChevronLeft className="size-4 ltr:rotate-180" aria-hidden />
+          <Forward />
         </Link>
       )}
     </div>

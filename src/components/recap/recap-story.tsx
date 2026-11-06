@@ -1,11 +1,12 @@
 "use client";
 
+import { Forward, Back } from "@/components/ui/dir-chevron";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { getRecap } from "@/lib/api";
 import { lastCompleteMonth, shiftMonth, type MonthRecap, type YearRecap } from "@/lib/recap";
@@ -146,7 +147,7 @@ export function RecapStory() {
 
           <div className="mt-5 flex items-center justify-between gap-3">
             <button type="button" onClick={() => go(at - 1)} disabled={at === 0} className="inline-flex min-h-11 items-center gap-1 rounded-xl px-4 text-sm font-semibold hover:bg-accent disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-ring">
-              <ChevronRight className="size-4 ltr:rotate-180" aria-hidden />{t("prev")}
+              <Back />{t("prev")}
             </button>
             <div className="flex items-center gap-1">
               {cards.map((c, i) => (
@@ -157,7 +158,7 @@ export function RecapStory() {
               ))}
             </div>
             <button type="button" onClick={() => go(at + 1)} disabled={at === total - 1} className="inline-flex min-h-11 items-center gap-1 rounded-xl px-4 text-sm font-semibold hover:bg-accent disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-ring">
-              {t("next")}<ChevronLeft className="size-4 ltr:rotate-180" aria-hidden />
+              {t("next")}<Forward />
             </button>
           </div>
 

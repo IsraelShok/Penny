@@ -1,9 +1,10 @@
 "use client";
 
+import { Forward, Back } from "@/components/ui/dir-chevron";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, ArrowLeftRight, ArrowRight, Baby, Banknote, Briefcase, CircleDot, Coffee, Gift, GraduationCap, HeartPulse, Home, PawPrint, Plane, Receipt, RefreshCw, Shield, ShoppingBag, ShoppingBasket, Sparkles, Ticket, TramFront, UtensilsCrossed, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Baby, Banknote, Briefcase, CircleDot, Coffee, Gift, GraduationCap, HeartPulse, Home, PawPrint, Plane, Receipt, RefreshCw, Shield, ShoppingBag, ShoppingBasket, Sparkles, Ticket, TramFront, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import {
   Tooltip,
@@ -145,10 +146,10 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
 
       <footer className="flex items-center justify-between pt-2">
         <IconButton label={t("aiBackButton")} variant="outline" onClick={onBack} disabled={saving}>
-          <ArrowRight className="size-4 ltr:rotate-180" aria-hidden />
+          <Back />
         </IconButton>
         <IconButton label={saving ? t("aiSavingButton") : t("aiContinueButton")} variant="default" onClick={() => finish(true)} disabled={saving || isLoading}>
-          <ArrowLeft className="size-4 ltr:rotate-180" aria-hidden />
+          <Forward />
         </IconButton>
       </footer>
 

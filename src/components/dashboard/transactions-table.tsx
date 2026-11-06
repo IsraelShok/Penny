@@ -1,5 +1,6 @@
 "use client";
 
+import { Forward, Back } from "@/components/ui/dir-chevron";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -37,8 +38,6 @@ import {
   Tags,
   EyeOff,
   Eye,
-  ArrowLeft,
-  ArrowRight,
   X,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -755,7 +754,7 @@ export function TransactionsTable({
                     onClick={() => onPageChange(page - 1)}
                     disabled={page === 0}
                   >
-                    <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden />
+                    <Back />
                   </IconButton>
                   <IconButton
                     label={t("next")}
@@ -764,7 +763,7 @@ export function TransactionsTable({
                     onClick={() => onPageChange(page + 1)}
                     disabled={page >= totalPages - 1}
                   >
-                    <ArrowRight className="size-4 rtl:rotate-180" aria-hidden />
+                    <Forward />
                   </IconButton>
                 </div>
               </div>

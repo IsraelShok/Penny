@@ -349,3 +349,27 @@ html { scroll-padding-bottom: 7rem; }
     backdrop-filter: none;
   }
 }
+
+/* One disclosure cue everywhere: a small chevron after the label instead of the browser's ◄/▼ triangle. */
+@layer base {
+  summary:not(.list-none) {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  summary:not(.list-none)::-webkit-details-marker { display: none; }
+  summary:not(.list-none)::after {
+    content: "";
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    background-color: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: rotate 150ms ease-out;
+  }
+  details[open] > summary:not(.list-none)::after { rotate: 180deg; }
+  @media (prefers-reduced-motion: reduce) {
+    summary:not(.list-none)::after { transition: none; }
+  }
+}

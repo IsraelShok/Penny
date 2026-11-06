@@ -1,9 +1,10 @@
 "use client";
 
+import { Forward } from "@/components/ui/dir-chevron";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, CheckCircle2, RefreshCw } from "lucide-react";
+import { CheckCircle2, RefreshCw } from "lucide-react";
 import { getCashAhead, getSuggestions, getWellbeing } from "@/lib/api";
 import { wellbeingDue } from "@/lib/wellbeing";
 import { isoWeek } from "@/lib/plan";
@@ -106,7 +107,7 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
             <span className="block text-lg font-semibold">{next.label}</span>
             <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{next.hint}</span>
           </span>
-          <ArrowLeft className="size-5 shrink-0 ltr:rotate-180" aria-hidden />
+          <Forward className="size-5" />
         </Link>
       )}
       {state === "done" && <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="size-5 shrink-0" aria-hidden />{t("allDone")}</p>}
@@ -116,13 +117,13 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
       {wellbeingQuery.data && wellbeingDue(wellbeingQuery.data, today) && (
         <Link href="/wellbeing" className="mt-6 me-6 inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-medium text-muted-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
           {tWell("todayLink")}
-          <ArrowLeft className="size-4 shrink-0 ltr:rotate-180" aria-hidden />
+          <Forward />
         </Link>
       )}
       {Number(today.slice(8)) <= 7 && (
         <Link href="/recap" className="mt-6 inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-medium text-muted-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
           {tRecap("todayLink", { month: new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(new Date(`${lastCompleteMonth(today)}-15T12:00:00Z`)) })}
-          <ArrowLeft className="size-4 shrink-0 ltr:rotate-180" aria-hidden />
+          <Forward />
         </Link>
       )}
     </section>

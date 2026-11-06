@@ -1,10 +1,11 @@
 "use client";
 
+import { Forward } from "@/components/ui/dir-chevron";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { translateCategoryName } from "@/lib/i18n-data";
-import { ChevronRight, Plus, Search, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { IconButton } from "@/components/ui/icon-button";
@@ -295,7 +296,7 @@ function CategoryRow({
           ) : null}
         </div>
         <BudgetChip category={category} data={data} />
-        <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground/60 rtl:rotate-180" />
+        <Forward className="text-muted-foreground/60" />
       </button>
     </li>
   );

@@ -1,7 +1,8 @@
 "use client";
 
+import { Forward, Back } from "@/components/ui/dir-chevron";
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input, InputGroup } from "@/components/ui/input";
@@ -83,7 +84,7 @@ export function MonthlyTargetStep({ onComplete, onBack }: MonthlyTargetStepProps
 
       <footer className="flex items-center justify-between pt-2">
         <IconButton label={t("aiBackButton")} variant="outline" onClick={onBack} disabled={saving}>
-          <ArrowRight className="size-4 ltr:rotate-180" aria-hidden />
+          <Back />
         </IconButton>
         <IconButton
           label={saving ? t("aiSavingButton") : t("aiContinueButton")}
@@ -91,7 +92,7 @@ export function MonthlyTargetStep({ onComplete, onBack }: MonthlyTargetStepProps
           onClick={() => save(valid ? parsed : null)}
           disabled={saving || !valid}
         >
-          <ArrowLeft className="size-4 ltr:rotate-180" aria-hidden />
+          <Forward />
         </IconButton>
       </footer>
 

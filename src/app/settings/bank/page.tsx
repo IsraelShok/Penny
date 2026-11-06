@@ -1,10 +1,10 @@
 "use client";
 
+import { Forward } from "@/components/ui/dir-chevron";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import {
-  ChevronRight,
   Plus,
   RefreshCw,
   Loader2,
@@ -216,7 +216,7 @@ export default function BankSettingsPage() {
                       })}
                       className="-me-1 shrink-0 rounded-md p-1 text-muted-foreground/60 hover:bg-muted hover:text-foreground"
                     >
-                      <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                      <Forward />
                     </button>
                   </li>
                 );

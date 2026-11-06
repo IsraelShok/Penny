@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -56,14 +57,9 @@ export function MoveFrom({ target, card, rows, month, moves }: { target: Categor
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            disabled={move.isPending || amount <= 0}
-            onClick={() => move.mutate()}
-            className="h-9 justify-self-start rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
-          >
+          <Button disabled={move.isPending || amount <= 0} onClick={() => move.mutate()} className="justify-self-start">
             {t("move", { amount: shekels(amount, locale) })}
-          </button>
+          </Button>
         </div>
       )}
       <p className="mt-2 text-xs text-muted-foreground">{t("thisMonthOnly")}</p>
@@ -90,14 +86,9 @@ export function MovedIn({ card, rows, month, moves }: { card: CategoryWithData; 
       {mine.map((m) => (
         <li key={m.index} className="flex items-center justify-between gap-2">
           <span>{t("movedFrom", { amount: shekels(m.amount, locale), name: nameOf(m.from) })}</span>
-          <button
-            type="button"
-            disabled={undo.isPending}
-            onClick={() => undo.mutate(m.index)}
-            className="min-h-8 rounded-md px-2 font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-          >
+          <Button variant="ghost" size="sm" disabled={undo.isPending} onClick={() => undo.mutate(m.index)} className="text-primary">
             {t("undo")}
-          </button>
+          </Button>
         </li>
       ))}
     </ul>
