@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { usePlan } from "@/hooks/use-plan";
+import { CONFIDENCE, DETAIL, GOALS, SITUATIONS, profileEffects, type UserProfile } from "@/lib/plan";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useHousehold } from "@/hooks/use-household";
@@ -24,7 +27,10 @@ const chip =
 const chipOn = "border-primary bg-primary text-primary-foreground";
 const chipOff = "border-border bg-card hover:bg-accent";
 
-/** The 3-minute household welcome: who lives here, income shape, money style. Every step skippable. */
+const STEPS = 6;
+const SIZES = [1, 2, 3, 4, 5];
+
+/** "Let's get to know you": situation, household, income, money style, goal, confidence. Every step skippable; answers go to the household and the plan. */
 export function WelcomeFlow() {
   const t = useTranslations("welcome");
   const tH = useTranslations("household");
@@ -34,20 +40,37 @@ export function WelcomeFlow() {
   const [members, setMembers] = useState<HouseholdMember[] | null>(null);
   const [income, setIncome] = useState<IncomeShape | null | undefined>(undefined);
   const [style, setStyle] = useState<MoneyStyle | null | undefined>(undefined);
+  const { plan, loaded, update: updatePlan } = usePlan();
+  const [prof, setProf] = useState<UserProfile | null>(null);
 
-  if (loading) return <p className="text-subheadline text-muted-foreground">{t("loading")}</p>;
+  if (loading || !loaded) return <p className="text-subheadline text-muted-foreground">{t("loading")}</p>;
 
   const list = members ?? household.members;
   const incomeShape = income === undefined ? household.incomeShape : income;
   const moneyStyle = style === undefined ? household.moneyStyle : style;
+  const profile = prof ?? plan.profile;
+  const setP = (patch: Partial<UserProfile>) => setProf({ ...profile, ...patch });
+  // Tap the chosen chip again to clear it.
+  const toggle = <K extends keyof UserProfile>(k: K, v: UserProfile[K]) => setP({ [k]: profile[k] === v ? null : v } as Partial<UserProfile>);
 
-  function next(patch: Partial<Household>) {
-    const last = step === 2;
+  function next(patch: Partial<Household>, finish = step === STEPS - 1) {
     // Send every answer so far: an earlier save may not have landed yet.
-    save({ members: saveMembers(), incomeShape, moneyStyle, ...patch, ...(last && { welcomeDismissed: true }) });
-    if (last) router.push("/");
+    save({ members: saveMembers(), incomeShape, moneyStyle, ...patch, ...(finish && { welcomeDismissed: true }) });
+    const done = { ...profile, onboarded: profile.onboarded || finish };
+    updatePlan({ profile: done, ...(finish && profileEffects(done)) }).catch(() => toast.error(t("saveFailed")));
+    if (finish) router.push("/");
     else setStep(step + 1);
   }
+
+  const chips = <T extends string | number>(k: keyof UserProfile, list: readonly T[], label: (v: T) => string) => (
+    <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t(`${k}Label`)}>
+      {list.map((v) => (
+        <button key={v} type="button" aria-pressed={profile[k] === v} className={cn(chip, "min-h-11", profile[k] === v ? chipOn : chipOff)} onClick={() => toggle(k, v as UserProfile[typeof k])}>
+          {label(v)}
+        </button>
+      ))}
+    </div>
+  );
 
   function saveMembers() {
     // A member saved without a name keeps its role as the name.
@@ -61,17 +84,58 @@ export function WelcomeFlow() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <p className="text-footnote text-muted-foreground" aria-live="polite">
-        {t("stepOf", { step: step + 1, total: 3 })}
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-footnote text-muted-foreground" aria-live="polite">
+          {t("stepOf", { step: step + 1, total: STEPS })}
+        </p>
+        <Button variant="ghost" disabled={saving} onClick={() => next({}, true)}>{t("skipAll")}</Button>
+      </div>
       <div className="mt-2 flex gap-1.5" aria-hidden>
-        {[0, 1, 2].map((i) => (
+        {Array.from({ length: STEPS }, (_, i) => (
           <span key={i} className={cn("h-1 flex-1 rounded-full", i <= step ? "bg-primary" : "bg-muted")} />
         ))}
       </div>
 
       <section className="mt-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6" aria-labelledby="welcome-step">
         {step === 0 && (
+          <>
+            <h2 id="welcome-step" className="text-title3 font-semibold">{t("aboutTitle")}</h2>
+            <p className="mt-1 text-subheadline text-muted-foreground">{t("aboutHint")}</p>
+            {chips("situation", SITUATIONS, (v) => t(`situation.${v}`))}
+            <p className="mt-5 text-subheadline font-medium">{t("householdSizeLabel")}</p>
+            {chips("householdSize", SIZES, (n) => (n === 5 ? "5+" : String(n)))}
+          </>
+        )}
+
+        {step === 4 && (
+          <>
+            <h2 id="welcome-step" className="text-title3 font-semibold">{t("goalTitle")}</h2>
+            <p className="mt-1 text-subheadline text-muted-foreground">{t("goalHint")}</p>
+            {chips("goal", GOALS, (v) => t(`goal.${v}`))}
+            {profile.goal === "save" && (
+              <Input
+                aria-label={t("goalNoteLabel")}
+                placeholder={t("goalNotePlaceholder")}
+                maxLength={60}
+                value={profile.goalNote}
+                onChange={(e) => setP({ goalNote: e.target.value })}
+                className="mt-3"
+              />
+            )}
+          </>
+        )}
+
+        {step === 5 && (
+          <>
+            <h2 id="welcome-step" className="text-title3 font-semibold">{t("levelTitle")}</h2>
+            <p className="mt-1 text-subheadline text-muted-foreground">{t("levelHint")}</p>
+            {chips("confidence", CONFIDENCE, (v) => t(`confidence.${v}`))}
+            <p className="mt-5 text-subheadline font-medium">{t("detailLabel")}</p>
+            {chips("detail", DETAIL, (v) => t(`detail.${v}`))}
+          </>
+        )}
+
+        {step === 1 && (
           <>
             <h2 id="welcome-step" className="text-title3 font-semibold">{t("whoTitle")}</h2>
             <p className="mt-1 text-subheadline text-muted-foreground">{t("whoHint")}</p>
@@ -132,7 +196,7 @@ export function WelcomeFlow() {
           </>
         )}
 
-        {step === 1 && (
+        {step === 2 && (
           <>
             <h2 id="welcome-step" className="text-title3 font-semibold">{t("incomeTitle")}</h2>
             <p className="mt-1 text-subheadline text-muted-foreground">{t("incomeHint")}</p>
@@ -152,7 +216,7 @@ export function WelcomeFlow() {
           </>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <>
             <h2 id="welcome-step" className="text-title3 font-semibold">{t("styleTitle")}</h2>
             <p className="mt-1 text-subheadline text-muted-foreground">{t("styleHint")}</p>
@@ -175,18 +239,15 @@ export function WelcomeFlow() {
           </>
         )}
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <Button
-            disabled={saving}
-            onClick={() =>
-              next(step === 0 ? { members: saveMembers() } : step === 1 ? { incomeShape } : { moneyStyle })
-            }
-          >
-            {step === 2 ? t("finish") : t("next")}
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Button disabled={saving} onClick={() => next({})}>
+            {step === STEPS - 1 ? t("finish") : t("next")}
           </Button>
-          <Button variant="ghost" disabled={saving} onClick={() => next({})}>
-            {t("skip")}
-          </Button>
+          {step > 0 && (
+            <Button variant="ghost" disabled={saving} onClick={() => setStep(step - 1)}>
+              {t("back")}
+            </Button>
+          )}
         </div>
       </section>
       <p className="mt-4 text-center text-footnote text-muted-foreground">{t("skipHint")}</p>

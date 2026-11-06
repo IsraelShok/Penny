@@ -12,6 +12,10 @@ import { AlertNotifier } from "./alert-notifier";
 import { CommandPalette } from "./command-palette";
 import { useTranslations } from "next-intl";
 import { InfoTip } from "@/components/ui/info-tip";
+import { usePathname } from "next/navigation";
+import { usePlan } from "@/hooks/use-plan";
+import { wantsExplanations } from "@/lib/plan";
+import { pagePurposeKey } from "@/lib/orientation";
 
 /** Lives in the root layout so the collapsed state survives page changes. */
 export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; children: ReactNode }) {
@@ -47,6 +51,12 @@ export function PageHeader({
   /** Off where the page opens with its own big heading (Home's greeting); the title stays for screen readers. */
   largeTitle?: boolean;
 }) {
+  const tPurpose = useTranslations("purpose");
+  const pathname = usePathname();
+  const { plan } = usePlan();
+  // One plain line on what this page is for, only for those who asked for more explanations.
+  const key = wantsExplanations(plan) ? pagePurposeKey(pathname) : null;
+  const purpose = key && largeTitle && tPurpose.has(key) ? tPurpose(key) : null;
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -63,6 +73,7 @@ export function PageHeader({
           <h1 className="truncate text-[1.625rem] leading-8 font-bold tracking-tight">{title}</h1>
           {/* Short context (a month) stays visible; anything longer hides behind the "i". */}
           {meta && (meta.length > 24 ? <InfoTip text={meta} /> : <p className="truncate text-footnote text-muted-foreground">{meta}</p>)}
+          {purpose && <InfoTip text={purpose} />}
         </div>
         <div className="col-start-3 flex min-w-0 flex-wrap items-center justify-end gap-2">{actions}</div>
       </div>

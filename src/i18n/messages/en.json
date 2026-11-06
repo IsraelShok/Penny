@@ -1591,7 +1591,9 @@
     "dockHint": "Find a page or action…",
     "close": "Close search",
     "saveFailed": "Preference was not saved. Try again.",
-    "count": "{n, plural, one {1 result} other {# results}}"
+    "count": "{n, plural, one {1 result} other {# results}}",
+    "help": "How it works",
+    "welcome": "Let's get to know you"
   },
   "dataState": {
     "loading": "Loading your data…",
@@ -2222,8 +2224,8 @@
     }
   },
   "welcome": {
-    "title": "Welcome",
-    "subtitle": "Three minutes, three questions",
+    "title": "Let's get to know you",
+    "subtitle": "A few short questions, each one skippable",
     "loading": "Loading…",
     "stepOf": "Step {step} of {total}",
     "whoTitle": "Who lives with you?",
@@ -2245,9 +2247,48 @@
     "finish": "Done",
     "skip": "Skip",
     "skipHint": "You can skip and finish later",
-    "prompt": "Three minutes to fit the app to your home",
-    "promptHint": "Who lives here, how money comes in and how you run it",
-    "dismiss": "Not now"
+    "prompt": "Let's get to know you — a few questions so the app fits you",
+    "promptHint": "Who you are, your goal and how you like to see money. Skippable.",
+    "dismiss": "Not now",
+    "skipAll": "Skip",
+    "back": "Back",
+    "saveFailed": "Couldn't save. Please try again.",
+    "aboutTitle": "Tell us a little about you",
+    "aboutHint": "What's closest to your situation today?",
+    "situationLabel": "Your situation",
+    "householdSizeLabel": "How many people at home?",
+    "situation": {
+      "student": "Student",
+      "employee": "Employee",
+      "selfEmployed": "Self-employed",
+      "family": "Family",
+      "retired": "Retired"
+    },
+    "goalTitle": "What matters most right now?",
+    "goalHint": "Pick one goal. You can change it later.",
+    "goalLabel": "Main goal",
+    "goal": {
+      "control": "Get control of spending",
+      "save": "Save for something",
+      "overdraft": "Get out of overdraft",
+      "invest": "Start investing"
+    },
+    "goalNoteLabel": "What are you saving for?",
+    "goalNotePlaceholder": "e.g. a trip, a home, a car",
+    "levelTitle": "How comfortable are you with money?",
+    "levelHint": "No wrong answer. It sets how much we explain and how much detail we show.",
+    "confidenceLabel": "Confidence",
+    "confidence": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "detailLabel": "How much detail?",
+    "detail": {
+      "simple": "Just the essentials",
+      "standard": "Standard",
+      "detailed": "Everything, with numbers"
+    }
   },
   "life": {
     "title": "Life stages",
@@ -2453,7 +2494,12 @@
     "legacy_title": "Family document",
     "legacy_hint": "Where everything is, if it's ever needed",
     "import_title": "Import files",
-    "import_hint": "Bank and card statements, without connecting a bank"
+    "import_hint": "Bank and card statements, without connecting a bank",
+    "group_help": "Help",
+    "help_title": "How it works",
+    "help_hint": "Terms, steps and keyboard shortcuts",
+    "welcome_title": "Let's get to know you",
+    "welcome_hint": "Short questions that fit the app to you"
   },
   "telegram": {
     "title": "Telegram bot",
@@ -2519,5 +2565,69 @@
     "deleteWarning": "All of this profile's data will be deleted. This can't be undone.",
     "switch": "Switch profile",
     "error": "Something went wrong. Try again."
+  },
+  "concepts": {
+    "whatIs": "What is {term}?",
+    "free": {
+      "term": "Free until payday",
+      "body": "How much you can still spend until your next salary, after the fixed bills still due."
+    },
+    "pace": {
+      "term": "Pace",
+      "body": "Compares what you've spent so far with what you'd spend if spending were spread evenly over the month."
+    },
+    "forecast": {
+      "term": "Forecast",
+      "body": "An estimate of what you'll spend by month end if you keep going as you have."
+    },
+    "budget": {
+      "term": "Budget",
+      "body": "The amount you decided to spend in a month, overall or per category. It shows when it's time to slow down."
+    },
+    "resilience": {
+      "term": "Resilience",
+      "body": "A 0-100 score: how long you could hold on if income stopped, and how steady things are."
+    }
+  },
+  "purpose": {
+    "budget": "What you planned to spend this month, and what's gone so far.",
+    "transactions": "Every account and card movement, in one place.",
+    "overview": "The full picture: what you have, what you owe and the plan.",
+    "insights": "Spending patterns worth knowing.",
+    "investments": "Your savings and investments and how they grow.",
+    "fi": "When your money can work for you.",
+    "life": "Short checklists for each life stage.",
+    "checkin": "A few minutes a week to stay in the picture.",
+    "recap": "A short summary of the recent period.",
+    "ask": "Ask about your money in plain words.",
+    "journey": "Where you are on the way, and the next step.",
+    "more": "Everything you don't need every day.",
+    "wellbeing": "How you feel about money.",
+    "markets": "What's happening in the markets, briefly.",
+    "rules": "Rules that sort transactions into categories for you.",
+    "settings": "Accounts, display and privacy.",
+    "help": "A short guide to the app and its terms."
+  },
+  "help": {
+    "title": "How it works",
+    "howTitle": "Four steps",
+    "step_connect_title": "Connect a bank",
+    "step_connect_body": "Transactions come in by themselves and stay only on your computer.",
+    "step_today_title": "Look at today",
+    "step_today_body": "Home shows what's free until payday and the next step.",
+    "step_budget_title": "Set a budget",
+    "step_budget_body": "If you like, set how much to spend and see whether you're on pace.",
+    "step_rituals_title": "Check once a week",
+    "step_rituals_body": "A few minutes of weekly check-in is enough to stay in control.",
+    "conceptsTitle": "Terms",
+    "keysTitle": "Keyboard shortcuts",
+    "key_palette": "Search and jump to any page or action",
+    "key_search": "Opens quick search",
+    "key_close": "Closes an open window or explanation",
+    "key_move": "Moves between buttons and links",
+    "youTitle": "Make it yours",
+    "youBody": "Answer the get-to-know-you questions again any time, or turn on simple mode.",
+    "youCta": "Let's get to know you",
+    "simpleCta": "Simple mode and display"
   }
 }

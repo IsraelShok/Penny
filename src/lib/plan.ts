@@ -91,7 +91,42 @@ export interface FinancialPlan {
   checkin: { lastWeek: string | null; streak: number };
   /** Life events for the FI projection (up to 12). */
   events: LifeEvent[];
+  /** Optional "get to know you" answers; any field may stay null (skipped). */
+  profile: UserProfile;
 }
+
+export const SITUATIONS = ["student", "employee", "selfEmployed", "family", "retired"] as const;
+export const GOALS = ["control", "save", "overdraft", "invest"] as const;
+export const CONFIDENCE = ["beginner", "intermediate", "advanced"] as const;
+export const DETAIL = ["simple", "standard", "detailed"] as const;
+
+export interface UserProfile {
+  situation: (typeof SITUATIONS)[number] | null;
+  householdSize: number | null;
+  goal: (typeof GOALS)[number] | null;
+  /** What the user is saving for, when goal is "save". */
+  goalNote: string;
+  confidence: (typeof CONFIDENCE)[number] | null;
+  detail: (typeof DETAIL)[number] | null;
+  /** The intro was finished or skipped; it can still be reopened from More / Help. */
+  onboarded: boolean;
+}
+
+export const EMPTY_PROFILE: UserProfile = { situation: null, householdSize: null, goal: null, goalNote: "", confidence: null, detail: null, onboarded: false };
+
+/** The plan changes the answers drive: beginners or "simple" get simple mode, advanced or "detailed" get the full views. */
+export function profileEffects(p: UserProfile): Partial<FinancialPlan> {
+  const simple = p.detail === "simple" || (p.detail == null && p.confidence === "beginner");
+  const dense = p.detail === "detailed" || (p.detail == null && p.confidence === "advanced");
+  return simple ? { simpleMode: true } : dense ? { simpleMode: false } : {};
+}
+
+/** Show extra explanations (page purposes, hints): beginners, or anyone in simple mode. */
+export function wantsExplanations(plan: FinancialPlan): boolean {
+  return plan.profile.confidence === "beginner" || (plan.profile.confidence == null && plan.simpleMode);
+}
+
+const pick = <T extends string>(list: readonly T[], v: unknown): T | null => (list.includes(v as T) ? (v as T) : null);
 
 /** A future change: a one-off amount (negative = cost) and a monthly cost change from that year on (positive = spend more). */
 export interface LifeEvent {
@@ -112,6 +147,7 @@ export const DEFAULT_PLAN: FinancialPlan = {
   wheelPaging: false,
   checkin: { lastWeek: null, streak: 0 },
   events: [],
+  profile: EMPTY_PROFILE,
 };
 
 const finite = (v: unknown, limit: number) => {
@@ -130,6 +166,7 @@ export function parsePlan(raw: unknown): FinancialPlan {
   const a = (r.allocation ?? {}) as Record<string, unknown>;
   const t = (r.taxDone ?? {}) as Record<string, unknown>;
   const c = (r.checkin ?? {}) as Record<string, unknown>;
+  const p = (r.profile ?? {}) as Record<string, unknown>;
   return {
     monthStartDay: int(r.monthStartDay, 1, 28, DEFAULT_PLAN.monthStartDay),
     birthYear: r.birthYear == null || r.birthYear === "" ? null : int(r.birthYear, 1920, 2015, 0) || null,
@@ -152,6 +189,15 @@ export function parsePlan(raw: unknown): FinancialPlan {
         amount: finite(e.amount, 100_000_000),
         monthlyChange: finite(e.monthlyChange, 1_000_000),
       })),
+    profile: {
+      situation: pick(SITUATIONS, p.situation),
+      householdSize: int(p.householdSize, 1, 20, 0) || null,
+      goal: pick(GOALS, p.goal),
+      goalNote: typeof p.goalNote === "string" ? p.goalNote.trim().slice(0, 60) : "",
+      confidence: pick(CONFIDENCE, p.confidence),
+      detail: pick(DETAIL, p.detail),
+      onboarded: p.onboarded === true,
+    },
   };
 }
 
