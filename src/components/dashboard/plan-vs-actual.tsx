@@ -59,7 +59,7 @@ export function PlanVsActual({ summary }: { summary: DashboardSummary }) {
                 <td className="py-2 text-end tabular-nums">{shekels(c.budget, locale)}</td>
                 <td className="py-2 text-end tabular-nums">{shekels(c.spent, locale)}</td>
                 {/* Words, not only color, say which way it went. */}
-                {!gentle && <td className={`py-2 text-end tabular-nums ${diff > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                {!gentle && <td className={`py-2 text-end tabular-nums ${diff > 0 ? "text-[var(--status-heads-up)]" : "text-muted-foreground"}`}>
                   {diff > 0 ? t("over", { amount: shekels(diff, locale) }) : t("under", { amount: shekels(-diff, locale) })}
                 </td>}
               </tr>

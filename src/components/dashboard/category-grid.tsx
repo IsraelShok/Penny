@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CategoryCard } from "./category-card";
 import { BudgetDetailSheet } from "./budget-detail-sheet";
+import { MoveFrom, MovedIn } from "./move-from";
+import { moveTarget, type BudgetMove } from "@/lib/budget-moves";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -33,6 +35,9 @@ interface CategoryGridProps {
   from: string;
   to: string;
   viewMode: CategoryViewMode;
+  /** YYYY-MM and that month's budget moves ("move from X"). */
+  month: string;
+  moves: BudgetMove[];
 }
 
 function applySort(list: CategoryWithData[], sort: Sort): CategoryWithData[] {
@@ -69,6 +74,8 @@ export function CategoryGrid({
   from,
   to,
   viewMode,
+  month,
+  moves,
 }: CategoryGridProps) {
   const t = useTranslations("dashboard");
   const [filter, setFilter] = useState<Filter>("all");
@@ -245,6 +252,15 @@ export function CategoryGrid({
               key={c.categoryId}
               data={c}
               onClick={() => setSelectedId(c.categoryId)}
+              footer={(() => {
+                const target = moveTarget(c, categories);
+                return (
+                  <>
+                    <MovedIn card={c} rows={categories} month={month} moves={moves} />
+                    {target && <MoveFrom target={target} card={c} rows={categories} month={month} moves={moves} />}
+                  </>
+                );
+              })()}
             />
           ))}
         </div>

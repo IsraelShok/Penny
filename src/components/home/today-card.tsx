@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeft, CheckCircle2, RefreshCw } from "lucide-react";
-import { getCashAhead, getSuggestions } from "@/lib/api";
+import { getCashAhead, getSuggestions, getWellbeing } from "@/lib/api";
+import { wellbeingDue } from "@/lib/wellbeing";
 import { isoWeek } from "@/lib/plan";
 import { todayState } from "@/lib/today-state";
 import { lastCompleteMonth } from "@/lib/recap";
@@ -32,6 +33,8 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
   const { plan, loaded, failed: planFailed, retry: retryPlan } = usePlan();
   const cashQuery = useQuery({ queryKey: ["cash-ahead"], queryFn: getCashAhead });
   const suggestionsQuery = useQuery({ queryKey: ["suggestions"], queryFn: getSuggestions });
+  const wellbeingQuery = useQuery({ queryKey: ["wellbeing"], queryFn: getWellbeing });
+  const tWell = useTranslations("wellbeing");
   const cash = cashQuery.data;
   const suggestions = suggestionsQuery.data?.suggestions ?? [];
   const attention = home?.needsAttention;
@@ -110,6 +113,12 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
       {!gentle && ready && stats.length > 0 && <dl className="mt-8 grid gap-5 border-t border-white/10 pt-6 sm:grid-cols-3">
         {stats.map((stat) => <div key={stat.label} className="min-w-0"><dt className="text-sm text-muted-foreground">{stat.label}</dt><dd className="figure mt-2 break-words text-3xl"><bdi>{stat.value}</bdi></dd></div>)}
       </dl>}
+      {wellbeingQuery.data && wellbeingDue(wellbeingQuery.data, today) && (
+        <Link href="/wellbeing" className="mt-6 me-6 inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-medium text-muted-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+          {tWell("todayLink")}
+          <ArrowLeft className="size-4 shrink-0 ltr:rotate-180" aria-hidden />
+        </Link>
+      )}
       {Number(today.slice(8)) <= 7 && (
         <Link href="/recap" className="mt-6 inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-medium text-muted-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
           {tRecap("todayLink", { month: new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(new Date(`${lastCompleteMonth(today)}-15T12:00:00Z`)) })}

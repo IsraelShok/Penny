@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { CalendarCheck, Milestone, MessageCircleQuestion, Moon, RefreshCw, Search, Settings2, Sparkles, Sun, Zap, X } from "lucide-react";
+import { CalendarCheck, HeartHandshake, Milestone, MessageCircleQuestion, Moon, RefreshCw, Search, Settings2, Sparkles, Sun, Zap, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { usePlan } from "@/hooks/use-plan";
@@ -34,6 +34,7 @@ export function CommandPalette() {
   const tRecap = useTranslations("recap");
   const tAsk = useTranslations("ask");
   const tLife = useTranslations("life");
+  const tWell = useTranslations("wellbeing");
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const { plan, update } = usePlan();
@@ -68,6 +69,7 @@ export function CommandPalette() {
       { id: "recap", label: tRecap("palette"), hint: t("page"), Icon: Sparkles, run: go("/recap") },
       { id: "ask-page", label: tAsk("title"), hint: t("page"), Icon: MessageCircleQuestion, run: go("/ask") },
       { id: "life", label: tLife("title"), hint: t("page"), Icon: Milestone, run: go("/life") },
+      { id: "wellbeing", label: tWell("palette"), hint: t("page"), Icon: HeartHandshake, run: go("/wellbeing") },
       { id: "sync", label: t("sync"), hint: t("action"), Icon: RefreshCw, run: go("/?sync=1") },
       ...SETTINGS.map((s) => ({ id: `settings-${s}`, label: tSettings(s), hint: t("settings"), Icon: Settings2, run: go(`/settings/${s}`) })),
       {
@@ -79,7 +81,7 @@ export function CommandPalette() {
       },
       { id: "simple", label: plan.simpleMode ? t("simpleOff") : t("simpleOn"), hint: t("action"), Icon: Zap, run: () => { void update({ simpleMode: !plan.simpleMode }).catch(() => toast.error(t("saveFailed"))); } },
     ];
-  }, [router, t, tNav, tSettings, tRecap, tAsk, tLife, resolvedTheme, setTheme, plan.simpleMode, update]);
+  }, [router, t, tNav, tSettings, tRecap, tAsk, tLife, tWell, resolvedTheme, setTheme, plan.simpleMode, update]);
 
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const askCommand: Command[] = looksLikeQuestion(q)

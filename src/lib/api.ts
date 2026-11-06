@@ -979,3 +979,74 @@ export function saveLifeProgress(progress: Record<string, string[]>) {
     body: JSON.stringify({ progress }),
   });
 }
+
+// ---- Settle-up and per-child ------------------------------------------------
+
+export interface SettleCounterpart {
+  member: import("./household").HouseholdMember;
+  rule: import("./settle").SplitRule;
+  balance: number;
+  since: string | null;
+  lines: import("./settle").LedgerLine[];
+  entries: import("./settle").SettleEntry[];
+}
+
+export function getSettle() {
+  return fetchJSON<{ me: string | null; counterparts: SettleCounterpart[] }>("/api/transactions/settle");
+}
+
+export function setSplitRule(counterpart: string, rule: import("./settle").SplitRule) {
+  return fetchJSON<unknown>("/api/transactions/settle", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ counterpart, rule }) });
+}
+
+export function addSettlement(counterpart: string, date: string, amount: number) {
+  return fetchJSON<{ id: number }>("/api/transactions/settle", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ counterpart, date, amount }) });
+}
+
+export function undoSettlement(id: number) {
+  return fetchJSON<unknown>(`/api/transactions/settle?id=${id}`, { method: "DELETE" });
+}
+
+export function getChildReport(member: string, month: string) {
+  return fetchJSON<{
+    child: import("./household").HouseholdMember;
+    summary: import("./kids").ChildSummary;
+    transactions: { id: number; date: string; amount: number; description: string; category: string | null }[];
+  }>(`/api/transactions/kids?member=${encodeURIComponent(member)}&month=${month}`);
+}
+
+export function getWellbeing() {
+  return fetchJSON<import("./wellbeing").WellbeingEntry[]>("/api/wellbeing");
+}
+
+export function saveWellbeing(answers: number[]) {
+  return fetchJSON<import("./wellbeing").WellbeingEntry[]>("/api/wellbeing", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answers }),
+  });
+}
+
+export function getBudgetMoves(month: string) {
+  return fetchJSON<import("./budget-moves").BudgetMove[]>(`/api/budgets/moves?month=${month}`);
+}
+
+export function addBudgetMove(month: string, move: import("./budget-moves").BudgetMove) {
+  return fetchJSON<import("./budget-moves").BudgetMove[]>("/api/budgets/moves", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ month, ...move }),
+  });
+}
+
+export function undoBudgetMove(month: string, index?: number) {
+  return fetchJSON<import("./budget-moves").BudgetMove[]>(`/api/budgets/moves?month=${month}${index == null ? "" : `&index=${index}`}`, { method: "DELETE" });
+}
+
+export function getIncomeSmoothing() {
+  return fetchJSON<{ smoothing: import("./smoothing").Smoothing | null }>("/api/budgets/smoothing");
+}
+
+export function getOverdraft() {
+  return fetchJSON<import("./overdraft").OverdraftCost & { balance: number | null }>("/api/overdraft");
+}

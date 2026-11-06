@@ -44,4 +44,17 @@ export const IL = {
   selfEmployedPension: { averageWage: 13_769, lowRate: 0.0445, highRate: 0.1255 },
   /** VAT 18% since 1 Jan 2025 (was 17%). Bimonthly report due by the 15th of the following month. */
   vat: { rate: 0.18, dueDay: 15 },
+  /**
+   * Purchase tax (מס רכישה) for a single home, [upTo, marginal rate]. Brackets frozen 16.01.2024–15.01.2028
+   * (not indexed). Checked Nov 2026 against secondary sources, not the ITA page itself:
+   * bizportal.co.il/realestates/news/article/20038028, bscpa.co.il (מס רכישה 2026). Editable in the calculator.
+   */
+  purchaseTaxSingleHome: [[1_978_745, 0], [2_347_040, 0.035], [6_055_070, 0.05], [20_183_565, 0.08], [Infinity, 0.1]],
+  /**
+   * Amendment 190 (תיקון 190): from age 60, with a "qualifying pension" (קצבה מזכה) above the minimum,
+   * a provident fund for investment can pay a tax-free annuity; a lump sum pays 15% on the real gain.
+   * Minimum ₪5,306/month for 2026 per pensuni.com/?p=2795 and gilisaar.co.il (citing the Jan 2026 ITA table);
+   * not checked against the ITA directly. National Insurance old-age pension does not count.
+   */
+  amendment190: { minAge: 60, minQualifyingPension: 5_306, lumpRealGainTax: 0.15 },
 } as const;

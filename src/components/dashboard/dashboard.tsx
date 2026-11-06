@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { DataState } from "@/components/ui/data-state";
-import { getSummary, getTransactions, listIntegrations } from "@/lib/api";
+import { getSummary, getTransactions, listIntegrations, getBudgetMoves } from "@/lib/api";
+import { applyMoves } from "@/lib/budget-moves";
+import { IncomeSmoothingCard } from "./income-smoothing-card";
 import { getMonthRange, formatMonthLabel, addMonths } from "@/lib/formatters";
 import { PageHeader } from "@/components/layout/app-shell";
 import { HeroCard } from "./hero-card";
@@ -68,7 +70,14 @@ export function Dashboard() {
   }, [queryClient]);
 
   const monthLabel = formatMonthLabel(selectedDate, locale);
-  const summary = summaryQuery.data;
+  const month = from.slice(0, 7);
+  const moves = useQuery({ queryKey: ["budget-moves", month], queryFn: () => getBudgetMoves(month) });
+  // Effective budgets for this month: base budget ± "move from X" moves.
+  const summary = useMemo(() => {
+    const s = summaryQuery.data;
+    if (!s || !moves.data?.length) return s;
+    return { ...s, categoriesWithData: applyMoves(s.categoriesWithData, moves.data, s.timeElapsedPercent) };
+  }, [summaryQuery.data, moves.data]);
   const period = useQuery({ queryKey: ["budget-period", from, to], queryFn: () => getTransactions({ from, to, limit: 1 }) });
   const banks = useQuery({ queryKey: ["integrations"], queryFn: listIntegrations });
 
@@ -125,7 +134,10 @@ export function Dashboard() {
           from={from}
           to={to}
           viewMode={viewMode}
+          month={month}
+          moves={moves.data ?? []}
         />
+        {from === getMonthRange(new Date()).from && <IncomeSmoothingCard />}
         <PeriodicCard />
         <AINotConnectedBanner />
         </>}

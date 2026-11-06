@@ -15,6 +15,8 @@ import { WidgetsRow } from "./widgets-row";
 import { ReviewInbox } from "./review-inbox";
 import { CashWalletCard } from "./cash-wallet-card";
 import { OwnerSummary } from "./owner-summary";
+import { SettleLedger } from "./settle-ledger";
+import { KidSummary } from "./kid-summary";
 import { useHousehold } from "@/hooks/use-household";
 import { X } from "lucide-react";
 import { getOwners, getTagReport } from "@/lib/api";
@@ -41,7 +43,10 @@ import type { Locale } from "@/i18n/routing";
 export function TransactionsPage() {
   const t = useTranslations("transactions");
   const tReview = useTranslations("review");
-  const [view, setView] = useState<"review" | "all">("all");
+  const [view, setView] = useState<"review" | "all" | "settle">("all");
+  const tSettle = useTranslations("settle");
+  const tKids = useTranslations("kids");
+  const [kidFilter, setKidFilter] = useState<string>("");
   const locale = useLocale() as Locale;
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [search, setSearch] = useState("");
@@ -158,15 +163,25 @@ export function TransactionsPage() {
           options={[
             { value: "review", label: tReview("tab") },
             { value: "all", label: tReview("tabAll") },
+            { value: "settle", label: tSettle("tab") },
           ]}
           onChange={setView}
         />
-        {view === "review" ? <ReviewInbox /> :
+        {view === "review" ? <ReviewInbox /> : view === "settle" ? <SettleLedger /> :
         summaryQuery.isError || transactionsQuery.isError || integrationsQuery.isError ? <DataState error onRetry={() => { void summaryQuery.refetch(); void transactionsQuery.refetch(); void integrationsQuery.refetch(); }} />
         : summaryInitialLoading || tableInitialLoading || integrationsQuery.isPending ? <DataState loading />
         : transactionsQuery.data?.total === 0 && !search && !categoryFilter.length && !accountFilter.length && !tagFilter && kind === "all" ? <DataState period={integrationsQuery.data?.some((bank) => bank.lastSyncAt)} />
         : <>
         {members.length >= 2 && <OwnerSummary members={members} from={from} to={to} />}
+        {members.some((m) => m.role === "child") && (
+          <label className="flex w-fit items-center gap-2 text-sm">{tKids("filter")}
+            <select value={kidFilter} onChange={(e) => setKidFilter(e.target.value)} className="h-9 rounded-lg border border-border/60 bg-background px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring">
+              <option value="">{tKids("all")}</option>
+              {members.filter((m) => m.role === "child").map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </label>
+        )}
+        {kidFilter ? <KidSummary member={kidFilter} month={from.slice(0, 7)} /> : <>
         <KpiCards summary={summaryQuery.data} loading={summaryInitialLoading} />
 
 
@@ -229,6 +244,7 @@ export function TransactionsPage() {
           page={page}
           onPageChange={setPage}
         />
+        </>}
         <details className="rounded-xl border border-border/60 p-4"><summary className="cursor-pointer py-2 font-medium">{t("moreDetails")}</summary><div className="pt-4"><WidgetsRow summary={summaryQuery.data} loading={summaryInitialLoading} /></div></details>
         <AINotConnectedBanner />
         </>}

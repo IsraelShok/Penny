@@ -63,3 +63,63 @@ describe("plan events", () => {
     expect(parsePlan({ events: [{ year: "abc", amount: "x" }] }).events[0].amount).toBe(0);
   });
 });
+
+import { amendment190, bracketTax, rentVsBuy, spitzer } from "@/lib/tools";
+import { IL } from "@/lib/il-defaults";
+import { parseWellbeingHistory, wellbeingDue, wellbeingScore } from "@/lib/wellbeing";
+
+describe("purchase tax and spitzer", () => {
+  it("single-home brackets: exempt to 1.98M, ₪3M ≈ ₪45.5K", () => {
+    expect(bracketTax(1_900_000, IL.purchaseTaxSingleHome)).toBe(0);
+    expect(Math.round(bracketTax(3_000_000, IL.purchaseTaxSingleHome))).toBe(45_538);
+  });
+  it("spitzer payment for 1M, 5%, 25y ≈ ₪5,846", () => {
+    expect(Math.round(spitzer(1_000_000, 0.05, 25))).toBe(5_846);
+    expect(spitzer(120_000, 0, 10)).toBe(1_000);
+  });
+});
+
+describe("rentVsBuy", () => {
+  const base = { price: 2_500_000, down: 750_000, mortgageRate: 0.045, mortgageYears: 25, purchaseTax: 7_000, oneOffs: 60_000, ownerMonthly: 500, appreciation: 0.03, rent: 7_000, rentGrowth: 0.03, investReturn: 0.05, years: 15 };
+  it("returns one row per year and a consistent diff", () => {
+    const r = rentVsBuy(base);
+    expect(r.yearly).toHaveLength(15);
+    expect(r.diff).toBeCloseTo(r.buy - r.rent);
+  });
+  it("cheap rent with high returns favours renting; strong appreciation favours buying", () => {
+    expect(rentVsBuy({ ...base, rent: 3_000, appreciation: 0, investReturn: 0.08 }).diff).toBeLessThan(0);
+    const b = rentVsBuy({ ...base, rent: 12_000, appreciation: 0.06, investReturn: 0.02 });
+    expect(b.diff).toBeGreaterThan(0);
+    expect(b.breakEven).not.toBeNull();
+  });
+});
+
+describe("amendment190", () => {
+  const base = { balance: 1_000_000, realGainShare: 0.4, age: 62, qualifyingPension: 6_000, annuityFactor: 200, ...IL.amendment190 };
+  it("annuity = balance / factor; tax saved = 15% of real gain", () => {
+    const r = amendment190(base);
+    expect(r.monthly).toBe(5_000);
+    expect(r.taxSaved).toBe(60_000);
+    expect(r.eligible).toBe(true);
+  });
+  it("needs age 60 and the minimum qualifying pension", () => {
+    expect(amendment190({ ...base, age: 59 }).ageOk).toBe(false);
+    expect(amendment190({ ...base, qualifyingPension: 5_000 }).eligible).toBe(false);
+  });
+});
+
+describe("wellbeing", () => {
+  it("scores 0–100 with the positive item reversed", () => {
+    expect(wellbeingScore([4, 4, 4, 0, 4])).toBe(100);
+    expect(wellbeingScore([0, 0, 0, 4, 0])).toBe(0);
+    expect(wellbeingScore([2, 2, 2, 2, 2])).toBe(50);
+    expect(wellbeingScore([1, 2])).toBeNull();
+    expect(wellbeingScore([5, 0, 0, 0, 0])).toBeNull();
+  });
+  it("is due after 90 days or with no history; drops bad rows", () => {
+    expect(wellbeingDue([], "2026-11-06")).toBe(true);
+    expect(wellbeingDue([{ date: "2026-09-01", score: 50 }], "2026-11-06")).toBe(false);
+    expect(wellbeingDue([{ date: "2026-07-01", score: 50 }], "2026-11-06")).toBe(true);
+    expect(parseWellbeingHistory([{ date: "x", score: 1 }, { date: "2026-01-01", score: 120 }, { date: "2026-02-01", score: 40 }])).toEqual([{ date: "2026-02-01", score: 40 }]);
+  });
+});

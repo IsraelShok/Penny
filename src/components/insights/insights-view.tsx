@@ -9,6 +9,9 @@ import { shekels } from "@/lib/money";
 import { BalanceForecastCard } from "./balance-forecast-card";
 import { RecurringCalendar } from "./recurring-calendar";
 import { TagReport } from "./tag-report";
+import { OverdraftCard } from "./overdraft-card";
+
+const PER_MONTH = { weekly: 52 / 12, monthly: 1, yearly: 1 / 12 } as const;
 
 
 export function InsightsView() {
@@ -25,6 +28,9 @@ export function InsightsView() {
   return (
     <div className="grid gap-6">
       <BalanceForecastCard />
+      <OverdraftCard
+        subscriptionsMonthly={data.series.filter((s) => s.status !== "candidate").reduce((sum, s) => sum + s.expectedAmount * PER_MONTH[s.cadence], 0)}
+      />
       <RecurringCalendar data={data} today={new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date())} />
       <TagReport />
       <Card>
@@ -51,7 +57,7 @@ export function InsightsView() {
 
       {data.installments.plans.length > 0 && <OpenInstallments data={data.installments} locale={locale} />}
 
-      <Card>
+      <Card id="subscriptions" className="scroll-mt-20">
         <CardHeader>
           <CardTitle>{t("subscriptions")}</CardTitle>
         </CardHeader>

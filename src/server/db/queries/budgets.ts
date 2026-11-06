@@ -2,6 +2,8 @@ import "server-only";
 
 import { getDb } from "../index";
 import { toLocalISODate } from "../../lib/date-utils";
+import { getWorkspaceSetting, setWorkspaceSetting } from "./settings";
+import { parseMoves, type BudgetMoves } from "@/lib/budget-moves";
 
 export interface BudgetRow {
   categoryId: number;
@@ -124,4 +126,36 @@ export function getAutoBudgetAverage(
     result.push({ categoryId, amount: total / months });
   }
   return result;
+}
+
+// One-month budget moves ("move from X"), kept as a JSON workspace setting.
+export function getBudgetMoves(workspaceId: number): BudgetMoves {
+  try {
+    return parseMoves(JSON.parse(getWorkspaceSetting(workspaceId, "budget_moves") ?? "{}"));
+  } catch {
+    return {};
+  }
+}
+
+export function setBudgetMoves(workspaceId: number, moves: BudgetMoves): void {
+  setWorkspaceSetting(workspaceId, "budget_moves", JSON.stringify(moves));
+}
+
+/** Income of each of the last `months` complete months (0 for months with none), and this month so far. */
+export function getMonthlyIncomes(workspaceId: number, months = 12, now = new Date()) {
+  const from = toLocalISODate(new Date(now.getFullYear(), now.getMonth() - months, 1));
+  const rows = getDb()
+    .prepare(
+      `SELECT substr(date, 1, 7) as month, SUM(charged_amount) as income FROM transactions
+       WHERE workspace_id = ? AND kind = 'income' AND status = 'completed' AND is_excluded = 0 AND date >= ?
+       GROUP BY month`
+    )
+    .all(workspaceId, from) as { month: string; income: number }[];
+  const byMonth = new Map(rows.map((r) => [r.month, r.income]));
+  const key = (d: Date) => toLocalISODate(d).slice(0, 7);
+  const past: number[] = [];
+  for (let i = months; i >= 1; i--) past.push(byMonth.get(key(new Date(now.getFullYear(), now.getMonth() - i, 1))) ?? 0);
+  // Leading empty months are before the data starts, not weak months.
+  while (past.length && past[0] === 0) past.shift();
+  return { past, current: byMonth.get(key(now)) ?? 0 };
 }

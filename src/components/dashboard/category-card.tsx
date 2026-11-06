@@ -28,6 +28,7 @@ import {
   RotateCcw,
   type LucideIcon,
 } from "lucide-react";
+import type { ReactNode } from "react";
 import { formatCurrency } from "@/lib/formatters";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { CategoryWithData, BudgetStatus } from "@/lib/types";
@@ -62,9 +63,11 @@ export const ICON_MAP: Record<string, LucideIcon> = {
 interface CategoryCardProps {
   data: CategoryWithData;
   onClick?: () => void;
+  /** Shown under the card, outside its button (e.g. "move from X"). */
+  footer?: ReactNode;
 }
 
-export function CategoryCard({ data, onClick }: CategoryCardProps) {
+export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
   const t = useTranslations("dashboard");
   const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale() as Locale;
@@ -75,10 +78,11 @@ export function CategoryCard({ data, onClick }: CategoryCardProps) {
   const categoryName = translateCategoryName(data.categoryName, tCat);
   const parentName = data.parentName ? translateCategoryName(data.parentName, tCat) : null;
   return (
+    <div className="rounded-2xl bg-card">
     <button
       type="button"
       onClick={onClick}
-      className="group w-full cursor-pointer rounded-2xl bg-card p-5 text-start transition-colors duration-200 ease-out hover:border-[#D6C9AC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+      className="group w-full cursor-pointer rounded-2xl p-5 text-start transition-colors duration-200 ease-out hover:border-[#D6C9AC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <div
@@ -198,7 +202,7 @@ export function CategoryCard({ data, onClick }: CategoryCardProps) {
                 </>
               ) : (
                 <>
-                  <span className="text-[var(--status-over)]">
+                  <span className="text-[var(--status-heads-up)]">
                     {t("overAmount", {
                       amount: formatCurrency(data.spent - data.budget, "ILS", locale),
                     })}
@@ -214,6 +218,8 @@ export function CategoryCard({ data, onClick }: CategoryCardProps) {
         </div>
       )}
     </button>
+    {footer}
+    </div>
   );
 }
 
@@ -257,7 +263,7 @@ function ProgressDonut({
   const visualPercent = Math.min(100, percent);
   const dash = (visualPercent / 100) * circumference;
   const strokeColor =
-    status === "over" ? "var(--status-over)" : shade(color);
+    status === "over" ? "var(--status-heads-up)" : shade(color);
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
@@ -293,7 +299,7 @@ function StatusPill({ status }: { status: BudgetStatus }) {
     "plenty-left": { label: t("statusPlentyLeft"), color: "var(--status-plenty-left)" },
     "on-track": { label: t("statusOnTrack"), color: "var(--status-on-track)" },
     "heads-up": { label: t("statusHeadsUp"), color: "var(--status-heads-up)" },
-    over: { label: t("statusOver"), color: "var(--status-over)" },
+    over: { label: t("statusOver"), color: "var(--status-heads-up)" },
   };
   const m = meta[status];
   return (
@@ -323,7 +329,7 @@ function VsLastMonth({ pct }: { pct: number }) {
   return (
     <span
       className={
-        up ? "text-[var(--status-over)]" : "text-[var(--status-on-track)]"
+        up ? "text-[var(--status-heads-up)]" : "text-[var(--status-on-track)]"
       }
     >
       {up

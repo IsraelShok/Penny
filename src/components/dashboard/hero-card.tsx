@@ -245,7 +245,7 @@ function HeroPhrase({
 
   const toneClass =
     verdict === "overBudget" || verdict === "headsUp"
-      ? "text-[var(--status-over)]"
+      ? "text-[var(--status-heads-up)]"
       : "text-[var(--status-on-track)]";
 
   const leadParts = lead.split(amount);
@@ -318,9 +318,9 @@ function PaceGauge({
   const isOverBudget = pctSpent > 100;
   const isOver = isOverBudget || delta >= 25;
   const isAhead = delta <= -10;
-  const ringColor = isOver ? "var(--status-over)" : "var(--status-on-track)";
+  const ringColor = isOver ? "var(--status-heads-up)" : "var(--status-on-track)";
   const verdictClass = isOver
-    ? "text-[var(--status-over)]"
+    ? "text-[var(--status-heads-up)]"
     : "text-[var(--status-on-track)]";
 
   let verdictText: string;

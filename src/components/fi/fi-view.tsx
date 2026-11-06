@@ -7,7 +7,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { getFi } from "@/lib/api";
 import { useGentle } from "@/hooks/use-gentle";
 import { carCost, fiNumber, fiOdds, yearsToTarget, yearsToTargetWithEvents, type CarInputs } from "@/lib/fi";
-import { brokerOutcome, fundSwitch, gemelVsBroker } from "@/lib/tools";
+import { amendment190, bracketTax, brokerOutcome, fundSwitch, gemelVsBroker, rentVsBuy } from "@/lib/tools";
+import { IL } from "@/lib/il-defaults";
 import type { LifeEvent } from "@/lib/plan";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -390,10 +391,12 @@ function EventInput({ id, label, value, onChange, text }: { id: string; label: s
   );
 }
 
-type CalcKind = "switch" | "gemel" | "broker";
+type CalcKind = "switch" | "gemel" | "broker" | "rentBuy" | "a190";
 
 function Calculators({ returnPct }: { returnPct: number }) {
   const tt = useTranslations("tools");
+  const tRent = useTranslations("rentBuy");
+  const tA190 = useTranslations("amendment190");
   const locale = useLocale();
   const [kind, setKind] = useState<CalcKind>("switch");
   const [v, setV] = useStored<Record<string, string>>("fi-tools", {
@@ -423,7 +426,7 @@ function Calculators({ returnPct }: { returnPct: number }) {
         <ResultRow label={tt("deposited")} value={shekels(g.deposited, locale)} />
       </dl>
     );
-  } else {
+  } else if (kind === "broker") {
     fields = [field("invest"), field("trades"), field("aTrade"), field("aPct", "%"), field("aCustody"), field("bTrade"), field("bPct", "%"), field("bCustody")];
     const a = brokerOutcome({ perTrade: n("aTrade"), pct: n("aPct"), custodyMonthly: n("aCustody") }, n("invest"), n("trades"), 10, r);
     const b = brokerOutcome({ perTrade: n("bTrade"), pct: n("bPct"), custodyMonthly: n("bCustody") }, n("invest"), n("trades"), 10, r);
@@ -440,11 +443,19 @@ function Calculators({ returnPct }: { returnPct: number }) {
 
   return (
     <CardShell label={tt("calcTitle")} className="lg:col-span-3">
-      <Segmented label={tt("calcTitle")} value={kind} onChange={setKind} options={(["switch", "gemel", "broker"] as const).map((k) => ({ value: k, label: tt(`calc_${k}`) }))} />
-      <p className="mt-3 text-caption text-pretty text-muted-foreground">{tt(`calcHint_${kind}`, { ret: fmt(r * 100, locale, 1) })}</p>
-      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">{fields}</div>
-      <div className="mt-5" aria-live="polite">{result}</div>
-      <p className="mt-4 text-caption text-muted-foreground">{tt("notAdvice")}</p>
+      <Segmented label={tt("calcTitle")} value={kind} onChange={setKind} className="flex-wrap" options={[
+        ...(["switch", "gemel", "broker"] as const).map((k) => ({ value: k, label: tt(`calc_${k}`) })),
+        { value: "rentBuy" as const, label: tRent("tab") },
+        { value: "a190" as const, label: tA190("tab") },
+      ]} />
+      {kind === "rentBuy" ? <RentVsBuy returnPct={r} /> : kind === "a190" ? <Amendment190 /> : (
+        <>
+          <p className="mt-3 text-caption text-pretty text-muted-foreground">{tt(`calcHint_${kind}`, { ret: fmt(r * 100, locale, 1) })}</p>
+          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">{fields}</div>
+          <div className="mt-5" aria-live="polite">{result}</div>
+          <p className="mt-4 text-caption text-muted-foreground">{tt("notAdvice")}</p>
+        </>
+      )}
     </CardShell>
   );
 }
@@ -455,5 +466,88 @@ function ResultRow({ label, value }: { label: string; value: string }) {
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="font-semibold">{value}</dd>
     </div>
+  );
+}
+const RENT_FIELDS = ["price", "down", "mortgageRate", "mortgageYears", "purchaseTax", "oneOffs", "ownerMonthly", "appreciation", "rent", "rentGrowth", "investReturn", "years"] as const;
+const RENT_PCT = new Set<string>(["mortgageRate", "appreciation", "rentGrowth", "investReturn"]);
+
+function RentVsBuy({ returnPct }: { returnPct: number }) {
+  const t = useTranslations("rentBuy");
+  const locale = useLocale();
+  const [v, setV] = useStored<Record<(typeof RENT_FIELDS)[number], string>>("fi-rent-buy", {
+    price: "2500000", down: "750000", mortgageRate: String(IL.typicalMortgageRate), mortgageYears: "25", purchaseTax: "",
+    oneOffs: "60000", ownerMonthly: "500", appreciation: "3", rent: "7000", rentGrowth: "3", investReturn: "", years: "15",
+  });
+  const n = (k: (typeof RENT_FIELDS)[number]) => Number(v[k]) || 0;
+  const pct = (k: (typeof RENT_FIELDS)[number]) => n(k) / 100;
+  const autoTax = bracketTax(n("price"), IL.purchaseTaxSingleHome);
+  const res = rentVsBuy({
+    price: n("price"), down: n("down"), mortgageRate: pct("mortgageRate"), mortgageYears: n("mortgageYears") || 25,
+    purchaseTax: v.purchaseTax.trim() === "" ? autoTax : n("purchaseTax"), oneOffs: n("oneOffs"), ownerMonthly: n("ownerMonthly"),
+    appreciation: pct("appreciation"), rent: n("rent"), rentGrowth: pct("rentGrowth"),
+    investReturn: v.investReturn.trim() === "" ? returnPct : pct("investReturn"), years: Math.min(40, Math.max(1, Math.round(n("years")) || 15)),
+  });
+  const years = res.yearly.length;
+  const placeholders: Partial<Record<string, string>> = { purchaseTax: fmt(autoTax, locale), investReturn: fmt(returnPct * 100, locale, 1) };
+
+  return (
+    <>
+      <p className="mt-3 text-caption text-pretty text-muted-foreground">{t("hint")}</p>
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {RENT_FIELDS.map((k) => (
+          <Field key={k} id={`rb-${k}`} label={t(`f_${k}`)} value={v[k]} placeholder={placeholders[k]} onChange={(x) => setV({ ...v, [k]: x })} suffix={RENT_PCT.has(k) ? "%" : undefined} />
+        ))}
+      </div>
+      <p className="mt-2 text-caption text-pretty text-muted-foreground">{t("taxNote", { year: IL.year })}</p>
+      <div className="mt-5" aria-live="polite">
+        <p className="text-footnote font-semibold text-pretty">
+          {Math.abs(res.diff) < 1000 ? t("resultEven", { years }) : t(res.diff > 0 ? "resultBuy" : "resultRent", { years, amount: shekels(Math.abs(res.diff), locale) })}{" "}
+          {res.breakEven != null ? t("breakEven", { year: res.breakEven }) : t("noBreakEven", { years })}
+        </p>
+        <dl className="mt-3 space-y-2 text-footnote tabular-nums">
+          <ResultRow label={t("netBuy", { years })} value={shekels(res.buy, locale)} />
+          <ResultRow label={t("netRent", { years })} value={shekels(res.rent, locale)} />
+          <ResultRow label={t("monthlyBuy")} value={shekels(res.firstMonth.buy, locale)} />
+          <ResultRow label={t("monthlyRent")} value={shekels(res.firstMonth.rent, locale)} />
+        </dl>
+      </div>
+      <p className="mt-4 text-caption text-pretty text-muted-foreground">{t("disclaimer")}</p>
+    </>
+  );
+}
+
+const A190_FIELDS = ["balance", "realGain", "age", "pension", "factor"] as const;
+
+function Amendment190() {
+  const t = useTranslations("amendment190");
+  const locale = useLocale();
+  const [v, setV] = useStored<Record<(typeof A190_FIELDS)[number], string>>("fi-a190", { balance: "1000000", realGain: "40", age: "62", pension: "6000", factor: "200" });
+  const n = (k: (typeof A190_FIELDS)[number]) => Number(v[k]) || 0;
+  const res = amendment190({ balance: n("balance"), realGainShare: n("realGain") / 100, age: n("age"), qualifyingPension: n("pension"), annuityFactor: n("factor"), ...IL.amendment190 });
+
+  return (
+    <>
+      <p className="mt-3 text-caption text-pretty text-muted-foreground">{t("hint")}</p>
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+        {A190_FIELDS.map((k) => (
+          <Field key={k} id={`a190-${k}`} label={t(`f_${k}`)} value={v[k]} onChange={(x) => setV({ ...v, [k]: x })} suffix={k === "realGain" ? "%" : undefined} />
+        ))}
+      </div>
+      <div className="mt-5" aria-live="polite">
+        <p className="text-footnote font-semibold text-pretty">
+          {res.eligible
+            ? t("resultEligible", { monthly: shekels(res.monthly, locale), saved: shekels(res.taxSaved, locale) })
+            : !res.ageOk
+              ? t("resultAge", { age: IL.amendment190.minAge })
+              : t("resultPension", { min: shekels(IL.amendment190.minQualifyingPension, locale) })}
+        </p>
+        <dl className="mt-3 space-y-2 text-footnote tabular-nums">
+          <ResultRow label={t("monthly")} value={shekels(res.monthly, locale)} />
+          <ResultRow label={t("lumpNet")} value={shekels(res.lumpNet, locale)} />
+          <ResultRow label={t("taxSaved")} value={shekels(res.taxSaved, locale)} />
+        </dl>
+      </div>
+      <p className="mt-4 text-caption text-pretty text-muted-foreground">{t("disclaimer", { min: shekels(IL.amendment190.minQualifyingPension, locale), year: IL.year })}</p>
+    </>
   );
 }

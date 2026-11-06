@@ -1,6 +1,6 @@
 // Household profile and life events — stored as one JSON workspace setting.
 
-export const MEMBER_ROLES = ["me", "partner", "child", "roommate", "exPartner", "parent"] as const;
+export const MEMBER_ROLES = ["me", "partner", "child", "roommate", "exPartner", "parent", "sibling"] as const;
 export const INCOME_SHAPES = ["salaried", "freelancer", "mixed", "pension", "allowance", "irregular", "none"] as const;
 export const MONEY_STYLES = ["joint", "mixed", "separate"] as const;
 export const LIFE_EVENTS = [

@@ -1029,3 +1029,45 @@ export function deleteFileImport(workspaceId: number, batchId: number): number {
     return n;
   })();
 }
+
+// ---- Settle-up and per-child -----------------------------------------------
+
+/** Counted expenses after `from` (exclusive) for the split ledger. */
+export function getSettleRows(workspaceId: number, from: string): import("@/lib/settle").SettleRow[] {
+  return getDb()
+    .prepare(
+      `SELECT id, date, charged_amount AS amount, owner, account_number AS accountNumber, description
+       FROM transactions
+       WHERE workspace_id = ? AND date > ? AND kind = 'expense' AND is_excluded = 0 AND charged_amount < 0
+       ORDER BY date DESC`
+    )
+    .all(workspaceId, from) as import("@/lib/settle").SettleRow[];
+}
+
+export function listSettleEntries(workspaceId: number): import("@/lib/settle").SettleEntry[] {
+  return getDb()
+    .prepare("SELECT id, counterpart, date, amount FROM settle_entries WHERE workspace_id = ? ORDER BY date DESC, id DESC")
+    .all(workspaceId) as import("@/lib/settle").SettleEntry[];
+}
+
+export function addSettleEntry(workspaceId: number, counterpart: string, date: string, amount: number): number {
+  return Number(getDb().prepare("INSERT INTO settle_entries (workspace_id, counterpart, date, amount) VALUES (?, ?, ?, ?)").run(workspaceId, counterpart, date, amount).lastInsertRowid);
+}
+
+export function deleteSettleEntry(workspaceId: number, id: number): boolean {
+  return getDb().prepare("DELETE FROM settle_entries WHERE workspace_id = ? AND id = ?").run(workspaceId, id).changes > 0;
+}
+
+/** Counted expenses (and refunds) in [from, to] with owner and category, for per-child views. */
+export function getChildRows(workspaceId: number, from: string, to: string): {
+  id: number; date: string; amount: number; owner: string | null; accountNumber: string; description: string; category: string | null;
+}[] {
+  return getDb()
+    .prepare(
+      `SELECT t.id, t.date, t.charged_amount AS amount, t.owner, t.account_number AS accountNumber, t.description, c.name AS category
+       FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
+       WHERE t.workspace_id = ? AND t.date >= ? AND t.date <= ? AND t.kind = 'expense' AND t.is_excluded = 0
+       ORDER BY t.date DESC`
+    )
+    .all(workspaceId, from, to) as ReturnType<typeof getChildRows>;
+}
