@@ -5,10 +5,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Check, Plus, Trash2 } from "lucide-react";
-import { deletePlanItem, getPlan, savePlan, savePlanItem } from "@/lib/api";
+import { getPlan, savePlan, savePlanItem } from "@/lib/api";
 import { goalMonthly, type FinancialPlan } from "@/lib/plan";
 import { fmt, shekels } from "@/lib/money";
 import { IL } from "@/lib/il-defaults";
+import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
@@ -141,7 +142,7 @@ function Goals({ goals }: { goals: Goal[] }) {
     },
     onError: (e: Error) => toast.error(e.message || t("saveFailed")),
   });
-  const remove = useMutation({ mutationFn: (id: number) => deletePlanItem("goal", id), onSuccess: refresh });
+  const remove = useUndoableDelete<Goal & Record<string, unknown>>("goal", "plan", (g) => g.id, (g) => g.name);
   const today = new Date();
 
   return (
@@ -159,7 +160,7 @@ function Goals({ goals }: { goals: Goal[] }) {
                     <p className="truncate text-footnote font-semibold">{g.name}</p>
                     <p className="text-caption text-muted-foreground">{t("goalDue", { date: due, target: shekels(g.targetAmount, locale) })}</p>
                   </div>
-                  <Button variant="ghost" size="icon" aria-label={t("removeGoal", { name: g.name })} onClick={() => remove.mutate(g.id)}>
+                  <Button variant="ghost" size="icon" aria-label={t("removeGoal", { name: g.name })} onClick={() => remove.mutate(g as Goal & Record<string, unknown>)}>
                     <Trash2 className="size-4" aria-hidden />
                   </Button>
                 </div>
@@ -265,7 +266,7 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
     },
     onError: (e: Error) => toast.error(e.message || t("saveFailed")),
   });
-  const remove = useMutation({ mutationFn: (id: number) => deletePlanItem("policy", id), onSuccess: refresh });
+  const remove = useUndoableDelete<InsurancePolicy & Record<string, unknown>>("policy", "plan", (p) => p.id, (p) => p.name);
   const total = policies.reduce((s, p) => s + p.monthlyPremium, 0);
   const counts = new Map<string, number>();
   for (const p of policies) counts.set(p.kind, (counts.get(p.kind) ?? 0) + 1);
@@ -291,7 +292,7 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
               </span>
               <span className="flex items-center gap-1">
                 <span className="tabular-nums">{shekels(p.monthlyPremium, locale)}</span>
-                <Button variant="ghost" size="icon" aria-label={t("removePolicy", { name: p.name })} onClick={() => remove.mutate(p.id)}>
+                <Button variant="ghost" size="icon" aria-label={t("removePolicy", { name: p.name })} onClick={() => remove.mutate(p as InsurancePolicy & Record<string, unknown>)}>
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
               </span>

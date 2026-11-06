@@ -5,9 +5,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Check, Plus, Trash2 } from "lucide-react";
-import { deletePlanItem, getPlan, savePlan, savePlanItem } from "@/lib/api";
+import { getPlan, savePlan, savePlanItem } from "@/lib/api";
 import { ALLOCATION_CLASSES, BENCHMARK_FEES, CLASS_OF, debtPayoff, feeCost, type AllocationClass, type FinancialPlan } from "@/lib/plan";
 import { shekels } from "@/lib/money";
+import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
@@ -238,7 +239,9 @@ function PastNetWorth({ history }: { history: AssetsPayload["history"] }) {
     },
     onError: (e: Error) => toast.error(e.message || t("saveFailed")),
   });
-  const remove = useMutation({ mutationFn: (date: string) => deletePlanItem("netWorth", date), onSuccess: refresh });
+  const remove = useUndoableDelete<{ date: string; netWorth: number }>("netWorth", "assets", (h) => h.date, (h) =>
+    new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(`${h.date}T12:00:00`))
+  );
 
   return (
     <CardShell label={t("pastTitle")}>
@@ -267,7 +270,7 @@ function PastNetWorth({ history }: { history: AssetsPayload["history"] }) {
               <span>{new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(`${h.date}T12:00:00`))}</span>
               <span className="flex items-center gap-1">
                 <span className="tabular-nums">{shekels(h.netWorth, locale)}</span>
-                <Button variant="ghost" size="icon" aria-label={t("remove")} onClick={() => remove.mutate(h.date)}>
+                <Button variant="ghost" size="icon" aria-label={t("remove")} onClick={() => remove.mutate({ date: h.date, netWorth: h.netWorth })}>
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
               </span>

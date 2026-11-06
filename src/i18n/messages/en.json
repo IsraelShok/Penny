@@ -136,7 +136,7 @@
     "syncMayBeStuck": "Sync may have stopped",
     "syncingNow": "Syncing now",
     "syncingNowElapsed": "Syncing now · {elapsed}",
-    "nextScheduled": "next {time}"
+    "nextScheduled": "Next sync {time}"
   },
   "activityPanel": {
     "title": "Spent background activity",
@@ -158,21 +158,21 @@
   "syncFailureBanner": {
     "oneBankTitle": "Sync incomplete for {bank}",
     "multiBankTitle": "Sync incomplete for {count} banks",
-    "twoFaHelper": "Some banks (notably Yahav) block scraping when 2FA is on. Disable it on the bank side and try again.",
+    "twoFaHelper": "Some banks (notably Yahav) block syncing when 2FA is on. Turn it off on the bank's site and try again.",
     "reconnectBank": "Reconnect bank",
     "fallbackErrorMsg": "Sync did not finish. Try syncing again.",
     "showDetails": "Technical details"
   },
   "syncErrors": {
-    "botBlocked": "The bank's bot protection blocked this sync. It usually clears after a few hours (often overnight). Wait and try again.",
+    "botBlocked": "The bank paused syncing for now. This usually clears within a few hours, often by morning. Try again later.",
     "isracardIdMismatch": "Isracard rejected your ID and card combination. Check that the 'Last 6 digits of your card' field holds the last 6 digits of your card number, not your ID. You can fix it in the bank settings.",
-    "emptyResponse": "The bank returned an empty response. This is usually temporary rate limiting on their side. We'll retry automatically; if it keeps failing, wait a few minutes and try again.",
+    "emptyResponse": "The bank returned an empty response, usually a temporary limit on their side. Spent will retry on its own. If it keeps happening, wait a few minutes and try again.",
     "network": "Could not connect to the bank. Check your internet connection and try again.",
     "slowSite": "The bank's site took too long to respond. This is often temporary; try again in a minute.",
     "invalidPassword": "The bank rejected the credentials. Check your ID, card last 6 digits and password.",
     "changePassword": "The bank requires a new password. Sign in on the bank website and change it first.",
     "accountBlocked": "The bank has blocked the account. Sign in on the bank website to check how to unblock it.",
-    "timeout": "The sync timed out. The bank's site may be slow or down. Try again.",
+    "timeout": "The bank didn't respond in time. Its site may be slow or down. Try again in a few minutes.",
     "twoFactor": "This account is asking for 2FA. For most banks, turn on 'This account requires 2FA' in the bank settings so Spent shows the browser and you can complete it. For One Zero, make sure the phone number is set.",
     "unexpected": "Sync did not finish. Turn on \"Show browser during sync\" in Settings and sync again to see what is stopping it.",
     "unexpectedHeadless": "Sync did not finish. The bank may have changed its sign-in page. Try again later. If this continues, update Spent."
@@ -230,7 +230,7 @@
     "headerCategory": "Category",
     "headerAmount": "Amount",
     "emptyWithFilters": "No transactions match these filters. Change or clear the filters.",
-    "emptyNoData": "No transactions yet. Start a sync to load them.",
+    "emptyNoData": "No transactions yet. They show up here after a sync.",
     "rowReview": "Review",
     "rowReviewTooltipConfidence": "Category confidence: {score}/7. Review the category.",
     "rowReviewTooltipUnsure": "The category is uncertain. Review it.",
@@ -259,7 +259,7 @@
     "syncing": "Syncing…",
     "syncAndCategorize": "Sync and categorize",
     "categorize": "Categorize",
-    "thinking": "Preparing categories…",
+    "thinking": "Categorizing…",
     "nothingToCategorize": "Every transaction already has a category.",
     "categorizationFailed": "Categorization did not finish. Check your AI provider settings and try again.",
     "aiCategorizationIssue": "Automatic categorization incomplete",
@@ -283,7 +283,7 @@
     "wordOnSchedule": "on planned pace",
     "moreCategories": "+{count} more",
     "setMonthlyTargetWithTypical": "Set a monthly target ({amount} typical) →",
-    "setMonthlyTarget": "Set a monthly target to see how you're pacing →",
+    "setMonthlyTarget": "Set a monthly target to see your pace →",
     "viewModeGrouped": "Grouped",
     "viewModeAll": "All categories",
     "budgetsHeading": "Budgets",
@@ -303,7 +303,7 @@
     "emptyUncategorizedTitle": "Transactions aren't categorized yet",
     "emptyUncategorizedBody": "This month’s expenses have no category yet. Enable an AI provider in Settings and sync, or choose categories on Transactions.",
     "emptyNoSpendTitle": "No spending yet",
-    "emptyNoSpendBody": "When you sync transactions and they get categorized, each category will show up here with its own budget, pace, and recent activity.",
+    "emptyNoSpendBody": "After you sync and categorize, each category shows up here with its budget, pace and recent activity.",
     "transactionsOne": "transaction",
     "transactionsOther": "transactions",
     "mostlyMerchant": "mostly {merchant}",
@@ -930,7 +930,7 @@
     "subscriptions": "Subscriptions and recurring charges",
     "noSubscriptions": "No recurring charges detected yet.",
     "maybe": "maybe",
-    "priceChanged": "Price changed {from} → {to}",
+    "priceChanged": "Price changed from {from} to {to}",
     "forecast": "Next card bills",
     "recurring": "Recurring",
     "installments": "Installments",
@@ -1065,7 +1065,7 @@
     "bannerRollup": "This budget combines the subcategory budgets. Set a separate group budget to replace it.",
     "subcategoriesHeading": "Sub-categories · {count}",
     "needsReviewHeading": "Worth a look · {count}",
-    "needsReviewHint": "The AI wasn't sure about these. Approve to keep, or pick a different category. Either way, the choice is remembered for next time.",
+    "needsReviewHint": "The AI wasn't sure about these transactions. Approve them or pick a different category. Your choice is saved for next time.",
     "approve": "Approve",
     "auto": "auto",
     "editBudgetAmount": "Edit budget amount"
@@ -1119,7 +1119,9 @@
     "points": "pts",
     "print": "Print report",
     "reportTitle": "Period report",
-    "reportGenerated": "Generated {date}"
+    "reportGenerated": "Generated {date}",
+    "answerSaved": "This period you kept {net}, a {rate}% savings rate.",
+    "answerShort": "This period {amount} more went out than came in. Worth a look below."
   },
   "investments": {
     "title": "Investments",
@@ -1230,7 +1232,8 @@
     "fundHint": "From the Finance Ministry's Gemel-Net and Pensia-Net. Fees are the fund's average; if you have a personal discount, update them.",
     "deletedName": "{name} deleted",
     "undo": "Undo",
-    "marketsHint": "Indices, currencies and commodities · open when needed"
+    "marketsHint": "Indices, currencies and commodities · open when needed",
+    "answer": "Your net worth is {netWorth}, of which {liquid} is available for early retirement."
   },
   "markets": {
     "title": "Markets",
@@ -1443,7 +1446,7 @@
   },
   "cashAhead": {
     "title": "Free to spend",
-    "connect": "Connect a bank",
+    "connect": "Connect a bank account",
     "noBalance": "Connect a bank account to see how much is free until your next salary.",
     "until": "until {date} ({days} days)",
     "perDay": "{amount} a day",
@@ -1539,7 +1542,7 @@
     "hint": "Connect and sync an account to see your transactions and summaries here.",
     "periodTitle": "No transactions in this period yet",
     "periodHint": "Choose another period above or sync your account in bank settings.",
-    "connect": "Open bank accounts",
+    "connect": "Connect a bank account",
     "retry": "Try again"
   },
   "household": {

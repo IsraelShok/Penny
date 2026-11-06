@@ -99,6 +99,9 @@ function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => voi
 
   return (
     <>
+      <p className="text-[1.375rem] leading-snug font-semibold text-balance">
+        {t("answer", { netWorth: shekels(totals.netWorth, locale), liquid: shekels(totals.liquidNetWorth, locale) })}
+      </p>
       <div className="grid gap-4 md:grid-cols-3">
         <CardShell wallet label={t("netWorth")} className="md:col-span-2">
           <p className="figure text-[3.5rem] leading-none">{shekels(totals.netWorth, locale)}</p>
