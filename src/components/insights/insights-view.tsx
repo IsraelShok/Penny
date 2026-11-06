@@ -8,13 +8,14 @@ import { getInsights, listIntegrations, type InsightsPayload } from "@/lib/api";
 import { shekels } from "@/lib/money";
 import { BalanceForecastCard } from "./balance-forecast-card";
 import { RecurringCalendar } from "./recurring-calendar";
-import { TagReport } from "./tag-report";
 import { OverdraftCard } from "./overdraft-card";
+import { More } from "@/components/overview/more";
 
 const PER_MONTH = { weekly: 52 / 12, monthly: 1, yearly: 1 / 12 } as const;
 
 
-export function InsightsView() {
+/** One tab of the insights: what's coming ("ahead") or what repeats ("recurring"). */
+export function InsightsView({ part }: { part: "ahead" | "recurring" }) {
   const t = useTranslations("insights");
   const locale = useLocale();
   const money = (n: number) => shekels(Math.round(n), locale);
@@ -25,14 +26,17 @@ export function InsightsView() {
   if (!data || banks.isPending) return <DataState loading />;
   if (!banks.data?.some((bank) => bank.lastSyncAt) && data.forecast.length === 0 && data.series.length === 0 && data.installments.plans.length === 0) return <DataState />;
 
+  if (part === "recurring") return (
+    <div className="grid gap-6">
+      <Subscriptions data={data} money={money} />
+      {data.installments.plans.length > 0 && <OpenInstallments data={data.installments} locale={locale} />}
+    </div>
+  );
+
   return (
     <div className="grid gap-6">
       <BalanceForecastCard />
-      <OverdraftCard
-        subscriptionsMonthly={data.series.filter((s) => s.status !== "candidate").reduce((sum, s) => sum + s.expectedAmount * PER_MONTH[s.cadence], 0)}
-      />
       <RecurringCalendar data={data} today={new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date())} />
-      <TagReport />
       <Card>
         <CardHeader>
           <CardTitle>{t("forecast")}</CardTitle>
@@ -55,38 +59,11 @@ export function InsightsView() {
         </CardContent>
       </Card>
 
-      {data.installments.plans.length > 0 && <OpenInstallments data={data.installments} locale={locale} />}
+      <OverdraftCard
+        subscriptionsMonthly={data.series.filter((s) => s.status !== "candidate").reduce((sum, s) => sum + s.expectedAmount * PER_MONTH[s.cadence], 0)}
+      />
 
-      <Card id="subscriptions" className="scroll-mt-20">
-        <CardHeader>
-          <CardTitle>{t("subscriptions")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {data.series.length === 0 ? (
-            <p className="text-muted-foreground">{t("noSubscriptions")}</p>
-          ) : (
-            <ul className="grid gap-3">
-              {data.series.map((s) => (
-                <li key={`${s.merchant}|${s.currency}`} className="flex flex-wrap items-baseline justify-between gap-x-4">
-                  <span className="font-medium">
-                    {s.merchant}
-                    {s.status === "candidate" ? <span className="ms-2 text-sm text-muted-foreground">({t("maybe")})</span> : null}
-                  </span>
-                  <span className="tabular-nums">
-                    {money(s.expectedAmount)} · {t(s.cadence)}
-                  </span>
-                  {s.priceChange ? (
-                    <span className="w-full text-sm text-[var(--status-heads-up)]">
-                      {t("priceChanged", { from: money(s.priceChange.from), to: money(s.priceChange.to) })}
-                    </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
+      <More>
       <Card>
         <CardHeader>
           <CardTitle>{t("anomalies")}</CardTitle>
@@ -103,6 +80,7 @@ export function InsightsView() {
           )}
         </CardContent>
       </Card>
+      </More>
     </div>
   );
 }
@@ -147,6 +125,41 @@ function OpenInstallments({ data, locale }: { data: InsightsPayload["installment
             </li>
           ))}
         </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Subscriptions({ data, money }: { data: InsightsPayload; money: (n: number) => string }) {
+  const t = useTranslations("insights");
+  return (
+    <Card id="subscriptions" className="scroll-mt-20">
+      <CardHeader>
+        <CardTitle>{t("subscriptions")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {data.series.length === 0 ? (
+          <p className="text-muted-foreground">{t("noSubscriptions")}</p>
+        ) : (
+          <ul className="grid gap-3">
+            {data.series.map((s) => (
+              <li key={`${s.merchant}|${s.currency}`} className="flex flex-wrap items-baseline justify-between gap-x-4">
+                <span className="font-medium">
+                  {s.merchant}
+                  {s.status === "candidate" ? <span className="ms-2 text-sm text-muted-foreground">({t("maybe")})</span> : null}
+                </span>
+                <span className="tabular-nums">
+                  {money(s.expectedAmount)} · {t(s.cadence)}
+                </span>
+                {s.priceChange ? (
+                  <span className="w-full text-sm text-[var(--status-heads-up)]">
+                    {t("priceChanged", { from: money(s.priceChange.from), to: money(s.priceChange.to) })}
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );

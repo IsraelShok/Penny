@@ -50,10 +50,11 @@
     "overview": "Overview",
     "investments": "Investments",
     "markets": "Markets",
-    "fi": "Until when?",
+    "fi": "Future",
     "skipToContent": "Skip to content",
-    "dailyGroup": "Day to day",
-    "planningGroup": "Looking ahead"
+    "dailyGroup": "Every day",
+    "planningGroup": "The big picture",
+    "more": "More"
   },
   "home": {
     "pageTitle": "Home",
@@ -1076,7 +1077,7 @@
   },
   "overview": {
     "title": "Overview",
-    "subtitle": "Income, spending and savings by period",
+    "subtitle": "Your money now, what is coming, and what repeats",
     "period_month": "Month",
     "period_quarter": "Quarter",
     "period_half": "Half year",
@@ -1125,7 +1126,13 @@
     "reportTitle": "Period report",
     "reportGenerated": "Generated {date}",
     "answerSaved": "This period you kept {net}, a {rate}% savings rate.",
-    "answerShort": "This period {amount} more went out than came in. Worth a look below."
+    "answerShort": "This period {amount} more went out than came in. Worth a look below.",
+    "more": "More",
+    "tabsLabel": "What to show",
+    "tab_period": "The period",
+    "tab_ahead": "Coming up",
+    "tab_recurring": "Recurring charges",
+    "tab_tags": "Tags"
   },
   "investments": {
     "title": "Investments",
@@ -1269,8 +1276,8 @@
     }
   },
   "fi": {
-    "title": "Until when?",
-    "subtitle": "The path to financial independence",
+    "title": "Future",
+    "subtitle": "Financial independence, safety and calculators",
     "loadFailed": "Calculation did not load. Try again.",
     "retry": "Try again",
     "heroLabel": "Time to financial independence",
@@ -1316,7 +1323,14 @@
     "car_annualInsurance": "Yearly insurance",
     "car_annualMaintenance": "Yearly servicing",
     "gentleHero": "Nothing needs deciding now. It's all here when it suits you.",
-    "gentleMore": "More"
+    "gentleMore": "More",
+    "tabsLabel": "What to show",
+    "tab_fi": "Independence",
+    "tab_safety": "Safety net",
+    "tab_tools": "Calculators",
+    "more": "More",
+    "planSettings": "Plan settings",
+    "toolsSimple": "Calculators are hidden in simple mode. You can bring them back in settings."
   },
   "plan": {
     "saved": "Saved",
@@ -1456,7 +1470,8 @@
     "price_gentle": "The price of {name} changed from {from} to {to}.",
     "fxMarkup_gentle": "Foreign-currency purchases cost about {amount} extra this year. You can come back to this later.",
     "taxRefundEmployers_gentle": "You may be owed a tax refund for {year}. You can check later; no rush.",
-    "taxRefundGap_gentle": "You may be owed a tax refund for {year}. You can check later; no rush."
+    "taxRefundGap_gentle": "You may be owed a tax refund for {year}. You can check later; no rush.",
+    "showLess": "Show less"
   },
   "cashAhead": {
     "title": "Free to spend",
@@ -2406,5 +2421,28 @@
     "stepSubscriptionsNone": "Go over your subscriptions and pause what you use less.",
     "seeSubscriptions": "See subscriptions",
     "stepBank": "You can also ask your bank for an arrangement or a lower-interest loan to clear the overdraft. It's a normal request, and worth asking."
+  },
+  "moreHub": {
+    "title": "More",
+    "subtitle": "Everything you don't need every day, in one place",
+    "group_rituals": "Small habits",
+    "group_explore": "Explore",
+    "group_documents": "Documents and files",
+    "checkin_title": "Weekly check-in",
+    "checkin_hint": "5 minutes, three steps, then you're done for the week",
+    "recap_title": "Monthly recap",
+    "recap_hint": "The month at a glance, wins first",
+    "wellbeing_title": "Wellbeing check",
+    "wellbeing_hint": "How money feels, once a quarter",
+    "ask_title": "Ask your money",
+    "ask_hint": "\"How much did I spend on food last month?\"",
+    "journey_title": "Your journey",
+    "journey_hint": "Life events and milestones over time",
+    "life_title": "Life stages",
+    "life_hint": "What to check at each stage, with official links",
+    "legacy_title": "Family document",
+    "legacy_hint": "Where everything is, if it's ever needed",
+    "import_title": "Import files",
+    "import_hint": "Bank and card statements, without connecting a bank"
   }
 }

@@ -54,6 +54,8 @@ export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; e
   });
 
   const items = query.data?.suggestions ?? [];
+  const [showAll, setShowAll] = useState(false);
+  const shown = showAll ? items.length : limit;
   if (items.length === 0) return <>{empty}</>;
 
   function onAccept(s: Suggestion) {
@@ -82,7 +84,7 @@ export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; e
   return (
     <CardShell label={t("title")} action={<NotifyToggle />} className="mb-6 h-auto scroll-mt-20 md:mb-8" id="suggestions">
       <ul className="divide-y divide-border">
-        {items.slice(0, limit).map((s) => {
+        {items.slice(0, shown).map((s) => {
           const Icon = ICONS[s.type];
           return (
             <li key={s.key} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
@@ -104,7 +106,11 @@ export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; e
           );
         })}
       </ul>
-      {items.length > limit && <p className="mt-3 text-caption text-muted-foreground">{t("more", { count: items.length - limit })}</p>}
+      {items.length > limit && (
+        <button type="button" onClick={() => setShowAll(!showAll)} aria-expanded={showAll} className="mt-3 rounded-full px-3 py-1.5 text-footnote font-medium text-primary hover:bg-accent">
+          {showAll ? t("showLess") : t("more", { count: items.length - limit })}
+        </button>
+      )}
       {dialog && (
         <AssetDialog
           asset="new"

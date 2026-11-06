@@ -50,10 +50,11 @@
     "overview": "תמונת מצב",
     "investments": "השקעות",
     "markets": "שווקים",
-    "fi": "עד מתי?",
+    "fi": "עתיד",
     "skipToContent": "דילוג לתוכן",
-    "dailyGroup": "ביום־יום",
-    "planningGroup": "מבט קדימה"
+    "dailyGroup": "כל יום",
+    "planningGroup": "התמונה הרחבה",
+    "more": "עוד"
   },
   "home": {
     "pageTitle": "בית",
@@ -1076,7 +1077,7 @@
   },
   "overview": {
     "title": "תמונת מצב",
-    "subtitle": "הכנסות, הוצאות וחיסכון לפי תקופה",
+    "subtitle": "הכסף שלכם עכשיו, מה צפוי ומה חוזר כל חודש",
     "period_month": "חודש",
     "period_quarter": "רבעון",
     "period_half": "חצי שנה",
@@ -1125,7 +1126,13 @@
     "reportTitle": "דוח תקופתי",
     "reportGenerated": "הופק ב-{date}",
     "answerSaved": "בתקופה הזאת נשארו לך {net}, שיעור חיסכון של {rate}%.",
-    "answerShort": "בתקופה הזאת יצאו {amount} יותר ממה שנכנס. כדאי לבדוק למטה איפה."
+    "answerShort": "בתקופה הזאת יצאו {amount} יותר ממה שנכנס. כדאי לבדוק למטה איפה.",
+    "more": "עוד",
+    "tabsLabel": "מה להציג",
+    "tab_period": "התקופה",
+    "tab_ahead": "מה צפוי",
+    "tab_recurring": "חיובים קבועים",
+    "tab_tags": "תגיות"
   },
   "investments": {
     "title": "השקעות",
@@ -1269,8 +1276,8 @@
     }
   },
   "fi": {
-    "title": "עד מתי?",
-    "subtitle": "הדרך לעצמאות כלכלית",
+    "title": "עתיד",
+    "subtitle": "עצמאות כלכלית, ביטחון ומחשבונים",
     "loadFailed": "החישוב לא נטען. נסו שוב.",
     "retry": "ניסיון נוסף",
     "heroLabel": "זמן לעצמאות כלכלית",
@@ -1316,7 +1323,14 @@
     "car_annualInsurance": "ביטוח בשנה",
     "car_annualMaintenance": "טיפולים בשנה",
     "gentleHero": "אין צורך להחליט כלום עכשיו. הכול כאן כשיתאים לך.",
-    "gentleMore": "עוד"
+    "gentleMore": "עוד",
+    "tabsLabel": "מה להציג",
+    "tab_fi": "עצמאות כלכלית",
+    "tab_safety": "רשת ביטחון",
+    "tab_tools": "מחשבונים",
+    "more": "עוד",
+    "planSettings": "הגדרות תכנון",
+    "toolsSimple": "המחשבונים מוסתרים במצב פשוט. אפשר להחזיר אותם בהגדרות."
   },
   "plan": {
     "saved": "נשמר",
@@ -1456,7 +1470,8 @@
     "price_gentle": "המחיר של {name} השתנה מ-{from} ל-{to}.",
     "fxMarkup_gentle": "ברכישות במט\"ח נוספו בשנה בערך {amount}. אפשר לחזור לזה בהמשך.",
     "taxRefundEmployers_gentle": "ייתכן שמגיע החזר מס על {year}. אפשר לבדוק בהמשך, אין דחיפות.",
-    "taxRefundGap_gentle": "ייתכן שמגיע החזר מס על {year}. אפשר לבדוק בהמשך, אין דחיפות."
+    "taxRefundGap_gentle": "ייתכן שמגיע החזר מס על {year}. אפשר לבדוק בהמשך, אין דחיפות.",
+    "showLess": "להציג פחות"
   },
   "cashAhead": {
     "title": "פנוי להוצאה",
@@ -2406,5 +2421,28 @@
     "stepSubscriptionsNone": "לעבור על המנויים ולהשהות את מה שפחות בשימוש.",
     "seeSubscriptions": "למנויים",
     "stepBank": "אפשר גם לבקש מהבנק הסדר או הלוואה בריבית נמוכה יותר כדי לסגור את המינוס. זו בקשה רגילה, ושווה לשאול."
+  },
+  "moreHub": {
+    "title": "עוד",
+    "subtitle": "כל מה שלא צריך כל יום, במקום אחד",
+    "group_rituals": "הרגלים קטנים",
+    "group_explore": "לגלות",
+    "group_documents": "מסמכים וקבצים",
+    "checkin_title": "בדיקה שבועית",
+    "checkin_hint": "5 דקות, שלושה צעדים, ואז סיימת לשבוע",
+    "recap_title": "סיכום חודשי",
+    "recap_hint": "החודש במבט אחד, עם מה שהלך טוב",
+    "wellbeing_title": "בדיקת רווחה",
+    "wellbeing_hint": "איך מרגישים עם הכסף, פעם ברבעון",
+    "ask_title": "לשאול את הכסף",
+    "ask_hint": "\"כמה הוצאתי על אוכל בחודש שעבר?\"",
+    "journey_title": "המסע שלך",
+    "journey_hint": "אירועי חיים ואבני דרך לאורך הזמן",
+    "life_title": "שלבי חיים",
+    "life_hint": "מה כדאי לבדוק בכל שלב, עם קישורים רשמיים",
+    "legacy_title": "מסמך למשפחה",
+    "legacy_hint": "איפה הכול נמצא, אם יום אחד יצטרכו",
+    "import_title": "ייבוא קבצים",
+    "import_hint": "דפי חשבון וכרטיסי אשראי, בלי לחבר בנק"
   }
 }

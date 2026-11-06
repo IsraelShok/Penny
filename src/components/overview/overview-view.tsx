@@ -10,6 +10,7 @@ import { getOverview, listIntegrations } from "@/lib/api";
 import { ICON_MAP } from "@/components/dashboard/category-card";
 import { CardShell } from "@/components/home/card-shell";
 import { ResilienceCard } from "@/components/overview/resilience-card";
+import { More } from "@/components/overview/more";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataState } from "@/components/ui/data-state";
 import { Button } from "@/components/ui/button";
@@ -157,30 +158,29 @@ function Body({ data }: { data: OverviewPayload }) {
         <>
           {data.monthly.length > 1 && <FlowChart monthly={data.monthly} />}
 
-          <div className={cn("grid gap-4", !simple && "md:grid-cols-2")}>
-            <SplitCard
-              title={t("ruleTitle")}
-              hint={t("ruleHint")}
-              parts={(["need", "want", "saving"] as const).map((k) => ({ key: k, label: t(k), value: data.byNeed[k], color: NEED_COLORS[k] }))}
-              uncategorized={data.uncategorized}
-            />
-            {!simple && (
+          <SplitCard
+            title={t("ruleTitle")}
+            hint={t("ruleHint")}
+            parts={(["need", "want", "saving"] as const).map((k) => ({ key: k, label: t(k), value: data.byNeed[k], color: NEED_COLORS[k] }))}
+            uncategorized={data.uncategorized}
+          />
+
+          <CategoryList data={data} />
+          {!simple && (
+            <More>
               <SplitCard
                 title={t("costTitle")}
                 parts={(["fixed", "variable", "unplanned"] as const).map((k) => ({ key: k, label: t(k), value: data.byCost[k], color: COST_COLORS[k] }))}
                 uncategorized={data.uncategorized}
               />
-            )}
-          </div>
-
-          <CategoryList data={data} />
-          {!simple && data.period.months.length > 1 && <YearTable data={data} />}
-
-          <p hidden={simple} className="px-1 text-footnote text-muted-foreground" title={t("lifeCostHint")}>
-            <span className="font-medium text-foreground">{t("lifeCost", { amount: fmt(avgMonthly * 300, locale) })}</span>
-            {" · "}
-            {t("lifeCostHint")}
-          </p>
+              {data.period.months.length > 1 && <YearTable data={data} />}
+              <p className="px-1 text-footnote text-muted-foreground" title={t("lifeCostHint")}>
+                <span className="font-medium text-foreground">{t("lifeCost", { amount: fmt(avgMonthly * 300, locale) })}</span>
+                {" · "}
+                {t("lifeCostHint")}
+              </p>
+            </More>
+          )}
         </>
       )}
     </>

@@ -11,7 +11,7 @@ import {
   Flag,
   Wallet,
   ArrowLeftRight,
-  Lightbulb,
+  LayoutGrid,
   Settings as SettingsIcon,
   PanelLeftIcon,
 } from "lucide-react";
@@ -49,7 +49,7 @@ export const NAV: NavDef[] = [
     href: "/overview",
     labelKey: "overview",
     Icon: PieChart,
-    match: (p: string) => p.startsWith("/overview"),
+    match: (p: string) => p.startsWith("/overview") || p.startsWith("/insights"),
   },
   {
     href: "/investments",
@@ -76,10 +76,11 @@ export const NAV: NavDef[] = [
     match: (p: string) => p.startsWith("/transactions"),
   },
   {
-    href: "/insights",
-    labelKey: "insights",
-    Icon: Lightbulb,
-    match: (p: string) => p.startsWith("/insights"),
+    href: "/more",
+    labelKey: "more",
+    Icon: LayoutGrid,
+    // The hub plus the tools it opens, so the menu stays short but you always see where you are.
+    match: (p: string) => ["/more", "/recap", "/ask", "/journey", "/life", "/wellbeing", "/checkin"].some((r) => p.startsWith(r)),
   },
 ];
 
@@ -119,7 +120,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent className="pt-3" onWheel={onWheel}>
-        {[{ label: "dailyGroup", items: [NAV[0], NAV[5], NAV[4], NAV[6]] }, { label: "planningGroup", items: [NAV[1], NAV[2], NAV[3]] }].map((group) => (
+        {[{ label: "dailyGroup", items: [NAV[0], NAV[5], NAV[4]] }, { label: "planningGroup", items: [NAV[1], NAV[2], NAV[3], NAV[6]] }].map((group) => (
         <SidebarGroup key={group.label}>
           <SidebarGroupLabel>{t(group.label)}</SidebarGroupLabel>
           <SidebarGroupContent>

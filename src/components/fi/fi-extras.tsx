@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Check, Plus, Trash2 } from "lucide-react";
+import { Check, Plus, Settings2, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { getPlan, savePlan, savePlanItem } from "@/lib/api";
 import { goalMonthly, type FinancialPlan } from "@/lib/plan";
 import { fmt, shekels } from "@/lib/money";
@@ -22,21 +23,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { POLICY_KINDS, type FiPayload, type Goal, type InsurancePolicy } from "@/lib/types";
 
-/** Everything below the FI calculator: plan settings, safety net, goals, tax and insurance. */
-export function FiExtras({ data }: { data: FiPayload }) {
+/** Plan-backed cards: goals on the FI tab, the safety net on the safety tab. */
+export function FiExtras({ data, tab }: { data: FiPayload; tab: "fi" | "safety" }) {
   const query = useQuery({ queryKey: ["plan"], queryFn: getPlan });
   if (!query.data) return null;
   const { plan, goals, policies } = query.data;
+  if (tab === "fi") return <Goals goals={goals} />;
   return (
     <>
       <EmergencyFund data={data} months={plan.emergencyMonths} />
       <Forecast data={data} />
-      <PlanSettings plan={plan} />
-      <Goals goals={goals} />
+      <Insurance policies={policies} monthlyExpenses={data.monthlyExpenses} />
       <Tax data={data} plan={plan} />
       <TakeHome />
-      <Insurance policies={policies} monthlyExpenses={data.monthlyExpenses} />
     </>
+  );
+}
+
+/** Plan settings sit behind a small button: reachable, but not on screen all the time. */
+export function PlanSettingsButton() {
+  const t = useTranslations("fi");
+  const tp = useTranslations("plan");
+  const query = useQuery({ queryKey: ["plan"], queryFn: getPlan });
+  if (!query.data) return null;
+  return (
+    <Dialog>
+      <DialogTrigger render={<Button variant="outline" size="sm"><Settings2 className="size-3.5" aria-hidden />{t("planSettings")}</Button>} />
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle>{tp("settingsTitle")}</DialogTitle></DialogHeader>
+        <PlanSettings plan={query.data.plan} />
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -110,8 +127,7 @@ function PlanSettings({ plan }: { plan: FinancialPlan }) {
     { k: "monthStartDay", min: 1, max: 28 },
   ] as const;
   return (
-    <CardShell label={t("settingsTitle")}>
-      <form
+    <form
         className="grid grid-cols-2 gap-3"
         onSubmit={(e) => {
           e.preventDefault();
@@ -127,7 +143,6 @@ function PlanSettings({ plan }: { plan: FinancialPlan }) {
         <p className="col-span-2 text-caption text-pretty text-muted-foreground">{t("settingsHint")}</p>
         <IconButton label={t("save")} variant="default" type="submit" className="col-span-2 justify-self-start" disabled={save.isPending}><Check className="size-4" aria-hidden /></IconButton>
       </form>
-    </CardShell>
   );
 }
 

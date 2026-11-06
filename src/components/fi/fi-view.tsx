@@ -22,7 +22,39 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { FiPayload } from "@/lib/types";
-import { FiExtras } from "./fi-extras";
+import { FiExtras, PlanSettingsButton } from "./fi-extras";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
+const TABS = ["fi", "safety", "tools"] as const;
+type Tab = (typeof TABS)[number];
+const TAB_KEY = "fi-tab";
+
+/** The tab lives in ?tab=; with no param, the last one you used is remembered on this device. */
+function useTab(): [Tab, (t: Tab) => void] {
+  const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const fromUrl = params.get("tab");
+  const [stored, setStored] = useState<Tab>("fi");
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(TAB_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- read once after hydration
+      if (raw && (TABS as readonly string[]).includes(raw)) setStored(raw as Tab);
+    } catch {}
+  }, []);
+  const tab = fromUrl && (TABS as readonly string[]).includes(fromUrl) ? (fromUrl as Tab) : stored;
+  return [
+    tab,
+    (next) => {
+      setStored(next);
+      try {
+        localStorage.setItem(TAB_KEY, next);
+      } catch {}
+      router.replace(`${pathname}?tab=${next}`, { scroll: false });
+    },
+  ];
+}
 
 const RATES = [0.04, 0.035, 0.03];
 const fmt = (n: number, locale: string, digits = 0) =>
@@ -133,8 +165,9 @@ function Body({ data }: { data: FiPayload }) {
     </>
   );
 
-  return (
-    <div className="grid gap-4 lg:grid-cols-3">
+  const [tab, setTab] = useTab();
+  const fiTab = (
+    <>
       <CardShell wallet label={t("heroLabel")} className="lg:col-span-2">
         {gentle ? (
           <>
@@ -178,16 +211,38 @@ function Body({ data }: { data: FiPayload }) {
         </form>
       </CardShell>
 
-      {!simple && (
-        <>
-          <AggressiveSaving spend={spend} income={income} savings={savings} annualReturn={annualReturn} rate={plan.rate} />
-          <Inflation data={data.inflation} />
-          <CarCalculator rate={plan.rate} />
-        </>
-      )}
       <LifeEvents events={events} plainYears={plainYears} years={years} onSave={(e) => update({ events: e })} />
-      {!simple && <Calculators returnPct={annualReturn} />}
-      <FiExtras data={data} />
+      <FiExtras data={data} tab="fi" />
+      {!simple && (
+        <details className="group lg:col-span-3">
+          <summary className="min-h-11 w-fit cursor-pointer content-center text-footnote font-medium text-muted-foreground">{t("more")}</summary>
+          <div className="mt-2 grid gap-4 lg:grid-cols-2">
+            <AggressiveSaving spend={spend} income={income} savings={savings} annualReturn={annualReturn} rate={plan.rate} />
+            <Inflation data={data.inflation} />
+          </div>
+        </details>
+      )}
+    </>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Segmented<Tab> label={t("tabsLabel")} value={tab} onChange={setTab} options={TABS.map((k) => ({ value: k, label: t(`tab_${k}`) }))} />
+        <PlanSettingsButton />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {tab === "fi" && fiTab}
+        {tab === "safety" && <FiExtras data={data} tab="safety" />}
+        {tab === "tools" && (simple ? (
+          <CardShell className="lg:col-span-3"><p className="text-footnote text-muted-foreground">{t("toolsSimple")}</p></CardShell>
+        ) : (
+          <>
+            <Calculators returnPct={annualReturn} />
+            <CarCalculator rate={plan.rate} />
+          </>
+        ))}
+      </div>
     </div>
   );
 }
