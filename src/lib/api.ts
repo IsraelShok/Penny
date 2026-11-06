@@ -967,3 +967,15 @@ export function askQuestion(question: string) {
     body: JSON.stringify({ question }),
   });
 }
+
+export function getLifeProgress() {
+  return fetchJSON<Record<string, string[]>>("/api/life");
+}
+
+export function saveLifeProgress(progress: Record<string, string[]>) {
+  return fetchJSON<Record<string, string[]>>("/api/life", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ progress }),
+  });
+}

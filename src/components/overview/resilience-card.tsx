@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { getResilience } from "@/lib/api";
 import { usePlan } from "@/hooks/use-plan";
+import { useGentle } from "@/hooks/use-gentle";
 import { CardShell } from "@/components/home/card-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -12,7 +13,8 @@ const BAND_COLOR = { building: "var(--chart-4)", steady: "var(--chart-1)", stron
 /** Resilience score and Age of Money: one compact card, band in words so color is never the only signal. */
 export function ResilienceCard() {
   const t = useTranslations("resilience");
-  const simple = usePlan().plan.simpleMode;
+  const gentle = useGentle();
+  const simple = usePlan().plan.simpleMode || gentle;
   const { data, isError } = useQuery({ queryKey: ["resilience"], queryFn: getResilience });
   if (isError) return null;
   if (!data) return <Skeleton className="h-28 rounded-2xl" />;

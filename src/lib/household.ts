@@ -24,12 +24,14 @@ export interface Household {
   moneyStyle: MoneyStyle | null;
   gentleMode: boolean;
   gentleSuggestionDismissed: boolean;
+  /** The Home prompt for the 3-minute welcome was dismissed or completed. */
+  welcomeDismissed: boolean;
   events: LifeEvent[];
 }
 
 export const EMPTY_HOUSEHOLD: Household = {
   members: [], incomeShape: null, moneyStyle: null,
-  gentleMode: false, gentleSuggestionDismissed: false, events: [],
+  gentleMode: false, gentleSuggestionDismissed: false, welcomeDismissed: false, events: [],
 };
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -70,12 +72,17 @@ export function parseHousehold(raw: unknown): Household {
     moneyStyle: o.moneyStyle == null ? null : oneOf(MONEY_STYLES, o.moneyStyle),
     gentleMode: o.gentleMode === true,
     gentleSuggestionDismissed: o.gentleSuggestionDismissed === true,
+    welcomeDismissed: o.welcomeDismissed === true,
     events: list(o.events ?? [], (e) => ({ id: str(e.id, 40), type: oneOf(LIFE_EVENTS, e.type), date: date(e.date) })),
   };
 }
 
 export function shouldSuggestGentle(h: Household): boolean {
   return !h.gentleMode && !h.gentleSuggestionDismissed && h.events.some((e) => HARD_EVENTS.includes(e.type));
+}
+
+export function shouldShowWelcome(h: Household): boolean {
+  return !h.welcomeDismissed && h.members.length === 0 && h.incomeShape == null && h.moneyStyle == null;
 }
 
 export function newId(): string {

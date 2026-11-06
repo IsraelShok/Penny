@@ -8,6 +8,8 @@ import { AlertTriangle, ArrowLeftRight, BadgePercent, CalendarDays, Check, Copy,
 import { createRule, dismissSuggestion, getPlan, getSuggestions, savePlan, savePlanItem } from "@/lib/api";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { shekels } from "@/lib/money";
+import { gentleKey } from "@/lib/gentle";
+import { useGentle } from "@/hooks/use-gentle";
 import type { Suggestion } from "@/lib/suggestions";
 import type { AssetInput } from "@/lib/types";
 import { CardShell } from "./card-shell";
@@ -26,6 +28,8 @@ export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; e
   const t = useTranslations("suggestions");
   const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale();
+  const gentle = useGentle();
+  const g = (key: string) => gentleKey(key, gentle, t.has);
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["suggestions"], queryFn: getSuggestions });
   const plan = useQuery({ queryKey: ["plan"], queryFn: getPlan });
@@ -60,18 +64,18 @@ export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; e
 
   const text = (s: Suggestion) => {
     switch (s.type) {
-      case "policy": return t("policy", { name: s.name, amount: shekels(s.monthly, locale), kind: t(`kind_${s.policyKind}`) });
-      case "debt": return t("debt", { name: s.name, amount: shekels(s.monthly, locale) });
-      case "portfolio": return t("portfolio", { name: s.name, amount: shekels(s.monthly, locale) });
-      case "fees": return t("fees", { amount: shekels(s.yearly, locale), count: s.count });
-      case "interest": return t("interest", { amount: shekels(s.yearly, locale) });
-      case "fx": return t("fx", { amount: shekels(s.yearly, locale) });
-      case "duplicate": return t("duplicate", { name: s.name, amount: shekels(s.amount, locale), date: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(new Date(`${s.date}T12:00:00`)) });
-      case "price": return t("price", { name: s.name, from: shekels(s.from, locale), to: shekels(s.to, locale) });
-      case "payday": return t("payday", { day: s.day });
-      case "taxRefund": return t(s.reason === "twoEmployers" ? "taxRefundEmployers" : "taxRefundGap", { year: s.year, months: s.months });
-      case "rule": return t("rule", { name: s.merchant, category: translateCategoryName(s.categoryName, tCat), count: s.count });
-      case "fxMarkup": return t("fxMarkup", { amount: shekels(s.total, locale), pct: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(s.avgPct), count: s.count });
+      case "policy": return t(g("policy"), { name: s.name, amount: shekels(s.monthly, locale), kind: t(`kind_${s.policyKind}`) });
+      case "debt": return t(g("debt"), { name: s.name, amount: shekels(s.monthly, locale) });
+      case "portfolio": return t(g("portfolio"), { name: s.name, amount: shekels(s.monthly, locale) });
+      case "fees": return t(g("fees"), { amount: shekels(s.yearly, locale), count: s.count });
+      case "interest": return t(g("interest"), { amount: shekels(s.yearly, locale) });
+      case "fx": return t(g("fx"), { amount: shekels(s.yearly, locale) });
+      case "duplicate": return t(g("duplicate"), { name: s.name, amount: shekels(s.amount, locale), date: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(new Date(`${s.date}T12:00:00`)) });
+      case "price": return t(g("price"), { name: s.name, from: shekels(s.from, locale), to: shekels(s.to, locale) });
+      case "payday": return t(g("payday"), { day: s.day });
+      case "taxRefund": return t(g(s.reason === "twoEmployers" ? "taxRefundEmployers" : "taxRefundGap"), { year: s.year, months: s.months });
+      case "rule": return t(g("rule"), { name: s.merchant, category: translateCategoryName(s.categoryName, tCat), count: s.count });
+      case "fxMarkup": return t(g("fxMarkup"), { amount: shekels(s.total, locale), pct: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(s.avgPct), count: s.count });
     }
   };
 

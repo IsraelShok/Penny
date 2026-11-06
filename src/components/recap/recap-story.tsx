@@ -14,6 +14,7 @@ import { translateCategoryName } from "@/lib/i18n-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { saveCardAsPng } from "./card-image";
+import { useGentle } from "@/hooks/use-gentle";
 
 export interface StoryCard { title: string; text: string; figure?: string }
 
@@ -24,6 +25,7 @@ export function RecapStory() {
   const t = useTranslations("recap");
   const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale();
+  const gentle = useGentle();
   const router = useRouter();
   const params = useSearchParams();
   const yearParam = params.get("year");
@@ -47,20 +49,33 @@ export function RecapStory() {
     const keptLine = r.income === 0 ? "" : r.kept >= 0 ? t("kept", { amount: money(r.kept) }) : t("over", { amount: money(-r.kept) });
     const first = r.prevSpent === 0 || r.spent === r.prevSpent ? t("m1Plain", { month: name, spent: money(r.spent) })
       : t(r.spent < r.prevSpent ? "m1Less" : "m1More", { month: name, spent: money(r.spent), diff: money(Math.abs(r.spent - r.prevSpent)) });
+    const improved: StoryCard = { title: t("m5Title"), figure: r.improved ? money(r.improved.drop) : undefined, text: r.improved ? t("m5", { name: cat(r.improved.name), drop: money(r.improved.drop) }) : t("m5None") };
+    const quiet: StoryCard = { title: t("m4Title"), figure: String(r.noSpendDays), text: [
+      t("m4Days", { days: r.noSpendDays }),
+      r.longestStreak > 1 && t("m4Streak", { streak: r.longestStreak }),
+      r.underBudgetMonths != null && r.underBudgetMonths > 0 && t("m4Budget", { months: r.underBudgetMonths }),
+    ].filter(Boolean).join(" ") };
+    // Gentle: wins first, no month-to-month comparisons, no biggest expense, nothing to trim.
+    if (gentle) return [
+      ...(r.improved ? [improved] : []),
+      quiet,
+      { title: t("m1Title"), text: `${t("m1Plain", { month: name, spent: money(r.spent) })} ${r.income > 0 && r.kept > 0 ? t("kept", { amount: money(r.kept) }) : ""}`.trim() },
+      ...(r.top ? [{ title: t("m2Title"), text: t("m2New", { name: cat(r.top.name), spent: money(r.top.spent) }) }] : []),
+      { title: t("closeTitle"), text: t("m7_gentle") },
+    ];
     return [
-      { title: t("m1Title"), text: `${first} ${keptLine}`.trim(), figure: money(r.spent) },
+      // The outcome (money kept) leads when there is one.
+      r.income > 0 && r.kept > 0
+        ? { title: t("m1Title"), text: `${keptLine} ${first}`, figure: money(r.kept) }
+        : { title: t("m1Title"), text: `${first} ${keptLine}`.trim(), figure: money(r.spent) },
       { title: t("m2Title"), figure: r.top ? money(r.top.spent) : undefined, text: !r.top ? t("m2None")
         : r.top.prev === 0 ? t("m2New", { name: cat(r.top.name), spent: money(r.top.spent) })
         : t(r.top.spent >= r.top.prev ? "m2Up" : "m2Down", { name: cat(r.top.name), spent: money(r.top.spent), pct: pct(r.top.spent, r.top.prev) }) },
       { title: t("m3Title"), figure: r.biggest ? money(r.biggest.amount) : undefined, text: r.biggest
         ? t("m3", { description: r.biggest.description, amount: money(r.biggest.amount), date: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(new Date(`${r.biggest.date}T12:00:00`)) })
         : t("m2None") },
-      { title: t("m4Title"), figure: String(r.noSpendDays), text: [
-        t("m4Days", { days: r.noSpendDays }),
-        r.longestStreak > 1 && t("m4Streak", { streak: r.longestStreak }),
-        r.underBudgetMonths != null && r.underBudgetMonths > 0 && t("m4Budget", { months: r.underBudgetMonths }),
-      ].filter(Boolean).join(" ") },
-      { title: t("m5Title"), figure: r.improved ? money(r.improved.drop) : undefined, text: r.improved ? t("m5", { name: cat(r.improved.name), drop: money(r.improved.drop) }) : t("m5None") },
+      quiet,
+      improved,
       { title: t("m6Title"), figure: r.trim ? money(r.trim.yearly) : undefined, text: r.trim ? t("m6", { name: cat(r.trim.name), yearly: money(r.trim.yearly) }) : t("m6None") },
       { title: t("closeTitle"), text: t("m7") },
     ];

@@ -1314,7 +1314,9 @@
     "car_fuelPrice": "Fuel price per litre",
     "car_annualTest": "Yearly test",
     "car_annualInsurance": "Yearly insurance",
-    "car_annualMaintenance": "Yearly servicing"
+    "car_annualMaintenance": "Yearly servicing",
+    "gentleHero": "Nothing needs deciding now. It's all here when it suits you.",
+    "gentleMore": "More"
   },
   "plan": {
     "saved": "Saved",
@@ -1446,7 +1448,15 @@
     "notifyTitle": "Spent spotted something new",
     "notifyBody": "{count, plural, one {One new finding} other {# new findings}} on Home",
     "notifyEnable": "Get desktop notifications",
-    "notifyOn": "Desktop notifications are on"
+    "notifyOn": "Desktop notifications are on",
+    "fees_gentle": "Bank fees over the last year: {amount}. You can look at this later.",
+    "interest_gentle": "Overdraft interest over the last year: {amount}. Look at it when it suits you.",
+    "fx_gentle": "Conversion and foreign fees this year: {amount}. Not urgent.",
+    "duplicate_gentle": "The {name} charge ({amount}) may have been recorded twice on {date}. Check when convenient.",
+    "price_gentle": "The price of {name} changed from {from} to {to}.",
+    "fxMarkup_gentle": "Foreign-currency purchases cost about {amount} extra this year. You can come back to this later.",
+    "taxRefundEmployers_gentle": "You may be owed a tax refund for {year}. You can check later; no rush.",
+    "taxRefundGap_gentle": "You may be owed a tax refund for {year}. You can check later; no rush."
   },
   "cashAhead": {
     "title": "Free to spend",
@@ -1492,7 +1502,17 @@
     "calculation": "Latest bank balance: {bank}, minus expected card bills of {bills} before payday.",
     "estimateNote": "This estimate uses synced data. Other future expenses and salary not yet received are not included.",
     "reviewBills": "Review upcoming bills",
-    "reviewBillsHint": "See which bills are expected before payday"
+    "reviewBillsHint": "See which bills are expected before payday",
+    "fine_gentle": "You have {amount} until {date}. Things are okay for now.",
+    "short_gentle": "You're {amount} short until {date}. It can all wait; look at it when it suits you.",
+    "noBank_gentle": "Whenever it suits you, you can connect a bank account. No need now.",
+    "needsBalance_gentle": "The balance hasn't updated yet. That can wait.",
+    "nextLabel_gentle": "Everything can wait. When you have the energy, the next thing is",
+    "checkinHint_gentle": "A few minutes, at your pace",
+    "reviewHint_gentle": "Another time is fine too",
+    "suggestionHint_gentle": "No rush",
+    "gentleBanner": "Gentle mode is on. You can turn it off anytime",
+    "gentleSettings": "in Settings"
   },
   "checkin": {
     "title": "Weekly check-in",
@@ -1518,7 +1538,17 @@
     "aheadNoBank": "Connect a bank account to see what's ahead until payday.",
     "aheadFine": "Until {date}, {amount} is free, about {perDay} a day.",
     "aheadShort": "{amount} short until {date}. Consider rescheduling an expense or transferring from savings.",
-    "aheadBills": "That's after card bills of {amount}."
+    "aheadBills": "That's after card bills of {amount}.",
+    "doneTitle_gentle": "Done. That's enough for today.",
+    "doneOutcome": "{amount} stays free until {date}.",
+    "weekTitle_gentle": "This week",
+    "weekMore_gentle": "This week, {spent} went out.",
+    "weekLess_gentle": "This week, {spent} went out.",
+    "weekUsual_gentle": "This week, {spent} went out.",
+    "findingHint_gentle": "If you have the energy, take a look. Skipping is fine too.",
+    "noFindings_gentle": "Nothing is waiting here.",
+    "aheadShort_gentle": "You're {amount} short until {date}. Nothing needs deciding now.",
+    "aheadNoBank_gentle": "You can connect a bank account later, when it suits you."
   },
   "palette": {
     "title": "Search and actions",
@@ -1872,7 +1902,8 @@
     "y4": "{month} kept the most: {kept}.",
     "y5Title": "Quiet days",
     "y5": "{days, plural, =0 {No no-spend days this year.} one {One day this year had no spending.} other {# days this year had no spending.}}",
-    "y6": "A year of keeping track. That's a lot."
+    "y6": "A year of keeping track. That's a lot.",
+    "m7_gentle": "Thanks for looking. Nothing to do. It's all here when it suits you."
   },
   "tags": {
     "add": "Add tag",
@@ -2116,5 +2147,97 @@
       "bimonthly": "Bimonthly",
       "quarterly": "Quarterly"
     }
+  },
+  "journey": {
+    "title": "Your journey",
+    "homeLink": "Your journey",
+    "settingsLink": "See your journey",
+    "loading": "Loading…",
+    "now": "Now",
+    "intro": "Your home's big moments, and the good things your money did along the way.",
+    "introNamed": "{name}, these are your home's big moments, and the good things your money did along the way.",
+    "empty": "Your journey is still being written. Add life events, and money milestones will appear here on their own.",
+    "addEvent": "Add a life event",
+    "netWorthTitle": "Net worth passed {amount}",
+    "netWorthBody": "Every shekel you set aside added up to this.",
+    "debtPaidTitle": "{name} fully paid off",
+    "debtPaidBody": "One less debt. A real achievement.",
+    "goalTitle": "Goal reached: {name}",
+    "goalBody": "You saved the whole amount. Well done.",
+    "savingsRateTitle": "First month saving {rate}%",
+    "savingsRateBody": "In {month}, a fifth of income or more stayed aside.",
+    "emergencyTitle": "A {months}-month emergency fund",
+    "emergencyBody": "You have a cushion for {months} months of spending.",
+    "eventNote": {
+      "birth": "Where it all began.",
+      "firstJob": "A first paycheck, a first step.",
+      "armyRelease": "A new chapter, discharge grant in hand.",
+      "movedIn": "A shared home, shared money.",
+      "wedding": "A day of big joy.",
+      "homePurchase": "Keys to a home of your own.",
+      "newChild": "Someone new joined the home.",
+      "jobLoss": "A hard stretch, and you got through it step by step.",
+      "startedBusiness": "Your business got going.",
+      "divorce": "A fresh start, at your own pace.",
+      "illness": "A hard time. Health comes first.",
+      "caringParent": "Caring for someone who cared for you.",
+      "retirement": "Time to breathe, after years of work.",
+      "loss": "A memory that stays with you."
+    },
+    "teaser": {
+      "taxTitle": "Tax and national insurance set-aside",
+      "taxBody": "How much to put aside from each payment",
+      "childTitle": "Spending on the kids this month",
+      "childLine": "{name}: {amount}",
+      "settleTitle": "Settle up",
+      "settleBody": "{from} pays {to} {amount}",
+      "freeTitle": "Free to spend",
+      "freeBody": "This month's budget at a glance"
+    }
+  },
+  "welcome": {
+    "title": "Welcome",
+    "subtitle": "Three minutes, three questions",
+    "loading": "Loading…",
+    "stepOf": "Step {step} of {total}",
+    "whoTitle": "Who lives with you?",
+    "whoHint": "Pick who shares your home. Names are optional.",
+    "namePlaceholder": "Name (optional)",
+    "nameFor": "Name for {role}",
+    "birthYear": "Birth year",
+    "birthYearFor": "Birth year of {name}",
+    "incomeTitle": "How does money come in?",
+    "incomeHint": "Pick the closest. You can change it any time.",
+    "styleTitle": "How do you run your money?",
+    "styleHint": "There's no one right way.",
+    "styleExplain": {
+      "joint": "One pot, all spending together.",
+      "mixed": "Some shared, some each your own.",
+      "separate": "Each keeps their own, and you split home costs."
+    },
+    "next": "Continue",
+    "finish": "Done",
+    "skip": "Skip",
+    "skipHint": "You can skip and finish later",
+    "prompt": "Three minutes to fit the app to your home",
+    "promptHint": "Who lives here, how money comes in and how you run it",
+    "dismiss": "Not now"
+  },
+  "life": {
+    "title": "Life stages",
+    "subtitle": "Short checklists for each stage, at your pace",
+    "nowTitle": "Relevant to you now",
+    "nowEmpty": "Add household members and events in your profile and we'll show the stages that fit.",
+    "allTitle": "All stages",
+    "progress": "{done} of {total} done",
+    "linksTitle": "Read more",
+    "newTab": "(opens in a new tab)",
+    "source": "Source: {source} · last checked {date}",
+    "sourceGov": "government site",
+    "sourceKolzchut": "Kol-Zchut",
+    "linksNote": "Exact amounts and rules are on the sites themselves.",
+    "footer": "No need to do it all now. Every tick is a step forward.",
+    "footerGentle": "Take your time. You can come back whenever you like, and every small step counts.",
+    "saveFailed": "Couldn't save. Please try again."
   }
 }

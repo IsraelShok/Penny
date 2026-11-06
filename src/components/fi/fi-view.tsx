@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { getFi } from "@/lib/api";
+import { useGentle } from "@/hooks/use-gentle";
 import { carCost, fiNumber, fiOdds, yearsToTarget, yearsToTargetWithEvents, type CarInputs } from "@/lib/fi";
 import { brokerOutcome, fundSwitch, gemelVsBroker } from "@/lib/tools";
 import type { LifeEvent } from "@/lib/plan";
@@ -83,6 +84,7 @@ interface Plan {
 function Body({ data }: { data: FiPayload }) {
   const { plan: saved, update } = usePlan();
   const simple = saved.simpleMode;
+  const gentle = useGentle();
   const t = useTranslations("fi");
   const tt = useTranslations("tools");
   const thisYear = new Date().getFullYear();
@@ -108,9 +110,9 @@ function Body({ data }: { data: FiPayload }) {
   const progress = target > 0 && Number.isFinite(target) ? Math.min(1, Math.max(0, savings / target)) : 0;
   const savingsRate = income > 0 ? monthlySaving / income : null;
 
-  return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <CardShell wallet label={t("heroLabel")} className="lg:col-span-2">
+  // Gentle mode keeps the years and odds one tap away instead of as the headline.
+  const heroNumbers = (
+    <>
         <p className="figure text-[3.5rem] leading-none">
           {years == null ? t("never") : years === 0 ? t("already") : t("years", { years: fmt(years, locale, 1) })}
         </p>
@@ -127,6 +129,21 @@ function Body({ data }: { data: FiPayload }) {
             )}
           </p>
         )}
+    </>
+  );
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-3">
+      <CardShell wallet label={t("heroLabel")} className="lg:col-span-2">
+        {gentle ? (
+          <>
+            <p className="text-2xl font-semibold leading-relaxed text-pretty">{t("gentleHero")}</p>
+            <details className="mt-3 text-footnote">
+              <summary className="min-h-11 w-fit cursor-pointer content-center font-medium text-muted-foreground">{t("gentleMore")}</summary>
+              {heroNumbers}
+            </details>
+          </>
+        ) : heroNumbers}
         <div className="mt-8">
           <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={t("progressLabel")}>
             <div className="h-full rounded-full bg-foreground" style={{ width: `${progress * 100}%` }} />

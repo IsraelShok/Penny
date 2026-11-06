@@ -9,6 +9,8 @@ import { getCashAhead, getHome, getTransactionsSummary } from "@/lib/api";
 import { completeCheckin } from "@/lib/plan";
 import { shekels } from "@/lib/money";
 import { usePlan } from "@/hooks/use-plan";
+import { useGentle } from "@/hooks/use-gentle";
+import { gentleKey } from "@/lib/gentle";
 import { Button } from "@/components/ui/button";
 import { SuggestionsCard } from "@/components/home/suggestions-card";
 
@@ -20,23 +22,21 @@ const daysAgo = (n: number) => {
   return iso(d);
 };
 
-/** The weekly ritual: three short steps with a visible end, then a streak. */
+/** Picks the "_gentle" copy variant when gentle mode is on. */
+function useCopy() {
+  const t = useTranslations("checkin");
+  const gentle = useGentle();
+  return { t, gentle, g: (key: string) => gentleKey(key, gentle, t.has) };
+}
+
+/** The weekly ritual: three short steps with a visible end, then the outcome (the streak stays a quiet footnote). */
 export function Checkin() {
   const t = useTranslations("checkin");
   const { plan, update, saving } = usePlan();
   const [step, setStep] = useState(0);
   const [done, setDone] = useState<number | null>(null);
 
-  if (done != null) {
-    return (
-      <div className="rounded-[1.375rem] bg-card p-8 text-center" role="status">
-        <PartyPopper className="mx-auto size-10 text-status-on-track" aria-hidden />
-        <p className="mt-4 text-title font-semibold">{t("doneTitle")}</p>
-        <p className="mt-1 text-footnote text-muted-foreground">{t("doneStreak", { weeks: done })}</p>
-        <Button className="mt-6" nativeButton={false} render={<Link href="/">{t("backHome")}</Link>} />
-      </div>
-    );
-  }
+  if (done != null) return <Done streak={done} />;
 
   const finish = async () => {
     const checkin = completeCheckin(plan.checkin, new Date());
@@ -84,6 +84,26 @@ export function Checkin() {
   );
 }
 
+/** Celebrates what the money did, not the habit. Gentle mode: no icon, no numbers, no streak. */
+function Done({ streak }: { streak: number }) {
+  const { t, gentle, g } = useCopy();
+  const locale = useLocale();
+  const cash = useQuery({ queryKey: ["cash-ahead"], queryFn: getCashAhead }).data;
+  const free = cash?.safeToSpend;
+  const date = cash ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(new Date(`${cash.until}T12:00:00`)) : "";
+  return (
+    <div className="rounded-[1.375rem] bg-card p-8 text-center" role="status">
+      {!gentle && <PartyPopper className="mx-auto mb-4 size-10 text-status-on-track" aria-hidden />}
+      <p className="text-title font-semibold">{t(g("doneTitle"))}</p>
+      {!gentle && free != null && free >= 0 && (
+        <p className="mt-2 text-headline">{t("doneOutcome", { amount: shekels(free, locale), date })}</p>
+      )}
+      {!gentle && <p className="mt-2 text-caption text-muted-foreground">{t("doneStreak", { weeks: streak })}</p>}
+      <Button className="mt-6" nativeButton={false} render={<Link href="/">{t("backHome")}</Link>} />
+    </div>
+  );
+}
+
 function StepCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="rounded-[1.375rem] bg-card p-7">
@@ -94,7 +114,7 @@ function StepCard({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function WeekStep() {
-  const t = useTranslations("checkin");
+  const { t, gentle, g } = useCopy();
   const locale = useLocale();
   const week = useQuery({ queryKey: ["summary-week"], queryFn: () => getTransactionsSummary({ from: daysAgo(6), to: iso(new Date()) }) }).data;
   const month = useQuery({ queryKey: ["summary-4w"], queryFn: () => getTransactionsSummary({ from: daysAgo(34), to: daysAgo(7) }) }).data;
@@ -106,16 +126,16 @@ function WeekStep() {
 
   let line = "…";
   if (spent != null) {
-    if (!usual) line = t("weekPlain", { spent: money(spent) });
-    else if (spent > usual * 1.15) line = t("weekMore", { spent: money(spent), usual: money(usual) });
-    else if (spent < usual * 0.85) line = t("weekLess", { spent: money(spent), usual: money(usual) });
-    else line = t("weekUsual", { spent: money(spent) });
+    if (!usual) line = t(g("weekPlain"), { spent: money(spent) });
+    else if (spent > usual * 1.15) line = t(g("weekMore"), { spent: money(spent), usual: money(usual) });
+    else if (spent < usual * 0.85) line = t(g("weekLess"), { spent: money(spent), usual: money(usual) });
+    else line = t(g("weekUsual"), { spent: money(spent) });
   }
 
   return (
-    <StepCard title={t("weekTitle")}>
+    <StepCard title={t(g("weekTitle"))}>
       <p className="text-headline">{line}</p>
-      {week?.expense.largest && (
+      {!gentle && week?.expense.largest && (
         <p className="mt-2 text-footnote text-muted-foreground">
           {t("largest", { name: week.expense.largest.description, amount: money(Math.abs(week.expense.largest.chargedAmount)) })}
         </p>
@@ -130,15 +150,15 @@ function WeekStep() {
 }
 
 function FindingStep() {
-  const t = useTranslations("checkin");
+  const { t, g } = useCopy();
   return (
     <div>
-      <p className="mb-3 px-1 text-footnote text-muted-foreground">{t("findingHint")}</p>
+      <p className="mb-3 px-1 text-footnote text-muted-foreground">{t(g("findingHint"))}</p>
       <SuggestionsCard
         limit={1}
         empty={
-          <StepCard title={t("findingTitle")}>
-            <p className="text-footnote text-muted-foreground">{t("noFindings")}</p>
+          <StepCard title={t(g("findingTitle"))}>
+            <p className="text-footnote text-muted-foreground">{t(g("noFindings"))}</p>
           </StepCard>
         }
       />
@@ -147,24 +167,24 @@ function FindingStep() {
 }
 
 function AheadStep() {
-  const t = useTranslations("checkin");
+  const { t, gentle, g } = useCopy();
   const locale = useLocale();
   const cash = useQuery({ queryKey: ["cash-ahead"], queryFn: getCashAhead }).data;
   const date = cash ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(new Date(`${cash.until}T12:00:00`)) : "";
   return (
-    <StepCard title={t("aheadTitle")}>
+    <StepCard title={t(g("aheadTitle"))}>
       {!cash ? (
         <p className="text-footnote text-muted-foreground">…</p>
       ) : cash.safeToSpend == null ? (
-        <p className="text-headline">{t("aheadNoBank")}</p>
+        <p className="text-headline">{t(g("aheadNoBank"))}</p>
       ) : (
         <>
           <p className="text-headline">
             {cash.safeToSpend >= 0
-              ? t("aheadFine", { amount: shekels(cash.safeToSpend, locale), date, perDay: shekels(cash.safeToSpend / Math.max(1, cash.daysLeft), locale) })
-              : t("aheadShort", { amount: shekels(-cash.safeToSpend, locale), date })}
+              ? t(g("aheadFine"), { amount: shekels(cash.safeToSpend, locale), date, perDay: shekels(cash.safeToSpend / Math.max(1, cash.daysLeft), locale) })
+              : t(g("aheadShort"), { amount: shekels(-cash.safeToSpend, locale), date })}
           </p>
-          <p className="mt-2 text-footnote text-muted-foreground">{t("aheadBills", { amount: shekels(cash.billsDue, locale) })}</p>
+          {!gentle && <p className="mt-2 text-footnote text-muted-foreground">{t("aheadBills", { amount: shekels(cash.billsDue, locale) })}</p>}
         </>
       )}
     </StepCard>

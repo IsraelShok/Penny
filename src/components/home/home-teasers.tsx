@@ -1,0 +1,89 @@
+"use client";
+
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+import { ChevronLeft, X } from "lucide-react";
+import { getOwners } from "@/lib/api";
+import { useHousehold } from "@/hooks/use-household";
+import { homeTeasers, type HomeTeaser } from "@/lib/home-layout";
+import { shouldShowWelcome } from "@/lib/household";
+
+const monthStart = () => new Date().toISOString().slice(0, 8) + "01";
+const today = () => new Date().toISOString().slice(0, 10);
+const ils = (n: number) => new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS", maximumFractionDigits: 0 }).format(n);
+
+const card =
+  "flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card px-5 py-4 transition-colors duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
+/** "Three minutes" prompt, shown once while the household profile is empty. */
+export function WelcomePrompt() {
+  const t = useTranslations("welcome");
+  const { household, loading, save } = useHousehold();
+  if (loading || !shouldShowWelcome(household)) return null;
+  return (
+    <div className="mb-4 flex items-center gap-2 rounded-2xl border border-border/60 bg-card p-2 md:mb-5">
+      <Link href="/welcome" className="min-w-0 flex-1 rounded-xl px-3 py-2 hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
+        <span className="block text-subheadline font-medium">{t("prompt")}</span>
+        <span className="block text-footnote text-muted-foreground">{t("promptHint")}</span>
+      </Link>
+      <button
+        type="button"
+        aria-label={t("dismiss")}
+        onClick={() => save({ welcomeDismissed: true })}
+        className="rounded-full p-2 text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        <X className="size-4" aria-hidden />
+      </button>
+    </div>
+  );
+}
+
+/** Up to two small profile-driven teasers. */
+export function HomeTeasers() {
+  const t = useTranslations("journey.teaser");
+  const { household } = useHousehold();
+  const needsOwners = household.members.some((m) => m.role !== "me");
+  const owners = useQuery({
+    queryKey: ["owners", monthStart(), today()],
+    queryFn: () => getOwners(monthStart(), today()),
+    enabled: needsOwners,
+  });
+  const summary = owners.data?.summary;
+  const kids = household.members.filter((m) => m.role === "child");
+  const kidSpend = kids.map((k) => ({ name: k.name, spent: summary?.byOwner[k.id] ?? 0 })).filter((k) => k.spent > 0);
+  const settle = summary?.settlements[0];
+  const name = (id: string) => household.members.find((m) => m.id === id)?.name ?? id;
+
+  const teasers = homeTeasers(household, { childSpend: kidSpend.length > 0, settleUp: !!settle });
+  if (teasers.length === 0) return null;
+
+  const content: Record<HomeTeaser, { href: string; title: string; body: string }> = {
+    taxSetAside: { href: "/fi", title: t("taxTitle"), body: t("taxBody") },
+    childSpend: {
+      href: "/transactions",
+      title: t("childTitle"),
+      body: kidSpend.map((k) => t("childLine", { name: k.name, amount: ils(k.spent) })).join(" · "),
+    },
+    settleUp: {
+      href: "/transactions",
+      title: t("settleTitle"),
+      body: settle ? t("settleBody", { from: name(settle.from), to: name(settle.to), amount: ils(settle.amount) }) : "",
+    },
+    freeToSpend: { href: "/budget", title: t("freeTitle"), body: t("freeBody") },
+  };
+
+  return (
+    <div className="mb-4 grid gap-3 sm:grid-cols-2 md:mb-5">
+      {teasers.map((k) => (
+        <Link key={k} href={content[k].href} className={card}>
+          <span className="min-w-0">
+            <span className="block text-subheadline font-medium">{content[k].title}</span>
+            <span className="block text-footnote text-muted-foreground">{content[k].body}</span>
+          </span>
+          <ChevronLeft className="size-4 shrink-0 text-muted-foreground ltr:rotate-180" aria-hidden />
+        </Link>
+      ))}
+    </div>
+  );
+}

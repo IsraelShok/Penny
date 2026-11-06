@@ -6,12 +6,14 @@ import { CardShell } from "@/components/home/card-shell";
 import { projectMonthEnd } from "@/lib/budget-suggest";
 import { shekels } from "@/lib/money";
 import type { DashboardSummary } from "@/lib/types";
+import { useGentle } from "@/hooks/use-gentle";
 
 /** Planned vs actual for the current month, answer first. */
 export function PlanVsActual({ summary }: { summary: DashboardSummary }) {
   const t = useTranslations("budgetPlan");
   const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale();
+  const gentle = useGentle();
   // Top-level rows only (parents carry their children's rollup), so nothing counts twice.
   const rows = summary.categoriesWithData.filter((c) => c.parentId == null && c.budget > 0);
   if (rows.length === 0) return null;
@@ -45,7 +47,7 @@ export function PlanVsActual({ summary }: { summary: DashboardSummary }) {
             <th scope="col" className="py-1 text-start font-medium">{t("category")}</th>
             <th scope="col" className="py-1 text-end font-medium">{t("planned")}</th>
             <th scope="col" className="py-1 text-end font-medium">{t("actual")}</th>
-            <th scope="col" className="py-1 text-end font-medium">{t("difference")}</th>
+            {!gentle && <th scope="col" className="py-1 text-end font-medium">{t("difference")}</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-border/60">
@@ -57,9 +59,9 @@ export function PlanVsActual({ summary }: { summary: DashboardSummary }) {
                 <td className="py-2 text-end tabular-nums">{shekels(c.budget, locale)}</td>
                 <td className="py-2 text-end tabular-nums">{shekels(c.spent, locale)}</td>
                 {/* Words, not only color, say which way it went. */}
-                <td className={`py-2 text-end tabular-nums ${diff > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                {!gentle && <td className={`py-2 text-end tabular-nums ${diff > 0 ? "text-destructive" : "text-muted-foreground"}`}>
                   {diff > 0 ? t("over", { amount: shekels(diff, locale) }) : t("under", { amount: shekels(-diff, locale) })}
-                </td>
+                </td>}
               </tr>
             );
           })}

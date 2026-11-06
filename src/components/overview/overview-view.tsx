@@ -1,6 +1,7 @@
 "use client";
 
 import { usePlan } from "@/hooks/use-plan";
+import { useGentle } from "@/hooks/use-gentle";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -187,7 +188,8 @@ function Body({ data }: { data: OverviewPayload }) {
 }
 
 function Delta({ cur, base, goodWhenUp, label }: { cur: number; base: number; goodWhenUp?: boolean; label: string }) {
-  if (base === 0) return null;
+  // Gentle mode: no comparisons with earlier periods.
+  if (useGentle() || base === 0) return null;
   const change = (cur - base) / Math.abs(base);
   const good = goodWhenUp ? change >= 0 : change <= 0;
   return (
@@ -204,9 +206,10 @@ function Stat({
   label, value, cur, prev, ly, goodWhenUp, tone,
 }: { label: string; value: string; cur: number; prev: number; ly: number; goodWhenUp?: boolean; tone?: "bad" }) {
   const t = useTranslations("overview");
+  const gentle = useGentle();
   return (
     <CardShell label={label}>
-      <p className={cn("figure text-[2rem] leading-tight", tone === "bad" && "text-status-over")}>{value}</p>
+      <p className={cn("figure text-[2rem] leading-tight", tone === "bad" && !gentle && "text-status-over")}>{value}</p>
       <div className="mt-2 space-y-0.5">
         <Delta cur={cur} base={prev} goodWhenUp={goodWhenUp} label={t("vsPrevShort")} />
         <Delta cur={cur} base={ly} goodWhenUp={goodWhenUp} label={t("vsLyShort")} />
@@ -217,9 +220,10 @@ function Stat({
 
 function SavingsStat({ totals, previous, lastYear }: { totals: OverviewTotals; previous: OverviewTotals; lastYear: OverviewTotals }) {
   const t = useTranslations("overview");
+  const gentle = useGentle();
   const rate = totals.savingsRate;
   const points = (base: number | null, label: string) =>
-    rate != null && base != null ? (
+    !gentle && rate != null && base != null ? (
       <span className="flex items-baseline gap-1.5 text-caption">
         <span className={cn("whitespace-nowrap font-semibold tabular-nums", rate >= base ? "text-status-on-track" : "text-status-over")}>
           <bdi>{rate >= base ? "+" : "−"}{Math.round(Math.abs(rate - base) * 100)}</bdi> {t("points")}
@@ -229,7 +233,7 @@ function SavingsStat({ totals, previous, lastYear }: { totals: OverviewTotals; p
     ) : null;
   return (
     <CardShell label={t("savingsRate")}>
-      <p className={cn("figure text-[2rem] leading-tight", rate != null && rate < 0 && "text-status-over")} dir="ltr">
+      <p className={cn("figure text-[2rem] leading-tight", !gentle && rate != null && rate < 0 && "text-status-over")} dir="ltr">
         {rate == null ? "—" : pct(rate)}
       </p>
       {rate == null ? (

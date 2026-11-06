@@ -5,11 +5,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { CardShell } from "@/components/home/card-shell";
 import { getBalanceForecast } from "@/lib/api";
 import { shekels } from "@/lib/money";
+import { useGentle } from "@/hooks/use-gentle";
 
 /** 90-day bank balance: one sentence with the low point, then the line. Hidden until a bank balance syncs. */
 export function BalanceForecastCard() {
   const t = useTranslations("ahead");
   const locale = useLocale();
+  const gentle = useGentle();
   const query = useQuery({ queryKey: ["balance-forecast"], queryFn: getBalanceForecast });
   const f = query.data?.forecast;
   if (!f) return null;
@@ -36,9 +38,9 @@ export function BalanceForecastCard() {
 
   return (
     <CardShell label={t("forecastTitle")}>
-      <p className={`mb-4 text-base font-medium ${f.firstNegative ? "text-[var(--status-over)]" : ""}`}>{sentence}</p>
+      <p className={`mb-4 text-base font-medium ${f.firstNegative && !gentle ? "text-[var(--status-over)]" : ""}`}>{sentence}</p>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-32 w-full overflow-visible" role="img" aria-label={`${sentence} ${endText}`}>
-        {min < 0 && <rect x="0" y={y(0)} width={W} height={H - y(0)} fill="var(--status-over)" opacity="0.1" />}
+        {min < 0 && !gentle && <rect x="0" y={y(0)} width={W} height={H - y(0)} fill="var(--status-over)" opacity="0.1" />}
         <line x1="0" x2={W} y1={y(0)} y2={y(0)} stroke="currentColor" strokeOpacity="0.2" vectorEffect="non-scaling-stroke" />
         <polyline
           points={values.map((v, i) => `${x(i)},${y(v)}`).join(" ")}
@@ -55,7 +57,7 @@ export function BalanceForecastCard() {
           x2={x(lowIndex)}
           y1={y(f.low.balance)}
           y2={y(f.low.balance)}
-          stroke={f.low.balance < 0 ? "var(--status-over)" : "var(--primary)"}
+          stroke={f.low.balance < 0 && !gentle ? "var(--status-over)" : "var(--primary)"}
           strokeWidth="8"
           strokeLinecap="round"
           vectorEffect="non-scaling-stroke"

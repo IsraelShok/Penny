@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { ExternalLink, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ import {
 export function HouseholdSettings() {
   const t = useTranslations("household");
   const tCommon = useTranslations("common");
+  const tJ = useTranslations("journey");
   const { household, loading } = useHousehold();
 
   return (
@@ -47,6 +49,7 @@ export function HouseholdSettings() {
           <MoneyShapeCard />
           <GentleModeCard />
           <LifeEventsCard />
+          <Link href="/journey" className="block text-subheadline text-primary hover:underline">{tJ("settingsLink")}</Link>
         </>
       )}
     </SectionShell>

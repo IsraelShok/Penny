@@ -17,6 +17,7 @@ import { SuggestionsCard } from "./suggestions-card";
 import { NextBillCard, SubscriptionsCard } from "./bills-card";
 import { TodayCard } from "./today-card";
 import { MoreSection } from "./more-section";
+import { HomeTeasers, WelcomePrompt } from "./home-teasers";
 import { CategoryScroll } from "./category-scroll";
 import { HistoricalTrendCard } from "./historical-trend-card";
 import { RecentTransactionsCard } from "./recent-transactions-card";
@@ -130,8 +131,10 @@ export function HomePage() {
         />
         <Greeting name={settings?.displayName} />
         <TodayCard home={data} bills={insights?.forecast} homePending={isLoading} homeFailed={isError} onRetry={() => { void queryClient.invalidateQueries({ queryKey: ["home"] }); }} />
+        <WelcomePrompt />
         <MoreSection>
         <SuggestionsCard limit={1} />
+        <HomeTeasers />
         {/* A setup nudge, not today's business: it waits under "more". */}
         <AINotConnectedBanner className="mb-4 md:mb-5 lg:mb-6" />
         <MarketStrip />

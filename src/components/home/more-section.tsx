@@ -12,6 +12,7 @@ const KEY = "home-more-open";
 /** Everything beyond today's answer, folded away until asked for. Remembers the choice; hidden in simple mode. */
 export function MoreSection({ children }: { children: ReactNode }) {
   const t = useTranslations("today");
+  const tJ = useTranslations("journey");
   const { plan } = usePlan();
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -47,6 +48,9 @@ export function MoreSection({ children }: { children: ReactNode }) {
       </button>
       <div id="home-more" hidden={!open}>
         {children}
+        <Link href="/journey" className="mx-auto mt-6 block w-fit rounded-full px-4 py-2 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
+          {tJ("homeLink")}
+        </Link>
       </div>
     </section>
   );
