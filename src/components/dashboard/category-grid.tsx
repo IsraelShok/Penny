@@ -7,13 +7,6 @@ import { BudgetDetailSheet } from "./budget-detail-sheet";
 import { MoveFrom, MovedIn } from "./move-from";
 import { moveTarget, type BudgetMove } from "@/lib/budget-moves";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type {
   BudgetStatus,
   CategoryViewMode,
@@ -79,7 +72,7 @@ export function CategoryGrid({
 }: CategoryGridProps) {
   const t = useTranslations("dashboard");
   const [filter, setFilter] = useState<Filter>("all");
-  const [sort, setSort] = useState<Sort>("most-spent");
+  const sort: Sort = "most-spent";
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const filterLabels: { id: Filter; label: string }[] = [
@@ -153,7 +146,7 @@ export function CategoryGrid({
     const hasUncategorized = periodTotal > 0;
     return (
       <div className="space-y-5">
-        <h2 className="font-serif text-2xl">{t("budgetsHeading")}</h2>
+        <h2 className="text-title font-semibold">{t("budgetsHeading")}</h2>
         <div className="rounded-2xl bg-card p-10 md:p-14">
           <div className="mx-auto max-w-md text-center">
             <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -198,19 +191,19 @@ export function CategoryGrid({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="font-serif text-2xl">{t("budgetsHeading")}</h2>
+          <h2 className="text-title font-semibold">{t("budgetsHeading")}</h2>
           <div className="flex flex-wrap gap-1.5">
-            {filterLabels.map((f) => {
+            {filterLabels.filter((f) => f.id === "all" || counts[f.id] > 0 || filter === f.id).map((f) => {
               const active = filter === f.id;
               const count = counts[f.id];
               return (
                 <button
                   key={f.id}
                   onClick={() => setFilter(f.id)}
-                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                  className={`inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring ${
                     active
-                      ? "bg-foreground text-background shadow-sm"
-                      : "bg-muted text-foreground/70 hover:bg-secondary hover:text-foreground"
+                      ? "bg-primary/10 font-semibold text-primary"
+                      : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
                   }`}
                 >
                   {f.label}
@@ -223,21 +216,6 @@ export function CategoryGrid({
               );
             })}
           </div>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{t("sortLabel")}</span>
-          <Select value={sort} onValueChange={(v) => v && setSort(v as Sort)}>
-            <SelectTrigger className="h-8 w-[150px] cursor-pointer border-none bg-transparent transition-colors duration-200 hover:bg-secondary hover:text-foreground">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="budgeted-first">{t("sortBudgetedFirst")}</SelectItem>
-              <SelectItem value="most-spent">{t("sortMostSpent")}</SelectItem>
-              <SelectItem value="least-spent">{t("sortLeastSpent")}</SelectItem>
-              <SelectItem value="over-pace">{t("sortOverPace")}</SelectItem>
-              <SelectItem value="alphabetical">{t("sortAlphabetical")}</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 

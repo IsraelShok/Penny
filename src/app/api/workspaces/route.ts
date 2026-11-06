@@ -3,6 +3,7 @@ import {
   createWorkspace,
   listWorkspaces,
 } from "@/server/db/queries/workspaces";
+import { parseAvatar } from "@/lib/profile-avatar";
 
 export async function GET() {
   return NextResponse.json(listWorkspaces());
@@ -28,8 +29,13 @@ export async function POST(request: Request) {
     );
   }
 
+  const avatar = parseAvatar(body);
+  if ("error" in avatar) {
+    return NextResponse.json({ error: avatar.error }, { status: 400 });
+  }
+
   try {
-    const ws = createWorkspace(name);
+    const ws = createWorkspace(name, avatar);
     return NextResponse.json(ws, { status: 201 });
   } catch (err) {
     return NextResponse.json(

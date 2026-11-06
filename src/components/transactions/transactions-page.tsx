@@ -155,7 +155,7 @@ export function TransactionsPage() {
         }
       />
 
-      <div className="space-y-6 p-4 md:p-6 lg:p-8">
+      <div className="space-y-6 px-4 pb-8 pt-3 md:px-6 lg:px-8">
         <CashWalletCard />
         <Segmented
           label={tReview("viewLabel")}

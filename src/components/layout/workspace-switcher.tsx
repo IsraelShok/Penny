@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, FolderKanban, Plus, Settings2 } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Settings2, Users } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +19,24 @@ import {
 } from "@/lib/workspace-store";
 import type { Workspace } from "@/lib/types";
 import { useTranslations } from "next-intl";
+import { ProfileAvatar } from "@/components/profiles/profile-avatar";
+
+const PROFILE_CHOSEN_KEY = "penny.profileChosen";
+
+/** Remembers for this browser session that the "who's using?" screen was shown. */
+export function markProfileChosen() {
+  try {
+    sessionStorage.setItem(PROFILE_CHOSEN_KEY, "1");
+  } catch {}
+}
+
+export function profileChosen() {
+  try {
+    return sessionStorage.getItem(PROFILE_CHOSEN_KEY) === "1";
+  } catch {
+    return true; // no storage: never nag
+  }
+}
 
 export function useSwitchWorkspace() {
   const queryClient = useQueryClient();
@@ -33,6 +51,7 @@ export function useSwitchWorkspace() {
 export function WorkspaceSwitcher() {
   const router = useRouter();
   const t = useTranslations("nav");
+  const tp = useTranslations("profiles");
   const switchWorkspace = useSwitchWorkspace();
   const activeId = useActiveWorkspaceId();
 
@@ -55,9 +74,6 @@ export function WorkspaceSwitcher() {
 
   const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
 
-  const initial =
-    (active?.name ?? "?").trim().charAt(0).toUpperCase() || "?";
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -71,9 +87,11 @@ export function WorkspaceSwitcher() {
               />
             }
           >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary font-semibold text-primary-foreground">
-              {initial}
-            </div>
+            {active ? (
+              <ProfileAvatar profile={active} className="size-7 text-base" />
+            ) : (
+              <div className="size-7 shrink-0 rounded-[28%] bg-primary" />
+            )}
             <div className="flex min-w-0 flex-1 flex-col text-start group-data-[collapsible=icon]:hidden">
               <span className="truncate text-sm font-medium">
                 {active?.name ?? t("workspace")}
@@ -97,7 +115,7 @@ export function WorkspaceSwitcher() {
                 onClick={() => switchWorkspace(w.id)}
                 className="gap-2"
               >
-                <FolderKanban className="size-4 opacity-70" />
+                <ProfileAvatar profile={w} className="size-5 text-xs" />
                 <span className="flex-1 truncate">{w.name}</span>
                 {w.id === activeId ? (
                   <Check className="size-4 text-primary" />
@@ -105,6 +123,10 @@ export function WorkspaceSwitcher() {
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push("/profiles")} className="gap-2">
+              <Users className="size-4" />
+              {tp("switch")}
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => router.push("/setup?mode=new-workspace")}
               className="gap-2"

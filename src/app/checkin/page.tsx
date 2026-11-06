@@ -9,7 +9,7 @@ export default async function CheckinPage() {
   return (
     <AppShell>
       <PageHeader title={t("title")} meta={t("subtitle")} />
-      <div className="mx-auto w-full max-w-2xl p-4 md:p-6 lg:p-8">
+      <div className="mx-auto w-full max-w-2xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
         <Checkin />
       </div>
     </AppShell>

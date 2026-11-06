@@ -266,7 +266,11 @@ function CategoryRow({
 }) {
   const t = useTranslations("settings.categories");
   const tCat = useTranslations("categoriesSeeded");
-  const description = category.description?.trim();
+  const tDesc = useTranslations("categoryDescriptions");
+  const stored = category.description?.trim();
+  // Seeded descriptions are English (the categorizer reads them); show the translation unless the user wrote their own.
+  const translated = tDesc.has(category.name) ? tDesc(category.name) : "";
+  const description = stored && !/[֐-׿]/.test(stored) && translated ? translated : stored;
   return (
     <li>
       <button

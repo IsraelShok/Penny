@@ -14,7 +14,7 @@ export default async function SettingsLayout({ children }: { children: ReactNode
       <div className="flex min-h-[calc(100vh-4rem)] flex-1">
         <SettingsSidebar />
         <main className="min-w-0 flex-1">
-          <div className="mx-auto max-w-4xl px-4 py-6 md:px-8 md:py-8">
+          <div className="mx-auto max-w-4xl px-4 pb-8 pt-3 md:px-8">
             <SettingsMobileNav />
             {children}
           </div>

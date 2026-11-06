@@ -3,6 +3,8 @@ export interface Workspace {
   id: number;
   name: string;
   slug: string;
+  avatarEmoji: string | null;
+  avatarColor: string | null;
   createdAt: string;
   updatedAt: string;
 }

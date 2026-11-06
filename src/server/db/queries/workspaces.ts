@@ -2,11 +2,14 @@ import "server-only";
 
 import { getDb } from "../index";
 import type { Workspace } from "@/lib/types";
+import type { AvatarInput } from "@/lib/profile-avatar";
 
 interface WorkspaceRow {
   id: number;
   name: string;
   slug: string;
+  avatar_emoji: string | null;
+  avatar_color: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -16,6 +19,8 @@ function mapRow(row: WorkspaceRow): Workspace {
     id: row.id,
     name: row.name,
     slug: row.slug,
+    avatarEmoji: row.avatar_emoji,
+    avatarColor: row.avatar_color,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -24,7 +29,7 @@ function mapRow(row: WorkspaceRow): Workspace {
 export function listWorkspaces(): Workspace[] {
   const rows = getDb()
     .prepare(
-      "SELECT id, name, slug, created_at, updated_at FROM workspaces ORDER BY id"
+      "SELECT id, name, slug, avatar_emoji, avatar_color, created_at, updated_at FROM workspaces ORDER BY id"
     )
     .all() as WorkspaceRow[];
   return rows.map(mapRow);
@@ -33,7 +38,7 @@ export function listWorkspaces(): Workspace[] {
 export function getWorkspace(id: number): Workspace | null {
   const row = getDb()
     .prepare(
-      "SELECT id, name, slug, created_at, updated_at FROM workspaces WHERE id = ?"
+      "SELECT id, name, slug, avatar_emoji, avatar_color, created_at, updated_at FROM workspaces WHERE id = ?"
     )
     .get(id) as WorkspaceRow | undefined;
   return row ? mapRow(row) : null;
@@ -107,7 +112,15 @@ function uniqueSlug(base: string): string {
   return candidate;
 }
 
-export function createWorkspace(name: string): Workspace {
+function setAvatar(id: number, avatar: AvatarInput): void {
+  const db = getDb();
+  if (avatar.avatarEmoji !== undefined)
+    db.prepare("UPDATE workspaces SET avatar_emoji = ? WHERE id = ?").run(avatar.avatarEmoji, id);
+  if (avatar.avatarColor !== undefined)
+    db.prepare("UPDATE workspaces SET avatar_color = ? WHERE id = ?").run(avatar.avatarColor, id);
+}
+
+export function createWorkspace(name: string, avatar: AvatarInput = {}): Workspace {
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Workspace name is required");
   if (trimmed.length > 60) throw new Error("Workspace name too long");
@@ -129,6 +142,7 @@ export function createWorkspace(name: string): Workspace {
     for (const c of SEED_CATEGORIES) {
       insertCat.run(id, c.name, c.color, c.icon, c.kind, c.description);
     }
+    setAvatar(id, avatar);
     return id;
   });
 
@@ -138,7 +152,7 @@ export function createWorkspace(name: string): Workspace {
   return row;
 }
 
-export function updateWorkspace(id: number, name: string): Workspace {
+export function updateWorkspace(id: number, name: string, avatar: AvatarInput = {}): Workspace {
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Workspace name is required");
   if (trimmed.length > 60) throw new Error("Workspace name too long");
@@ -155,6 +169,7 @@ export function updateWorkspace(id: number, name: string): Workspace {
   db.prepare(
     "UPDATE workspaces SET name = ?, slug = ?, updated_at = datetime('now') WHERE id = ?"
   ).run(trimmed, slug, id);
+  setAvatar(id, avatar);
 
   const updated = getWorkspace(id);
   if (!updated) throw new Error("Workspace update failed");

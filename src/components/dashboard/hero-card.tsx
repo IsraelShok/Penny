@@ -4,6 +4,7 @@ import { CardAction } from "@/components/home/card-shell";
 import { useLocale, useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters";
+import { shekels } from "@/lib/money";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { DashboardSummary } from "@/lib/types";
 import type { Locale } from "@/i18n/routing";
@@ -58,7 +59,6 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
     totalBudget,
     timeElapsedPercent,
     daysUntilPayday,
-    todayLabel,
     categoriesWithData,
     typicalMonthly,
   } = data;
@@ -108,78 +108,71 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
       })
     : t("setMonthlyTarget");
 
-  const body = (
-    <div className="space-y-5">
-      <p className="text-sm text-muted-foreground">
-        {todayPhrase}
-        {" · "}
-        {t("youHavePaydayPrefix")}{" "}
-        <span className="font-medium text-foreground">
-          {daysUntilPayday}{" "}
-          {daysUntilPayday === 1 ? t("daysOne") : t("daysOther")}
-        </span>{" "}
-        {t("untilPayday")}
-      </p>
-      <h2 className="font-serif text-title text-balance md:text-3xl lg:text-display">
-        <HeroPhrase
-          hasBudget={hasBudget}
-          verdict={verdict}
-          monthLabel={monthLabel}
-          displaySpent={hasBudget ? budgetedSpent : periodTotal}
-          totalBudget={totalBudget}
-          locale={locale}
-        />
-      </h2>
-      {legend.length > 0 && (
-        <div className="space-y-3 pt-2">
-          <StackedBar legend={legend} />
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-            {legend.map((seg) => (
-              <div key={seg.name} className="flex items-center gap-2">
-                <div
-                  className="h-2.5 w-2.5 rounded-sm"
-                  style={{ backgroundColor: seg.color }}
-                />
-                <span className="font-medium">{seg.name}</span>
-                <span className="tabular-nums text-muted-foreground">
-                  {formatCurrency(seg.amount, "ILS", locale)} {"·"}{" "}
-                  {Math.round(seg.pct)}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {!hasBudget && (
-        <div className="pt-1">
-          <span className="text-muted-foreground">
-            <CardAction href="/settings/general#section-monthly-target">{ctaLabel}</CardAction>
-          </span>
-        </div>
-      )}
-    </div>
-  );
+  const money = (n: number) => shekels(n, locale);
+  const spent = hasBudget ? budgetedSpent : periodTotal;
+  const pct = hasBudget ? Math.min(100, (budgetedSpent / totalBudget) * 100) : 0;
+  const left = totalBudget - budgetedSpent;
+  const forecast = timeElapsedPercent > 5 ? (spent / timeElapsedPercent) * 100 : null;
+  const tone = verdict === "overBudget" || verdict === "headsUp" ? "var(--status-heads-up)" : "var(--status-on-track)";
+  const word = {
+    overBudget: t("wordOverBudget"),
+    headsUp: t("wordOverSchedule"),
+    wellUnder: t("wordWellUnder"),
+    ahead: t("wordAhead"),
+    onSchedule: t("wordOnSchedule"),
+    noBudget: t("verdictSpentThisMonth"),
+  }[verdict];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-card p-6 md:p-8 lg:p-10">
-      {hasBudget ? (
-        <div className="grid gap-6 md:grid-cols-[200px_1fr] md:gap-10 lg:grid-cols-[240px_1fr]">
-          <div className="flex flex-col items-center justify-center gap-2">
-            <PaceGauge
-              periodTotal={periodTotal}
-              budgetedSpent={budgetedSpent}
-              totalBudget={totalBudget}
-              timeElapsedPercent={timeElapsedPercent}
-              verdict={verdict}
-              locale={locale}
-            />
+    <section className="rounded-[1.375rem] bg-card p-6 md:p-8" aria-label={monthLabel}>
+      <p className="text-footnote text-muted-foreground">
+        {todayPhrase} · {daysUntilPayday} {daysUntilPayday === 1 ? t("daysOne") : t("daysOther")} {t("untilPayday")}
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="figure text-5xl"><bdi>{money(spent)}</bdi></span>
+        {hasBudget && <span className="text-headline text-muted-foreground">{t("ofBudget", { amount: money(totalBudget) })}</span>}
+        <span className="ms-auto rounded-full px-3 py-1 text-footnote font-semibold" style={{ color: tone, backgroundColor: `color-mix(in oklch, ${tone} 12%, transparent)` }}>
+          {word}
+        </span>
+      </div>
+
+      {hasBudget && (
+        <div className="mt-5">
+          <div className="relative h-2.5 rounded-full bg-muted">
+            <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: tone }} />
+            {/* Where spending would be today at an even pace. */}
+            <span className="absolute -top-1 h-[1.125rem] w-0.5 rounded-full bg-foreground/60" style={{ insetInlineStart: `${Math.min(100, timeElapsedPercent)}%` }} aria-hidden />
           </div>
-          {body}
+          <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">
+            <div><dt className="text-muted-foreground">{left >= 0 ? t("heroLeft") : t("heroOver")}</dt><dd className="mt-0.5 font-semibold tabular-nums"><bdi>{money(Math.abs(left))}</bdi></dd></div>
+            <div><dt className="text-muted-foreground">{t("heroPerDay")}</dt><dd className="mt-0.5 font-semibold tabular-nums"><bdi>{left > 0 && daysUntilPayday > 0 ? money(left / daysUntilPayday) : "—"}</bdi></dd></div>
+            <div><dt className="text-muted-foreground">{t("heroForecast")}</dt><dd className="mt-0.5 font-semibold tabular-nums"><bdi>{forecast != null ? money(forecast) : "—"}</bdi></dd></div>
+          </dl>
         </div>
-      ) : (
-        body
       )}
-    </div>
+
+      {legend.length > 0 && (
+        <div className="mt-6 space-y-3 border-t border-border/60 pt-5">
+          <StackedBar legend={legend} />
+          <ul className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2 lg:grid-cols-3">
+            {legend.map((seg) => (
+              <li key={seg.name} className="flex items-center gap-2">
+                <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: seg.color }} aria-hidden />
+                <span className="min-w-0 truncate">{seg.name}</span>
+                <span className="ms-auto tabular-nums text-muted-foreground"><bdi>{money(seg.amount)}</bdi></span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {!hasBudget && (
+        <div className="mt-4">
+          <CardAction href="/settings/general#section-monthly-target">{ctaLabel}</CardAction>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -198,217 +191,7 @@ function useTodayPhrase(serverLabel: string, locale: Locale): string {
   }
 }
 
-function HeroPhrase({
-  hasBudget,
-  verdict,
-  monthLabel,
-  displaySpent,
-  totalBudget,
-  locale,
-}: {
-  hasBudget: boolean;
-  verdict: PaceVerdict;
-  monthLabel: string;
-  displaySpent: number;
-  totalBudget: number;
-  locale: Locale;
-}) {
-  const t = useTranslations("dashboard");
-  const amount = formatCurrency(displaySpent, "ILS", locale);
-  const budget = formatCurrency(totalBudget, "ILS", locale);
 
-  if (!hasBudget) {
-    return <span>{t("phraseSpentThis", { amount, month: monthLabel })}</span>;
-  }
-
-  const lead = t("phraseLead", { amount, budget, month: monthLabel });
-  const tail =
-    verdict === "overBudget"
-      ? t("phraseOver")
-      : verdict === "headsUp"
-        ? t("phraseHeadsUp")
-        : verdict === "wellUnder"
-          ? t("phraseWellUnder")
-          : verdict === "ahead"
-            ? t("phraseAhead")
-            : t("phraseOnSchedule");
-
-  const toneWord =
-    verdict === "overBudget"
-      ? t("wordOverBudget")
-      : verdict === "headsUp"
-        ? t("wordOverSchedule")
-        : verdict === "wellUnder"
-          ? t("wordWellUnder")
-          : verdict === "ahead"
-            ? t("wordAhead")
-            : t("wordOnSchedule");
-
-  const toneClass =
-    verdict === "overBudget" || verdict === "headsUp"
-      ? "text-[var(--status-heads-up)]"
-      : "text-[var(--status-on-track)]";
-
-  const leadParts = lead.split(amount);
-  const renderLead =
-    leadParts.length === 2 ? (
-      <>
-        {leadParts[0]}
-        <span className="text-[var(--status-on-track)]">{amount}</span>
-        {leadParts[1]}
-      </>
-    ) : (
-      lead
-    );
-
-  const tailParts = tail.split(toneWord);
-  const renderTail =
-    tailParts.length === 2 ? (
-      <>
-        {tailParts[0]}
-        <span className={toneClass}>{toneWord}</span>
-        {tailParts[1]}
-      </>
-    ) : (
-      tail
-    );
-
-  return (
-    <>
-      {renderLead}
-      {renderTail}
-    </>
-  );
-}
-
-function PaceGauge({
-  periodTotal,
-  budgetedSpent,
-  totalBudget,
-  timeElapsedPercent,
-  verdict,
-  locale,
-}: {
-  periodTotal: number;
-  budgetedSpent: number;
-  totalBudget: number;
-  timeElapsedPercent: number;
-  verdict: PaceVerdict;
-  locale: Locale;
-}) {
-  const t = useTranslations("dashboard");
-  const size = 200;
-  const stroke = 18;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const cx = size / 2;
-  const cy = size / 2;
-  const hasBudget = totalBudget > 0;
-
-  const fillPercent = hasBudget
-    ? Math.min(100, Math.max(0, (budgetedSpent / totalBudget) * 100))
-    : 0;
-  const dash = (fillPercent / 100) * circumference;
-
-  const pctSpent = hasBudget ? (budgetedSpent / totalBudget) * 100 : 0;
-  const delta = pctSpent - timeElapsedPercent;
-  const scheduleTarget = totalBudget * (timeElapsedPercent / 100);
-  const scheduleGap = budgetedSpent - scheduleTarget;
-  const overBudgetBy = Math.round(Math.max(0, budgetedSpent - totalBudget));
-
-  const isOverBudget = pctSpent > 100;
-  const isOver = isOverBudget || delta >= 25;
-  const isAhead = delta <= -10;
-  const ringColor = isOver ? "var(--status-heads-up)" : "var(--status-on-track)";
-  const verdictClass = isOver
-    ? "text-[var(--status-heads-up)]"
-    : "text-[var(--status-on-track)]";
-
-  let verdictText: string;
-  if (!hasBudget) {
-    verdictText = t("verdictSpentThisMonth");
-  } else if (isOverBudget) {
-    verdictText = t("verdictOverBudgetBy", {
-      amount: formatCurrency(overBudgetBy, "ILS", locale),
-    });
-  } else if (delta >= 25) {
-    verdictText = t("verdictOverSchedule", {
-      amount: formatCurrency(Math.abs(scheduleGap), "ILS", locale),
-    });
-  } else if (isAhead) {
-    verdictText = t("verdictAheadOfSchedule", {
-      amount: formatCurrency(Math.abs(scheduleGap), "ILS", locale),
-    });
-  } else {
-    verdictText = t("verdictOnSchedule");
-  }
-
-  const notchAngle = (timeElapsedPercent / 100) * 2 * Math.PI;
-  const cosA = Math.cos(notchAngle);
-  const sinA = Math.sin(notchAngle);
-  const notchInnerR = radius - stroke / 2 - 2;
-  const notchOuterR = radius + stroke / 2 + 2;
-  const notchX1 = cx + notchInnerR * cosA;
-  const notchY1 = cy + notchInnerR * sinA;
-  const notchX2 = cx + notchOuterR * cosA;
-  const notchY2 = cy + notchOuterR * sinA;
-
-  void verdict;
-
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle
-          cx={cx}
-          cy={cy}
-          r={radius}
-          fill="none"
-          stroke="var(--muted)"
-          strokeWidth={stroke}
-        />
-        {hasBudget && (
-          <circle
-            cx={cx}
-            cy={cy}
-            r={radius}
-            fill="none"
-            stroke={ringColor}
-            strokeWidth={stroke}
-            strokeDasharray={`${dash} ${circumference}`}
-            strokeLinecap="round"
-          />
-        )}
-        {hasBudget && (
-          <line
-            x1={notchX1}
-            y1={notchY1}
-            x2={notchX2}
-            y2={notchY2}
-            stroke="var(--foreground)"
-            strokeOpacity={0.85}
-            strokeWidth={3}
-            strokeLinecap="round"
-          />
-        )}
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
-        <div className="font-serif text-3xl tabular-nums">
-          {formatCurrency(hasBudget ? budgetedSpent : periodTotal, "ILS", locale)}
-        </div>
-        {hasBudget && (
-          <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-            {t("ofBudget", { amount: formatCurrency(totalBudget, "ILS", locale) })}
-          </div>
-        )}
-        <div
-          className={`mt-1 text-xs ${hasBudget ? verdictClass : "text-muted-foreground"}`}
-        >
-          {verdictText}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function StackedBar({
   legend,

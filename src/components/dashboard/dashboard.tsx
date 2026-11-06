@@ -15,7 +15,6 @@ import { PeriodSelector } from "./period-selector";
 import { SyncButton } from "./sync-button";
 import { CategorizeButton } from "./categorize-button";
 import { BudgetFromAverage } from "./budget-from-average";
-import { PlanVsActual } from "./plan-vs-actual";
 import { PeriodicCard } from "./periodic-card";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -99,7 +98,7 @@ export function Dashboard() {
         }
       />
 
-      <div className="space-y-6 p-4 md:p-6 lg:p-8">
+      <div className="space-y-6 px-4 pb-8 pt-3 md:px-6 lg:px-8">
         {summaryQuery.isError || period.isError || banks.isError ? <DataState error onRetry={() => { void summaryQuery.refetch(); void period.refetch(); void banks.refetch(); }} />
         : summaryQuery.isPending || period.isPending || banks.isPending ? <DataState loading />
         : period.data?.total === 0 ? <DataState period={banks.data?.some((bank) => bank.lastSyncAt)} />
@@ -109,8 +108,6 @@ export function Dashboard() {
           loading={summaryQuery.isLoading}
           monthLabel={monthLabel}
         />
-
-        {summary && from === getMonthRange(new Date()).from && <PlanVsActual summary={summary} />}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <BudgetFromAverage modes={new Map((summary?.categoriesWithData ?? []).map((c) => [c.categoryId, c.budgetMode]))} />

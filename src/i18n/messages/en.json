@@ -331,7 +331,11 @@
     "vsLastMonthDown": "↓ {pct}% vs last month",
     "vsLastMonthFlat": "flat vs last month",
     "vsTypical": "vs {amount} typical",
-    "ofBudget": "of {amount}"
+    "ofBudget": "of {amount}",
+    "heroLeft": "Left",
+    "heroOver": "Over by",
+    "heroPerDay": "Per day",
+    "heroForecast": "Month-end forecast"
   },
   "settings": {
     "pageTitle": "Settings",
@@ -2465,5 +2469,50 @@
     "linked": "Connected to {name}",
     "linkedHint": "The bot has two buttons: short snapshot and full snapshot. You can also send /short or /full.",
     "disconnect": "Disconnect bot"
+  },
+  "categoryDescriptions": {
+    "Groceries": "",
+    "Restaurants": "",
+    "Transport": "",
+    "Shopping": "",
+    "Entertainment": "",
+    "Health": "",
+    "Education": "",
+    "Bills & Utilities": "",
+    "Subscriptions": "",
+    "Travel": "",
+    "Cash & ATM": "",
+    "Transfers": "",
+    "Insurance": "",
+    "Home": "",
+    "Personal Care": "",
+    "Coffee & Cafes": "",
+    "Pet Care": "",
+    "Gifts & Donations": "",
+    "Kids & Childcare": "",
+    "Sports & Hobbies": "",
+    "Salary": "",
+    "Freelance & Side Income": "",
+    "Investment Income": "",
+    "Refunds & Reimbursements": ""
+  },
+  "profiles": {
+    "title": "Who's using Penny?",
+    "manageTitle": "Manage profiles",
+    "manage": "Manage profiles",
+    "done": "Done",
+    "add": "Add profile",
+    "edit": "Edit profile",
+    "editProfile": "Edit {name}",
+    "name": "Name",
+    "emoji": "Icon",
+    "color": "Color",
+    "colorN": "Color {n}",
+    "save": "Save",
+    "delete": "Delete profile",
+    "confirmDelete": "Yes, delete",
+    "deleteWarning": "All of this profile's data will be deleted. This can't be undone.",
+    "switch": "Switch profile",
+    "error": "Something went wrong. Try again."
   }
 }

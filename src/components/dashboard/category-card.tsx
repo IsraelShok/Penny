@@ -1,5 +1,6 @@
 "use client";
 
+import { shekels } from "@/lib/money";
 import { useLocale, useTranslations } from "next-intl";
 import {
   ShoppingBasket,
@@ -29,7 +30,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { formatCurrency } from "@/lib/formatters";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { CategoryWithData, BudgetStatus } from "@/lib/types";
 import type { Locale } from "@/i18n/routing";
@@ -162,11 +162,11 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
       <div className="mt-4">
         <div className="flex items-baseline gap-1.5">
           <span className="font-serif text-3xl tabular-nums">
-            {formatCurrency(data.spent, "ILS", locale)}
+            {shekels(data.spent, locale)}
           </span>
           {!isTracking && data.budget > 0 && (
             <span className="font-serif text-base tabular-nums text-muted-foreground">
-              / {formatCurrency(data.budget, "ILS", locale)}
+              / {shekels(data.budget, locale)}
             </span>
           )}
         </div>
@@ -189,13 +189,13 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
               data.spent <= data.budget ? (
                 <>
                   {t("spentLeft", {
-                    amount: formatCurrency(data.remaining, "ILS", locale),
+                    amount: shekels(data.remaining, locale),
                   })}
                   {data.perDayRemaining != null && (
                     <>
                       {" · "}
                       {t("perDay", {
-                        amount: formatCurrency(data.perDayRemaining, "ILS", locale),
+                        amount: shekels(data.perDayRemaining, locale),
                       })}
                     </>
                   )}
@@ -204,7 +204,7 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
                 <>
                   <span className="text-[var(--status-heads-up)]">
                     {t("overAmount", {
-                      amount: formatCurrency(data.spent - data.budget, "ILS", locale),
+                      amount: shekels(data.spent - data.budget, locale),
                     })}
                   </span>
                   {t("overByEaseUp")}
@@ -242,7 +242,7 @@ function VsTypical({
     <span className="flex items-center gap-1 tabular-nums">
       <span style={{ color: accent }}>{arrow}</span>
       {Math.abs(rounded) >= 5 && <span>{Math.abs(rounded)}%</span>}
-      <span>{t("vsTypical", { amount: formatCurrency(vsTypical.typical, "ILS", locale) })}</span>
+      <span>{t("vsTypical", { amount: shekels(vsTypical.typical, locale) })}</span>
     </span>
   );
 }

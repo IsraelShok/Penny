@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-/** iOS segmented control: one choice from a few. Arrow keys move between options, as in a radio group. */
+/** Pill tabs (text only, the chosen one tinted): one choice from a few. Arrow keys move between options, as in a radio group. */
 export function Segmented<T extends string | number>({
   options,
   value,
@@ -21,7 +21,7 @@ export function Segmented<T extends string | number>({
     <div
       role="radiogroup"
       aria-label={label}
-      className={cn("inline-flex rounded-[0.6rem] bg-[var(--segmented)] p-0.5", className)}
+      className={cn("inline-flex flex-wrap gap-1", className)}
       onKeyDown={(e) => {
         const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
         if (!step) return;
@@ -45,8 +45,8 @@ export function Segmented<T extends string | number>({
             data-value={o.value}
             onClick={() => onChange(o.value)}
             className={cn(
-              "min-h-8 min-w-14 rounded-[0.5rem] px-3 text-footnote font-medium tabular-nums transition-[background-color,color,box-shadow] duration-150",
-              selected ? "bg-[var(--segmented-thumb)] text-foreground shadow-[0_3px_8px_rgb(0_0_0/0.12),0_3px_1px_rgb(0_0_0/0.04)]" : "text-foreground/80 hover:text-foreground"
+              "min-h-9 rounded-full px-3.5 text-sm font-medium tabular-nums transition-[background-color,color] duration-150 focus-visible:outline-2 focus-visible:outline-ring",
+              selected ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
             )}
           >
             {o.label}

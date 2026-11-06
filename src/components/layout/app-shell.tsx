@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-/** iOS large title: a big heading on the page that hands over to a small centred title in the bar once scrolled. */
+/** One quiet row: the page title (and its context line) on the start, the page's few actions on the end. Sticks on scroll. */
 export function PageHeader({
   title,
   meta,
@@ -49,34 +49,22 @@ export function PageHeader({
 }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 48);
+    const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
-    <>
-      <header
-        className={`glass sticky top-0 z-20 transition-[box-shadow] duration-150 ${scrolled ? "shadow-[0_0.5px_0_var(--border)]" : ""}`}
-      >
-        <div className="relative mx-auto flex min-h-14 max-w-[76rem] flex-wrap items-center justify-between gap-3 px-4 py-2 md:min-h-16 md:px-6 lg:px-8">
-          <SidebarTrigger className="-ms-1 md:hidden" />
-          <span
-            aria-hidden
-            className={`pointer-events-none hidden min-w-0 flex-1 truncate md:block text-headline font-semibold transition-opacity duration-150 ${scrolled ? "opacity-100" : "opacity-0"}`}
-          >
-            {title}
-          </span>
-          <div className="ms-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
-            {actions}
-          </div>
+    <header className={`glass sticky top-0 z-20 transition-[box-shadow] duration-150 ${scrolled ? "shadow-[0_0.5px_0_var(--border)]" : ""}`}>
+      <div className="mx-auto flex min-h-14 max-w-[76rem] flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 md:px-6 lg:px-8">
+        <SidebarTrigger className="-ms-1 md:hidden" />
+        <div className={largeTitle ? "flex min-w-0 items-baseline gap-3" : "sr-only"}>
+          <h1 className="truncate text-[1.625rem] leading-8 font-bold tracking-tight">{title}</h1>
+          {meta && <p className="truncate text-footnote text-muted-foreground">{meta}</p>}
         </div>
-      </header>
-      <div className={largeTitle ? "mx-auto w-full max-w-[76rem] px-4 pb-1 pt-3 md:px-6 lg:px-8" : "sr-only"}>
-        <h1 className="text-[2.125rem] leading-[2.5rem] font-bold tracking-tight">{title}</h1>
-        {meta && <p className="mt-0.5 text-footnote text-muted-foreground">{meta}</p>}
+        <div className="ms-auto flex min-w-0 flex-wrap items-center justify-end gap-2">{actions}</div>
       </div>
-    </>
+    </header>
   );
 }

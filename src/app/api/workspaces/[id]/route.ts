@@ -4,6 +4,7 @@ import {
   getWorkspace,
   updateWorkspace,
 } from "@/server/db/queries/workspaces";
+import { parseAvatar } from "@/lib/profile-avatar";
 
 export async function PATCH(
   request: Request,
@@ -38,8 +39,13 @@ export async function PATCH(
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
+  const avatar = parseAvatar(body);
+  if ("error" in avatar) {
+    return NextResponse.json({ error: avatar.error }, { status: 400 });
+  }
+
   try {
-    const ws = updateWorkspace(numericId, name);
+    const ws = updateWorkspace(numericId, name, avatar);
     return NextResponse.json(ws);
   } catch (err) {
     return NextResponse.json(
