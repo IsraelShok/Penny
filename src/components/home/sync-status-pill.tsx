@@ -181,6 +181,7 @@ export function SyncStatusPill({
               render={
                 <button
                   type="button"
+                  aria-label={tooltipText}
                   className={cn(
                     "inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     styles.text

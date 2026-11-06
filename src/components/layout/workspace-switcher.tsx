@@ -92,7 +92,7 @@ export function WorkspaceSwitcher() {
             ) : (
               <div className="size-7 shrink-0 rounded-[28%] bg-primary" />
             )}
-            <div className="flex min-w-0 flex-1 flex-col text-start group-data-[collapsible=icon]:hidden">
+            <div className="flex min-w-0 flex-1 flex-col text-start group-data-[collapsible=icon]:sr-only">
               <span className="truncate text-sm font-medium">
                 {active?.name ?? t("workspace")}
               </span>
