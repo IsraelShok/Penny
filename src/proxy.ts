@@ -21,11 +21,18 @@ export function proxy(request: NextRequest) {
     return new NextResponse("Forbidden: unexpected host", { status: 403 });
   }
 
-  if (!MUTATING_METHODS.has(request.method) && !ORIGIN_CHECKED_GETS.has(request.nextUrl.pathname)) {
+  if (!request.nextUrl.pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 
-  if (!request.nextUrl.pathname.startsWith("/api/")) {
+  // Browsers mark requests from other sites; no API call, read or write, should come from one.
+  // ("same-site" covers sibling hosts such as other *.localhost apps.)
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (fetchSite === "cross-site" || fetchSite === "same-site") {
+    return new NextResponse("Forbidden: cross-site request blocked", { status: 403 });
+  }
+
+  if (!MUTATING_METHODS.has(request.method) && !ORIGIN_CHECKED_GETS.has(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 

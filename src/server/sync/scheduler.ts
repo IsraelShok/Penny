@@ -2,6 +2,7 @@ import "server-only";
 
 import { runAllWorkspaces } from "@/server/sync/orchestrator";
 import { getGlobalSetting } from "@/server/db/queries/settings";
+import { redactError } from "@/server/lib/redact";
 
 interface SchedulerState {
   timeoutId: ReturnType<typeof setTimeout> | null;
@@ -132,7 +133,7 @@ async function fire(): Promise<void> {
     await runAllWorkspaces(undefined, undefined, "scheduled");
     console.log("[scheduler] done");
   } catch (err) {
-    console.error("[scheduler] run failed:", err);
+    console.error("[scheduler] run failed:", redactError(err));
   } finally {
     state.running = false;
     armNext();

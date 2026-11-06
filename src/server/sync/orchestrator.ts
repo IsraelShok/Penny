@@ -1,4 +1,5 @@
 import { saveAccountBalances } from "../db/queries/assets";
+import { redactError } from "../lib/redact";
 import "server-only";
 
 import {
@@ -393,7 +394,7 @@ export async function syncWorkspace(
     } catch (err) {
       const message =
         err instanceof Error
-          ? err.message.replace(/\b\d{5,}\b/g, "[REDACTED]")
+          ? redactError(err)
           : "Unknown scrape error";
       results.push({
         provider,
@@ -546,7 +547,7 @@ export async function syncWorkspace(
           } catch (err) {
             console.error(
               `[sync] AI categorization batch failed (${kind}):`,
-              err
+              redactError(err)
             );
             if (!aiWarning) {
               aiWarning = friendlyAIError(err, settings.ollamaModel);

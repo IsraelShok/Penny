@@ -5,6 +5,7 @@ import type {
   PastCorrection,
   TransactionForCategorization,
 } from "./types";
+import { redact } from "../lib/redact";
 
 function renderCategoryLine(c: CategoryForCategorization, indent = ""): string {
   return c.description && c.description.trim().length > 0
@@ -77,7 +78,8 @@ export function buildCategorizationPrompt(
   const transactionLines = transactions
     .map(
       (t, i) =>
-        `${i}: "${t.description}" | ${t.currency} ${Math.abs(t.amount).toFixed(2)}${t.memo ? ` | memo: "${t.memo}"` : ""}`
+        // Account, ID and card digits never help categorize and must not reach a cloud model.
+        `${i}: "${redact(t.description)}" | ${t.currency} ${Math.abs(t.amount).toFixed(2)}${t.memo ? ` | memo: "${redact(t.memo)}"` : ""}`
     )
     .join("\n");
 

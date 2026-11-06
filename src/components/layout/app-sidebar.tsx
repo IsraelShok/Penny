@@ -2,7 +2,8 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Eye, EyeOff, Search } from "lucide-react";
+import { usePrivacyMode } from "@/hooks/use-privacy-mode";
 import { OPEN_COMMAND_PALETTE } from "./command-palette";
 import { SidebarSync } from "./sidebar-sync";
 import { usePathname, useRouter } from "next/navigation";
@@ -104,6 +105,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("nav");
+  const [privacy, togglePrivacy] = usePrivacyMode();
   const { toggleSidebar, setOpenMobile } = useSidebar();
   const { plan } = usePlan();
   // Settings lives as an icon by the workspace, but the wheel still reaches it last.
@@ -182,6 +184,9 @@ export function AppSidebar() {
           render={<Link href="/settings" />}
         >
           <SettingsIcon className="size-4" aria-hidden />
+        </IconButton>
+        <IconButton label={t("privacyMode")} size="icon-sm" aria-pressed={privacy} onClick={togglePrivacy}>
+          {privacy ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
         </IconButton>
         <IconButton label={t("toggleSidebar")} size="icon-sm" onClick={toggleSidebar}>
           <PanelLeftIcon className="size-4 rtl:rotate-180" aria-hidden />

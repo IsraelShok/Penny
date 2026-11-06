@@ -9,6 +9,7 @@ import { listAllWorkspaceIds } from "../lib/workspace-context";
 import { israelToday } from "../lib/date-utils";
 import { getActivitySnapshot } from "../sync/activity";
 import { checkForUpdate, createUpdateNotifier } from "../update/check";
+import { redactError } from "../lib/redact";
 
 declare global {
   var __spentBot: Bot | undefined;
@@ -49,7 +50,7 @@ export function startBot(): void {
     if (reply) for (const part of splitMessage(reply)) await ctx.reply(part, { reply_markup: KEYBOARD });
   });
 
-  bot.catch((err) => console.error("[bot]", err.message));
+  bot.catch((err) => console.error("[bot]", redactError(err)));
   globalThis.__spentBot = bot;
   void bot.start();
   if (!globalThis.__spentUpdateCheck) {
@@ -84,7 +85,7 @@ function scheduleUpdateCheck(send: (text: string) => Promise<void>): void {
       branch: process.env.SPENT_UPDATE_BRANCH || "main",
       current,
     });
-    if (info) await notify(info).catch((err) => console.error("[update]", err.message));
+    if (info) await notify(info).catch((err) => console.error("[update]", redactError(err)));
   };
   setTimeout(() => void run(), 60_000).unref();
   setInterval(() => void run(), DAY_MS).unref();

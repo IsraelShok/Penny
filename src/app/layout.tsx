@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/query-provider";
 import { dirFor, isLocale, defaultLocale } from "@/i18n/routing";
+import { PRIVACY_COOKIE } from "@/lib/privacy";
 import "./globals.css";
 
 const inter = Inter({
@@ -43,11 +44,13 @@ export default async function RootLayout({
   const messages = await getMessages();
   const dir = dirFor(locale);
   // Set by the sidebar's collapse button.
-  const sidebarOpen = (await cookies()).get("sidebar_state")?.value !== "false";
+  const jar = await cookies();
+  const sidebarOpen = jar.get("sidebar_state")?.value !== "false";
   return (
     <html
       lang={locale}
       dir={dir}
+      data-privacy={jar.get(PRIVACY_COOKIE)?.value === "on" ? "on" : "off"}
       className={`${inter.variable} ${heebo.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
