@@ -41,6 +41,8 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
   const t = useTranslations("dashboard");
   const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale() as Locale;
+  // Hooks run before the loading return, so their order never changes between renders.
+  const todayPhrase = useTodayPhrase(data?.todayLabel ?? "", locale);
 
   if (loading || !data) {
     return (
@@ -99,7 +101,6 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
   ];
 
   const verdict = computeVerdict(budgetedSpent, totalBudget, timeElapsedPercent);
-  const todayPhrase = useTodayPhrase(todayLabel, locale);
 
   const ctaLabel = typicalMonthly
     ? t("setMonthlyTargetWithTypical", {

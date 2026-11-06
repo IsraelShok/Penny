@@ -23,7 +23,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     <>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-background focus:px-5 focus:py-3 focus:outline-2">{t("skipToContent")}</a>
       <AppSidebar />
-      <SidebarInset id="main-content" tabIndex={-1}>
+      {/* Room under the content so the floating search dock never covers the last card. */}
+      <SidebarInset id="main-content" tabIndex={-1} className="pb-28 print:pb-0">
         {children}
         <PageWheelNav />
         <AlertNotifier />
