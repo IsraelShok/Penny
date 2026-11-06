@@ -61,7 +61,7 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
     : free! < 0 ? t(g("short"), { amount: money(-free!), date: date(cash!.until) })
     : t(g("fine"), { amount: money(free!), date: date(cash!.until), perDay: money(free! / Math.max(1, cash!.daysLeft)) });
   const actions = {
-    cash: { href: "/insights", label: t("reviewBills"), hint: t("reviewBillsHint") },
+    cash: { href: "/overview?tab=ahead", label: t("reviewBills"), hint: t("reviewBillsHint") },
     connect: { href: "/settings/bank", label: t("connect"), hint: t("connectHint") },
     sync: { href: "/settings/bank", label: t("manageBanks"), hint: t("syncHint") },
     checkin: { href: "/checkin", label: t("nextCheckin"), hint: t(g("checkinHint")) },
@@ -73,7 +73,6 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
   const nextBill = bills?.filter((bill) => bill.date >= today).sort((a, b) => a.date.localeCompare(b.date))[0];
   const month = home?.thisMonth;
   const stats = [
-    free != null && { label: t("statFree"), value: money(free) },
     month && home?.bankHealth?.some((bank) => bank.lastSyncAt) && { label: t("statSpent"), value: money(month.spent) },
     nextBill && { label: t("statBill", { date: date(nextBill.date) }), value: money(nextBill.total) },
   ].filter(Boolean) as { label: string; value: string }[];
@@ -111,7 +110,7 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
         </Link>
       )}
       {state === "done" && <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="size-5 shrink-0" aria-hidden />{t("allDone")}</p>}
-      {!gentle && ready && stats.length > 0 && <dl className="mt-6 grid gap-3 sm:grid-cols-3">
+      {!gentle && ready && stats.length > 0 && <dl className="mt-6 grid gap-3 sm:grid-cols-2">
         {stats.map((stat) => <div key={stat.label} className="glass-tile min-w-0 rounded-2xl px-5 py-4"><dt className="text-sm text-muted-foreground">{stat.label}</dt><dd className="figure mt-2 break-words text-3xl"><bdi>{stat.value}</bdi></dd></div>)}
       </dl>}
       {wellbeingQuery.data && wellbeingDue(wellbeingQuery.data, today) && (
