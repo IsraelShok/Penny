@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
@@ -44,6 +45,8 @@ const SECURITY_HEADERS = [
 const nextConfig: NextConfig = {
   serverExternalPackages: ["better-sqlite3", "israeli-bank-scrapers", "@sergienko4/israeli-bank-scrapers"],
   devIndicators: false,
+  // Include shared worktree dependencies on the host and use /app inside Docker.
+  turbopack: { root: path.resolve(require.resolve("next/package.json"), "../../..") },
   async headers() {
     return [
       {
