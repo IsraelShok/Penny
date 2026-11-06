@@ -947,3 +947,23 @@ export function importStatement(account: string, rows: { date: string; descripti
 export function undoStatementImport(batchId: number) {
   return fetchJSON<{ removed: number }>(`/api/import?batch=${batchId}`, { method: "DELETE" });
 }
+
+export function getLegacyNotes() {
+  return fetchJSON<import("./legacy").LegacyNotes>(`/api/legacy`);
+}
+
+export function saveLegacyNotes(notes: import("./legacy").LegacyNotes) {
+  return fetchJSON<import("./legacy").LegacyNotes>(`/api/legacy`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(notes),
+  });
+}
+
+export function askQuestion(question: string) {
+  return fetchJSON<import("./ask").AskAnswer>(`/api/ask`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question }),
+  });
+}

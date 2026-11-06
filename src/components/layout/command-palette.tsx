@@ -4,12 +4,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { CalendarCheck, Moon, RefreshCw, Search, Settings2, Sparkles, Sun, Zap, X } from "lucide-react";
+import { CalendarCheck, MessageCircleQuestion, Moon, RefreshCw, Search, Settings2, Sparkles, Sun, Zap, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { usePlan } from "@/hooks/use-plan";
 import { cn } from "@/lib/utils";
 import { FOOTER_NAV, NAV } from "./app-sidebar";
+import { askQuestion } from "@/lib/api";
+import { looksLikeQuestion, type AskAnswer } from "@/lib/ask";
+import { AskAnswerView } from "@/components/ask/ask-answer";
 
 interface Command {
   id: string;
@@ -29,6 +32,7 @@ export function CommandPalette() {
   const tNav = useTranslations("nav");
   const tSettings = useTranslations("settings.sidebar");
   const tRecap = useTranslations("recap");
+  const tAsk = useTranslations("ask");
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const { plan, update } = usePlan();
@@ -36,6 +40,8 @@ export function CommandPalette() {
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const listRef = useRef<HTMLUListElement>(null);
+  // Answer shown inside the palette after choosing "Ask: …"; null while browsing commands.
+  const [asked, setAsked] = useState<{ q: string; answer: AskAnswer | null; failed?: boolean } | null>(null);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -44,7 +50,7 @@ export function CommandPalette() {
         setOpen((o) => !o);
       }
     }
-    const show = () => { setQ(""); setActive(0); setOpen(true); };
+    const show = () => { setQ(""); setActive(0); setAsked(null); setOpen(true); };
     window.addEventListener("keydown", onKey);
     window.addEventListener(OPEN_COMMAND_PALETTE, show);
     return () => {
@@ -59,6 +65,7 @@ export function CommandPalette() {
       ...[...NAV, ...FOOTER_NAV].map((p) => ({ id: p.href, label: tNav(p.labelKey), hint: t("page"), Icon: p.Icon, run: go(p.href) })),
       { id: "checkin", label: t("checkin"), hint: t("action"), Icon: CalendarCheck, run: go("/checkin") },
       { id: "recap", label: tRecap("palette"), hint: t("page"), Icon: Sparkles, run: go("/recap") },
+      { id: "ask-page", label: tAsk("title"), hint: t("page"), Icon: MessageCircleQuestion, run: go("/ask") },
       { id: "sync", label: t("sync"), hint: t("action"), Icon: RefreshCw, run: go("/?sync=1") },
       ...SETTINGS.map((s) => ({ id: `settings-${s}`, label: tSettings(s), hint: t("settings"), Icon: Settings2, run: go(`/settings/${s}`) })),
       {
@@ -70,10 +77,13 @@ export function CommandPalette() {
       },
       { id: "simple", label: plan.simpleMode ? t("simpleOff") : t("simpleOn"), hint: t("action"), Icon: Zap, run: () => { void update({ simpleMode: !plan.simpleMode }).catch(() => toast.error(t("saveFailed"))); } },
     ];
-  }, [router, t, tNav, tSettings, tRecap, resolvedTheme, setTheme, plan.simpleMode, update]);
+  }, [router, t, tNav, tSettings, tRecap, tAsk, resolvedTheme, setTheme, plan.simpleMode, update]);
 
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const results = commands.filter((c) => words.every((w) => `${c.label} ${c.hint ?? ""}`.toLowerCase().includes(w)));
+  const askCommand: Command[] = looksLikeQuestion(q)
+    ? [{ id: "ask", label: tAsk("askPrefix", { q: q.trim() }), hint: tAsk("hint"), Icon: MessageCircleQuestion, run: () => {} }]
+    : [];
+  const results = [...askCommand, ...commands].filter((c) => c.id === "ask" || words.every((w) => `${c.label} ${c.hint ?? ""}`.toLowerCase().includes(w)));
   const current = Math.min(active, Math.max(0, results.length - 1));
 
   useEffect(() => {
@@ -81,8 +91,17 @@ export function CommandPalette() {
     listRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
   }, [current, open]);
 
+  function ask(question: string) {
+    setAsked({ q: question, answer: null });
+    askQuestion(question).then(
+      (answer) => setAsked((a) => (a?.q === question ? { q: question, answer } : a)),
+      () => setAsked((a) => (a?.q === question ? { q: question, answer: null, failed: true } : a)),
+    );
+  }
+
   function choose(c: Command | undefined) {
     if (!c) return;
+    if (c.id === "ask") return ask(q.trim());
     setOpen(false);
     setQ("");
     setActive(0);
@@ -98,7 +117,7 @@ export function CommandPalette() {
         <kbd dir="ltr" className="hidden rounded-md border border-border px-2 py-1 text-xs text-muted-foreground sm:inline">Ctrl / ⌘ K</kbd>
       </button>
     </div>
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQ(""); }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setQ(""); setAsked(null); } }}>
       <DialogContent showCloseButton={false} className="top-auto bottom-[max(1rem,env(safe-area-inset-bottom))] flex max-h-[calc(100dvh-2rem)] translate-y-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl data-open:animate-none data-closed:animate-none">
         <DialogTitle className="sr-only">{t("title")}</DialogTitle>
         <div className="order-2 flex shrink-0 items-center gap-3 border-t border-border px-5">
@@ -109,6 +128,7 @@ export function CommandPalette() {
             onChange={(e) => {
               setQ(e.target.value);
               setActive(0);
+              setAsked(null);
             }}
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
@@ -132,6 +152,13 @@ export function CommandPalette() {
           />
           <button type="button" aria-label={t("close")} onClick={() => setOpen(false)} className="grid min-h-11 min-w-11 place-items-center rounded-lg hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"><X className="size-4" aria-hidden /></button>
         </div>
+        {asked ? (
+          <div className="order-1 min-h-0 max-h-[min(28rem,60dvh)] overflow-y-auto overscroll-contain p-5">
+            {asked.answer ? <AskAnswerView answer={asked.answer} onExample={(e) => { setQ(e); ask(e); }} onNavigate={() => setOpen(false)} />
+              : asked.failed ? <p role="alert" className="text-footnote text-destructive">{tAsk("error")}</p>
+              : <p role="status" className="text-footnote text-muted-foreground">{tAsk("loading")}</p>}
+          </div>
+        ) : (
         <ul id="palette-list" ref={listRef} role="listbox" className="order-1 min-h-0 max-h-[min(24rem,55dvh)] overflow-y-auto overscroll-contain p-1.5">
           {results.length === 0 && <li className="px-3 py-6 text-center text-footnote text-muted-foreground">{t("none")}</li>}
           {results.map((c, i) => (
@@ -150,6 +177,7 @@ export function CommandPalette() {
             </li>
           ))}
         </ul>
+        )}
         <p className="order-3 shrink-0 border-t border-border px-5 py-2 text-caption text-muted-foreground">{t("footer")}</p>
       </DialogContent>
     </Dialog>

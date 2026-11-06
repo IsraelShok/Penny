@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   ListFilter,
   Users,
+  HeartHandshake,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -94,13 +95,21 @@ const GROUPS: NavGroup[] = [
         Icon: ShieldAlert,
         match: (p) => p.startsWith("/settings/data"),
       },
+      {
+        href: "/settings/legacy",
+        labelKey: "legacy.nav",
+        Icon: HeartHandshake,
+        match: (p) => p.startsWith("/settings/legacy"),
+      },
     ],
   },
 ];
 
 export function SettingsSidebar() {
   const pathname = usePathname();
-  const t = useTranslations("settings.sidebar");
+  const tSidebar = useTranslations("settings.sidebar");
+  const tRoot = useTranslations();
+  const t = (k: string) => (k.includes(".") ? tRoot(k) : tSidebar(k));
   return (
     <aside className="hidden w-56 shrink-0 border-e border-border/40 bg-card/30 md:flex md:flex-col">
       <div className="px-5 pt-6 pb-3">
@@ -145,7 +154,9 @@ export function SettingsSidebar() {
 
 export function SettingsMobileNav() {
   const pathname = usePathname();
-  const t = useTranslations("settings.sidebar");
+  const tSidebar = useTranslations("settings.sidebar");
+  const tRoot = useTranslations();
+  const t = (k: string) => (k.includes(".") ? tRoot(k) : tSidebar(k));
   const allItems = GROUPS.flatMap((g) => g.items);
   return (
     <div className="-mx-4 overflow-x-auto border-b border-border/40 px-4 md:hidden">
