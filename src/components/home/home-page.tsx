@@ -14,6 +14,7 @@ import { MarketStrip } from "@/components/markets/markets-view";
 import { SuggestionsCard } from "./suggestions-card";
 import { NextBillCard, SubscriptionsCard } from "./bills-card";
 import { TodayCard } from "./today-card";
+import { MoneyTreeCard } from "./money-tree-card";
 import { MoreSection } from "./more-section";
 import { HomeTeasers, WelcomePrompt } from "./home-teasers";
 import { CategoryScroll } from "./category-scroll";
@@ -80,6 +81,7 @@ export function HomePage() {
           className="mb-4 md:mb-5 lg:mb-6"
         />
         <Greeting name={settings?.displayName} />
+        <MoneyTreeCard />
         <TodayCard home={data} bills={insights?.forecast} homePending={isLoading} homeFailed={isError} onRetry={() => { void queryClient.invalidateQueries({ queryKey: ["home"] }); }} />
         <WelcomePrompt />
         <MoreSection>

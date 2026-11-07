@@ -2686,5 +2686,26 @@
     "submit": "Unlock",
     "wrong": "Not right. You can try again in {seconds} seconds.",
     "wait": "Too many tries. Try again in {seconds} seconds."
+  },
+  "moneyTree": {
+    "title": "Your money tree",
+    "netWorth": "Net worth",
+    "artLabel": "Your money tree, at the {stage} stage",
+    "stage": {
+      "0": "Seed",
+      "1": "Sprout",
+      "2": "Sapling",
+      "3": "Young tree",
+      "4": "Blossoming tree",
+      "5": "Fruit-bearing tree",
+      "6": "Ancient tree"
+    },
+    "plant": "Plant your seed: add your accounts, savings and investments, and watch the tree grow with your wealth.",
+    "plantAction": "Plant it",
+    "growing": "Your tree grew by {amount} this month. Money that is invested grows on its own, like water for the roots.",
+    "steady": "Your tree is steady. Every shekel you invest waters the roots and helps it grow.",
+    "autumn": "A little autumn this month. It happens to every tree, and it grows back. Investing for the long run is what makes it bloom.",
+    "water": "Grow it by investing",
+    "toNext": "{amount} more to reach {stage}"
   }
 }
