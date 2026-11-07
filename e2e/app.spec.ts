@@ -15,7 +15,7 @@ test.describe("core screens", () => {
   });
 
   test("no page scrolls sideways", async ({ page }) => {
-    for (const path of ["/", "/calculators", "/car", "/discounted-home", "/calculators/mortgage", "/calculators/debt"]) {
+    for (const path of ["/", "/learn", "/learn/electric-car", "/calculators", "/car", "/discounted-home", "/calculators/mortgage", "/calculators/debt"]) {
       await page.goto(path);
       await page.getByRole("heading", { level: 1 }).waitFor();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -63,6 +63,19 @@ test.describe("calculators", () => {
   test("discounted home shows a verdict", async ({ page }) => {
     await page.goto("/discounted-home");
     await expect(page.getByText(/משאירה אתכם במצב טוב יותר|בערך לאותו מקום/)).toBeVisible();
+  });
+});
+
+test.describe("knowledge center", () => {
+  test("search narrows the guides and a guide leads to its calculator", async ({ page }) => {
+    await page.goto("/learn");
+    await page.getByRole("searchbox", { name: "חיפוש מדריכים" }).fill("משכנתא");
+    await expect(page.getByRole("link", { name: /תמהיל משכנתא/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /לצאת מהמינוס/ })).toHaveCount(0);
+    await page.getByRole("link", { name: /תמהיל משכנתא/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "תמהיל משכנתא בלי כאב ראש" })).toBeVisible();
+    await page.getByRole("link", { name: "מחשבון משכנתא" }).click();
+    await expect(page).toHaveURL(/\/calculators\/mortgage$/);
   });
 });
 

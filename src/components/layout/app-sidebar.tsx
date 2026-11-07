@@ -20,6 +20,7 @@ import {
   ArrowLeftRight,
   LayoutGrid,
   Calculator,
+  BookOpen,
   Settings as SettingsIcon,
   PanelLeftIcon,
 } from "lucide-react";
@@ -100,6 +101,13 @@ export const NAV: NavDef[] = [
     match: (p: string) => ["/more", "/recap", "/ask", "/journey", "/life", "/wellbeing", "/checkin"].some((r) => p.startsWith(r)),
   },
   {
+    href: "/learn",
+    labelKey: "learn",
+    tint: "bg-[#ff3b30]",
+    Icon: BookOpen,
+    match: (p: string) => p.startsWith("/learn"),
+  },
+  {
     href: "/calculators",
     labelKey: "calculators",
     tint: "bg-[#a2845e]",
@@ -163,7 +171,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        {[{ label: "dailyGroup", items: [NAV[0], NAV[5], NAV[4]] }, { label: "planningGroup", items: [NAV[1], NAV[2], NAV[3], NAV[7], NAV[6]] }].map((group) => (
+        {[{ label: "dailyGroup", items: [NAV[0], NAV[5], NAV[4]] }, { label: "planningGroup", items: [NAV[1], NAV[2], NAV[3], NAV[8], NAV[7], NAV[6]] }].map((group) => (
         <SidebarGroup key={group.label}>
           <SidebarGroupLabel>{t(group.label)}</SidebarGroupLabel>
           <SidebarGroupContent>

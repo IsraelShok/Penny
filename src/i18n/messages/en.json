@@ -59,7 +59,8 @@
     "search": "Search",
     "privacyMode": "Privacy mode: hide amounts",
     "lockNow": "Lock now",
-    "calculators": "Calculators"
+    "calculators": "Calculators",
+    "learn": "Learn"
   },
   "home": {
     "pageTitle": "Home",
@@ -2966,5 +2967,17 @@
       "tip": "Try a prime change of +2 points: if the higher payment still fits comfortably, the mix is safe. Every extra shekel you pay early on the most expensive track saves the most.",
       "disclaimer": "Rates are examples; take offers from at least three banks or a mortgage advisor."
     }
+  },
+  "learn": {
+    "title": "Knowledge center",
+    "subtitle": "Short, plain guides for every money decision",
+    "search": "Search guides",
+    "topic": "Topic",
+    "all": "All guides",
+    "empty": "No guides match. Try another word.",
+    "minutes": "{n} min read",
+    "takeaway": "The bottom line",
+    "related": "Read next",
+    "disclaimer": "General education, not personal financial advice."
   }
 }
