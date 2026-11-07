@@ -23,7 +23,7 @@ export default defineConfig({
   ],
   webServer: {
     // A production build: dev mode recompiles and reloads pages mid-test.
-    command: `npx next build && npx next start -H 127.0.0.1 -p ${PORT}`,
+    command: `node -e "require('fs').rmSync('e2e/.data', { recursive: true, force: true })" && npx next build && npx next start -H 127.0.0.1 -p ${PORT}`,
     url: `http://127.0.0.1:${PORT}/api/health`,
     timeout: 180_000,
     reuseExistingServer: !process.env.CI,

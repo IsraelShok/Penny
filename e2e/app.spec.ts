@@ -66,6 +66,24 @@ test.describe("calculators", () => {
   });
 });
 
+test.describe("profiles", () => {
+  test("with two profiles, a new session starts at who's using, and picking one goes home", async ({ page, browser, isMobile }) => {
+    test.skip(isMobile, "profiles are shared data; one project is enough");
+    await page.goto("/profiles");
+    await page.getByRole("button", { name: "הוספת פרופיל" }).click();
+    await page.getByLabel("שם").fill("נועה");
+    await page.getByRole("button", { name: /שמירה/ }).click();
+    await expect(page.getByRole("button", { name: "נועה" })).toBeVisible();
+
+    const fresh = await browser.newPage();
+    await fresh.goto("/");
+    await expect(fresh).toHaveURL(/\/profiles$/);
+    await fresh.getByRole("button", { name: "נועה" }).click();
+    await expect(fresh).toHaveURL(/\/$/);
+    await fresh.close();
+  });
+});
+
 test.describe("PWA", () => {
   test("serves an installable manifest and the offline page", async ({ request }) => {
     const manifest = await (await request.get("/manifest.webmanifest")).json();

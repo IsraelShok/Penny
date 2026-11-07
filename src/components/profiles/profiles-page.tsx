@@ -84,14 +84,22 @@ export function ProfilesPage() {
   };
 
   return (
-    <main className="flex min-h-dvh w-full flex-col items-center justify-center bg-background px-4 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+    <main className="relative isolate flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-background px-4 py-12">
+      {/* Soft brand glow behind the avatars, like a lock screen wallpaper. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_45%_at_50%_42%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_70%),radial-gradient(40%_35%_at_80%_90%,color-mix(in_oklab,#34c759_14%,transparent),transparent_70%)]" />
+      <div className="mb-6 motion-safe:animate-[fadeIn_0.5s_ease-out_both]">
+        {/* eslint-disable-next-line @next/next/no-img-element -- tiny SVG logo */}
+        <img src="/logo_lightmode.svg" alt="" className="h-10 w-auto dark:hidden" />
+        {/* eslint-disable-next-line @next/next/no-img-element -- tiny SVG logo */}
+        <img src="/logo_darkmode.svg" alt="" className="hidden h-10 w-auto dark:block" />
+      </div>
+      <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl motion-safe:animate-[fadeIn_0.5s_ease-out_both]">
         {managing ? t("manageTitle") : t("title")}
       </h1>
 
-      <ul className="mt-10 flex max-w-3xl flex-wrap justify-center gap-6 sm:gap-8">
-        {profiles.map((p) => (
-          <li key={p.id}>
+      <ul className="mt-10 flex max-w-3xl flex-wrap justify-center gap-6 sm:gap-10">
+        {profiles.map((p, i) => (
+          <li key={p.id} className="motion-safe:animate-[fadeIn_0.45s_ease-out_both]" style={{ animationDelay: `${120 + i * 70}ms` }}>
             <button
               type="button"
               className={tile}
@@ -99,20 +107,20 @@ export function ProfilesPage() {
               aria-label={managing ? t("editProfile", { name: p.name }) : p.name}
             >
               <span className="relative">
-                <ProfileAvatar profile={p} className={cn(square, managing && "opacity-60")} />
+                <ProfileAvatar profile={p} className={cn(square, "shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] ring-0 ring-white/70 group-hover:ring-4 dark:ring-white/80", managing && "opacity-60")} />
                 {managing ? (
                   <span className="absolute inset-0 flex items-center justify-center">
                     <Pencil className="size-8 text-white drop-shadow" />
                   </span>
                 ) : null}
               </span>
-              <span className="max-w-32 truncate text-base text-muted-foreground group-hover:text-foreground">
+              <span className="max-w-32 truncate text-base font-medium text-muted-foreground group-hover:text-foreground">
                 {p.name}
               </span>
             </button>
           </li>
         ))}
-        <li>
+        <li className="motion-safe:animate-[fadeIn_0.45s_ease-out_both]" style={{ animationDelay: `${120 + profiles.length * 70}ms` }}>
           <button type="button" className={tile} onClick={() => openEditor()}>
             <span
               className={cn(
