@@ -2548,7 +2548,9 @@
     "help_title": "How it works",
     "help_hint": "Terms, steps and keyboard shortcuts",
     "welcome_title": "Let's get to know you",
-    "welcome_hint": "Short questions that fit the app to you"
+    "welcome_hint": "Short questions that fit the app to you",
+    "car_title": "Car cost calculator",
+    "car_hint": "Petrol, hybrid or electric: what each really costs"
   },
   "telegram": {
     "title": "Telegram bot",
@@ -2707,5 +2709,54 @@
     "autumn": "A little autumn this month. It happens to every tree, and it grows back. Investing for the long run is what makes it bloom.",
     "water": "Grow it by investing",
     "toNext": "{amount} more to reach {stage}"
+  },
+  "car": {
+    "title": "Car cost calculator",
+    "subtitle": "What a car really costs to own: gas, hybrid, plug-in or electric",
+    "sharedTitle": "How you drive",
+    "years": "Years you will keep it",
+    "kmPerYear": "Km per year",
+    "fuelPrice": "Fuel, ₪ per litre",
+    "electricityPrice": "Electricity, ₪ per kWh",
+    "investReturn": "Investment return, % a year",
+    "carA": "Car A",
+    "carB": "Car B",
+    "typeLabel": "Engine type",
+    "type": {
+      "gas": "Petrol",
+      "hybrid": "Hybrid",
+      "phev": "Plug-in hybrid",
+      "ev": "Electric"
+    },
+    "price": "Price, ₪",
+    "downShare": "Paid up front, %",
+    "loanRate": "Loan interest, % a year",
+    "loanYears": "Loan years",
+    "moreAssumptions": "More assumptions",
+    "litersPer100": "Litres per 100 km",
+    "kwhPer100": "kWh per 100 km",
+    "electricShare": "Km on electricity, %",
+    "insuranceYearly": "Insurance, ₪ a year",
+    "maintenanceYearly": "Maintenance, ₪ a year",
+    "licenseYearly": "Licence fee, ₪ a year",
+    "resaleAfter5": "Value left after 5 years, %",
+    "resultTitle": "Total cost over {years} years",
+    "same": "Both cars cost about the same.",
+    "verdict": "{car} is cheaper by {amount}, about {perMonth} a month.",
+    "perMonth": "{amount} a month",
+    "perKm": "₪{amount} per km",
+    "loanPayment": "Loan payment: {amount} a month",
+    "part": {
+      "depreciation": "Value lost",
+      "energy": "Fuel and charging",
+      "insurance": "Insurance",
+      "maintenance": "Maintenance",
+      "license": "Licence",
+      "interest": "Loan interest",
+      "missedReturn": "Missed investment return"
+    },
+    "investNudge": "Choosing the cheaper car and investing the difference of {amount} a month lets the saving keep growing. Cash paid for a car stops earning; invested money keeps working.",
+    "investLink": "See how to start investing",
+    "disclaimer": "Estimates from typical Israeli figures (Nov 2026). Change any assumption to match your offer. Not financial advice."
   }
 }
