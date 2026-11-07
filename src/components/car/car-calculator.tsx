@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NumField as Num } from "@/components/ui/num-field";
 import { Segmented } from "@/components/ui/segmented";
 import { CAR_DEFAULTS, SHARED_DEFAULTS, carCost, type CarCost, type CarInputs, type Powertrain } from "@/lib/car-cost";
 import { shekels } from "@/lib/money";
@@ -141,26 +140,4 @@ export function CarCalculator() {
   }
 }
 
-const pct = (v: number) => Math.round(v * 1000) / 10;
-
-function Num({ id, label, value, onChange, min = 0, max, step = 1 }: { id: string; label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number }) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={`car-${id}`}>{label}</Label>
-      <Input
-        id={`car-${id}`}
-        type="number"
-        inputMode="decimal"
-        dir="ltr"
-        min={min}
-        max={max}
-        step={step}
-        value={Number.isFinite(value) ? value : ""}
-        onChange={(e) => {
-          const v = e.target.valueAsNumber;
-          onChange(Number.isFinite(v) ? Math.max(min, max === undefined ? v : Math.min(max, v)) : 0);
-        }}
-      />
-    </div>
-  );
-}
+const pct = (v: number) => Math.round(v * 10000) / 100;

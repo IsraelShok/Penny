@@ -2550,7 +2550,9 @@
     "welcome_title": "Let's get to know you",
     "welcome_hint": "Short questions that fit the app to you",
     "car_title": "Car cost calculator",
-    "car_hint": "Petrol, hybrid or electric: what each really costs"
+    "car_hint": "Petrol, hybrid or electric: what each really costs",
+    "discountedHome_title": "Discounted home vs market",
+    "discountedHome_hint": "Dira BeHanacha or buying now: which leaves you better off"
   },
   "telegram": {
     "title": "Telegram bot",
@@ -2758,5 +2760,49 @@
     "investNudge": "Choosing the cheaper car and investing the difference of {amount} a month lets the saving keep growing. Cash paid for a car stops earning; invested money keeps working.",
     "investLink": "See how to start investing",
     "disclaimer": "Estimates from typical Israeli figures (Nov 2026). Change any assumption to match your offer. Not financial advice."
+  },
+  "discountedHome": {
+    "title": "Discounted home vs open market",
+    "subtitle": "Dira BeHanacha (formerly Mehir LaMishtaken) or buying now: where you stand after years",
+    "apartmentTitle": "The apartment",
+    "programTitle": "If you win the lottery",
+    "mortgageTitle": "Mortgage",
+    "moreAssumptions": "More assumptions",
+    "in": {
+      "marketPrice": "Market price, ₪",
+      "equity": "Your own money, ₪",
+      "horizon": "Compare after, years",
+      "appreciation": "Home prices rise, % a year",
+      "discountPct": "Discount, %",
+      "discountCap": "Discount cap, ₪",
+      "yearsToKeys": "Years until the keys",
+      "rent": "Rent while waiting, ₪ a month",
+      "linkedShare": "Price linked to the construction index, %",
+      "indexRate": "Construction index, % a year",
+      "rentGrowth": "Rent rises, % a year",
+      "mortgageRate": "Mortgage interest, % a year",
+      "mortgageYears": "Mortgage years"
+    },
+    "resultTitle": "Where you stand after {years} years",
+    "same": "Both paths end up about the same.",
+    "verdict_discounted": "The discounted home leaves you better off by about {amount}.",
+    "verdict_market": "Buying on the open market now leaves you better off by about {amount}: the wait and the rent eat the discount.",
+    "discountedTitle": "Discounted home",
+    "marketTitle": "Open market, now",
+    "better": "Better",
+    "position": "Home value minus mortgage left and everything paid",
+    "price": "Final price",
+    "discount": "Discount",
+    "indexation": "Index linkage added",
+    "rentPaid": "Rent paid while waiting",
+    "purchaseTax": "Purchase tax",
+    "loan": "Mortgage",
+    "monthlyPayment": "Monthly payment",
+    "interestPaid": "Interest paid",
+    "homeValue": "Home value then",
+    "mortgageLeft": "Mortgage left",
+    "tip": "While you wait for the keys, your equity can grow: money kept in a money-market fund or a broad index fund earns instead of sitting idle. Check eligibility and the lottery terms on the official program site before deciding.",
+    "investLink": "See where to keep the money meanwhile",
+    "disclaimer": "Estimates. The discount, cap, sale and rental limits change between lotteries. Purchase tax by the single-home brackets (2026). Not financial advice."
   }
 }
