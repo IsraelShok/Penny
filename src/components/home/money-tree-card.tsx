@@ -87,7 +87,7 @@ function TreeArt({ tree, label }: { tree: MoneyTree; label: string }) {
   };
 
   return (
-    <svg viewBox="0 0 320 260" role="img" aria-label={label} className="mx-auto w-full max-w-[320px]">
+    <svg viewBox={tree.stage === 0 ? "0 150 320 110" : "0 0 320 260"} role="img" aria-label={label} className="mx-auto w-full max-w-[320px]">
       <ellipse cx="160" cy={GROUND + 4} rx="120" ry="12" className="fill-emerald-900/10 dark:fill-emerald-200/10" />
       <g
         className="motion-safe:animate-[treeSway_7s_ease-in-out_infinite]"

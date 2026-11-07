@@ -15,20 +15,20 @@ const pct = (v: number) => Math.round(v * 10000) / 100;
 /** Every calculator in the app, by life topic. Existing FI tools live on /fi. */
 const HUB = [
   { key: "money", items: [
-    { href: "/calculators/growth", key: "growth", Icon: Sprout },
-    { href: "/calculators/debt", key: "debt", Icon: Scale },
-    { href: "/fi", key: "fi", Icon: LineChart },
+    { href: "/calculators/growth", key: "growth", Icon: Sprout, tint: "bg-[#34c759]" },
+    { href: "/calculators/debt", key: "debt", Icon: Scale, tint: "bg-[#ff3b30]" },
+    { href: "/fi", key: "fi", Icon: LineChart, tint: "bg-[#ff2d55]" },
   ] },
   { key: "home", items: [
-    { href: "/calculators/mortgage", key: "mortgage", Icon: Percent },
-    { href: "/discounted-home", key: "discountedHome", Icon: House },
-    { href: "/calculators/renovation", key: "renovation", Icon: Hammer },
-    { href: "/fi", key: "rentBuy", Icon: Landmark },
+    { href: "/calculators/mortgage", key: "mortgage", Icon: Percent, tint: "bg-[#007aff]" },
+    { href: "/discounted-home", key: "discountedHome", Icon: House, tint: "bg-[#ff9500]" },
+    { href: "/calculators/renovation", key: "renovation", Icon: Hammer, tint: "bg-[#a2845e]" },
+    { href: "/fi", key: "rentBuy", Icon: Landmark, tint: "bg-[#30b0c7]" },
   ] },
   { key: "life", items: [
-    { href: "/car", key: "car", Icon: Car },
-    { href: "/fi", key: "takeHome", Icon: Wallet },
-    { href: "/fi", key: "fees", Icon: Banknote },
+    { href: "/car", key: "car", Icon: Car, tint: "bg-[#5856d6]" },
+    { href: "/fi", key: "takeHome", Icon: Wallet, tint: "bg-[#34c759]" },
+    { href: "/fi", key: "fees", Icon: Banknote, tint: "bg-[#8e8e93]" },
   ] },
 ] as const;
 
@@ -40,10 +40,10 @@ export function CalculatorsHub() {
         <section key={g.key} aria-labelledby={`calc-${g.key}`}>
           <h2 id={`calc-${g.key}`} className="mb-3 px-1 text-footnote font-semibold text-muted-foreground">{t(`group.${g.key}`)}</h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {g.items.map(({ href, key, Icon }) => (
+            {g.items.map(({ href, key, Icon, tint }) => (
               <li key={key}>
                 <Link href={href} className="flex h-full items-start gap-4 rounded-2xl bg-card p-5 transition-[background-color] duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary" aria-hidden><Icon className="size-5" /></span>
+                  <span className={`grid size-11 shrink-0 place-items-center rounded-xl text-white ${tint}`} aria-hidden><Icon className="size-5" /></span>
                   <span className="min-w-0">
                     <span className="block text-headline font-semibold">{t(`item.${key}.title`)}</span>
                     <span className="mt-0.5 block text-footnote text-pretty text-muted-foreground">{t(`item.${key}.hint`)}</span>
