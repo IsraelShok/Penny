@@ -19,6 +19,7 @@ import {
   Wallet,
   ArrowLeftRight,
   LayoutGrid,
+  Calculator,
   Settings as SettingsIcon,
   PanelLeftIcon,
 } from "lucide-react";
@@ -42,6 +43,8 @@ interface NavDef {
   href: string;
   labelKey: string;
   Icon: React.ComponentType<{ className?: string }>;
+  /** iOS Settings-style icon tile colour. */
+  tint: string;
   match: (p: string) => boolean;
 }
 
@@ -49,45 +52,59 @@ export const NAV: NavDef[] = [
   {
     href: "/",
     labelKey: "home",
+    tint: "bg-[#007aff]",
     Icon: LayoutDashboard,
     match: (p: string) => p === "/",
   },
   {
     href: "/overview",
     labelKey: "overview",
+    tint: "bg-[#ff9500]",
     Icon: PieChart,
     match: (p: string) => p.startsWith("/overview") || p.startsWith("/insights"),
   },
   {
     href: "/investments",
     labelKey: "investments",
+    tint: "bg-[#30b0c7]",
     Icon: Landmark,
     match: (p: string) => p.startsWith("/investments"),
   },
   {
     href: "/fi",
     labelKey: "fi",
+    tint: "bg-[#ff2d55]",
     Icon: Flag,
     match: (p: string) => p.startsWith("/fi"),
   },
   {
     href: "/budget",
     labelKey: "budget",
+    tint: "bg-[#34c759]",
     Icon: Wallet,
     match: (p: string) => p.startsWith("/budget"),
   },
   {
     href: "/transactions",
     labelKey: "transactions",
+    tint: "bg-[#5856d6]",
     Icon: ArrowLeftRight,
     match: (p: string) => p.startsWith("/transactions"),
   },
   {
     href: "/more",
     labelKey: "more",
+    tint: "bg-[#8e8e93]",
     Icon: LayoutGrid,
     // The hub plus the tools it opens, so the menu stays short but you always see where you are.
     match: (p: string) => ["/more", "/recap", "/ask", "/journey", "/life", "/wellbeing", "/checkin"].some((r) => p.startsWith(r)),
+  },
+  {
+    href: "/calculators",
+    labelKey: "calculators",
+    tint: "bg-[#a2845e]",
+    Icon: Calculator,
+    match: (p: string) => ["/calculators", "/car", "/discounted-home"].some((r) => p.startsWith(r)),
   },
 ];
 
@@ -95,6 +112,7 @@ export const FOOTER_NAV: NavDef[] = [
   {
     href: "/settings",
     labelKey: "settings",
+    tint: "bg-[#8e8e93]",
     Icon: SettingsIcon,
     match: (p: string) => p.startsWith("/settings"),
   },
@@ -145,7 +163,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        {[{ label: "dailyGroup", items: [NAV[0], NAV[5], NAV[4]] }, { label: "planningGroup", items: [NAV[1], NAV[2], NAV[3], NAV[6]] }].map((group) => (
+        {[{ label: "dailyGroup", items: [NAV[0], NAV[5], NAV[4]] }, { label: "planningGroup", items: [NAV[1], NAV[2], NAV[3], NAV[7], NAV[6]] }].map((group) => (
         <SidebarGroup key={group.label}>
           <SidebarGroupLabel>{t(group.label)}</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -157,7 +175,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       render={
                         <Link href={item.href} onClick={() => setOpenMobile(false)} aria-current={item.match(pathname) ? "page" : undefined}>
-                          <item.Icon />
+                          <span className={`grid size-7 shrink-0 place-items-center rounded-[0.5rem] text-white ${item.tint}`} aria-hidden><item.Icon /></span>
                           <span>{label}</span>
                         </Link>
                       }
@@ -173,12 +191,13 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="gap-2">
-        <Suspense fallback={null}><SidebarSync /></Suspense>
-        <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
-        <div className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none">
-          <WorkspaceSwitcher />
+      {/* iOS-style footer: a grouped sync card, then who is using the app, then one even row of tools. */}
+      <SidebarFooter className="gap-2 pb-3">
+        <div className="rounded-2xl bg-sidebar-accent/60 p-1.5 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0">
+          <Suspense fallback={null}><SidebarSync /></Suspense>
         </div>
+        <WorkspaceSwitcher />
+        <div className="flex items-center justify-between border-t border-sidebar-border/70 px-1 pt-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:border-t-0">
         <IconButton
           label={t("settings")}
           variant={pathname.startsWith("/settings") ? "secondary" : "ghost"}
