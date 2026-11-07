@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Banknote, Car, Hammer, House, Landmark, LineChart, Scale, Sprout, Wallet } from "lucide-react";
+import { Banknote, Car, Hammer, House, Landmark, LineChart, Percent, Scale, Sprout, Wallet } from "lucide-react";
 import { NumField } from "@/components/ui/num-field";
 import { Segmented } from "@/components/ui/segmented";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ const HUB = [
     { href: "/fi", key: "fi", Icon: LineChart },
   ] },
   { key: "home", items: [
+    { href: "/calculators/mortgage", key: "mortgage", Icon: Percent },
     { href: "/discounted-home", key: "discountedHome", Icon: House },
     { href: "/calculators/renovation", key: "renovation", Icon: Hammer },
     { href: "/fi", key: "rentBuy", Icon: Landmark },

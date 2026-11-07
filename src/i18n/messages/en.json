@@ -2853,6 +2853,10 @@
       "fees": {
         "title": "Fund fees",
         "hint": "What fees cost you over the years"
+      },
+      "mortgage": {
+        "title": "Mortgage",
+        "hint": "Tracks, monthly payment and what it really costs"
       }
     },
     "investLink": "See how to start investing",
@@ -2924,6 +2928,42 @@
       "interest": "Interest",
       "nudge": "Saving {monthly} a month for {months} months before starting avoids about {interest} in interest.",
       "disclaimer": "Typical Israeli prices, Nov 2026; get three quotes. Renovations almost always run over, so keep the buffer. Not financial advice."
+    },
+    "mortgageCalc": {
+      "basics": "The basics",
+      "loan": "Mortgage amount, ₪",
+      "propertyValue": "Property value, ₪",
+      "income": "Net household income, ₪ a month",
+      "prime": "Prime today, %",
+      "inflation": "Expected inflation, % a year",
+      "shock": "Prime change from year 2, points",
+      "tracks": "Your tracks (תמהיל)",
+      "tracksHint": "Banks split a mortgage into tracks. Prime moves with the Bank of Israel rate; fixed stays the same; fixed-linked has a lower rate, but the balance grows with the CPI.",
+      "trackKind": "Track type",
+      "kind": {
+        "prime": "Prime",
+        "fixed": "Fixed, unlinked",
+        "fixedLinked": "Fixed, CPI-linked"
+      },
+      "share": "Share, %",
+      "spread": "Prime +/−, %",
+      "rate": "Rate, %",
+      "years": "Years",
+      "remove": "Remove",
+      "add": "Add a track",
+      "trackLine": "{principal} · first payment {payment} · costs {cost} over its life",
+      "result": "Your mortgage",
+      "firstPayment": "First monthly payment",
+      "maxPayment": "Highest monthly payment (estimate)",
+      "totalPaid": "Total you will pay",
+      "costLine": "{cost} above the loan · ₪{per} per ₪1 borrowed",
+      "warnShares": "The track shares add up to {total}%. They should add up to 100%.",
+      "warnFixed": "Bank of Israel rules require at least {min}% of the mortgage at a fixed rate.",
+      "warnLtv": "The loan is {ltv}% of the property value. For a first home banks lend up to {max}%.",
+      "warnPtiOver": "The payment is {pti}% of your income. Banks won’t approve more than 50%.",
+      "warnPtiHigh": "The payment is {pti}% of your income. Above 40% leaves little room for surprises.",
+      "tip": "Try a prime change of +2 points: if the higher payment still fits comfortably, the mix is safe. Every extra shekel you pay early on the most expensive track saves the most.",
+      "disclaimer": "Rates are examples; take offers from at least three banks or a mortgage advisor."
     }
   }
 }
