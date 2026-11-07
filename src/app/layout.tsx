@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { Inter, Geist_Mono, Heebo } from "next/font/google";
 import { getLocale, getMessages } from "next-intl/server";
 import { cookies } from "next/headers";
@@ -32,6 +33,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Penny",
   description: "Personal finance tracker with AI-powered categorization",
+  applicationName: "Penny",
+  appleWebApp: { capable: true, title: "Penny", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f3fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0a1a" },
+  ],
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({
@@ -61,6 +73,7 @@ export default async function RootLayout({
               <TooltipProvider>
                 <SidebarRoot defaultOpen={sidebarOpen}>{children}</SidebarRoot>
                 <Toaster />
+                <ServiceWorkerRegister />
               </TooltipProvider>
             </QueryProvider>
           </ThemeProvider>

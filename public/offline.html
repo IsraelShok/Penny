@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Penny — אין חיבור</title>
+<style>
+  :root { color-scheme: light dark; --bg: #f4f3fb; --fg: #1a1830; --accent: #2f22b0; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0b0a1a; --fg: #eeeae3; --accent: #aaa2ff; } }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--fg);
+         font-family: system-ui, "Segoe UI", Arial, sans-serif; text-align: center; padding: 16px; box-sizing: border-box; }
+  img { width: 56px; height: auto; margin-bottom: 16px; }
+  h1 { font-size: 1.4rem; margin: 0 0 8px; }
+  p { margin: 0 0 20px; opacity: .8; line-height: 1.5; }
+  button { font: inherit; padding: 10px 22px; border: 0; border-radius: 999px; background: var(--accent); color: #fff; cursor: pointer; }
+  .light-logo { display: inline; } .dark-logo { display: none; }
+  @media (prefers-color-scheme: dark) { .light-logo { display: none; } .dark-logo { display: inline; } }
+</style>
+</head>
+<body>
+<main>
+  <img class="light-logo" src="/logo_lightmode.svg" alt="">
+  <img class="dark-logo" src="/logo_darkmode.svg" alt="">
+  <h1>אין כרגע חיבור לשרת</h1>
+  <p>הנתונים שלך בטוחים. בדקו את החיבור ונסו שוב.<br><span lang="en" dir="ltr">You're offline — your data is safe.</span></p>
+  <button type="button" onclick="location.reload()">לנסות שוב</button>
+</main>
+</body>
+</html>
