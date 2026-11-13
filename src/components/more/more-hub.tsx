@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { SuggestionsCard } from "@/components/home/suggestions-card";
 import { CalendarCheck, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, Sparkles } from "lucide-react";
 
 /** Everything that isn't daily, in one calm place: the menu stays short, nothing gets lost. */
@@ -30,6 +31,7 @@ export function MoreHub() {
   const t = useTranslations("moreHub");
   return (
     <div className="space-y-8">
+      <SuggestionsCard limit={50} />
       <Link href="/control" className="block rounded-2xl border bg-card p-5"><strong className="text-lg">מרכז הכסף</strong><p className="mt-2 text-muted-foreground">נתונים, התחייבויות, יעדים, כללים, דוחות ותכנון חובות</p></Link>
       {GROUPS.map((g) => (
         <section key={g.key} aria-labelledby={`more-${g.key}`}>

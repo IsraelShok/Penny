@@ -25,7 +25,7 @@ export const LIFE_STAGES: LifeStage[] = [
     items: items("birth", [
       ["לבדוק את מענק הלידה ואת דמי הלידה", "Check the birth grant and maternity pay"],
       ["לוודא שקצבת הילדים נכנסת לחשבון", "Make sure the child allowance is arriving"],
-      ["לבחור מסלול ב״חיסכון לכל ילד״", "Choose a track for the child savings plan"],
+      ["ב״חיסכון לכל ילד״ לבחור בית השקעות (קופת גמל) ולא בנק: דמי ניהול נמוכים ומסלול מנייתי לטווח ארוך", "For the child savings plan pick an investment house (provident fund), not a bank: low fees and a long-term equity track"],
       ["לתכנן את החודשים עם הכנסה נמוכה יותר בחופשה", "Plan the lower-income months of leave"],
       ["לקבוע תקציב חודשי לתינוק", "Set a monthly baby budget"],
     ]),

@@ -123,3 +123,28 @@ describe("wellbeing", () => {
     expect(parseWellbeingHistory([{ date: "x", score: 1 }, { date: "2026-01-01", score: 120 }, { date: "2026-02-01", score: 40 }])).toEqual([{ date: "2026-02-01", score: 40 }]);
   });
 });
+
+describe("competitor-gap calculators", () => {
+  it("prepay vs invest: a 6% loan beats a 6% taxed return", async () => {
+    const { payoffVsInvest } = await import("@/lib/tools");
+    const r = payoffVsInvest(100_000, 0.06, 0.06, 10);
+    expect(r.saved).toBeCloseTo(79_085, 0);
+    expect(r.diff).toBeLessThan(0);
+    expect(payoffVsInvest(100_000, 0.02, 0.07, 10).diff).toBeGreaterThan(0);
+  });
+
+  it("rental yield: gross, net and cash on cash", async () => {
+    const { rentalYield } = await import("@/lib/tools");
+    const r = rentalYield({ price: 1_200_000, equity: 1_200_000, rent: 4_000, costs: 500, rate: 0.05, years: 25 });
+    expect(r.gross).toBeCloseTo(0.04);
+    expect(r.net).toBeCloseTo(0.035);
+    expect(r.cashOnCash).toBeCloseTo(0.035);
+    expect(rentalYield({ price: 1_200_000, equity: 400_000, rent: 4_000, costs: 500, rate: 0.05, years: 25 }).cashflow).toBeLessThan(0);
+  });
+
+  it("money-market fund taxes only the real gain", async () => {
+    const { moneyMarket } = await import("@/lib/tools");
+    expect(moneyMarket(100_000, 1, 4, 0, 2).net).toBeCloseTo(103_500);
+    expect(moneyMarket(100_000, 1, 1, 0, 2).net).toBeCloseTo(101_000);
+  });
+});

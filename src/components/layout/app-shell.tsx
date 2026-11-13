@@ -17,7 +17,8 @@ import { usePlan } from "@/hooks/use-plan";
 import { wantsExplanations } from "@/lib/plan";
 import { pagePurposeKey } from "@/lib/orientation";
 import { MobileDock } from "./mobile-dock";
-import { SectionTabs } from "./section-tabs";
+import { SectionTabs, sectionOf } from "./section-tabs";
+import { NAV } from "./app-sidebar";
 
 /** Lives in the root layout so the collapsed state survives page changes. */
 export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; children: ReactNode }) {
@@ -55,14 +56,18 @@ export function PageHeader({
   largeTitle?: boolean;
 }) {
   const tPurpose = useTranslations("purpose");
+  const tNav = useTranslations("nav");
   const pathname = usePathname();
+  // Pages that share an area with tabs show the area's name, so the title never disagrees with the menu.
+  const area = sectionOf(pathname) ? NAV.find((n) => n.match(pathname)) : undefined;
+  const heading = area ? tNav(area.labelKey) : title;
   const { plan } = usePlan();
   // One plain line on what this page is for, only for those who asked for more explanations.
   const key = wantsExplanations(plan) ? pagePurposeKey(pathname) : null;
   const purpose = key && largeTitle && tPurpose.has(key) ? tPurpose(key) : null;
   const [scrolled, setScrolled] = useState(false);
   // Every page sets its own tab title, so tabs, history and screen readers can tell pages apart.
-  useEffect(() => { document.title = `${title} · Penny`; }, [title]);
+  useEffect(() => { document.title = `${heading} · Penny`; }, [heading]);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -71,11 +76,11 @@ export function PageHeader({
   }, []);
 
   return (
-    <header className={`glass sticky top-0 z-20 transition-[box-shadow] duration-150 ${scrolled ? "shadow-[0_0.5px_0_var(--border)]" : ""}`}>
+    <header className={`sticky top-0 z-20 transition-[box-shadow,background-color] duration-150 ${scrolled && (largeTitle || actions) ? "header-bar shadow-[0_0.5px_0_var(--border)]" : "bg-transparent"}`}>
       <div className="mx-auto grid min-h-14 max-w-[76rem] grid-cols-[1fr_auto_1fr] items-center gap-x-4 px-4 py-2 md:px-6 lg:px-8">
         <SidebarTrigger className="-ms-1 justify-self-start md:hidden" />
         <div className={largeTitle ? "col-start-2 flex min-w-0 items-center justify-center gap-1 text-center" : "sr-only"}>
-          <h1 className="truncate text-[1.625rem] leading-8 font-bold tracking-tight">{title}</h1>
+          <h1 className="truncate text-[1.625rem] leading-8 font-bold tracking-tight">{heading}</h1>
           {/* Short context (a month) stays visible; anything longer hides behind the "i". */}
           {meta && (meta.length > 24 ? <InfoTip text={meta} /> : <p className="truncate text-footnote text-muted-foreground">{meta}</p>)}
           {purpose && <InfoTip text={purpose} />}

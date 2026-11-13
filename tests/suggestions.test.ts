@@ -50,8 +50,8 @@ describe("buildSuggestions", () => {
       fxMarkup: { total: 120, avgPct: 2.1, count: 14 },
     });
     expect(s).toEqual([
-      { key: "rule:wolt:3", type: "rule", merchant: "wolt", categoryId: 3, categoryName: "Restaurants", count: 2 },
       { key: "fxMarkup:2026", type: "fxMarkup", total: 120, avgPct: 2.1, count: 14 },
+      { key: "rule:wolt:3", type: "rule", merchant: "wolt", categoryId: 3, categoryName: "Restaurants", count: 2 },
     ]);
     expect(buildSuggestions([], { ...ctx, fxMarkup: { total: 120, avgPct: 0.3, count: 14 } })).toEqual([]);
     expect(buildSuggestions([], { ...ctx, fxMarkup: { total: 15, avgPct: 3, count: 2 } })).toEqual([]);
@@ -79,5 +79,35 @@ describe("leak suggestions", () => {
     const txns = Array.from({ length: 7 }, (_, i) => ({ date: `2026-11-0${i + 1}`, description: "ארומה", amount: -18, kind: "expense" }));
     const out = buildSuggestions(txns, { today: "2026-11-13", known: [], monthStartDay: 1, priceChanges: [] });
     expect(out.find((s) => s.type === "leak")).toMatchObject({ name: "ארומה", count: 7, monthly: 126 });
+  });
+});
+
+describe("money insights", () => {
+  const base = ["2026-08", "2026-09", "2026-10"].flatMap((m) => [
+    t(`${m}-03`, "שכירות", -5000, "expense", "Housing"),
+    t(`${m}-12`, "מסעדה", -500, "expense", "Restaurants"),
+  ]);
+  const ctxM = { ...ctx, today: "2026-11-20" };
+
+  it("flags a category well above its 3-month average", () => {
+    const s = buildSuggestions([...base, t("2026-11-10", "מסעדה", -800, "expense", "Restaurants")], ctxM);
+    expect(s).toContainEqual(expect.objectContaining({ type: "spike", category: "Restaurants", pct: 60, avg: 500 }));
+    expect(s.find((x) => x.type === "spike" && x.category === "Housing")).toBeUndefined();
+  });
+
+  it("measures the emergency fund and idle checking money", () => {
+    const s = buildSuggestions(base, { ...ctxM, liquid: 11_000, checking: 14_000 });
+    expect(s).toContainEqual(expect.objectContaining({ type: "emergency", months: 2 }));
+    expect(s).toContainEqual(expect.objectContaining({ type: "idle", amount: 8_500 }));
+    expect(buildSuggestions(base, { ...ctxM, liquid: 20_000, checking: 6_000 }).filter((x) => x.type === "emergency" || x.type === "idle")).toHaveLength(0);
+  });
+
+  it("stays quiet without three months of history", () => {
+    expect(buildSuggestions(base.slice(2), { ...ctxM, liquid: 0, checking: 50_000 })).toHaveLength(0);
+  });
+
+  it("ranks by impact: a thin emergency fund before a small fee", () => {
+    const s = buildSuggestions([...base, ...Array.from({ length: 6 }, (_, i) => t(`2026-0${i + 4}-01`, "עמלת פעולה", -12))], { ...ctxM, liquid: 2_000 });
+    expect(s[0].type).toBe("emergency");
   });
 });

@@ -3,7 +3,7 @@
 import { Forward } from "@/components/ui/dir-chevron";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations, useMessages } from "next-intl";
 import { shekels } from "@/lib/money";
 import { Segmented } from "@/components/ui/segmented";
 import { translateCategoryName } from "@/lib/i18n-data";
@@ -236,12 +236,16 @@ function CategoryRow({
 }) {
   const t = useTranslations("settings.categories");
   const tCat = useTranslations("categoriesSeeded");
-  const tDesc = useTranslations("categoryDescriptions");
+  // Read the raw messages: names like "Sports & Hobbies" trip next-intl's key lookup.
+  const descriptions = (useMessages() as { categoryDescriptions?: Record<string, string> }).categoryDescriptions ?? {};
   const locale = useLocale();
   const stored = category.description?.trim();
   // Seeded descriptions are English (the categorizer reads them); show the translation unless the user wrote their own.
-  const translated = tDesc.has(category.name) ? tDesc(category.name) : "";
-  const description = stored && !/[֐-׿]/.test(stored) && translated ? translated : stored;
+  const translated = descriptions[category.name] ?? "";
+  // Mostly-Latin text is the seeded English (some mention a Hebrew word); a user's own Hebrew text stays.
+  const latin = (stored?.match(/[A-Za-z]/g) ?? []).length;
+  const hebrew = (stored?.match(/[֐-׿]/g) ?? []).length;
+  const description = stored && latin > hebrew && translated ? translated : stored;
   return (
     <li>
       <button

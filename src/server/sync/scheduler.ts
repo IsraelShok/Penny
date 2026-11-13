@@ -84,7 +84,8 @@ function computeNextDelay(targetHHMM: string): number {
 }
 
 function readSettings(): { enabled: boolean; time: string } {
-  const enabled = getGlobalSetting("auto_sync_enabled") === "true";
+  // On unless the user turned it off: a daily sync at 06:00 keeps the data fresh without a button.
+  const enabled = getGlobalSetting("auto_sync_enabled") !== "false";
   const time = getGlobalSetting("auto_sync_time");
   const safeTime = time && TIME_RE.test(time) ? time : "06:00";
   return { enabled, time: safeTime };

@@ -1,0 +1,33 @@
+appId: app.penny.desktop
+productName: Penny
+directories:
+  output: dist-desktop
+# The shell is just desktop/main.cjs; the app itself ships as resources/server.
+files:
+  - desktop/main.cjs
+  - package.json
+extraResources:
+  - from: .next/standalone
+    to: server
+    filter: ["**/*"]
+# node_modules are copied in by the hook (extraResources always skips them).
+afterPack: desktop/after-pack.cjs
+npmRebuild: false
+asar: true
+icon: public/icons/icon-512.png
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: true
+  perMachine: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Penny
+mac:
+  target: [dmg]
+  category: public.app-category.finance
+linux:
+  target: [AppImage]
+  category: Finance

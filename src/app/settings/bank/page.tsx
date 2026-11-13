@@ -4,9 +4,8 @@ import { Forward } from "@/components/ui/dir-chevron";
 import { Suspense, useMemo, useState } from "react";
 import { SyncActions } from "@/components/layout/sidebar-sync";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
-  Plus,
   RefreshCw,
   Loader2,
   CircleCheck,
@@ -14,12 +13,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ProviderBadge } from "@/components/setup/provider-badge";
 import { SectionShell } from "@/components/settings/section-shell";
 import { BankDetailSheet } from "@/components/settings/bank-detail-sheet";
@@ -29,6 +22,7 @@ import { BANK_PROVIDERS } from "@/lib/types";
 import { translateProviderName, useFormatterLabels } from "@/lib/i18n-data";
 import { formatLastSync } from "@/lib/formatters";
 import type { Integration } from "@/lib/types";
+import { InvestmentHouses } from "@/components/settings/investment-houses";
 
 interface SheetState {
   open: boolean;
@@ -41,6 +35,7 @@ export default function BankSettingsPage() {
   const t = useTranslations("settings.bank");
   const tBanks = useTranslations("banks");
   const labels = useFormatterLabels();
+  const locale = useLocale();
 
   const { data: integrations = [], isPending, isError, refetch } = useQuery({
     queryKey: ["integrations"],
@@ -91,43 +86,10 @@ export default function BankSettingsPage() {
           </div>
           <div className="flex items-center gap-2">
             <Suspense fallback={null}><SyncActions /></Suspense>
-            {availableToAdd.length > 0 ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <IconButton showLabel label={t("addBank")} variant="default">
-                      <Plus className="size-4" aria-hidden />
-                    </IconButton>
-                  }
-                />
-                <DropdownMenuContent align="end" className="w-56">
-                  {availableToAdd.map((b) => (
-                    <DropdownMenuItem
-                      key={b.id}
-                      onClick={() =>
-                        setSheet({
-                          open: true,
-                          mode: "add",
-                          providerId: b.id,
-                          credentialId: null,
-                        })
-                      }
-                    >
-                      <span className="flex items-center gap-2">
-                        <span
-                          className="h-2 w-2 rounded-full"
-                          style={{ background: b.color }}
-                        />
-                        {translateProviderName(b.id, b.name, tBanks)}
-                      </span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
           </div>
         </div>
 
+        {!isPending && !isError && integrations.length > 0 && <h3 className="text-footnote font-semibold text-muted-foreground">{t("groupConnected", { count: integrations.length })}</h3>}
         {isPending ? <p role="status">{t("loading")}</p> : isError ? <div role="alert"><p>{t("loadFailed")}</p><Button variant="outline" className="mt-3" onClick={() => void refetch()}>{t("retry")}</Button></div> : integrations.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             {t.rich("noneConnectedPrompt", {
@@ -137,7 +99,7 @@ export default function BankSettingsPage() {
         ) : (
           <div className="overflow-hidden rounded-2xl bg-card">
             <ul className="divide-y divide-border/60">
-              {integrations.map((integration) => {
+              {[...integrations].sort((x, y) => x.label.localeCompare(y.label, locale)).map((integration) => {
                 const info = BANK_PROVIDERS.find(
                   (b) => b.id === integration.provider
                 );
@@ -190,6 +152,8 @@ export default function BankSettingsPage() {
                         <div className="mt-0.5 truncate text-xs text-muted-foreground">
                           {localName}
                           {" · "}
+                          {t(info.kind === "bank" ? "kindBank" : "kindCard")}
+                          {" · "}
                           {subline}
                         </div>
                       </div>
@@ -215,6 +179,34 @@ export default function BankSettingsPage() {
             </ul>
           </div>
         )}
+        {/* Every provider we can read, connected or not, so nothing is hidden in a menu. */}
+        {!isPending && !isError && (() => {
+          const connected = new Set(integrations.map((i) => i.provider));
+          const rest = availableToAdd.filter((b) => !connected.has(b.id));
+          const groups = (["bank", "card"] as const).map((kind) => ({ kind, items: rest.filter((b) => b.kind === kind).sort((x, y) => translateProviderName(x.id, x.name, tBanks).localeCompare(translateProviderName(y.id, y.name, tBanks), locale)) })).filter((g) => g.items.length);
+          return groups.length > 0 && (
+            <>
+              {groups.map((g) => (
+                <section key={g.kind} aria-labelledby={`not-connected-${g.kind}`}>
+                  <h3 id={`not-connected-${g.kind}`} className="mb-2 text-footnote font-semibold text-muted-foreground">{t(g.kind === "bank" ? "groupBanks" : "groupCards")}</h3>
+                  <ul className="divide-y divide-border/60 overflow-hidden rounded-2xl bg-card">
+                    {g.items.map((b) => {
+                      const name = translateProviderName(b.id, b.name, tBanks);
+                      return (
+                        <li key={b.id} className="flex items-center gap-3 px-4 py-3">
+                          <ProviderBadge color={b.color} name={name} domain={b.domain} size={36} radius={9} />
+                          <span className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
+                          <Button variant="outline" size="sm" onClick={() => setSheet({ open: true, mode: "add", providerId: b.id, credentialId: null })}>{t("connect")}</Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
+            </>
+          );
+        })()}
+        <InvestmentHouses />
       </SectionShell>
 
       <BankDetailSheet

@@ -253,3 +253,17 @@ html.app-studio body {
 @media (prefers-reduced-transparency: reduce) {
   html.app-studio :is(.bg-card:not(.wallet), [data-slot="sidebar-inner"], .glass) { background-color: var(--card); backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
+
+/* Inline editor in Settings › Appearance: no sheet chrome, natural height. */
+.studio-editor-inline { position: static; inset: auto; width: 100%; max-width: none; height: auto; box-shadow: none; background: transparent; border: 0; }
+.studio-editor-inline .studio-editor-scroll { overflow: visible; max-height: none; padding: 0; }
+.studio-editor-inline .studio-editor-footer { position: static; padding: 16px 0 0; background: transparent; }
+.studio-editor-inline button:disabled { opacity: .5; cursor: not-allowed; }
+
+/* The pinned page header: light tint and blur so it reads as part of the page, not a white strip. */
+html.app-studio .header-bar { background-color: color-mix(in srgb, var(--background) 55%, transparent); -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6); }
+.budget-studio.studio-editor.studio-editor-inline { width: 100%; max-width: none; }
+@media (min-width: 1024px) {
+  .studio-editor-inline .studio-editor-scroll { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 40px; align-items: start; }
+  .studio-editor-inline .studio-editor-scroll > :is(.studio-section-label, .studio-reset) { grid-column: 1 / -1; }
+}

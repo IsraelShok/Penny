@@ -57,7 +57,14 @@ export const NAV: NavDef[] = [
     href: "/investments",
     labelKey: "future",
     Icon: Flag,
-    match: (p: string) => ["/investments", "/fi", "/journey", "/life"].some((r) => p.startsWith(r)),
+    match: (p: string) => ["/investments", "/fi", "/journey"].some((r) => p.startsWith(r)),
+  },
+  {
+    href: "/more",
+    labelKey: "more",
+    Icon: LayoutGrid,
+    // Calculators and the occasional tools; the hub stays lit while you use one.
+    match: (p: string) => ["/more", "/calculators", "/recap", "/ask", "/life", "/wellbeing", "/checkin", "/help", "/control", "/markets"].some((r) => p.startsWith(r)),
   },
 ];
 
@@ -65,7 +72,6 @@ export const NAV: NavDef[] = [
 export const SEARCH_PAGES: NavDef[] = [
   { href: "/overview", labelKey: "overview", Icon: PieChart, match: (p: string) => p.startsWith("/overview") },
   { href: "/fi", labelKey: "fi", Icon: Landmark, match: (p: string) => p.startsWith("/fi") },
-  { href: "/more", labelKey: "more", Icon: LayoutGrid, match: (p: string) => p.startsWith("/more") },
 ];
 
 export const FOOTER_NAV: NavDef[] = [
@@ -121,12 +127,6 @@ export function AppSidebar() {
       <SidebarContent className="pt-3" onWheel={onWheel}>
         <SidebarGroup className="pb-0">
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={toggleSidebar} tooltip={t("toggleSidebar")} aria-label={t("toggleSidebar")}>
-                <PanelLeftIcon className="rtl:rotate-180" />
-                <span>{t("collapse")}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={() => { setOpenMobile(false); window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE)); }}
@@ -189,6 +189,9 @@ export function AppSidebar() {
               <Lock className="size-4" aria-hidden />
             </IconButton>
           )}
+          <IconButton label={t("toggleSidebar")} size="icon-sm" variant="ghost" onClick={toggleSidebar}>
+            <PanelLeftIcon className="size-4 rtl:rotate-180" aria-hidden />
+          </IconButton>
           <IconButton
             label={t("settings")}
             variant={pathname.startsWith("/settings") ? "secondary" : "ghost"}

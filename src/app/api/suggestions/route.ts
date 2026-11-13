@@ -10,6 +10,8 @@ import { listRules } from "@/server/db/queries/rules";
 import { applyRules } from "@/server/rules/engine";
 import { fxMarkup, type FxCharge } from "@/lib/fx-markup";
 import { dailyRates } from "@/server/insights/fx-rates";
+import { getAssetsPayload } from "@/server/markets/portfolio";
+import { liquidCash } from "@/lib/allocation";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +76,12 @@ export async function GET(request: Request) {
     .all(ws, taxSince) as { m: string }[]).map((r) => r.m);
   const taxYears = taxYearFacts(salaryRows, months, today);
 
-  const suggestions: Suggestion[] = buildSuggestions(txns, { today, known, monthStartDay: getPlan(ws).monthStartDay, priceChanges, ruleCandidates, fxMarkup: fx, taxYears })
+  const { assets } = await getAssetsPayload(ws);
+  const banks = assets.filter((a) => a.source === "bank");
+  const liquid = assets.length ? liquidCash(assets) : undefined;
+  const checking = banks.length ? banks.reduce((s, a) => s + (a.isLiability ? -1 : 1) * (a.valueIls ?? 0), 0) : undefined;
+
+  const suggestions: Suggestion[] = buildSuggestions(txns, { today, known, monthStartDay: getPlan(ws).monthStartDay, priceChanges, ruleCandidates, fxMarkup: fx, taxYears, liquid, checking })
     .filter((s) => !dismissed.has(s.key));
   return NextResponse.json({ suggestions });
 }

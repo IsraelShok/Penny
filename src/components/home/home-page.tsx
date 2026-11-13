@@ -13,7 +13,7 @@ import { SuggestionsCard } from "./suggestions-card";
 import { NextBillCard, SubscriptionsCard } from "./bills-card";
 import { TodayCard } from "./today-card";
 import { HealthCard } from "./health-card";
-import { MoreSection } from "./more-section";
+import { MonthCelebration } from "./month-celebration";
 import { PersonalGrid } from "./personal-grid";
 import { ScenarioCard } from "./scenario-card";
 import { GoalFocus } from "./goal-focus";
@@ -77,7 +77,9 @@ export function HomePage() {
         />
         <Greeting name={settings?.displayName} />
         <TodayCard home={data} bills={insights?.forecast} homePending={isLoading} homeFailed={isError} onRetry={() => { void queryClient.invalidateQueries({ queryKey: ["home"] }); }} />
+        <SuggestionsCard limit={3} href="/more#suggestions" />
         <HealthCard />
+        <MonthCelebration />
         <WelcomePrompt />
         <PersonalGrid render={id => {
           if (id === "goals") return <GoalFocus />;
@@ -85,7 +87,6 @@ export function HomePage() {
           if (id === "bills") return insights ? <div className="space-y-3"><NextBillCard data={insights} /><SubscriptionsCard data={insights} /></div> : <CardSkeleton label={t("nextBill")} />;
           return renderSection(id, data, isLoading, isError, "", skeletonLabels);
         }} />
-        <MoreSection><SuggestionsCard limit={1} /></MoreSection>
       </div>
     </>
   );

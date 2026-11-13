@@ -1,0 +1,23 @@
+/** Pure helpers for investment-house balances (no I/O), so they can be tested. */
+
+/** Funds wired to the israeli-pension-scrapers library. Ids match the library and INVESTMENT_HOUSES. */
+export const PENSION_FUNDS = ["meitav", "harel", "migdal", "clal", "menora"] as const;
+export type PensionFund = (typeof PENSION_FUNDS)[number];
+export const isPensionFund = (id: string): id is PensionFund => (PENSION_FUNDS as readonly string[]).includes(id);
+
+/** Meitav opens a visible browser window for the user to sign in (CAPTCHA); the others log in headless with an SMS code. */
+export const INTERACTIVE: Record<PensionFund, boolean> = { meitav: true, harel: false, migdal: false, clal: false, menora: true };
+/** Which login fields each fund asks for. */
+export const LOGIN_FIELDS: Record<PensionFund, ("id" | "phone")[]> = { meitav: ["id", "phone"], harel: ["id", "phone"], migdal: ["id"], clal: ["id", "phone"], menora: ["id", "phone"] };
+
+export type SavingsType = "pension" | "study_fund" | "provident";
+
+/** Maps a product label from the provider's portal to our asset type. */
+export function savingsType(label: string): SavingsType {
+  if (/השתלמות|hishtalmut|study/i.test(label)) return "study_fund";
+  if (/גמל|provident|gemel/i.test(label)) return "provident";
+  return "pension";
+}
+
+/** The marker kept in the asset's note so a re-sync updates the same asset instead of adding a new one. */
+export const assetKey = (connectionId: number, accountNumber: string) => `pension:${connectionId}:${accountNumber}`;

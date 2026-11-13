@@ -37,11 +37,54 @@ function withWorkspaceHeader(init?: RequestInit): RequestInit {
   return { ...init, headers };
 }
 
+/** Error messages in the UI's language. Server details are mostly English, so in Hebrew we explain by status instead. */
+const ERRORS = {
+  he: {
+    network: "אין חיבור לשרת של Penny. ודאו שהאפליקציה פועלת ונסו שוב.",
+    400: "חלק מהפרטים לא תקינים. בדקו אותם ונסו שוב.",
+    401: "צריך להתחבר מחדש. רעננו את הדף.",
+    403: "אין הרשאה לפעולה הזאת.",
+    404: "לא מצאנו את מה שחיפשתם. ייתכן שזה נמחק.",
+    409: "הנתונים השתנו בינתיים. רעננו את הדף ונסו שוב.",
+    429: "יותר מדי ניסיונות. חכו רגע ונסו שוב.",
+    server: "משהו השתבש אצלנו. נסו שוב בעוד רגע.",
+  },
+  en: {
+    network: "Can't reach the Penny server. Make sure the app is running and try again.",
+    400: "Some details aren't valid. Check them and try again.",
+    401: "Please sign in again. Refresh the page.",
+    403: "You don't have permission for this.",
+    404: "We couldn't find that. It may have been deleted.",
+    409: "The data changed meanwhile. Refresh the page and try again.",
+    429: "Too many attempts. Wait a moment and try again.",
+    server: "Something went wrong on our side. Try again in a moment.",
+  },
+} as const;
+
+const uiLang = (): "he" | "en" => (typeof document !== "undefined" && document.documentElement.lang === "en" ? "en" : "he");
+
+/** Picks a message the user can read: the server's own text when it is in the UI language, else one by status. */
+export function friendlyError(status: number | "network", body = "", lang = uiLang()): string {
+  let detail = body.trim();
+  try {
+    const j = JSON.parse(detail) as { error?: unknown; message?: unknown };
+    detail = String(j.error ?? j.message ?? "");
+  } catch {}
+  const hebrew = /[֐-׿]/.test(detail);
+  const fits = detail && detail.length < 200 && !/^\s*</.test(detail) && (lang === "he" ? hebrew : !hebrew);
+  if (fits) return detail;
+  const m = ERRORS[lang];
+  if (status === "network") return m.network;
+  return status in m ? m[status as keyof typeof m] : status >= 500 ? m.server : m[400];
+}
+
 async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${url}`, withWorkspaceHeader(init));
+  const res = await fetch(`${BASE}${url}`, withWorkspaceHeader(init)).catch(() => {
+    throw new Error(friendlyError("network"));
+  });
   if (!res.ok) {
-    const text = await res.text().catch(() => "Request failed");
-    throw new Error(text);
+    const text = await res.text().catch(() => "");
+    throw new Error(friendlyError(res.status, text));
   }
   return res.json() as Promise<T>;
 }
@@ -876,6 +919,17 @@ export function dismissPeriodicSuggestion(autoKey: string) {
 
 export function deletePeriodic(id: number) {
   return fetchJSON<{ success: boolean }>(`/api/periodic?id=${id}`, { method: "DELETE" });
+}
+
+export type PensionConnection = { id: number; fundId: string; lastSyncAt: string | null; lastError: string | null; state: "idle" | "running" | "otp" | "done" | "error"; message?: string };
+export function listPension() {
+  return fetchJSON<{ connections: PensionConnection[] }>(`/api/pension`);
+}
+export function pensionAction(body: Record<string, unknown>) {
+  return fetchJSON<{ id?: number; started?: boolean; success?: boolean }>(`/api/pension`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+}
+export function deletePension(id: number) {
+  return fetchJSON<{ success: boolean }>(`/api/pension?id=${id}`, { method: "DELETE" });
 }
 
 export function getCashflowHealth() {

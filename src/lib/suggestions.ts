@@ -25,7 +25,10 @@ export type Suggestion =
   | { key: string; type: "rule"; merchant: string; categoryId: number; categoryName: string; count: number }
   | { key: string; type: "fxMarkup"; total: number; avgPct: number; count: number }
   | { key: string; type: "leak"; name: string; count: number; monthly: number }
-  | { key: string; type: "taxRefund"; year: number; reason: "twoEmployers" | "gap"; payers: number; months: number };
+  | { key: string; type: "taxRefund"; year: number; reason: "twoEmployers" | "gap"; payers: number; months: number }
+  | { key: string; type: "spike"; category: string; current: number; avg: number; pct: number }
+  | { key: string; type: "emergency"; months: number; target: number }
+  | { key: string; type: "idle"; amount: number; buffer: number };
 
 export type PolicyGuess = "health" | "life" | "disability" | "long_term_care" | "home" | "car" | "travel" | "other";
 
@@ -86,6 +89,10 @@ export interface SuggestionContext {
   fxMarkup?: { total: number; avgPct: number; count: number } | null;
   /** From taxYearFacts: salary patterns per past tax year. */
   taxYears?: TaxYearFacts[];
+  /** Cash, deposits and money-market funds on hand (emergency fund). */
+  liquid?: number;
+  /** Synced checking balances, summed. */
+  checking?: number;
 }
 
 export interface TaxYearFacts {
@@ -123,7 +130,66 @@ export function taxYearFacts(rows: { date: string; description: string }[], mont
   return out;
 }
 
+/** Rough yearly ₪ at stake, so the feed leads with what matters most. Setup items (add a policy, a rule) trail. */
+export function impact(s: Suggestion): number {
+  switch (s.type) {
+    case "emergency": return 20_000 * (1 - s.months / 3);
+    case "interest": return s.yearly * 2; // debt interest compounds: first in line
+    case "fees": case "fx": return s.yearly;
+    case "fxMarkup": return s.total;
+    case "duplicate": return s.amount;
+    case "price": return (s.to - s.from) * 12;
+    case "leak": return s.monthly * 12;
+    case "spike": return (s.current - s.avg) * 3;
+    case "idle": return s.amount * 0.04; // what a money-market fund would earn
+    case "taxRefund": return 3_000;
+    default: return 1;
+  }
+}
+
+/** Spending, emergency-fund and idle-cash insights on the user's own numbers. */
+function moneyInsights(txns: SuggestionTxn[], ctx: SuggestionContext): Suggestion[] {
+  const out: Suggestion[] = [];
+  const thisMonth = ctx.today.slice(0, 7);
+  const prev = [1, 2, 3].map((n) => {
+    const d = new Date(`${thisMonth}-15T12:00:00Z`);
+    d.setUTCMonth(d.getUTCMonth() - n);
+    return d.toISOString().slice(0, 7);
+  });
+  const spend = (m: string, cat?: string) =>
+    txns.filter((t) => t.amount < 0 && t.kind === "expense" && month(t.date) === m && (cat === undefined || t.categoryName === cat)).reduce((s, t) => s - t.amount, 0);
+  const hasData = prev.every((m) => txns.some((t) => month(t.date) === m));
+  if (!hasData) return out;
+
+  // A category already 30%+ (and ₪200+) above its 3-month average, this month so far.
+  const cats = new Set(txns.filter((t) => t.categoryName && month(t.date) === thisMonth).map((t) => t.categoryName!));
+  for (const c of cats) {
+    const current = spend(thisMonth, c);
+    const avg = prev.reduce((s, m) => s + spend(m, c), 0) / 3;
+    if (avg >= 100 && current >= avg * 1.3 && current - avg >= 200) {
+      out.push({ key: `spike:${thisMonth}:${c}`, type: "spike", category: c, current, avg, pct: Math.round((current / avg - 1) * 100) });
+    }
+  }
+
+  const expenses = prev.reduce((s, m) => s + spend(m), 0) / 3;
+  if (expenses <= 0) return out;
+  if (ctx.liquid !== undefined) {
+    const months = Math.round((ctx.liquid / expenses) * 10) / 10;
+    if (months < 3) out.push({ key: `emergency:${thisMonth}`, type: "emergency", months, target: expenses * 3 });
+  }
+  // Checking above a one-month buffer earns nothing; only worth saying from ₪5,000.
+  if (ctx.checking !== undefined) {
+    const amount = Math.floor((ctx.checking - expenses) / 100) * 100;
+    if (amount >= 5_000) out.push({ key: `idle:${thisMonth}`, type: "idle", amount, buffer: expenses });
+  }
+  return out;
+}
+
 export function buildSuggestions(txns: SuggestionTxn[], ctx: SuggestionContext): Suggestion[] {
+  return [...rawSuggestions(txns, ctx), ...moneyInsights(txns, ctx)].sort((a, b) => impact(b) - impact(a));
+}
+
+function rawSuggestions(txns: SuggestionTxn[], ctx: SuggestionContext): Suggestion[] {
   const out: Suggestion[] = [];
   const isKnown = (name: string) => ctx.known.some((k) => k && (name.toLowerCase().includes(k) || k.includes(name.toLowerCase())));
 

@@ -8,7 +8,8 @@ import { getFi } from "@/lib/api";
 import { fmt, shekels } from "@/lib/money";
 import { useGentle } from "@/hooks/use-gentle";
 import { carCost, fiNumber, fiOdds, yearsToTarget, yearsToTargetWithEvents, type CarInputs } from "@/lib/fi";
-import { amendment190, bracketTax, brokerOutcome, fundSwitch, gemelVsBroker, rentVsBuy } from "@/lib/tools";
+import { amendment190, bracketTax, brokerOutcome, fundSwitch, gemelVsBroker, moneyMarket, payoffVsInvest, rentalYield, rentVsBuy } from "@/lib/tools";
+import { projectBalance } from "@/lib/plan";
 import { IL } from "@/lib/il-defaults";
 import type { LifeEvent } from "@/lib/plan";
 import { Plus, X } from "lucide-react";
@@ -443,7 +444,8 @@ function EventInput({ id, label, value, onChange, text }: { id: string; label: s
   );
 }
 
-type CalcKind = "switch" | "gemel" | "broker" | "rentBuy" | "a190";
+type CalcKind = (typeof SIMPLE_CALCS)[number] | "rentBuy" | "a190";
+const SIMPLE_CALCS = ["switch", "gemel", "broker", "compound", "payoff", "rental", "mm"] as const;
 
 function Calculators({ returnPct }: { returnPct: number }) {
   const tt = useTranslations("tools");
@@ -456,6 +458,8 @@ function Calculators({ returnPct }: { returnPct: number }) {
     curDeposit: "1", curBalance: "0.8", altDeposit: "0", altBalance: "0.3",
     initial: "50000", inflation: "2", gemelFee: "0.65", etfFee: "0.1", custody: "0",
     invest: "2000", trades: "1", aTrade: "5", aPct: "0", aCustody: "0", bTrade: "0", bPct: "0.1", bCustody: "15",
+    fee: "0.5", lump: "50000", loanRate: "5", price: "1500000", equity: "500000", rent: "5000", costs: "600", mRate: "5", mYears: "25",
+    amount: "50000", mmYield: "4.2", mmFee: "0.25",
   });
   const n = (k: string) => Number(v[k]) || 0;
   const field = (k: string, suffix?: string) => <Field key={k} id={`tool-${k}`} label={tt(`f_${k}`)} value={v[k] ?? ""} onChange={(x) => setV({ ...v, [k]: x })} suffix={suffix} />;
@@ -493,10 +497,52 @@ function Calculators({ returnPct }: { returnPct: number }) {
     );
   }
 
+  else if (kind === "compound") {
+    fields = [field("initial"), field("monthly"), field("years"), field("fee", "%")];
+    const end = projectBalance(n("initial"), n("monthly"), n("years"), r, 0, n("fee"));
+    const deposited = n("initial") + n("monthly") * Math.round(n("years") * 12);
+    result = (
+      <dl className="space-y-2 text-footnote tabular-nums">
+        <ResultRow label={tt("endValue", { years: n("years") })} value={shekels(end, locale)} />
+        <ResultRow label={tt("deposited")} value={shekels(deposited, locale)} />
+        <ResultRow label={tt("growth")} value={shekels(end - deposited, locale)} />
+      </dl>
+    );
+  } else if (kind === "payoff") {
+    fields = [field("lump"), field("loanRate", "%"), field("years")];
+    const p = payoffVsInvest(n("lump"), n("loanRate") / 100, r, n("years"));
+    result = (
+      <>
+        <p className="text-footnote">{tt(p.diff > 0 ? "payoffInvest" : "payoffPrepay", { amount: shekels(Math.abs(p.diff), locale), years: n("years") })}</p>
+        <dl className="mt-2 space-y-2 text-footnote tabular-nums">
+          <ResultRow label={tt("payoffSaved")} value={shekels(p.saved, locale)} />
+          <ResultRow label={tt("payoffEarned")} value={shekels(p.earned, locale)} />
+        </dl>
+      </>
+    );
+  } else if (kind === "rental") {
+    fields = [field("price"), field("equity"), field("rent"), field("costs"), field("mRate", "%"), field("mYears")];
+    const y = rentalYield({ price: n("price"), equity: n("equity"), rent: n("rent"), costs: n("costs"), rate: n("mRate") / 100, years: n("mYears") || 25 });
+    const pct = (x: number) => `${fmt(x * 100, locale, 1)}%`;
+    result = (
+      <dl className="space-y-2 text-footnote tabular-nums">
+        <ResultRow label={tt("yieldGross")} value={pct(y.gross)} />
+        <ResultRow label={tt("yieldNet")} value={pct(y.net)} />
+        <ResultRow label={tt("rentPayment")} value={shekels(y.payment, locale)} />
+        <ResultRow label={tt("rentCashflow")} value={shekels(y.cashflow, locale)} />
+        <ResultRow label={tt("cashOnCash")} value={pct(y.cashOnCash)} />
+      </dl>
+    );
+  } else if (kind === "mm") {
+    fields = [field("amount"), field("years"), field("mmYield", "%"), field("mmFee", "%"), field("inflation", "%")];
+    const m = moneyMarket(n("amount"), n("years"), n("mmYield"), n("mmFee"), n("inflation"));
+    result = <p className="text-footnote">{tt("mmResult", { amount: shekels(m.gain, locale), years: n("years"), total: shekels(m.net, locale) })}</p>;
+  }
+
   return (
     <CardShell label={tt("calcTitle")} className="lg:col-span-3">
       <Segmented label={tt("calcTitle")} value={kind} onChange={setKind} className="flex-wrap" options={[
-        ...(["switch", "gemel", "broker"] as const).map((k) => ({ value: k, label: tt(`calc_${k}`) })),
+        ...SIMPLE_CALCS.map((k) => ({ value: k, label: tt(`calc_${k}`) })),
         { value: "rentBuy" as const, label: tRent("tab") },
         { value: "a190" as const, label: tA190("tab") },
       ]} />

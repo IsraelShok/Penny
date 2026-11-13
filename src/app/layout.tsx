@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
-import { Inter, Geist_Mono, Heebo } from "next/font/google";
+import { Inter, Geist_Mono, Rubik } from "next/font/google";
 import { getLocale, getMessages } from "next-intl/server";
 import { cookies } from "next/headers";
 import { SidebarRoot } from "@/components/layout/app-shell";
@@ -21,7 +21,7 @@ const inter = Inter({
 });
 
 // Hebrew UI font; globals.css points the font variables at it under lang="he".
-const heebo = Heebo({
+const heebo = Rubik({
   variable: "--font-heebo",
   subsets: ["hebrew", "latin"],
   display: "swap",

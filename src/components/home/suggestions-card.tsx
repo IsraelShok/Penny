@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowLeftRight, BadgePercent, CalendarDays, Check, Copy, Globe, Landmark, LineChart, Shield, Tags, Receipt, TrendingUp, X, Bell, BellRing, Coffee } from "lucide-react";
+import { AlertTriangle, ArrowLeftRight, BadgePercent, CalendarDays, Check, Copy, Globe, Landmark, LineChart, Shield, Tags, Receipt, TrendingUp, X, Bell, BellRing, Coffee, Flame, LifeBuoy, PiggyBank } from "lucide-react";
 import { createRule, dismissSuggestion, getPlan, getSuggestions, savePlan, savePlanItem } from "@/lib/api";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { shekels } from "@/lib/money";
@@ -19,12 +20,14 @@ import { AssetDialog } from "@/components/investments/asset-dialog";
 const ICONS: Record<Suggestion["type"], typeof Shield> = {
   policy: Shield, debt: Landmark, portfolio: LineChart, fees: BadgePercent, interest: AlertTriangle,
   fx: Globe, duplicate: Copy, price: TrendingUp, payday: CalendarDays, rule: Tags, fxMarkup: ArrowLeftRight, taxRefund: Receipt, leak: Coffee,
+  spike: Flame, emergency: LifeBuoy, idle: PiggyBank,
 };
 /** Suggestions that only inform: confirming just clears them. */
-const INFO: Suggestion["type"][] = ["fees", "interest", "fx", "duplicate", "price", "fxMarkup", "taxRefund", "leak"];
+const INFO: Suggestion["type"][] = ["fees", "interest", "fx", "duplicate", "price", "fxMarkup", "taxRefund", "leak", "spike", "emergency", "idle"];
 
 /** What the rules noticed in your transactions, each one click to add or dismiss. Hidden when there is nothing. */
-export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; empty?: React.ReactNode } = {}) {
+/** With `href`, shows at most `limit` and links to the full list instead of expanding. */
+export function SuggestionsCard({ limit = 6, empty = null, href }: { limit?: number; empty?: React.ReactNode; href?: string } = {}) {
   const t = useTranslations("suggestions");
   const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale();
@@ -78,6 +81,9 @@ export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; e
       case "taxRefund": return t(g(s.reason === "twoEmployers" ? "taxRefundEmployers" : "taxRefundGap"), { year: s.year, months: s.months });
       case "rule": return t(g("rule"), { name: s.merchant, category: translateCategoryName(s.categoryName, tCat), count: s.count });
       case "leak": return t(g("leak"), { name: s.name, count: s.count, amount: shekels(s.monthly, locale), yearly: shekels(s.monthly * 12, locale) });
+      case "spike": return t(g("spike"), { category: translateCategoryName(s.category, tCat), pct: s.pct, amount: shekels(s.current, locale), avg: shekels(s.avg, locale) });
+      case "emergency": return t(g("emergency"), { months: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(s.months), target: shekels(s.target, locale) });
+      case "idle": return t(g("idle"), { amount: shekels(s.amount, locale) });
       case "fxMarkup": return t(g("fxMarkup"), { amount: shekels(s.total, locale), pct: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(s.avgPct), count: s.count });
     }
   };
@@ -107,7 +113,12 @@ export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; e
           );
         })}
       </ul>
-      {items.length > limit && (
+      {items.length > limit && href && (
+        <Link href={href} className="mt-3 inline-block rounded-full px-3 py-1.5 text-footnote font-medium text-primary hover:bg-accent">
+          {t("more", { count: items.length - limit })}
+        </Link>
+      )}
+      {items.length > limit && !href && (
         <button type="button" onClick={() => setShowAll(!showAll)} aria-expanded={showAll} className="mt-3 rounded-full px-3 py-1.5 text-footnote font-medium text-primary hover:bg-accent">
           {showAll ? t("showLess") : t("more", { count: items.length - limit })}
         </button>

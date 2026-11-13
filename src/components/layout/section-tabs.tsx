@@ -20,6 +20,8 @@ const SECTIONS = [
   ],
 ] as const;
 
+export const sectionOf = (pathname: string) => SECTIONS.find((s) => s.some((x) => pathname.startsWith(x.href.split("?")[0])));
+
 export function SectionTabs() {
   const t = useTranslations("sections");
   const pathname = usePathname();

@@ -54,3 +54,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .superpowers/
+
+# desktop installer output
+/dist-desktop/

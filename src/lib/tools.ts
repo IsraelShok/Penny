@@ -158,3 +158,34 @@ export function amendment190(i: Amendment190Inputs) {
   const pensionOk = i.qualifyingPension >= i.minQualifyingPension;
   return { monthly, taxSaved, lumpNet: i.balance - taxSaved, ageOk, pensionOk, eligible: ageOk && pensionOk };
 }
+
+/**
+ * A lump sum: prepay a loan or invest it, after `years`. Prepaying saves compound interest, tax-free;
+ * investing earns the return, less 25% tax on nominal gains. Ignores prepayment fees (עמלת פירעון מוקדם).
+ */
+export function payoffVsInvest(lump: number, loanRate: number, investReturn: number, years: number) {
+  const saved = lump * ((1 + loanRate) ** years - 1);
+  const earned = lump * ((1 + investReturn) ** years - 1) * (1 - CAPITAL_GAINS_TAX);
+  return { saved, earned, diff: earned - saved };
+}
+
+/** Rental property yields: gross, net of costs, and the cash return on your own money after the mortgage. */
+export function rentalYield(i: { price: number; equity: number; rent: number; costs: number; rate: number; years: number }) {
+  const payment = spitzer(Math.max(0, i.price - i.equity), i.rate, i.years);
+  const cashflow = i.rent - i.costs - payment;
+  return {
+    gross: i.price > 0 ? (i.rent * 12) / i.price : 0,
+    net: i.price > 0 ? ((i.rent - i.costs) * 12) / i.price : 0,
+    cashOnCash: i.equity > 0 ? (cashflow * 12) / i.equity : 0,
+    payment,
+    cashflow,
+  };
+}
+
+/** Money left in checking vs a money-market fund: fund value after fee and 25% tax on real gains. */
+export function moneyMarket(amount: number, years: number, yieldPct: number, feePct: number, inflation: number) {
+  const gross = amount * (1 + (yieldPct - feePct) / 100) ** years;
+  const realBasis = amount * (1 + inflation / 100) ** years;
+  const net = gross - CAPITAL_GAINS_TAX * Math.max(0, gross - realBasis);
+  return { net, gain: net - amount };
+}

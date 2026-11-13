@@ -10,7 +10,7 @@ describe("providerLogoSrc", () => {
     expect(providerLogoSrc("max.co.il")).toBe("/banks/max.co.il.png");
   });
   it("returns null when there is no bundled logo, so the badge shows initials", () => {
-    expect(providerLogoSrc("unionbank.co.il")).toBeNull();
+    expect(providerLogoSrc("bankpagi.co.il")).toBeNull();
     expect(providerLogoSrc(undefined)).toBeNull();
   });
   it("never points outside the app", () => {

@@ -1,15 +1,20 @@
 "use client"
 
 import { useTheme } from "next-themes"
+import { useLocale } from "next-intl"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
+  const he = useLocale() === "he"
 
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
+      // Messages sit at the reading end's far corner: bottom-left in Hebrew (RTL), bottom-right in English.
+      position={he ? "bottom-left" : "bottom-right"}
+      dir={he ? "rtl" : "ltr"}
       className="toaster group"
       icons={{
         success: (

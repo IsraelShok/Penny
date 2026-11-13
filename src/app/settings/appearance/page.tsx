@@ -4,13 +4,11 @@ import { Switch } from "@/components/ui/switch";
 import { usePlan } from "@/hooks/use-plan";
 
 import { useRouter } from "next/navigation";
-import { useStudio } from "@/components/studio-provider";
 import { StudioEditor } from "@/components/dashboard/studio-editor";
 import { studioCopy } from "@/components/dashboard/studio-copy";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
 import { getSettings, updateSettings } from "@/lib/api";
 import type { AppSettings } from "@/lib/types";
@@ -20,10 +18,6 @@ type Lang = "en" | "he";
 export default function AppearanceSettingsPage() {
   const t = useTranslations("settings.appearance");
   const tCommon = useTranslations("common");
-  const { preferences, save } = useStudio();
-  const theme = preferences.theme === "midnight" ? "dark" : preferences.theme === "system" ? "system" : "light";
-  const hydrated = useIsHydrated();
-  const active = hydrated ? (theme ?? "system") : null;
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -49,12 +43,6 @@ export default function AppearanceSettingsPage() {
     },
   });
 
-  const themeOptions = [
-    { value: "light" as const, label: t("themeLight"), description: t("themeLightDesc") },
-    { value: "dark" as const, label: t("themeDark"), description: t("themeDarkDesc") },
-    { value: "system" as const, label: t("themeSystem"), description: t("themeSystemDesc") },
-  ];
-
   const langOptions: { value: Lang; label: string; description: string }[] = [
     { value: "en", label: t("languageEnglish"), description: t("languageEnglishDesc") },
     { value: "he", label: t("languageHebrew"), description: t("languageHebrewDesc") },
@@ -62,31 +50,7 @@ export default function AppearanceSettingsPage() {
 
   return (
     <SectionShell title={t("title")} description={t("description")}>
-      <SettingCard title={c.globalSettings} description={c.studioHint}><StudioEditor /></SettingCard>
-      <SettingCard title={t("themeCardTitle")}>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {themeOptions.map((o) => {
-            const isActive = active === o.value;
-            return (
-              <button
-                key={o.value}
-                onClick={() => save({ ...preferences, theme: o.value === "dark" ? "midnight" : o.value === "system" ? "system" : "pearl" })}
-                aria-pressed={isActive}
-                className={`rounded-xl border p-4 text-start transition-colors ${
-                  isActive
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50"
-                }`}
-              >
-                <div className="font-medium">{o.label}</div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {o.description}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </SettingCard>
+      <SettingCard title={c.globalSettings} description={c.studioHint}><StudioEditor inline /></SettingCard>
 
       <SettingCard title={t("languageCardTitle")} description={t("languageCardDescription")}>
         <div className="grid gap-2 sm:grid-cols-2">

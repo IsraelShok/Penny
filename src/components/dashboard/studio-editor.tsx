@@ -9,7 +9,8 @@ import { DEFAULT_STUDIO, type StudioPreferences } from "@/lib/budget-studio";
 import { useStudio } from "@/components/studio-provider";
 import { studioCopy } from "./studio-copy";
 
-export function StudioEditor({ compact = false }: { compact?: boolean }) {
+/** The design editor. `inline` shows it fully in place (Settings › Appearance); otherwise a button opens it in a sheet. */
+export function StudioEditor({ compact = false, inline = false }: { compact?: boolean; inline?: boolean }) {
   const { preferences: value, preview: onChange, save: persist, resolvedStudioTheme } = useStudio();
   const locale = useLocale();
   const c = studioCopy(locale);
@@ -30,25 +31,35 @@ export function StudioEditor({ compact = false }: { compact?: boolean }) {
       </button>)}
     </div></fieldset>;
   }
+  const body = (
+      <div className="studio-editor-scroll">
+      {options("theme", ["pearl", "midnight", "glass", "system"])}
+      {options("accent", ["violet", "ocean", "jade", "rose"])}
+      <label className="studio-toggle"><span>{locale === "he" ? "צבע אישי" : "Custom color"}<small className="block text-xs text-muted-foreground">{locale === "he" ? "הגוון מותאם לניגודיות קריאה" : "Adjusted for readable contrast"}</small></span><input type="color" aria-label={locale === "he" ? "צבע אישי" : "Custom color"} value={value.customColor ?? "#5541cc"} onChange={e => change("customColor", e.target.value)} /></label>
+      {options("density", ["comfortable", "compact"])}
+      <label className="studio-toggle studio-motion-setting"><span>{c.motion}</span><input type="checkbox" role="switch" checked={value.motion} onChange={(e) => change("motion", e.target.checked)} /></label>
+      <h3 className="studio-section-label">{c.budgetSettings}</h3>
+      {options("metric", ["remaining", "spent"])}
+      {options("chart", ["bars", "donut", "table"])}
+      {options("layout", ["balanced", "stacked"])}
+      <fieldset className="studio-field"><legend>{c.widgets}</legend>
+        {(["showChart", "showJourney"] as const).map((key) => <label className="studio-toggle" key={key}><span>{c[key]}</span><input type="checkbox" role="switch" checked={value[key]} onChange={(e) => change(key, e.target.checked)} /></label>)}
+      </fieldset>
+      <button className="studio-reset" onClick={() => onChange({ ...DEFAULT_STUDIO })}><RotateCcw size={15} aria-hidden="true" />{c.reset}</button>
+    </div>
+  );
+  if (inline) {
+    const dirty = JSON.stringify(value) !== JSON.stringify(original);
+    return <div className="budget-studio studio-editor studio-editor-inline" data-studio-theme={resolvedStudioTheme} data-studio-accent={value.accent} data-studio-motion={value.motion}>
+      {body}
+      <div className="studio-editor-footer"><button className="studio-primary" disabled={!dirty} onClick={() => { if (persist(value)) { toast.success(c.saved); setOriginal(value); } }}>{c.save}</button><button className="studio-quiet" disabled={!dirty} onClick={() => onChange(original)}>{c.cancel}</button></div>
+    </div>;
+  }
   return <Sheet open={open} onOpenChange={(next) => { if (next) { setOriginal(value); setOpen(true); } else close(); }}>
     <SheetTrigger className={`studio-customize ${compact ? "studio-customize-icon" : ""}`} aria-label={c.customize} title={c.customize}><Palette size={17} aria-hidden="true" />{!compact && <>{c.customize}<Sparkles size={14} aria-hidden="true" /></>}</SheetTrigger>
     <SheetContent side="right" className="budget-studio studio-editor" data-studio-theme={resolvedStudioTheme} data-studio-accent={value.accent} data-studio-motion={value.motion} dir={locale === "he" ? "rtl" : "ltr"}>
       <div className="studio-editor-heading"><span className="studio-eyebrow">DESIGN STUDIO</span><SheetTitle className="text-2xl font-semibold">{c.studio}</SheetTitle><SheetDescription>{c.studioHint}</SheetDescription></div>
-      <div className="studio-editor-scroll">
-        {options("theme", ["pearl", "midnight", "glass", "system"])}
-        {options("accent", ["violet", "ocean", "jade", "rose"])}
-        <label className="studio-toggle"><span>{locale === "he" ? "צבע אישי" : "Custom color"}<small className="block text-xs text-muted-foreground">{locale === "he" ? "הגוון מותאם לניגודיות קריאה" : "Adjusted for readable contrast"}</small></span><input type="color" aria-label={locale === "he" ? "צבע אישי" : "Custom color"} value={value.customColor ?? "#5541cc"} onChange={e => change("customColor", e.target.value)} /></label>
-        {options("density", ["comfortable", "compact"])}
-        <label className="studio-toggle studio-motion-setting"><span>{c.motion}</span><input type="checkbox" role="switch" checked={value.motion} onChange={(e) => change("motion", e.target.checked)} /></label>
-        <h3 className="studio-section-label">{c.budgetSettings}</h3>
-        {options("metric", ["remaining", "spent"])}
-        {options("chart", ["bars", "donut", "table"])}
-        {options("layout", ["balanced", "stacked"])}
-        <fieldset className="studio-field"><legend>{c.widgets}</legend>
-          {(["showChart", "showJourney"] as const).map((key) => <label className="studio-toggle" key={key}><span>{c[key]}</span><input type="checkbox" role="switch" checked={value[key]} onChange={(e) => change(key, e.target.checked)} /></label>)}
-        </fieldset>
-        <button className="studio-reset" onClick={() => onChange({ ...DEFAULT_STUDIO })}><RotateCcw size={15} aria-hidden="true" />{c.reset}</button>
-      </div>
+      {body}
       <div className="studio-editor-footer"><button className="studio-primary" onClick={save}>{c.save}</button><button className="studio-quiet" onClick={close}>{c.cancel}</button></div>
     </SheetContent>
   </Sheet>;

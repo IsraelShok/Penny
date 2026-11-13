@@ -24,7 +24,18 @@ const MAX_BYTES = 512 * 1024;
 const headers = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36" };
 
 const typesSource = await fs.readFile(path.join(root, "src", "lib", "types.ts"), "utf8");
-const domains = [...new Set([...typesSource.matchAll(/domain:\s*"([a-z0-9.-]+)"/g)].map((m) => m[1]))].sort();
+const housesSource = await fs.readFile(path.join(root, "src", "lib", "investment-houses.ts"), "utf8");
+const domains = [...new Set([...(typesSource + housesSource).matchAll(/domain:\s*"([a-z0-9.-]+)"/g)].map((m) => m[1]))].sort();
+// Logos to take from a fixed source: Google's favicon for these is wrong, or the site is gone (Union merged into Mizrahi).
+const OVERRIDES = {
+  // Cal's favicon is an abstract mark that does not read as Cal; use its wordmark.
+  "cal-online.co.il": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Israel_Credit_Cards_CAL_company_logo_2019.webp",
+  // Histadrut club card (issued by Max); its old domain is gone, so use the Histadrut icon.
+  "beyahad-bishvilha.co.il": "https://www.google.com/s2/favicons?domain=hist.org.il&sz=128",
+  "unionbank.co.il": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d6/Bank_Igud_logo.svg/250px-Bank_Igud_logo.svg.png",
+};
+// Google returns another brand's icon for these, so try the site's own icons first.
+const SITE_FIRST = new Set([]);
 
 async function download(url) {
   try {
@@ -120,20 +131,20 @@ await fs.mkdir(outDir, { recursive: true });
 const found = [];
 for (const domain of domains) {
   // A domain that no longer resolves (e.g. a bank that merged) can still get a stale or wrong icon from Google.
-  const live = await lookup(`www.${domain}`).then(() => true, () => lookup(domain).then(() => true, () => false));
+  const live = OVERRIDES[domain] ? true : await lookup(`www.${domain}`).then(() => true, () => lookup(domain).then(() => true, () => false));
   if (!live) {
     console.log(`skip ${domain} (domain no longer resolves)`);
     continue;
   }
-  const sources = [
-    `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
-    `https://www.google.com/s2/favicons?domain=www.${domain}&sz=128`,
+  const google = [`https://www.google.com/s2/favicons?domain=${domain}&sz=128`, `https://www.google.com/s2/favicons?domain=www.${domain}&sz=128`];
+  const site = [
     `https://www.${domain}/apple-touch-icon.png`,
     `https://${domain}/apple-touch-icon.png`,
     ...(await iconLinks(domain)),
     `https://www.${domain}/favicon.ico`,
     `https://${domain}/favicon.ico`,
   ];
+  const sources = OVERRIDES[domain] ? [OVERRIDES[domain]] : SITE_FIRST.has(domain) ? [...site, ...google] : [...google, ...site];
   let png = null;
   let from = "";
   for (const url of sources) {

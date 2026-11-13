@@ -78,7 +78,7 @@ export function getAppSettings(workspaceId: number): AppSettings {
     showBrowser: getWorkspaceSetting(workspaceId, "scraper_show_browser") === "true",
     paydayDay: Number(getWorkspaceSetting(workspaceId, "payday_day") ?? "1"),
     monthlyTarget: Number.isFinite(target) && target > 0 ? target : null,
-    autoSyncEnabled: getGlobalSetting("auto_sync_enabled") === "true",
+    autoSyncEnabled: getGlobalSetting("auto_sync_enabled") !== "false",
     autoSyncTime:
       storedTime && AUTO_SYNC_TIME_RE.test(storedTime) ? storedTime : "06:00",
     language: storedLang === "en" ? "en" : "he",

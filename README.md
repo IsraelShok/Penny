@@ -2,17 +2,14 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="public/logo_darkmode.svg">
-  <img src="public/logo_lightmode.svg" alt="Spent" width="84">
+  <img src="public/logo_lightmode.svg" alt="Penny" width="84">
 </picture>
 
-# Spent
+# Penny
 
 **Local-only personal finance for Israeli bank accounts.**
 Encrypted. AI-categorized. Yours.
 
-[![Website](https://img.shields.io/badge/%F0%9F%8C%90%20Website-1F4D33?style=for-the-badge&labelColor=1F4D33)](https://shaya16.github.io/Spent/)
-[![Docs](https://img.shields.io/badge/%F0%9F%93%96%20Docs-1F4D33?style=for-the-badge&labelColor=1F4D33)](https://shaya16.github.io/Spent/getting-started)
-[![Install](https://img.shields.io/badge/%E2%AC%87%20Install-28C75B?style=for-the-badge&labelColor=28C75B)](https://shaya16.github.io/Spent/install/mac)
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs&logoColor=white&style=flat-square)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white&style=flat-square)](https://react.dev/)
@@ -28,13 +25,13 @@ Encrypted. AI-categorized. Yours.
 
 <div align="center">
 
-![Spent dashboard](public/screenshots/home-light.png)
+![Penny dashboard](public/screenshots/home-light.png)
 
 </div>
 
-## Why Spent?
+## Why Penny?
 
-Israeli banks have terrible exports, YNAB doesn't speak ILS gracefully, and every "cloud finance" app wants you to hand over your bank password. Spent is the answer for people who'd rather just run something on their own laptop.
+Israeli banks have terrible exports, YNAB doesn't speak ILS gracefully, and every "cloud finance" app wants you to hand over your bank password. Penny is the answer for people who'd rather just run something on their own laptop.
 
 Your transactions get pulled directly from your bank with [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), stored in a local SQLite file you can `cp` and back up like any other file, and categorized by an AI provider you choose: paid Claude, free local Ollama, or nothing at all.
 
@@ -99,7 +96,7 @@ Pull up to 3 months of transactions per sync (configurable). Most banks support 
 <td valign="top">
 
 ### 🔍 Merchant memory
-Once you correct an AI categorization, Spent remembers — same merchant goes to the right category next time.
+Once you correct an AI categorization, Penny remembers — same merchant goes to the right category next time.
 
 </td>
 </tr>
@@ -209,11 +206,17 @@ You can change providers any time from **Settings → AI provider**. Existing ca
 
 ## Install
 
-> Prefer a screenshot-by-screenshot walkthrough? The [step-by-step install guides](https://shaya16.github.io/Spent/getting-started/) on the docs site cover macOS and Windows separately, with build-tool setup and tray-app gotchas spelled out.
+### Desktop app (easiest)
+
+Download **Penny Setup.exe** from the [Releases page](https://github.com/Sergey-Bar/Penny/releases), run it, and open Penny from the Start menu. No Node.js, no terminal. Your data stays in `%APPDATA%\Penny\data` on your computer, and bank sync uses the Chrome or Edge you already have.
+
+To build the installer yourself: `npm run desktop:build` (output in `dist-desktop/`).
+
+### From source
 
 ```bash
-git clone https://github.com/Shaya16/Spent.git
-cd spent
+git clone https://github.com/Sergey-Bar/Penny.git
+cd Penny
 npm install
 npm run setup
 ```
@@ -228,7 +231,7 @@ Open **`http://spent.localhost:41234`** and bookmark it.
 
 ### Docker (optional)
 
-Runs Spent, its scrapers and Chromium in a container, isolated from your machine. Requires Docker Desktop (or Docker Engine).
+Runs Penny, its scrapers and Chromium in a container, isolated from your machine. Requires Docker Desktop (or Docker Engine).
 
 ```bash
 docker compose up -d --build
@@ -239,7 +242,7 @@ On Windows, double-click `Spent-docker.bat` instead: it builds, starts and opens
 - The app is published on `127.0.0.1` only. The database and encryption key live in the `spent-data` volume and survive updates.
 - Settings go in `.env` (copied from `.env.example`); compose reads it automatically.
 - The image build runs the test suite. If the tests fail, no image is produced.
-- **Updates:** with Telegram configured, Spent tells you when a newer version exists (`SPENT_UPDATE_CHECK`, on by default in compose). Nothing installs itself. Run `Spent-update.bat` (or `Spent-update.ps1`): it pulls with `--ff-only`, backs up the database and key to `/data/backups` (newest five kept), builds (tests included), switches, and rolls back to the previous image if the new one is not healthy.
+- **Updates:** with Telegram configured, Penny tells you when a newer version exists (`SPENT_UPDATE_CHECK`, on by default in compose). Nothing installs itself. Run `Spent-update.bat` (or `Spent-update.ps1`): it pulls with `--ff-only`, backs up the database and key to `/data/backups` (newest five kept), builds (tests included), switches, and rolls back to the previous image if the new one is not healthy.
 - Ollama on the host: set `SPENT_ALLOW_REMOTE_OLLAMA=1` and use `http://host.docker.internal:11434`.
 
 ## First-time setup
@@ -291,11 +294,11 @@ Reverses everything `npm run setup` installed:
 **Kept on purpose:**
 
 - `data/`: your transactions, budgets, and encryption key. To wipe your data: `rm -rf data/`.
-- The repo itself. To remove Spent entirely: `rm -rf data/ && cd .. && rm -rf spent/`.
+- The repo itself. To remove Penny entirely: `rm -rf data/ && cd .. && rm -rf Penny/`.
 
 If you only want to remove the menubar but keep the always-on web app:
 
-- **macOS**: `rm -rf ~/Applications/Spent.app` and remove "Spent" from System Settings → General → Login Items.
+- **macOS**: `rm -rf ~/Applications/Spent.app` and remove "Penny" from System Settings → General → Login Items.
 - **Windows**: delete `%LOCALAPPDATA%\Programs\Spent\` and remove `Spent.lnk` from `shell:startup`.
 
 If you only want to remove the always-on service but keep the menubar (so it's there if you reinstall later): `npm run service:uninstall`.
@@ -326,7 +329,7 @@ Back up `data/` like any other folder. To migrate to a new machine, copy `data/`
 ## Architecture & code map
 
 ```
-spent/
+Penny/
 ├── src/
 │   ├── app/                  Next.js App Router (routes + API)
 │   │   ├── (dashboard)/      Dashboard, transactions, settings pages
@@ -354,8 +357,6 @@ spent/
 
 ## Troubleshooting
 
-> The [Troubleshooting docs](https://shaya16.github.io/Spent/troubleshooting/) cover Defender, Gatekeeper, Cloudflare bot challenges, and bank-specific quirks in more depth.
-
 - **Port 41234 in use** → `lsof -nP -iTCP:41234 -sTCP:LISTEN` (Unix) or `netstat -ano | findstr :41234` (Windows). Kill the offender and re-run install.
 - **Gatekeeper blocks `Spent.app`** → right-click → Open → Open. One-time.
 - **Linux: "systemd user instance not available"** → `loginctl enable-linger $USER`.
@@ -374,7 +375,7 @@ spent/
 
 ## Contributing
 
-Spent is built for personal use first, open-source second. PRs welcome for:
+Penny is built for personal use first, open-source second. PRs welcome for:
 
 - **New bank integrations** — add to `BANK_PROVIDERS` in [src/lib/types.ts](src/lib/types.ts), map to `CompanyTypes` in [src/server/scrapers/index.ts](src/server/scrapers/index.ts), flip `enabled: true`.
 - **New AI providers** — implement the `AIProvider` interface from [src/server/ai/types.ts](src/server/ai/types.ts), register in [src/server/ai/factory.ts](src/server/ai/factory.ts), and add an option to the setup wizard.
@@ -389,7 +390,7 @@ Conventions:
 
 ## License
 
-MIT
+MIT. Penny started from [Spent](https://github.com/Shaya16/Spent) (MIT); see `NOTICE.md`.
 
 ## Acknowledgments
 

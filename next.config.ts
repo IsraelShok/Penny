@@ -43,7 +43,13 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["better-sqlite3", "israeli-bank-scrapers", "@sergienko4/israeli-bank-scrapers"],
+  // The desktop build (npm run desktop:build) ships a self-contained server.
+  output: process.env.PENNY_STANDALONE ? "standalone" : undefined,
+  // Never trace user data or repo-only folders into the standalone build (it is shipped inside the installer).
+  outputFileTracingExcludes: {
+    "*": ["data/**", "reports/**", "research_notes/**", "docs/**", "tests/**", "e2e/**", "scripts/**", "desktop/**", "dist-desktop/**", ".claude/**", "*.md", "Dockerfile", "docker-compose.yml", "*.bat", "*.ps1", "*.tsbuildinfo"],
+  },
+  serverExternalPackages: ["better-sqlite3", "israeli-bank-scrapers", "@sergienko4/israeli-bank-scrapers", "israeli-pension-scrapers"],
   devIndicators: false,
   // Include shared worktree dependencies on the host and use /app inside Docker.
   turbopack: { root: path.resolve(require.resolve("next/package.json"), "../../..") },
