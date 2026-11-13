@@ -12,6 +12,8 @@ import { ICON_MAP } from "@/components/dashboard/category-card";
 import { CardShell } from "@/components/home/card-shell";
 import { ResilienceCard } from "@/components/overview/resilience-card";
 import { More } from "@/components/overview/more";
+import { AllocationCard } from "@/components/overview/allocation-card";
+import { CashflowHealthCard } from "@/components/overview/cashflow-health-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataState } from "@/components/ui/data-state";
 import { Button } from "@/components/ui/button";
@@ -131,11 +133,14 @@ function Body({ data }: { data: OverviewPayload }) {
   const empty = data.totals.income === 0 && data.totals.expenses === 0;
   const simple = usePlan().plan.simpleMode;
   // Future and not-yet-synced months would drag the average down.
+  // Months with any activity, so the 50/30/20 card works on an average month.
+  const months = Math.max(1, data.monthly.filter((m) => m.expenses > 0 || m.income > 0).length);
   const avgMonthly = data.totals.expenses / Math.max(1, data.monthly.filter((m) => m.expenses > 0).length);
 
   return (
     <>
       <ResilienceCard />
+      <CashflowHealthCard />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label={t("income")} value={shekels(data.totals.income, locale)} cur={data.totals.income} prev={data.previous.income} ly={data.lastYear.income} goodWhenUp />
         <Stat label={t("expenses")} value={shekels(data.totals.expenses, locale)} cur={data.totals.expenses} prev={data.previous.expenses} ly={data.lastYear.expenses} />
@@ -155,6 +160,8 @@ function Body({ data }: { data: OverviewPayload }) {
             parts={(["need", "want", "saving"] as const).map((k) => ({ key: k, label: t(k), value: data.byNeed[k], color: NEED_COLORS[k] }))}
             uncategorized={data.uncategorized}
           />
+
+          <AllocationCard income={data.totals.income / months} expenses={avgMonthly} byNeed={{ need: data.byNeed.need / months, want: data.byNeed.want / months, saving: data.byNeed.saving / months }} fixed={data.byCost.fixed / months} />
 
           <CategoryList data={data} />
           {!simple && (

@@ -15,7 +15,8 @@ export function NextBillCard({ data }: { data: InsightsPayload }) {
   const t = useTranslations("home");
   const tIns = useTranslations("insights");
   const locale = useLocale();
-  const first = [...data.forecast].sort((a, b) => a.date.localeCompare(b.date))[0];
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const first = data.forecast.filter(f => f.date >= today).sort((a, b) => a.date.localeCompare(b.date))[0];
   const sameDay = first ? data.forecast.filter((f) => f.date === first.date) : [];
   const total = sameDay.reduce((s, f) => s + f.total, 0);
 
@@ -56,7 +57,7 @@ export function SubscriptionsCard({ data }: { data: InsightsPayload }) {
           <div className="min-w-0">
             <p className="figure text-[1.75rem] leading-tight">{shekels(total, locale)}</p>
             <p className="text-footnote text-pretty text-muted-foreground">
-              {t("subscriptionsDetail", { count: active.length })}
+              {t("recurringCount", { count: active.length })}
             </p>
           </div>
         </div>

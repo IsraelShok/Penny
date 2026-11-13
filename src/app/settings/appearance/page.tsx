@@ -4,7 +4,9 @@ import { Switch } from "@/components/ui/switch";
 import { usePlan } from "@/hooks/use-plan";
 
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
+import { useStudio } from "@/components/studio-provider";
+import { StudioEditor } from "@/components/dashboard/studio-editor";
+import { studioCopy } from "@/components/dashboard/studio-copy";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -18,13 +20,15 @@ type Lang = "en" | "he";
 export default function AppearanceSettingsPage() {
   const t = useTranslations("settings.appearance");
   const tCommon = useTranslations("common");
-  const { theme, setTheme } = useTheme();
+  const { preferences, save } = useStudio();
+  const theme = preferences.theme === "midnight" ? "dark" : preferences.theme === "system" ? "system" : "light";
   const hydrated = useIsHydrated();
   const active = hydrated ? (theme ?? "system") : null;
 
   const router = useRouter();
   const queryClient = useQueryClient();
   const locale = useLocale() as Lang;
+  const c = studioCopy(locale);
 
   const { data: settings } = useQuery({
     queryKey: ["settings"],
@@ -58,6 +62,7 @@ export default function AppearanceSettingsPage() {
 
   return (
     <SectionShell title={t("title")} description={t("description")}>
+      <SettingCard title={c.globalSettings} description={c.studioHint}><StudioEditor /></SettingCard>
       <SettingCard title={t("themeCardTitle")}>
         <div className="grid gap-2 sm:grid-cols-3">
           {themeOptions.map((o) => {
@@ -65,7 +70,8 @@ export default function AppearanceSettingsPage() {
             return (
               <button
                 key={o.value}
-                onClick={() => setTheme(o.value)}
+                onClick={() => save({ ...preferences, theme: o.value === "dark" ? "midnight" : o.value === "system" ? "system" : "pearl" })}
+                aria-pressed={isActive}
                 className={`rounded-xl border p-4 text-start transition-colors ${
                   isActive
                     ? "border-primary bg-primary/5"

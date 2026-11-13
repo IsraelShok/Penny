@@ -58,7 +58,15 @@
     "more": "More",
     "search": "Search",
     "privacyMode": "Privacy mode: hide amounts",
-    "lockNow": "Lock now"
+    "lockNow": "Lock now",
+    "askBar": "Search, jump to a page, or ask…",
+    "staleTitle": "Your data is out of date",
+    "staleBody": "Last sync was {when}. Update so the numbers are right.",
+    "staleNever": "Nothing synced yet. Sync to see your data.",
+    "staleError": "A bank connection failed. Check it and sync again.",
+    "updateNow": "Update now",
+    "collapse": "Collapse menu",
+    "future": "Future"
   },
   "home": {
     "pageTitle": "Home",
@@ -115,9 +123,9 @@
     "nextBill": "Next card bill",
     "nextBillDetail": "Card {card} · {date}",
     "noUpcomingBills": "No upcoming bills",
-    "subscriptionsTitle": "Subscriptions",
+    "subscriptionsTitle": "Recurring charges",
     "subscriptionsDetail": "{count, plural, one {1 active subscription} other {# active subscriptions}} · per month",
-    "noSubscriptions": "No subscriptions found",
+    "noSubscriptions": "No recurring charges found yet",
     "categoriesTitle": "By category",
     "categoriesSubtitle": "Every category this month, largest first",
     "ofBudget": "of {budget}",
@@ -129,7 +137,8 @@
     "trendLabel": "6-month trend",
     "topMerchantsIn": "Top merchants",
     "noCategoriesYet": "No category spending yet this month.",
-    "categoryJump": "Jump to category"
+    "categoryJump": "Jump to category",
+    "recurringCount": "{count} regular charges (rent, bills and subscriptions) · monthly estimate"
   },
   "syncPill": {
     "noBanksConnected": "No banks connected",
@@ -658,7 +667,7 @@
       "lockError_wrong": "Wrong passphrase.",
       "lockError_wait": "Too many tries. Try again shortly.",
       "lockError_weak": "Too short: at least 8 characters, or a 6-digit PIN.",
-      "lockError_failed": "Something went wrong. Try again.",
+      "lockError_failed": "Couldn't finish that. Check that Penny is still running, then try again. If it keeps failing, restart Penny.",
       "wipeTitle": "Delete all data",
       "wipeDescription": "Deletes everything: transactions, bank connections and logins, settings, AI keys, the bot, the encryption key and logs. Penny returns to a fresh install. This cannot be undone.",
       "wipeConfirm": "To confirm, type \"{word}\"",
@@ -1504,6 +1513,7 @@
     "fx": "You paid {amount} in conversion and foreign fees this year. A card without conversion fees would save them.",
     "duplicate": "Possible double charge: {name}, {amount} twice on {date}. Worth checking with the card company.",
     "price": "{name} went up from {from} to {to}.",
+    "leak": "Small charges add up: {count} at {name} in the last month, {amount} (about {yearly} a year). Worth checking it's worth it to you.",
     "payday": "Your salary usually arrives on day {day}. Count months from that day?",
     "kind_health": "health",
     "kind_life": "life",
@@ -2062,10 +2072,10 @@
   },
   "fileImport": {
     "title": "Import a bank or card statement",
-    "description": "No bank connection needed: download the transactions file from your bank or card site and upload it here. You see a preview before anything is saved.",
+    "description": "The most private way in: you sign in to your bank or card site yourself, download the transactions file and upload it here. Penny never sees your password, and the file is read on this computer. You see a preview before anything is saved.",
     "file": "Statement file",
-    "fileHint": "CSV or Excel (xlsx). Duplicates are skipped automatically.",
-    "xlsNotSupported": "Old .xls files aren't supported yet. Open it in Excel and choose Save As → xlsx or CSV.",
+    "fileHint": "CSV, Excel (xlsx) or the bank's own .xls download. Files with several sheets or sections (domestic and abroad) are read in full. Duplicates are skipped automatically.",
+    "xlsNotSupported": "This .xls file is in the old Excel format, which isn't supported yet. Open it in Excel and choose Save As → xlsx or CSV.",
     "noHeader": "No header row found (like Date, Description, Amount). Check that this is the transactions file.",
     "readFailed": "Couldn't read this file. Try saving it again as CSV.",
     "column_date": "Date",
@@ -2390,7 +2400,7 @@
     "removeSupport": "Remove",
     "invalidAmount": "That amount isn't valid",
     "invalidShare": "Share must be 0–100",
-    "failed": "Something went wrong, try again"
+    "failed": "Couldn't save. Check the values and that Penny is still running, then try again."
   },
   "kids": {
     "filter": "By child",
@@ -2614,7 +2624,7 @@
     "confirmDelete": "Yes, delete",
     "deleteWarning": "All of this profile's data will be deleted. This can't be undone.",
     "switch": "Switch profile",
-    "error": "Something went wrong. Try again."
+    "error": "Couldn't finish that. Check that Penny is still running, then try again. If it keeps failing, restart Penny."
   },
   "concepts": {
     "whatIs": "What is {term}?",
@@ -2686,5 +2696,72 @@
     "submit": "Unlock",
     "wrong": "Not right. You can try again in {seconds} seconds.",
     "wait": "Too many tries. Try again in {seconds} seconds."
+  },
+  "allocation": {
+    "title": "Automatic 50/30/20 split",
+    "intro": "Based on an average month in this period: net income {income}, expenses {expenses}.",
+    "bucket": "Bucket",
+    "target": "Target",
+    "actual": "Actual",
+    "b_need": "Needs (50%)",
+    "b_want": "Wants (30%)",
+    "b_saving": "Savings & investing (20%)",
+    "offTarget": "off target",
+    "monthlyTitle": "Where the {amount} left each month goes",
+    "to_liquid": "Keep in checking",
+    "why_liquid": "A one-month cushion for normal swings",
+    "to_moneyMarket": "Money-market fund",
+    "why_moneyMarket": "Emergency fund: liquid, low risk, near the central-bank rate",
+    "to_market": "Invest in the market",
+    "why_market": "Money you won't need for years",
+    "noSurplus": "Spending equals or exceeds income, so there's nothing to split yet. Start with the buckets above target.",
+    "emergency": "Emergency fund goal: {goal} ({months} months of expenses): {liquid} in checking and {mm} in a money-market fund.",
+    "full": "It's full, so all surplus can go to investing.",
+    "never": "At this pace it won't fill.",
+    "eta": "You cover {covered} months today; at this pace it fills in {n} months.",
+    "disclaimer": "A general 50/30/20 rule of thumb on net income, not personal investment advice. Pension and study-fund contributions come on top of the 20%. With a large mortgage, 60/20/20 is a common adjustment.",
+    "fixed": "Fixed costs: {pct}% of income.",
+    "fixedHigh": "Fixed costs: {pct}% of income. Above 60% there's almost no room; check the 2–3 biggest fixed bills.",
+    "emergencySize": "Emergency fund size:",
+    "m3": "3 months (stable income)",
+    "m6": "6 months",
+    "payFirst": "Tip: set a standing order to savings a day or two after payday, so saving comes first, not from what's left."
+  },
+  "cashflowHealth": {
+    "title": "Cash-flow health",
+    "level_healthy": "Cash flow looks healthy. No warning signs found.",
+    "level_watch": "{n, plural, one {One warning sign} other {# warning signs}}. Worth watching.",
+    "level_problem": "{n} warning signs: this is a cash-flow problem, even on a good salary.",
+    "sign_overdraft": "Overdraft again mid-month",
+    "fix_overdraft": "That's a cash-flow problem, not a one-off slip. Build a checking buffer and halve 2–3 optional categories.",
+    "sign_installments": "Everyday purchases in installments",
+    "fix_installments": "Over 15% of purchases in installments pushes today's spending into future months.",
+    "sign_loans": "A new loan in the last six months",
+    "fix_loans": "If it covers an earlier loan or overdraft, cash flow is negative.",
+    "sign_lateFees": "Late fees or bounced charges",
+    "fix_lateFees": "Move bill dates to just after payday.",
+    "sign_noBuffer": "Less than a ₪1,000 cushion",
+    "fix_noBuffer": "A ₪1,000 surprise would push you into overdraft. Start with a small checking buffer.",
+    "sign_deficit": "Spending above income in most recent months",
+    "fix_deficit": "Check fixed costs against income on the 50/30/20 card.",
+    "hint": "Per moneyplan: three or more signs mean a cash-flow problem. Stabilising usually takes 3–6 months. Don't stop pension deposits; at most cut them for a while."
+  },
+  "health": {
+    "title": "Your financial health",
+    "details": "Details"
+  },
+  "homeGrid": {
+    "title": "My dashboard",
+    "arrange": "Arrange cards",
+    "done": "Done editing"
+  },
+  "sections": {
+    "budget": "Budget",
+    "summary": "Summary",
+    "investments": "Investments",
+    "fi": "Independence",
+    "goals": "Goals",
+    "ahead": "Coming up",
+    "recurring": "Recurring"
   }
 }

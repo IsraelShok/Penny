@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { Forward } from "@/components/ui/dir-chevron";
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -32,6 +33,7 @@ function useCopy() {
 
 /** The weekly ritual: three short steps with a visible end, then the outcome (the streak stays a quiet footnote). */
 export function Checkin() {
+  const locale = useLocale();
   const t = useTranslations("checkin");
   const { plan, update, saving } = usePlan();
   const [step, setStep] = useState(0);
@@ -41,8 +43,8 @@ export function Checkin() {
 
   const finish = async () => {
     const checkin = completeCheckin(plan.checkin, new Date());
-    await update({ checkin });
-    setDone(checkin.streak);
+    try { await update({ checkin }); setDone(checkin.streak); }
+    catch { toast.error(locale === "he" ? "לא הצלחנו לשמור את הסקירה. אפשר לנסות שוב." : "Could not save your review. Please try again."); }
   };
 
   return (

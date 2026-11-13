@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowLeftRight, BadgePercent, CalendarDays, Check, Copy, Globe, Landmark, LineChart, Shield, Tags, Receipt, TrendingUp, X, Bell, BellRing } from "lucide-react";
+import { AlertTriangle, ArrowLeftRight, BadgePercent, CalendarDays, Check, Copy, Globe, Landmark, LineChart, Shield, Tags, Receipt, TrendingUp, X, Bell, BellRing, Coffee } from "lucide-react";
 import { createRule, dismissSuggestion, getPlan, getSuggestions, savePlan, savePlanItem } from "@/lib/api";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { shekels } from "@/lib/money";
@@ -18,10 +18,10 @@ import { AssetDialog } from "@/components/investments/asset-dialog";
 
 const ICONS: Record<Suggestion["type"], typeof Shield> = {
   policy: Shield, debt: Landmark, portfolio: LineChart, fees: BadgePercent, interest: AlertTriangle,
-  fx: Globe, duplicate: Copy, price: TrendingUp, payday: CalendarDays, rule: Tags, fxMarkup: ArrowLeftRight, taxRefund: Receipt,
+  fx: Globe, duplicate: Copy, price: TrendingUp, payday: CalendarDays, rule: Tags, fxMarkup: ArrowLeftRight, taxRefund: Receipt, leak: Coffee,
 };
 /** Suggestions that only inform: confirming just clears them. */
-const INFO: Suggestion["type"][] = ["fees", "interest", "fx", "duplicate", "price", "fxMarkup", "taxRefund"];
+const INFO: Suggestion["type"][] = ["fees", "interest", "fx", "duplicate", "price", "fxMarkup", "taxRefund", "leak"];
 
 /** What the rules noticed in your transactions, each one click to add or dismiss. Hidden when there is nothing. */
 export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; empty?: React.ReactNode } = {}) {
@@ -77,6 +77,7 @@ export function SuggestionsCard({ limit = 6, empty = null }: { limit?: number; e
       case "payday": return t(g("payday"), { day: s.day });
       case "taxRefund": return t(g(s.reason === "twoEmployers" ? "taxRefundEmployers" : "taxRefundGap"), { year: s.year, months: s.months });
       case "rule": return t(g("rule"), { name: s.merchant, category: translateCategoryName(s.categoryName, tCat), count: s.count });
+      case "leak": return t(g("leak"), { name: s.name, count: s.count, amount: shekels(s.monthly, locale), yearly: shekels(s.monthly * 12, locale) });
       case "fxMarkup": return t(g("fxMarkup"), { amount: shekels(s.total, locale), pct: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(s.avgPct), count: s.count });
     }
   };

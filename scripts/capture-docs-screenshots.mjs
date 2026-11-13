@@ -19,7 +19,7 @@ import { banks, transactions, budgets } from './docs-seed/fake-data.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..');
-const OUT_DIR = path.join(REPO_ROOT, 'website/src/assets/screenshots');
+const OUT_DIR = path.join(REPO_ROOT, 'public/screenshots');
 
 const VIEWPORT = { width: 1600, height: 1100, deviceScaleFactor: 2 };
 const PORT = 4399; // separate from prod 41234 and dev 3000
@@ -29,7 +29,7 @@ const SCREENS = [
   { name: 'dashboard-light.png', path: '/budget', theme: 'light' },
   { name: 'dashboard-dark.png', path: '/', theme: 'dark' },
   { name: 'transactions-light.png', path: '/transactions', theme: 'light' },
-  { name: 'settings-banks-light.png', path: '/settings/bank', theme: 'light' },
+  { name: 'settings-bank-light.png', path: '/settings/bank', theme: 'light' },
   { name: 'settings-ai-light.png', path: '/settings/ai', theme: 'light' },
   { name: 'settings-categories-light.png', path: '/settings/categories', theme: 'light' },
   {
@@ -44,50 +44,36 @@ function seedDb(dbDir) {
   const dbPath = path.join(dbDir, 'spent.db');
   const db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
-  const migrationPath = path.join(REPO_ROOT, 'src/server/db/migrations/001_initial.sql');
-  db.exec(fs.readFileSync(migrationPath, 'utf-8'));
-
-  // Insert banks with dummy encrypted blobs. The dashboard doesn't decrypt
-  // these to render — it only shows the provider label.
-  const insertBank = db.prepare(
-    `INSERT INTO bank_credentials (provider, credentials_encrypted, iv, auth_tag)
-     VALUES (?, ?, ?, ?)`,
-  );
-  for (const b of banks) {
-    insertBank.run(b.provider, Buffer.from('demo'), Buffer.from('demo'), Buffer.from('demo'));
+  // Apply every migration the same way src/server/db/migrate.ts does, so the app sees an up-to-date DB.
+  db.exec(`CREATE TABLE IF NOT EXISTS _migrations (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, applied_at TEXT NOT NULL DEFAULT (datetime('now')))`);
+  const dir = path.join(REPO_ROOT, 'src/server/db/migrations');
+  for (const f of fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort()) {
+    db.exec(fs.readFileSync(path.join(dir, f), 'utf-8'));
+    db.prepare('INSERT INTO _migrations (name) VALUES (?)').run(f);
   }
 
-  // Insert transactions. Schema in src/server/db/migrations/001_initial.sql.
-  // If column list here drifts from schema, update both — the failure will be
-  // immediate and noisy.
+  const insertBank = db.prepare(
+    `INSERT INTO bank_credentials (workspace_id, provider, credentials_encrypted, iv, auth_tag) VALUES (1, ?, ?, ?, ?)`,
+  );
+  for (const b of banks) insertBank.run(b.provider, Buffer.from('demo'), Buffer.from('demo'), Buffer.from('demo'));
+
+  const run = db.prepare(
+    `INSERT INTO sync_runs (workspace_id, provider, started_at, completed_at, status, scrape_from_date)
+     VALUES (1, 'demo', datetime('now'), datetime('now'), 'completed', date('now','-90 day'))`,
+  ).run();
   const insertTx = db.prepare(
     `INSERT INTO transactions
-      (account_number, date, processed_date, original_amount, original_currency,
-       charged_amount, charged_currency, description, type, status, category_id, provider, hash)
-     VALUES (@account, @date, @date, @amount, 'ILS', @amount, 'ILS', @desc, 'normal', 'completed', @cat, @provider, @hash)`,
+      (workspace_id, account_number, date, processed_date, original_amount, original_currency,
+       charged_amount, charged_currency, description, type, status, category_id, provider, sync_run_id, dedup_hash, kind)
+     VALUES (1, '****1234', @date, @date, @amount, 'ILS', @amount, 'ILS', @desc, 'normal', 'completed', @cat, @provider, @run, @hash, @kind)`,
   );
-  for (let i = 0; i < transactions.length; i++) {
-    const t = transactions[i];
-    insertTx.run({
-      account: '****1234',
-      date: t.date,
-      amount: t.amount,
-      desc: t.merchant,
-      cat: t.cat,
-      provider: t.provider,
-      hash: `demo-${i.toString().padStart(4, '0')}`,
-    });
-  }
+  transactions.forEach((t, i) => insertTx.run({
+    date: t.date, amount: t.amount, desc: t.merchant, cat: t.cat, provider: t.provider,
+    run: run.lastInsertRowid, hash: `demo-${i}`, kind: t.amount > 0 ? 'income' : 'expense',
+  }));
 
-  // Budgets table may or may not exist depending on schema; soft-fail.
-  try {
-    const insertBudget = db.prepare(
-      `INSERT INTO budgets (category_id, monthly_target) VALUES (?, ?)`,
-    );
-    for (const b of budgets) insertBudget.run(b.category_id, b.monthly_target);
-  } catch {
-    console.log('   (skipping budgets table — not in schema)');
-  }
+  const insertBudget = db.prepare(`INSERT INTO budgets (workspace_id, category_id, monthly_amount, is_auto) VALUES (1, ?, ?, 0)`);
+  for (const b of budgets) insertBudget.run(b.category_id, b.monthly_target);
 
   db.close();
   return dbPath;
@@ -95,7 +81,7 @@ function seedDb(dbDir) {
 
 function startServer(dataDir) {
   const env = { ...process.env, SPENT_DATA_DIR: dataDir, PORT: String(PORT) };
-  const child = spawn('npm', ['run', 'dev', '--', '-p', String(PORT)], {
+  const child = spawn('npx', ['next', 'dev', '-H', '127.0.0.1', '-p', String(PORT)], { shell: process.platform === 'win32',
     cwd: REPO_ROOT, env, stdio: ['ignore', 'pipe', 'pipe'],
   });
   return child;
@@ -140,14 +126,14 @@ async function setTheme(page, theme) {
 
   const ready = await waitForServer();
   if (!ready) {
-    server.kill('SIGTERM');
+    process.platform === 'win32' ? spawn('taskkill', ['/PID', String(server.pid), '/T', '/F']) : server.kill('SIGTERM');
     fs.rmSync(tmpDir, { recursive: true, force: true });
     throw new Error('Next.js did not become ready in 60s');
   }
   console.log('  ✓ Next.js is ready');
 
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: 'new', executablePath: process.env.CHROME_PATH,
     defaultViewport: VIEWPORT,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
@@ -155,21 +141,21 @@ async function setTheme(page, theme) {
   try {
     const page = await browser.newPage();
     await page.setViewport(VIEWPORT);
-    await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load', timeout: 120000 });
 
     for (const screen of SCREENS) {
       const dest = path.join(OUT_DIR, screen.name);
       console.log(`Capturing ${screen.name} ← ${screen.path} (${screen.theme})`);
       await setTheme(page, screen.theme);
-      await page.goto(`http://127.0.0.1:${PORT}${screen.path}`, { waitUntil: 'networkidle2', timeout: 30000 });
+      await page.goto(`http://127.0.0.1:${PORT}${screen.path}`, { waitUntil: 'load', timeout: 120000 });
       await setTheme(page, screen.theme);
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 4000));
       await page.screenshot({ path: dest, fullPage: false });
       console.log('  ✓ saved');
     }
   } finally {
     await browser.close();
-    server.kill('SIGTERM');
+    process.platform === 'win32' ? spawn('taskkill', ['/PID', String(server.pid), '/T', '/F']) : server.kill('SIGTERM');
     await new Promise(r => setTimeout(r, 1000));
     fs.rmSync(tmpDir, { recursive: true, force: true });
     console.log('Cleaned up tmp dir');

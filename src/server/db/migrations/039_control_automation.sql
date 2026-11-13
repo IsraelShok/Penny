@@ -1,0 +1,2 @@
+ALTER TABLE goal_rules ADD COLUMN automatic INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE control_audit ADD COLUMN actor_id INTEGER REFERENCES app_users(id);

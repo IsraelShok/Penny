@@ -8,7 +8,7 @@ import { FileUp } from "lucide-react";
 import { importStatement, undoStatementImport } from "@/lib/api";
 import { parseCsv } from "@/lib/csv";
 import { readXlsx } from "@/lib/xlsx";
-import { buildImportRows, findHeaderRow, guessColumns, IMPORT_FIELDS, MAX_IMPORT_ROWS, type ImportMap } from "@/lib/file-import";
+import { buildImportRows, findHeaderRow, guessColumns, IMPORT_FIELDS, MAX_IMPORT_ROWS, parseHtmlTable, type ImportMap } from "@/lib/file-import";
 import { SettingCard } from "@/components/settings/section-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,14 +74,17 @@ export function StatementImportCard() {
     const name = file.name.toLowerCase();
     try {
       let parsed: string[][];
-      if (name.endsWith(".xls")) { setError(t("xlsNotSupported")); return; }
-      if (name.endsWith(".xlsx")) parsed = await readXlsx(await file.arrayBuffer());
+      const bytes = await file.arrayBuffer();
+      // Some .xls downloads are really .xlsx; check the zip signature, not the name.
+      const head = new Uint8Array(bytes.slice(0, 4));
+      if (head[0] === 0x50 && head[1] === 0x4b) parsed = await readXlsx(bytes);
       else {
-        const bytes = await file.arrayBuffer();
         // Israeli bank CSVs are often Windows-1255, not UTF-8.
         let text = new TextDecoder("utf-8").decode(bytes);
         if (text.includes("�")) text = new TextDecoder("windows-1255").decode(bytes);
-        parsed = parseCsv(text);
+        if (/<table/i.test(text)) parsed = parseHtmlTable(text);
+        else if (name.endsWith(".xls")) { setError(t("xlsNotSupported")); return; }
+        else parsed = parseCsv(text);
       }
       const h = findHeaderRow(parsed);
       if (h < 0) { setError(t("noHeader")); return; }

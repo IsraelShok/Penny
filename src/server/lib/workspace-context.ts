@@ -1,5 +1,6 @@
 import "server-only";
 
+import {accessEnabled,currentUser,membership,defaultWorkspace} from "./user-access";
 import { getDb } from "../db";
 
 const HEADER = "x-workspace-id";
@@ -9,6 +10,12 @@ export function hasWorkspaceHeader(req: Request): boolean {
 }
 
 export function getWorkspaceIdFromRequest(req: Request): number {
+  if(accessEnabled()) {
+    const user=currentUser(req);if(!user)throw new Error("Authentication required");
+    const raw=req.headers.get(HEADER),id=!raw?defaultWorkspace(user):Number(raw);
+    if(!id||!Number.isSafeInteger(id)||!membership(user,id)||!getDb().prepare("SELECT 1 FROM workspaces WHERE id=?").get(id))throw new Error("Workspace access denied");
+    return id;
+  }
   const header = req.headers.get(HEADER);
   if (header) {
     const id = Number(header);

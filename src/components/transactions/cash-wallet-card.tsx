@@ -40,6 +40,8 @@ export function CashWalletCard() {
   if (!wallet.data) return null;
   const { balance, withdrawn, days } = wallet.data;
   const valid = Number(amount) > 0;
+  // No cash withdrawn lately means nothing to track: keep the page clear.
+  if (Math.round(balance) === 0 && !withdrawn) return null;
 
   return (
     <section aria-label={t("cashTitle")} className="rounded-2xl border border-border/60 bg-card p-4">

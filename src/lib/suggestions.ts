@@ -24,6 +24,7 @@ export type Suggestion =
   | { key: string; type: "payday"; day: number }
   | { key: string; type: "rule"; merchant: string; categoryId: number; categoryName: string; count: number }
   | { key: string; type: "fxMarkup"; total: number; avgPct: number; count: number }
+  | { key: string; type: "leak"; name: string; count: number; monthly: number }
   | { key: string; type: "taxRefund"; year: number; reason: "twoEmployers" | "gap"; payers: number; months: number };
 
 export type PolicyGuess = "health" | "life" | "disability" | "long_term_care" | "home" | "car" | "travel" | "other";
@@ -45,6 +46,8 @@ const BANK_FEE = /עמלת|עמלה|דמי ניהול חשבון|דמי כרטי
 const OVERDRAFT = /ריבית חובה|ריבית על יתרת חובה|ריבית בגין|ריבית משיכת יתר/i;
 const FX_FEE = /עמלת המרה|עמלת מט"ח|עמלת חו"ל|עסקה בחו"ל|foreign transaction/i;
 
+const LEAK_MAX = 60;
+const LEAK_MIN_COUNT = 6;
 const month = (d: string) => d.slice(0, 7);
 const clean = (s: string) => s.replace(/\s+/g, " ").replace(/[0-9]{4,}/g, "").trim();
 
@@ -158,6 +161,20 @@ export function buildSuggestions(txns: SuggestionTxn[], ctx: SuggestionContext):
         break;
       }
     }
+  }
+
+  // Small, frequent charges ("leaks": coffee, snacks, rides): 6+ charges of up to ₪60 at one merchant in 30 days.
+  const small = new Map<string, { count: number; total: number }>();
+  for (const t of txns) {
+    if (t.amount >= 0 || -t.amount > LEAK_MAX || daysBetween(t.date, ctx.today) > 30) continue;
+    const name = clean(t.description);
+    const g = small.get(name) ?? { count: 0, total: 0 };
+    g.count++;
+    g.total -= t.amount;
+    small.set(name, g);
+  }
+  for (const [name, g] of small) {
+    if (g.count >= LEAK_MIN_COUNT) out.push({ key: `leak:${ctx.today.slice(0, 7)}:${name}`, type: "leak", name, count: g.count, monthly: g.total });
   }
 
   for (const p of ctx.priceChanges) {

@@ -5,7 +5,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { getTagReport } from "@/lib/api";
-import { Segmented } from "@/components/ui/segmented";
 import { OverviewView } from "./overview-view";
 import { InsightsView } from "@/components/insights/insights-view";
 import { TagReport } from "@/components/insights/tag-report";
@@ -23,7 +22,6 @@ export function OverviewTabs() {
   const tags = useQuery({ queryKey: ["tags"], queryFn: () => getTagReport() });
   const hasTags = (tags.data?.tags.length ?? 0) > 0;
   const fromUrl = params.get("tab") as Tab | null;
-  const tabs = TABS.filter((x) => x !== "tags" || hasTags);
   const wanted: Tab = fromUrl && TABS.includes(fromUrl) ? fromUrl : "period";
   // Tags tab without tags (yet, or at all) falls back to the period.
   const tab: Tab = wanted === "tags" && !hasTags ? "period" : wanted;
@@ -49,13 +47,10 @@ export function OverviewTabs() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <Segmented
-        className="print-hidden"
-        label={t("tabsLabel")}
-        value={tab}
-        options={tabs.map((x) => ({ value: x, label: t(`tab_${x}`) }))}
-        onChange={(x) => go(x)}
-      />
+      {/* The view tabs live in the Budget area's tab row; only the rare tag report gets a link here. */}
+      {hasTags && tab !== "tags" && (
+        <button type="button" onClick={() => go("tags")} className="print-hidden min-h-11 text-footnote font-medium text-primary">{t("tab_tags")}</button>
+      )}
       <div role="region" aria-label={t(`tab_${tab}`)}>
         {tab === "period" && <OverviewView />}
         {tab === "ahead" && <InsightsView part="ahead" />}

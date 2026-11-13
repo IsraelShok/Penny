@@ -3,10 +3,12 @@ import {
   createWorkspace,
   listWorkspaces,
 } from "@/server/db/queries/workspaces";
+import {accessEnabled,currentUser,membership} from "@/server/lib/user-access";
 import { parseAvatar } from "@/lib/profile-avatar";
 
-export async function GET() {
-  return NextResponse.json(listWorkspaces());
+export async function GET(request:Request) {
+  const user=currentUser(request);
+  return NextResponse.json(listWorkspaces().filter(ws=>!accessEnabled()||!!user&&!!membership(user,ws.id)));
 }
 
 export async function POST(request: Request) {

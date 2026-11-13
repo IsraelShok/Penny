@@ -1,4 +1,5 @@
 import "server-only";
+import { holidaySuggestions } from "@/lib/holidays";
 
 import { getDb } from "../index";
 import { loadInsights } from "@/server/insights/data";
@@ -50,5 +51,6 @@ export function periodicSuggestions(workspaceId: number, today: string): Periodi
       .all(workspaceId, today) as Charge[]
   ).map((c) => ({ ...c, date: israelDay(c.date) }));
   const yearly = loadInsights(workspaceId, today).series.filter((s) => s.cadence === "yearly");
-  return detectPeriodic(charges, yearly, today, known);
+  // Holiday templates come first: the big seasonal months are the ones people forget to save for.
+  return [...holidaySuggestions(today, known), ...detectPeriodic(charges, yearly, today, known)];
 }

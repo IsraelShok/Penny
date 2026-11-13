@@ -36,7 +36,10 @@ export function chargesBetween(cadence: Cadence, lastDate: string, from: string,
   return out;
 }
 
+export type ForecastEvent = { date: string; amount: number; kind: "income" | "card" | "recurring" };
+
 export interface BalanceForecast {
+  events?: ForecastEvent[];
   points: { date: string; balance: number }[];
   low: { date: string; balance: number };
   /** First day the balance goes below zero, if it does. */
@@ -57,11 +60,13 @@ export function forecastBalance(input: {
   bills: { date: string; total: number }[];
   recurring: { cadence: Cadence; lastDate: string; amount: number }[];
   days?: number;
+  scheduled?: {date:string;total:number}[];
 }): BalanceForecast {
   const days = input.days ?? 90;
   const end = addDays(input.today, days);
   const from = addDays(input.today, 1);
   const delta = new Map<string, number>();
+  const events: ForecastEvent[] = [];
   const add = (date: string, n: number) => delta.set(date, (delta.get(date) ?? 0) + n);
 
   const [y, m] = parts(input.today);
@@ -71,10 +76,11 @@ export function forecastBalance(input: {
     if (d >= from && d <= end) paydays.push(d);
   }
   if (!(input.monthlyIncome > 0)) paydays.length = 0;
-  for (const d of paydays) add(d, input.monthlyIncome);
-  for (const b of input.bills) if (b.date >= from && b.date <= end) add(b.date, -b.total);
-  for (const s of input.recurring) for (const d of chargesBetween(s.cadence, s.lastDate, from, end)) add(d, -s.amount);
+  for (const d of paydays) { add(d, input.monthlyIncome); events.push({ date: d, amount: input.monthlyIncome, kind: "income" }); }
+  for (const b of input.bills) if (b.date >= from && b.date <= end) { add(b.date, -b.total); events.push({ date: b.date, amount: -b.total, kind: "card" }); }
+  for (const s of input.recurring) for (const d of chargesBetween(s.cadence, s.lastDate, from, end)) { add(d, -s.amount); events.push({ date: d, amount: -s.amount, kind: "recurring" }); }
 
+  for(const event of input.scheduled??[]) if(event.date>=from&&event.date<=end) { add(event.date,-event.total); events.push({date:event.date,amount:-event.total,kind:"recurring"}); }
   const points = [{ date: input.today, balance: input.bank }];
   for (let i = 1; i <= days; i++) {
     const date = addDays(input.today, i);
@@ -83,6 +89,7 @@ export function forecastBalance(input: {
   const low = points.reduce((a, b) => (b.balance < a.balance ? b : a));
   return {
     points,
+    events: events.sort((a, b) => a.date.localeCompare(b.date)),
     low,
     firstNegative: points.find((p) => p.balance < 0)?.date ?? null,
     nextPayday: paydays.find((d) => d > low.date) ?? null,

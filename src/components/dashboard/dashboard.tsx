@@ -9,7 +9,11 @@ import { applyMoves } from "@/lib/budget-moves";
 import { IncomeSmoothingCard } from "./income-smoothing-card";
 import { getMonthRange, formatMonthLabel, addMonths } from "@/lib/formatters";
 import { PageHeader } from "@/components/layout/app-shell";
-import { HeroCard } from "./hero-card";
+import { StudioOverview } from "./studio-overview";
+import { StudioDistribution } from "./studio-distribution";
+import { StudioJourney } from "./studio-journey";
+import { studioCopy } from "./studio-copy";
+import { useStudio } from "@/components/studio-provider";
 import { CategoryGrid } from "./category-grid";
 import { PeriodSelector } from "./period-selector";
 import { BudgetFromAverage } from "./budget-from-average";
@@ -34,8 +38,13 @@ function readViewMode(): CategoryViewMode {
 export function Dashboard() {
   const t = useTranslations("dashboard");
   const locale = useLocale() as Locale;
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const [viewMode, setViewMode] = useState<CategoryViewMode>("collapsed");
+  const { preferences, save, resolvedStudioTheme } = useStudio();
+  const c = studioCopy(locale);
 
   useEffect(() => {
     setViewMode(readViewMode());
@@ -70,10 +79,9 @@ export function Dashboard() {
   const banks = useQuery({ queryKey: ["integrations"], queryFn: listIntegrations });
 
   return (
-    <>
+    <div className="studio-page" data-studio-theme={resolvedStudioTheme} data-studio-accent={preferences.accent} data-studio-density={preferences.density} data-studio-layout={preferences.layout} data-studio-motion={preferences.motion}>
       <PageHeader
         title={t("pageTitle")}
-        meta={monthLabel}
         actions={
           <>
             <PeriodSelector
@@ -85,16 +93,17 @@ export function Dashboard() {
         }
       />
 
-      <div className="space-y-6 px-4 pb-8 pt-3 md:px-6 lg:px-8">
+      <div className="studio-content">
         {summaryQuery.isError || period.isError || banks.isError ? <DataState error onRetry={() => { void summaryQuery.refetch(); void period.refetch(); void banks.refetch(); }} />
         : summaryQuery.isPending || period.isPending || banks.isPending ? <DataState loading />
         : period.data?.total === 0 ? <DataState period={banks.data?.some((bank) => bank.lastSyncAt)} />
         : <>
-        <HeroCard
-          data={summary}
-          loading={summaryQuery.isLoading}
-          monthLabel={monthLabel}
-        />
+        {summary && <div className={`studio-top-grid ${!preferences.showChart ? "studio-single" : ""}`}>
+          <StudioOverview data={summary} selectedDate={selectedDate} monthLabel={monthLabel} preferences={preferences} />
+          {preferences.showChart && <StudioDistribution categories={summary.categoriesWithData} chart={preferences.chart} onChartChange={(chart) => {
+            save({ ...preferences, chart });
+          }} />}
+        </div>}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <BudgetFromAverage modes={new Map((summary?.categoriesWithData ?? []).map((c) => [c.categoryId, c.budgetMode]))} />
@@ -111,7 +120,7 @@ export function Dashboard() {
           </Tabs>
         </div>
 
-        <CategoryGrid
+        <div className="studio-category-section"><CategoryGrid
           categories={summary?.categoriesWithData ?? []}
           loading={summaryQuery.isLoading}
           periodTotal={summary?.periodTotal ?? 0}
@@ -120,12 +129,13 @@ export function Dashboard() {
           viewMode={viewMode}
           month={month}
           moves={moves.data ?? []}
-        />
+        /></div>
+        {summary && preferences.showJourney && <StudioJourney data={summary} month={month} />}
         {from === getMonthRange(new Date()).from && <IncomeSmoothingCard />}
         <PeriodicCard />
         <AINotConnectedBanner />
         </>}
       </div>
-    </>
+    </div>
   );
 }

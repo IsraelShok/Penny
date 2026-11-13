@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -9,13 +9,15 @@ import {
 import { AppSidebar } from "./app-sidebar";
 import { PageWheelNav } from "./page-wheel-nav";
 import { AlertNotifier } from "./alert-notifier";
-import { CommandPalette } from "./command-palette";
+import { BottomBar } from "./bottom-bar";
 import { useTranslations } from "next-intl";
 import { InfoTip } from "@/components/ui/info-tip";
 import { usePathname } from "next/navigation";
 import { usePlan } from "@/hooks/use-plan";
 import { wantsExplanations } from "@/lib/plan";
 import { pagePurposeKey } from "@/lib/orientation";
+import { MobileDock } from "./mobile-dock";
+import { SectionTabs } from "./section-tabs";
 
 /** Lives in the root layout so the collapsed state survives page changes. */
 export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; children: ReactNode }) {
@@ -28,12 +30,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     <>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-background focus:px-5 focus:py-3 focus:outline-2">{t("skipToContent")}</a>
       <AppSidebar />
-      <SidebarInset id="main-content" tabIndex={-1}>
+      <SidebarInset id="main-content" tabIndex={-1} className="mobile-dock-content">
         {children}
         <PageWheelNav />
         <AlertNotifier />
-        <CommandPalette />
+        <BottomBar />
       </SidebarInset>
+      <MobileDock />
     </>
   );
 }
@@ -58,6 +61,8 @@ export function PageHeader({
   const key = wantsExplanations(plan) ? pagePurposeKey(pathname) : null;
   const purpose = key && largeTitle && tPurpose.has(key) ? tPurpose(key) : null;
   const [scrolled, setScrolled] = useState(false);
+  // Every page sets its own tab title, so tabs, history and screen readers can tell pages apart.
+  useEffect(() => { document.title = `${title} · Penny`; }, [title]);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -75,8 +80,9 @@ export function PageHeader({
           {meta && (meta.length > 24 ? <InfoTip text={meta} /> : <p className="truncate text-footnote text-muted-foreground">{meta}</p>)}
           {purpose && <InfoTip text={purpose} />}
         </div>
-        <div className="col-start-3 flex min-w-0 flex-wrap items-center justify-end gap-2">{actions}</div>
+        <div className="col-start-3 flex min-w-0 flex-wrap items-center justify-end gap-2 max-sm:col-span-3 max-sm:col-start-1 max-sm:row-start-2 max-sm:justify-center">{actions}</div>
       </div>
+      <Suspense fallback={null}><SectionTabs /></Suspense>
     </header>
   );
 }

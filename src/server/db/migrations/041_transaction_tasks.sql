@@ -1,0 +1,1 @@
+CREATE TABLE transaction_tasks(transaction_id INTEGER PRIMARY KEY REFERENCES transactions(id) ON DELETE CASCADE,user_id INTEGER NOT NULL REFERENCES app_users(id),done INTEGER NOT NULL DEFAULT 0,updated_at TEXT NOT NULL DEFAULT(datetime('now')));

@@ -1,4 +1,7 @@
 import "server-only";
+import { bankObligations } from "./obligations";
+import { addDays } from "@/lib/balance-forecast";
+import { cashReserve } from "@/server/db/queries/financial-control";
 
 import { getDb } from "@/server/db";
 import { loadInsights } from "@/server/insights/data";
@@ -8,7 +11,7 @@ import { getMonthlyAverages } from "@/server/db/queries/fi";
 import { getPlan } from "@/server/db/queries/plan";
 import { cashAhead, type CashAhead } from "@/lib/cash-ahead";
 
-/** "Left to spend until payday": synced bank balance, minus card bills due first, plus salary still to come. */
+/** "Left to spend until payday": synced bank balance, minus card bills due first; expected salary is not spendable yet. */
 export function computeCashAhead(ws: number, today: string): CashAhead {
   const balances = listAccountBalances(ws);
   const i = loadInsights(ws, today, Number(process.env.CARD_BILLING_DAY) || 10);
@@ -23,12 +26,14 @@ export function computeCashAhead(ws: number, today: string): CashAhead {
     )
     .get(ws, monthStart, today) as { total: number }).total;
 
-  return cashAhead({
+  return { accounts: balances.map(b => ({ ...b, accountNumber: b.accountNumber.slice(-4) })), ...cashAhead({
     today,
     payday,
     bank: balances.length ? balances.reduce((s, b) => s + b.balance, 0) : null,
     bills: bills.map((b) => ({ date: b.date, total: b.total })),
     monthlyIncome,
     incomeSoFar,
-  });
+    bankDebits: bankObligations(ws,i.series,today,addDays(today,35)),
+    reservedCash: cashReserve(ws),
+  }) };
 }

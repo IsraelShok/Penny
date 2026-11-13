@@ -39,6 +39,7 @@ export interface Transaction {
 }
 
 export interface TransactionWithCategory extends Transaction {
+  allocations?: { categoryId: number; amount: number }[];
   categoryName: string | null;
   categoryColor: string | null;
   isExcluded: boolean;
@@ -880,6 +881,7 @@ export interface FiPayload {
 }
 
 export interface Goal {
+  openingSavedAmount?: number;
   id: number;
   name: string;
   targetAmount: number;

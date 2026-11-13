@@ -1,15 +1,15 @@
 "use client";
 
-import { Suspense } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Lock, Search } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Eye, EyeOff, Lock, PanelLeftIcon, Search } from "lucide-react";
+import { getActivity, getHome } from "@/lib/api";
 import { getLockStatus } from "@/components/settings/app-lock-card";
 import { usePrivacyMode } from "@/hooks/use-privacy-mode";
+import { SyncStatusPill } from "@/components/home/sync-status-pill";
 import { OPEN_COMMAND_PALETTE } from "./command-palette";
-import { SidebarSync } from "./sidebar-sync";
-import { usePathname, useRouter } from "next/navigation";
-import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
@@ -20,7 +20,6 @@ import {
   ArrowLeftRight,
   LayoutGrid,
   Settings as SettingsIcon,
-  PanelLeftIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -28,7 +27,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -45,50 +43,29 @@ interface NavDef {
   match: (p: string) => boolean;
 }
 
+/** The four main areas. Everything else lives inside one of them (as a tab) or in search. */
 export const NAV: NavDef[] = [
-  {
-    href: "/",
-    labelKey: "home",
-    Icon: LayoutDashboard,
-    match: (p: string) => p === "/",
-  },
-  {
-    href: "/overview",
-    labelKey: "overview",
-    Icon: PieChart,
-    match: (p: string) => p.startsWith("/overview") || p.startsWith("/insights"),
-  },
-  {
-    href: "/investments",
-    labelKey: "investments",
-    Icon: Landmark,
-    match: (p: string) => p.startsWith("/investments"),
-  },
-  {
-    href: "/fi",
-    labelKey: "fi",
-    Icon: Flag,
-    match: (p: string) => p.startsWith("/fi"),
-  },
+  { href: "/", labelKey: "home", Icon: LayoutDashboard, match: (p: string) => p === "/" },
+  { href: "/transactions", labelKey: "transactions", Icon: ArrowLeftRight, match: (p: string) => p.startsWith("/transactions") },
   {
     href: "/budget",
     labelKey: "budget",
     Icon: Wallet,
-    match: (p: string) => p.startsWith("/budget"),
+    match: (p: string) => ["/budget", "/overview", "/insights"].some((r) => p.startsWith(r)),
   },
   {
-    href: "/transactions",
-    labelKey: "transactions",
-    Icon: ArrowLeftRight,
-    match: (p: string) => p.startsWith("/transactions"),
+    href: "/investments",
+    labelKey: "future",
+    Icon: Flag,
+    match: (p: string) => ["/investments", "/fi", "/journey", "/life"].some((r) => p.startsWith(r)),
   },
-  {
-    href: "/more",
-    labelKey: "more",
-    Icon: LayoutGrid,
-    // The hub plus the tools it opens, so the menu stays short but you always see where you are.
-    match: (p: string) => ["/more", "/recap", "/ask", "/journey", "/life", "/wellbeing", "/checkin"].some((r) => p.startsWith(r)),
-  },
+];
+
+/** Pages that are not in the menu but still found by search. */
+export const SEARCH_PAGES: NavDef[] = [
+  { href: "/overview", labelKey: "overview", Icon: PieChart, match: (p: string) => p.startsWith("/overview") },
+  { href: "/fi", labelKey: "fi", Icon: Landmark, match: (p: string) => p.startsWith("/fi") },
+  { href: "/more", labelKey: "more", Icon: LayoutGrid, match: (p: string) => p.startsWith("/more") },
 ];
 
 export const FOOTER_NAV: NavDef[] = [
@@ -107,9 +84,22 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("nav");
+  const { setOpenMobile, toggleSidebar } = useSidebar();
   const [privacy, togglePrivacy] = usePrivacyMode();
   const lock = useQuery({ queryKey: ["lock"], queryFn: getLockStatus });
-  const { toggleSidebar, setOpenMobile } = useSidebar();
+  const home = useQuery({ queryKey: ["home"], queryFn: getHome });
+  const queryClient = useQueryClient();
+  const [statusOpen, setStatusOpen] = useState(false);
+  const { data: activity } = useQuery({
+    queryKey: ["activity"],
+    queryFn: getActivity,
+    refetchInterval: (q) => (statusOpen || q.state.data?.sync.active ? 3000 : 15000),
+    refetchIntervalInBackground: false,
+  });
+  const onStatusOpen = useCallback((o: boolean) => {
+    setStatusOpen(o);
+    if (o) queryClient.invalidateQueries({ queryKey: ["activity"] });
+  }, [queryClient]);
   const { plan } = usePlan();
   // Settings lives as an icon by the workspace, but the wheel still reaches it last.
   const pages = [...NAV, ...FOOTER_NAV];
@@ -132,6 +122,12 @@ export function AppSidebar() {
         <SidebarGroup className="pb-0">
           <SidebarMenu>
             <SidebarMenuItem>
+              <SidebarMenuButton onClick={toggleSidebar} tooltip={t("toggleSidebar")} aria-label={t("toggleSidebar")}>
+                <PanelLeftIcon className="rtl:rotate-180" />
+                <span>{t("collapse")}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={() => { setOpenMobile(false); window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE)); }}
                 tooltip={`${t("search")} (Ctrl K)`}
@@ -140,14 +136,13 @@ export function AppSidebar() {
               >
                 <Search />
                 <span className="flex-1">{t("search")}</span>
-                <kbd dir="ltr" className="rounded border border-sidebar-border px-1.5 text-[0.6875rem] text-muted-foreground group-data-[collapsible=icon]:hidden">Ctrl K</kbd>
+                <kbd dir="ltr" className="rounded border border-sidebar-border px-1.5 text-[0.6875rem] text-muted-foreground group-data-[collapsible=icon]:hidden">/</kbd>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        {[{ label: "dailyGroup", items: [NAV[0], NAV[5], NAV[4]] }, { label: "planningGroup", items: [NAV[1], NAV[2], NAV[3], NAV[6]] }].map((group) => (
-        <SidebarGroup key={group.label}>
-          <SidebarGroupLabel>{t(group.label)}</SidebarGroupLabel>
+        {[{ label: null, items: NAV }].map((group) => (
+        <SidebarGroup key="main">
           <SidebarGroupContent>
             <SidebarMenu>
               {group.items.map((item) => {
@@ -173,39 +168,37 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="gap-2">
-        <Suspense fallback={null}><SidebarSync /></Suspense>
+      <SidebarFooter>
+        <WorkspaceSwitcher />
+        {/* Quick tools: sync status, privacy, lock and settings. One row open, one column collapsed. */}
         <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
-        <div className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none">
-          <WorkspaceSwitcher />
-        </div>
-        <IconButton
-          label={t("settings")}
-          variant={pathname.startsWith("/settings") ? "secondary" : "ghost"}
-          size="icon-sm"
-          nativeButton={false}
-          render={<Link href="/settings" />}
-        >
-          <SettingsIcon className="size-4" aria-hidden />
-        </IconButton>
-        <IconButton label={t("privacyMode")} size="icon-sm" aria-pressed={privacy} onClick={togglePrivacy}>
-          {privacy ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
-        </IconButton>
-        {lock.data?.enabled && (
-          <IconButton
-            label={t("lockNow")}
-            size="icon-sm"
-            onClick={async () => {
-              await fetch("/api/lock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "lock" }) });
-              window.location.assign("/lock");
-            }}
-          >
-            <Lock className="size-4" aria-hidden />
+          <SyncStatusPill items={home.data?.bankHealth ?? null} nextScheduledSync={home.data?.nextScheduledSync ?? null} activity={activity ?? null} onOpenChange={onStatusOpen} />
+          <IconButton label={t("privacyMode")} size="icon-sm" variant="ghost" aria-pressed={privacy} onClick={togglePrivacy}>
+            {privacy ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
           </IconButton>
-        )}
-        <IconButton label={t("toggleSidebar")} size="icon-sm" onClick={toggleSidebar}>
-          <PanelLeftIcon className="size-4 rtl:rotate-180" aria-hidden />
-        </IconButton>
+          {lock.data?.enabled && (
+            <IconButton
+              label={t("lockNow")}
+              size="icon-sm"
+              variant="ghost"
+              onClick={async () => {
+                await fetch("/api/lock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "lock" }) });
+                router.replace("/lock");
+              }}
+            >
+              <Lock className="size-4" aria-hidden />
+            </IconButton>
+          )}
+          <IconButton
+            label={t("settings")}
+            variant={pathname.startsWith("/settings") ? "secondary" : "ghost"}
+            size="icon-sm"
+            className="ms-auto group-data-[collapsible=icon]:ms-0"
+            nativeButton={false}
+            render={<Link href="/settings" />}
+          >
+            <SettingsIcon className="size-4" aria-hidden />
+          </IconButton>
         </div>
       </SidebarFooter>
     </Sidebar>

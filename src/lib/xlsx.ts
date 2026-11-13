@@ -1,6 +1,6 @@
 /**
  * Minimal .xlsx reader with no dependencies: zip central directory + DecompressionStream,
- * then the first worksheet as rows of strings (numbers as their plain string, so Excel
+ * then every worksheet in order (card exports split domestic/abroad by sheet) as rows of strings (numbers as their plain string, so Excel
  * date serials come through as e.g. "45292"). Formulas give their cached value.
  */
 
@@ -50,9 +50,10 @@ const colIndex = (ref: string) => {
 
 export async function readXlsx(input: ArrayBuffer | Uint8Array): Promise<string[][]> {
   const files = await unzip(input instanceof Uint8Array ? input : new Uint8Array(input));
-  const sheetName =
-    files.has("xl/worksheets/sheet1.xml") ? "xl/worksheets/sheet1.xml" : [...files.keys()].find((k) => /^xl\/worksheets\/[^/]+\.xml$/.test(k));
-  if (!sheetName) throw new Error("no worksheet");
+  const sheetNames = [...files.keys()]
+    .filter((k) => /^xl\/worksheets\/[^/]+\.xml$/.test(k))
+    .sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
+  if (!sheetNames.length) throw new Error("no worksheet");
   const shared: string[] = [];
   const ss = await files.get("xl/sharedStrings.xml")?.();
   for (const si of ss?.match(/<si>[\s\S]*?<\/si>/g) ?? []) {
@@ -60,25 +61,27 @@ export async function readXlsx(input: ArrayBuffer | Uint8Array): Promise<string[
     const body = si.replace(/<rPh[\s\S]*?<\/rPh>/g, "");
     shared.push(decodeXml([...body.matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((m) => m[1]).join("")));
   }
-  const xml = await files.get(sheetName)!();
   const rows: string[][] = [];
-  for (const rowMatch of xml.matchAll(/<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g)) {
-    const row: string[] = [];
-    for (const c of (rowMatch[1] ?? "").matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
-      const attrs = c[1];
-      const inner = c[2] ?? "";
-      const ref = /\br="([A-Z]+\d*)"/.exec(attrs)?.[1];
-      const type = /\bt="(\w+)"/.exec(attrs)?.[1];
-      const v = /<v>([\s\S]*?)<\/v>/.exec(inner)?.[1];
-      let text = "";
-      if (type === "s") text = shared[Number(v)] ?? "";
-      else if (type === "inlineStr") text = decodeXml([...inner.matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((m) => m[1]).join(""));
-      else if (v != null) text = decodeXml(v);
-      const i = ref ? colIndex(ref) : row.length;
-      while (row.length < i) row.push("");
-      row[i] = text.trim();
+  for (const sheetName of sheetNames) {
+    const xml = await files.get(sheetName)!();
+    for (const rowMatch of xml.matchAll(/<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g)) {
+      const row: string[] = [];
+      for (const c of (rowMatch[1] ?? "").matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+        const attrs = c[1];
+        const inner = c[2] ?? "";
+        const ref = /\br="([A-Z]+\d*)"/.exec(attrs)?.[1];
+        const type = /\bt="(\w+)"/.exec(attrs)?.[1];
+        const v = /<v>([\s\S]*?)<\/v>/.exec(inner)?.[1];
+        let text = "";
+        if (type === "s") text = shared[Number(v)] ?? "";
+        else if (type === "inlineStr") text = decodeXml([...inner.matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((m) => m[1]).join(""));
+        else if (v != null) text = decodeXml(v);
+        const i = ref ? colIndex(ref) : row.length;
+        while (row.length < i) row.push("");
+        row[i] = text.trim();
+      }
+      if (row.some((f) => f !== "")) rows.push(row);
     }
-    if (row.some((f) => f !== "")) rows.push(row);
   }
   return rows;
 }

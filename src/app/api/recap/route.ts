@@ -24,8 +24,8 @@ export async function GET(request: Request) {
   const where = `t.workspace_id = ? AND t.date >= ? AND t.date <= ? AND t.status = 'completed' AND t.is_excluded = 0`;
   const expenses = db
     .prepare(
-      `SELECT substr(t.date, 1, 10) as date, ABS(t.charged_amount) as amount, COALESCE(c.parent_id, c.id) as categoryId, t.description
-       FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
+      `SELECT substr(t.date, 1, 10) as date, -t.charged_amount as amount, COALESCE(c.parent_id, c.id) as categoryId, t.description
+       FROM category_transactions t LEFT JOIN categories c ON c.id = t.category_id
        WHERE ${where} AND t.kind = 'expense'`
     )
     .all(workspaceId, from, `${to}T23:59:59`) as RecapExpense[];

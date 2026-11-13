@@ -125,7 +125,7 @@ export function SettingsSidebar() {
   const tRoot = useTranslations();
   const t = (k: string) => (k.includes(".") ? tRoot(k) : tSidebar(k));
   return (
-    <aside className="hidden w-56 shrink-0 border-e border-border/40 bg-card/30 md:flex md:flex-col">
+    <aside className="studio-settings-nav hidden w-56 shrink-0 border-e border-border/40 bg-card/30 md:flex md:flex-col">
       <nav className="flex-1 overflow-y-auto px-2 pt-4 pb-6">
         {GROUPS.map((group) => (
           <div key={group.titleKey} className="mt-3">

@@ -12,7 +12,7 @@ export function getPeriodTotals(workspaceId: number, r: PeriodRange): OverviewTo
     .prepare(
       `SELECT
          COALESCE(SUM(CASE WHEN t.kind = 'income' THEN t.charged_amount END), 0) as income,
-         COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN ABS(t.charged_amount) END), 0) as expenses
+         COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN -t.charged_amount END), 0) as expenses
        FROM transactions t WHERE ${BASE}`
     )
     .get(workspaceId, r.from, r.to) as { income: number; expenses: number };
@@ -30,7 +30,7 @@ export function getMonthlyFlow(workspaceId: number, r: PeriodRange, startDay = 1
     .prepare(
       `SELECT ${month} as month,
          COALESCE(SUM(CASE WHEN t.kind = 'income' THEN t.charged_amount END), 0) as income,
-         COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN ABS(t.charged_amount) END), 0) as expenses
+         COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN -t.charged_amount END), 0) as expenses
        FROM transactions t WHERE ${BASE} GROUP BY month`
     )
     .all(shift, workspaceId, r.from, r.to) as { month: string; income: number; expenses: number }[];
@@ -42,8 +42,8 @@ export function getMonthlyFlow(workspaceId: number, r: PeriodRange, startDay = 1
 export function getSpendingTypeSplit(workspaceId: number, r: PeriodRange) {
   const rows = getDb()
     .prepare(
-      `SELECT c.need_type as needType, c.cost_type as costType, SUM(ABS(t.charged_amount)) as amount
-       FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
+      `SELECT c.need_type as needType, c.cost_type as costType, SUM(-t.charged_amount) as amount
+       FROM category_transactions t LEFT JOIN categories c ON c.id = t.category_id
        WHERE ${BASE} AND t.kind = 'expense'
        GROUP BY c.need_type, c.cost_type`
     )
@@ -76,8 +76,8 @@ export function getCategoryRows(
     db
       .prepare(
         `SELECT COALESCE(c.parent_id, c.id) as key${byMonth ? `, ${month} as month` : ""},
-           SUM(ABS(t.charged_amount)) as amount
-         FROM transactions t JOIN categories c ON c.id = t.category_id
+           SUM(-t.charged_amount) as amount
+         FROM category_transactions t JOIN categories c ON c.id = t.category_id
          WHERE ${BASE} AND t.kind = 'expense'
          GROUP BY key${byMonth ? ", month" : ""}`
       )

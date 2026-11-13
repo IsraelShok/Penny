@@ -30,12 +30,13 @@ describe("detectPeriodic", () => {
       { description: "ביטוח חובה הפניקס", amount: 1800, date: "2026-03-02", category: null },
       { description: "ארנונה עיריית ת\"א", amount: 900, date: "2026-07-01", category: null },
       { description: "ארנונה עיריית ת\"א", amount: 900, date: "2026-09-01", category: null },
-      { description: "סטימצקי", amount: 400, date: "2026-08-20", category: null },
+      { description: "ציוד לימוד", amount: 400, date: "2026-08-20", category: null },
     ];
+    charges.push({ description: "Costco", amount: 222, date: "2025-01-15", category: null }, { description: "Costco", amount: 222, date: "2026-01-15", category: null });
     const s = detectPeriodic(charges, [{ merchant: "Costco", expectedAmount: 222, lastDate: "2026-01-15" }], today, new Set(["kw:camp"]));
     const by = Object.fromEntries(s.map((x) => [x.autoKey, x]));
     expect(by["kw:car-insurance"]).toMatchObject({ amount: 1800, everyMonths: 12, nextDue: "2027-03" });
-    expect(by["kw:arnona"]).toMatchObject({ amount: 900, everyMonths: 6, nextDue: "2027-03" });
+    expect(by["kw:arnona"]).toMatchObject({ amount: 900, everyMonths: 2, nextDue: "2026-11" });
     expect(by["kw:school"]).toMatchObject({ nextDue: "2027-08" });
     expect(by["yearly:Costco"]).toMatchObject({ amount: 220, nextDue: "2027-01" });
     expect(detectPeriodic(charges, [], today, new Set(["kw:arnona"])).some((x) => x.autoKey === "kw:arnona")).toBe(false);
@@ -49,4 +50,9 @@ describe("detectPeriodic", () => {
     expect(s.some((x) => x.autoKey === "kw:vaad")).toBe(false);
     expect(s.find((x) => x.autoKey === "holidays-tishrei")).toMatchObject({ amount: 1000, nextDue: "2027-09" });
   });
+});
+
+it("does not turn an unsupported yearly classification or bookstore visit into an annual bill", () => {
+  const charges = [{description:"Restaurant",amount:200,date:"2026-10-01",category:null},{description:"סטימצקי",amount:100,date:"2026-08-01",category:null}];
+  expect(detectPeriodic(charges,[{merchant:"Restaurant",expectedAmount:200,lastDate:"2026-10-01"}],"2026-11-07",new Set())).toEqual([]);
 });

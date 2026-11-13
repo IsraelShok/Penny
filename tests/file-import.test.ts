@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildImportRows, findHeaderRow, guessColumns, markDuplicates, parseImportDate } from "@/lib/file-import";
+import { buildImportRows, findHeaderRow, guessColumns, markDuplicates, parseHtmlTable, parseImportDate } from "@/lib/file-import";
 
 describe("findHeaderRow / guessColumns", () => {
   it("skips title rows and maps a card export", () => {
@@ -39,6 +39,30 @@ describe("buildImportRows", () => {
   it("combines debit/credit columns", () => {
     const m = { date: 0, description: 1, amount: null, debit: 2, credit: 3 };
     expect(buildImportRows([["01/02/2024", "משכורת", "", "1,000.00"], ["01/02/2024", "חשמל", "300", ""]], m, true).rows.map((r) => r.amount)).toEqual([1000, -300]);
+  });
+});
+
+describe("multi-section card export", () => {
+  it("re-maps columns at the abroad section's own header", () => {
+    const table = [
+      ["תאריך רכישה", "שם בית עסק", "סכום עסקה", "סכום חיוב"],
+      ["01/02/2024", "קפה", "10", "10"],
+      ["עסקאות בחו\"ל"],
+      ["תאריך רכישה", "תאריך חיוב", "שם בית עסק", "סכום מקור", "סכום חיוב"],
+      ["03/02/2024", "10/02/2024", "AMAZON", "$5", "18.40"],
+    ];
+    const h = findHeaderRow(table);
+    const { rows, skipped } = buildImportRows(table.slice(h + 1), guessColumns(table[h]), true);
+    expect(rows).toEqual([{ date: "2024-02-01", description: "קפה", amount: -10 }, { date: "2024-02-03", description: "AMAZON", amount: -18.4 }]);
+    expect(skipped).toBe(1);
+  });
+});
+
+describe("parseHtmlTable", () => {
+  it("reads an HTML table saved as .xls", () => {
+    const html = `<html><body><table><tr><th>תאריך</th><th colspan="2">תיאור</th><th>חובה</th></tr>
+      <tr><td>01/02/2024</td><td>חשמל&nbsp;<b>ישראל</b></td><td></td><td>1,200.00</td></tr><tr><td></td></tr></table></body></html>`;
+    expect(parseHtmlTable(html)).toEqual([["תאריך", "תיאור", "", "חובה"], ["01/02/2024", "חשמל ישראל", "", "1,200.00"]]);
   });
 });
 

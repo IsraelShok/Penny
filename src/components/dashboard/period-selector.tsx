@@ -17,7 +17,7 @@ export function PeriodSelector({ label, onPrev, onNext }: PeriodSelectorProps) {
       <Button variant="ghost" size="icon-sm" onClick={onPrev} aria-label={t("prevMonth")}>
         <Back />
       </Button>
-      <span className="min-w-[120px] text-center text-sm font-medium tabular-nums">
+      <span className="min-w-0 sm:min-w-[120px] text-center text-sm font-medium tabular-nums">
         {label}
       </span>
       <Button variant="ghost" size="icon-sm" onClick={onNext} aria-label={t("nextMonth")}>

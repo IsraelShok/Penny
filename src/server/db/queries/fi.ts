@@ -20,7 +20,7 @@ export function getMonthlyAverages(workspaceId: number, today = new Date()) {
     .prepare(
       `SELECT substr(t.date, 1, 7) as month,
          COALESCE(SUM(CASE WHEN t.kind = 'income' THEN t.charged_amount END), 0) as income,
-         COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN ABS(t.charged_amount) END), 0) as expenses
+         COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN -t.charged_amount END), 0) as expenses
        FROM transactions t WHERE ${BASE} GROUP BY month`
     )
     .all(workspaceId, w.from, w.to) as { income: number; expenses: number }[];
@@ -39,8 +39,8 @@ export function getPersonalInflation(workspaceId: number, today = new Date()): F
     new Map(
       (db
         .prepare(
-          `SELECT COALESCE(c.parent_id, c.id) as key, SUM(ABS(t.charged_amount)) as amount
-           FROM transactions t JOIN categories c ON c.id = t.category_id
+          `SELECT COALESCE(c.parent_id, c.id) as key, SUM(-t.charged_amount) as amount
+           FROM category_transactions t JOIN categories c ON c.id = t.category_id
            WHERE ${BASE} AND t.kind = 'expense' GROUP BY key`
         )
         .all(workspaceId, from, to) as { key: number; amount: number }[]).map((r) => [r.key, r.amount])

@@ -65,7 +65,7 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
 
   function handleFinish() {
     queryClient.invalidateQueries();
-    router.push("/?sync=1");
+    router.push("/settings/bank?sync=1");
   }
 
   return (

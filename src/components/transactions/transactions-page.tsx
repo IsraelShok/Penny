@@ -3,6 +3,7 @@
 import { DataState } from "@/components/ui/data-state";
 import { Segmented } from "@/components/ui/segmented";
 
+import {useSearchParams} from "next/navigation";
 import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -41,6 +42,7 @@ import {
 import type { Locale } from "@/i18n/routing";
 
 export function TransactionsPage() {
+  const params=useSearchParams();
   const t = useTranslations("transactions");
   const tReview = useTranslations("review");
   const [view, setView] = useState<"review" | "all" | "settle">("all");
@@ -48,9 +50,9 @@ export function TransactionsPage() {
   const tKids = useTranslations("kids");
   const [kidFilter, setKidFilter] = useState<string>("");
   const locale = useLocale() as Locale;
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<number[]>([]);
+  const [selectedDate, setSelectedDate] = useState(()=>{const month=params.get("month");return month&&/^\d{4}-(0[1-9]|1[0-2])$/.test(month)?new Date(month+"-01T12:00:00"):new Date(new Date().getFullYear(),new Date().getMonth(),1);});
+  const [search, setSearch] = useState(params.get("search")??"");
+  const [categoryFilter, setCategoryFilter] = useState<number[]>(()=>{const id=Number(params.get("category"));return params.has("category")&&Number.isInteger(id)&&id>=0?[id]:[];});
   const [accountFilter, setAccountFilter] = useState<number[]>([]);
   const [page, setPage] = useState(0);
   const [kind, setKind] = useState<TransactionKindFilter>("all");

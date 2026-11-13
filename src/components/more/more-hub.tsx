@@ -30,6 +30,7 @@ export function MoreHub() {
   const t = useTranslations("moreHub");
   return (
     <div className="space-y-8">
+      <Link href="/control" className="block rounded-2xl border bg-card p-5"><strong className="text-lg">מרכז הכסף</strong><p className="mt-2 text-muted-foreground">נתונים, התחייבויות, יעדים, כללים, דוחות ותכנון חובות</p></Link>
       {GROUPS.map((g) => (
         <section key={g.key} aria-labelledby={`more-${g.key}`}>
           <h2 id={`more-${g.key}`} className="mb-3 px-1 text-footnote font-semibold text-muted-foreground">{t(`group_${g.key}`)}</h2>

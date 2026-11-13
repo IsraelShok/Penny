@@ -30,7 +30,8 @@ export function RecentTransactionsCard({ items }: Props) {
       action={<CardAction href="/transactions">{t("allTransactions")}</CardAction>}
     >
       <ul className="-mx-2 divide-y divide-border/60">
-        {items.map((txn) => (
+        {/* A glance, not a ledger: the full list lives on Transactions. */}
+        {items.slice(0, 5).map((txn) => (
           <li key={txn.id}>
             <Link
               href="/transactions"

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { GoalFocus } from "@/components/home/goal-focus";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { getAssets, getFi, getPlan, getRecap } from "@/lib/api";
@@ -72,6 +73,7 @@ export function JourneyView() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-xl rounded-2xl border border-border/60 bg-card p-6 text-center">
+        <div className="mb-6 text-start"><GoalFocus /></div>
         <p className="text-body">{t("empty")}</p>
         <Link href="/settings/household" className="mt-3 inline-block text-subheadline text-primary hover:underline">
           {t("addEvent")}
@@ -82,6 +84,7 @@ export function JourneyView() {
 
   return (
     <div className="mx-auto max-w-xl">
+      <div className="mb-6"><GoalFocus /></div>
       <p className="mb-6 text-subheadline text-muted-foreground">{me ? t("introNamed", { name: me }) : t("intro")}</p>
       <ol className="relative space-y-6 border-s-2 border-border ps-6">
         {items.map((it) => (

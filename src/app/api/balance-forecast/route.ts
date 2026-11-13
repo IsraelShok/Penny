@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/server/db";
 import { loadInsights } from "@/server/insights/data";
 import { forecastCards } from "@/server/insights/forecast";
 import { listAccountBalances } from "@/server/db/queries/assets";
 import { getMonthlyAverages } from "@/server/db/queries/fi";
 import { getPlan } from "@/server/db/queries/plan";
-import { isBankProvider } from "@/server/lib/transfers";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { israelToday } from "@/server/lib/date-utils";
+import { bankObligations } from "@/server/insights/obligations";
+import { addDays } from "@/lib/balance-forecast";
 import { forecastBalance } from "@/lib/balance-forecast";
 
 export const dynamic = "force-dynamic";
@@ -20,12 +20,6 @@ export async function GET(request: Request) {
   if (!balances.length) return NextResponse.json({ forecast: null });
   const i = loadInsights(ws, today, Number(process.env.CARD_BILLING_DAY) || 10);
   const bills = forecastCards({ today, cards: i.cards, series: i.series, installments: i.installments });
-  // Series carry the account number only; bank accounts are those whose transactions come from a bank provider.
-  const bankAccounts = new Set(
-    (getDb().prepare(`SELECT DISTINCT account_number as a, provider as p FROM transactions WHERE workspace_id = ?`).all(ws) as { a: string; p: string }[])
-      .filter((r) => isBankProvider(r.p))
-      .map((r) => r.a)
-  );
   return NextResponse.json({
     forecast: forecastBalance({
       today,
@@ -33,9 +27,8 @@ export async function GET(request: Request) {
       payday: getPlan(ws).monthStartDay,
       monthlyIncome: getMonthlyAverages(ws).monthlyIncome,
       bills: bills.map((b) => ({ date: b.date, total: b.total })),
-      recurring: i.series
-        .filter((s) => s.status === "suggested" && bankAccounts.has(s.account))
-        .map((s) => ({ cadence: s.cadence, lastDate: s.lastDate, amount: s.expectedAmount })),
+      recurring: [],
+      scheduled: bankObligations(ws,i.series,addDays(today,1),addDays(today,90)),
     }),
   });
 }

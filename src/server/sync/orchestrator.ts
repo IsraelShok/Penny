@@ -1,3 +1,4 @@
+import {applyAutomaticGoalRules} from "@/server/db/queries/financial-control";
 import { saveAccountBalances } from "../db/queries/assets";
 import { APP_LOCKED_MESSAGE, isKeyLocked } from "../lib/encryption";
 import { redactError } from "../lib/redact";
@@ -560,6 +561,7 @@ export async function syncWorkspace(
     }
   }
 
+  applyAutomaticGoalRules(workspaceId);
   return {
     workspaceId,
     workspaceName,

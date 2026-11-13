@@ -75,7 +75,7 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
   const month = home?.thisMonth;
   const stats = [
     month && home?.bankHealth?.some((bank) => bank.lastSyncAt) && { label: t("statSpent"), value: money(month.spent) },
-    nextBill && { label: t("statBill", { date: date(nextBill.date) }), value: money(nextBill.total) },
+    nextBill && { label: t("statBill", { date: date(nextBill.date) }), value: money(bills!.filter(b => b.date === nextBill.date).reduce((sum, b) => sum + b.total, 0)) },
   ].filter(Boolean) as { label: string; value: string }[];
 
   return (
@@ -87,7 +87,8 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
         </p>
       )}
       <h2 id="today-title" className="mb-4 text-footnote font-medium text-muted-foreground">{t("title")} <WhatIs concept="free" /></h2>
-      <p role="status" className={cn("max-w-3xl text-2xl font-semibold leading-relaxed text-pretty sm:text-3xl", !gentle && ready && free != null && free < 0 && "text-status-heads-up")}>{sentence}</p>
+      {ready && free != null && <div className="mb-4"><p className="text-sm text-muted-foreground">{locale === "he" ? "פנוי לאחר התחייבויות וכסף ששמרת" : "Available after obligations and reserves"}</p><p className="mt-2 text-5xl font-medium tracking-tight"><bdi>{money(free)}</bdi></p></div>}
+      <p role="status" className={cn("max-w-3xl text-lg font-medium leading-relaxed text-pretty sm:text-xl", !gentle && ready && free != null && free < 0 && "text-status-heads-up")}>{ready && free != null && cash ? (locale === "he" ? `עד ${date(cash.until)} · ממוצע של ${money(Math.max(0, free) / Math.max(1, cash.daysLeft))} ליום לפי האומדן` : `Until ${date(cash.until)} · ${money(Math.max(0, free) / Math.max(1, cash.daysLeft))} per day on this estimate`) : sentence}</p>
       {state === "error" && (
         <button type="button" onClick={() => { onRetry(); void retryPlan(); void cashQuery.refetch(); void suggestionsQuery.refetch(); }} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full glass-tile px-5 text-sm font-semibold hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
           <RefreshCw className="size-4" aria-hidden />{common("tryAgain")}
@@ -97,7 +98,11 @@ export function TodayCard({ home, bills, homePending, homeFailed, onRetry }: {
         <details className="mt-4 max-w-2xl text-sm text-muted-foreground">
           <summary className="w-fit cursor-pointer rounded-md py-2 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">{t("calculationTitle")}</summary>
           <p className="mt-2 leading-relaxed">{t("calculation", { bank: money(cash.bank ?? 0), bills: money(cash.billsDue) })}</p>
-          <p className="mt-2 leading-relaxed">{t("estimateNote")}</p>
+          <p className="mt-2 leading-relaxed">{locale === "he" ? "יתרה בבנק פחות תחזית חיובי הכרטיס עד יום ההכנסה. התחזית כוללת גם אומדן קניות לפי ההיסטוריה. מופחתות גם הוראות קבע שזוהו, התחייבויות בנקאיות שהוספת וכסף שבחרת לשמור. הכנסה עתידית אינה נחשבת זמינה. זה אינו הסכום שנותר בתקציב: התקציב משווה בין התכנון החודשי לבין ההוצאות שסווגו." : "Bank balance minus forecast card bills until payday, including estimated spending based on history. Detected and manually added bank obligations and your cash reserve are also deducted. Future income is not yet available. This differs from budget remaining, which compares your monthly plan with categorized spending."}</p>
+          <p className="mt-2 leading-relaxed">{locale === "he" ? "הממוצע ליום כאן מחושב עד יום ההכנסה; בתקציב הוא מחושב עד סוף החודש." : "The daily figure here runs until payday; the budget daily figure runs until month-end."}</p>
+          <p className="mt-2">{locale === "he" ? "חיובים בבנק: " : "Bank obligations: "}{money(cash.bankDebitsDue??0)} · {locale === "he" ? "כסף ששמרת: " : "Reserved: "}{money(cash.reservedCash??0)}</p><Link className="underline" href="/control">{locale === "he" ? "בדיקת ההתחייבויות והנתונים" : "Review obligations and data"}</Link>
+          <ul className="mt-3 space-y-2">{cash.accounts?.map(a => <li key={`${a.provider}-${a.accountNumber}`}><bdi>{a.provider} · ••••{a.accountNumber}</bdi> · <bdi>{money(a.balance)}</bdi><span className="block text-xs">{locale === "he" ? "עדכון יתרה: " : "Balance updated: "}{a.updatedAt}</span></li>)}</ul>
+          {home?.bankHealth?.some(b => b.status !== "ok") && <p className="mt-3 font-medium">{locale === "he" ? "יש מקור שאינו מעודכן. בדקו את החיבורים לפני הסתמכות על הסכומים." : "Some sources are not current. Check connections before relying on these amounts."}</p>}
         </details>
       )}
       {next && (

@@ -1,0 +1,55 @@
+"use client";
+
+import { useState } from "react";
+import { useLocale } from "next-intl";
+import { Check, Palette, RotateCcw, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
+import { DEFAULT_STUDIO, type StudioPreferences } from "@/lib/budget-studio";
+import { useStudio } from "@/components/studio-provider";
+import { studioCopy } from "./studio-copy";
+
+export function StudioEditor({ compact = false }: { compact?: boolean }) {
+  const { preferences: value, preview: onChange, save: persist, resolvedStudioTheme } = useStudio();
+  const locale = useLocale();
+  const c = studioCopy(locale);
+  const [open, setOpen] = useState(false);
+  const [original, setOriginal] = useState(value);
+  const change = <K extends keyof StudioPreferences>(key: K, v: StudioPreferences[K]) => onChange({ ...value, [key]: v });
+  const close = () => { onChange(original); setOpen(false); };
+  const save = () => {
+    if (persist(value)) toast.success(c.saved);
+    setOpen(false);
+  };
+  function options<K extends "theme" | "accent" | "metric" | "density" | "layout" | "chart">(key: K, values: StudioPreferences[K][]) {
+    return <fieldset className="studio-field"><legend>{c[key]}</legend><div className={`studio-options studio-options-${key}`}>
+      {values.map((option) => <button type="button" key={option} aria-pressed={value[key] === option && (key !== "accent" || !value.customColor)} onClick={() => key === "accent" ? onChange({ ...value, accent: option as StudioPreferences["accent"], customColor: null }) : change(key, option)}>
+        {key === "theme" && <span className={`studio-theme-sample sample-${option}`} aria-hidden="true"><i /><i /><i /></span>}
+        {key === "accent" && <span className={`studio-swatch swatch-${option}`} aria-hidden="true" />}
+        <span>{c[option]}</span>{value[key] === option && <Check size={14} aria-hidden="true" />}
+      </button>)}
+    </div></fieldset>;
+  }
+  return <Sheet open={open} onOpenChange={(next) => { if (next) { setOriginal(value); setOpen(true); } else close(); }}>
+    <SheetTrigger className={`studio-customize ${compact ? "studio-customize-icon" : ""}`} aria-label={c.customize} title={c.customize}><Palette size={17} aria-hidden="true" />{!compact && <>{c.customize}<Sparkles size={14} aria-hidden="true" /></>}</SheetTrigger>
+    <SheetContent side="right" className="budget-studio studio-editor" data-studio-theme={resolvedStudioTheme} data-studio-accent={value.accent} data-studio-motion={value.motion} dir={locale === "he" ? "rtl" : "ltr"}>
+      <div className="studio-editor-heading"><span className="studio-eyebrow">DESIGN STUDIO</span><SheetTitle className="text-2xl font-semibold">{c.studio}</SheetTitle><SheetDescription>{c.studioHint}</SheetDescription></div>
+      <div className="studio-editor-scroll">
+        {options("theme", ["pearl", "midnight", "glass", "system"])}
+        {options("accent", ["violet", "ocean", "jade", "rose"])}
+        <label className="studio-toggle"><span>{locale === "he" ? "צבע אישי" : "Custom color"}<small className="block text-xs text-muted-foreground">{locale === "he" ? "הגוון מותאם לניגודיות קריאה" : "Adjusted for readable contrast"}</small></span><input type="color" aria-label={locale === "he" ? "צבע אישי" : "Custom color"} value={value.customColor ?? "#5541cc"} onChange={e => change("customColor", e.target.value)} /></label>
+        {options("density", ["comfortable", "compact"])}
+        <label className="studio-toggle studio-motion-setting"><span>{c.motion}</span><input type="checkbox" role="switch" checked={value.motion} onChange={(e) => change("motion", e.target.checked)} /></label>
+        <h3 className="studio-section-label">{c.budgetSettings}</h3>
+        {options("metric", ["remaining", "spent"])}
+        {options("chart", ["bars", "donut", "table"])}
+        {options("layout", ["balanced", "stacked"])}
+        <fieldset className="studio-field"><legend>{c.widgets}</legend>
+          {(["showChart", "showJourney"] as const).map((key) => <label className="studio-toggle" key={key}><span>{c[key]}</span><input type="checkbox" role="switch" checked={value[key]} onChange={(e) => change(key, e.target.checked)} /></label>)}
+        </fieldset>
+        <button className="studio-reset" onClick={() => onChange({ ...DEFAULT_STUDIO })}><RotateCcw size={15} aria-hidden="true" />{c.reset}</button>
+      </div>
+      <div className="studio-editor-footer"><button className="studio-primary" onClick={save}>{c.save}</button><button className="studio-quiet" onClick={close}>{c.cancel}</button></div>
+    </SheetContent>
+  </Sheet>;
+}

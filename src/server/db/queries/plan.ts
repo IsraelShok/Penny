@@ -23,7 +23,7 @@ export function savePlan(workspaceId: number, plan: FinancialPlan) {
 export function listGoals(workspaceId: number): Goal[] {
   return getDb()
     .prepare(
-      `SELECT id, name, target_amount as targetAmount, target_date as targetDate, saved_amount as savedAmount
+      `SELECT id, name, target_amount as targetAmount, target_date as targetDate, saved_amount as openingSavedAmount, saved_amount + COALESCE((SELECT SUM(l.contribution) FROM goal_links l JOIN transactions t ON t.id=l.transaction_id WHERE l.goal_id=goals.id AND t.is_excluded=0 AND t.kind='transfer' AND t.status='completed'),0) as savedAmount
        FROM goals WHERE workspace_id = ? ORDER BY target_date`
     )
     .all(workspaceId) as Goal[];

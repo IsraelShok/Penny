@@ -19,18 +19,15 @@ const HEADER_WORDS = [...Object.values(KEYWORDS).flat(), "יתרה", "balance"];
 
 const norm = (s: string) => s.replace(/[\s"'׳״:*()₪]+/g, " ").trim().toLowerCase();
 
-/** Index of the header row: the row among the first 30 with the most known column names (at least 2), or -1. */
+const headerHits = (row: string[]) =>
+  row.filter((c) => {
+    const n = norm(c);
+    return n && HEADER_WORDS.some((k) => n === k || (n.length <= 30 && n.includes(k)));
+  }).length;
+
+/** Index of the first header row (at least 2 known column names) among the first 30, or -1. Later sections have their own header. */
 export function findHeaderRow(table: string[][]): number {
-  let best = -1;
-  let bestHits = 1;
-  table.slice(0, 30).forEach((row, i) => {
-    const hits = row.filter((c) => {
-      const n = norm(c);
-      return n && HEADER_WORDS.some((k) => n === k || (n.length <= 30 && n.includes(k)));
-    }).length;
-    if (hits > bestHits) { best = i; bestHits = hits; }
-  });
-  return best;
+  return table.slice(0, 30).findIndex((row) => headerHits(row) >= 2);
 }
 
 export function guessColumns(header: string[]): ImportMap {
@@ -75,12 +72,14 @@ export function parseImportDate(s: string | undefined): string | null {
 
 /**
  * Turns body rows into transactions (negative = money out). A single amount column on a card
- * statement lists spending as positive, so `positiveIsExpense` flips it.
+ * statement lists spending as positive, so `positiveIsExpense` flips it. A later header row
+ * (card exports list domestic, then abroad, each with its own header) re-maps the columns below it.
  */
 export function buildImportRows(body: string[][], map: ImportMap, positiveIsExpense: boolean): { rows: ImportRow[]; skipped: number } {
   const rows: ImportRow[] = [];
   let skipped = 0;
   for (const r of body) {
+    if (headerHits(r) >= 2) { map = guessColumns(r); continue; }
     const date = map.date == null ? null : parseImportDate(r[map.date]);
     const description = map.description == null ? "" : (r[map.description] ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
     let amount: number | null = null;
@@ -113,4 +112,26 @@ export function markDuplicates(rows: ImportRow[], existing: Map<string, number>)
     seen.set(k, seq);
     return { ...r, seq, duplicate: seq <= (existing.get(k) ?? 0) };
   });
+}
+
+/**
+ * Rows of every <table> in an HTML page. Some Israeli banks download "Excel" files that are
+ * really HTML tables saved with an .xls name.
+ */
+// shortcut: regex parsing, no nested tables or rowspan; fine for bank exports, switch to DOMParser if one breaks.
+export function parseHtmlTable(html: string): string[][] {
+  const text = (s: string) =>
+    s.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
+      .replace(/\s+/g, " ").trim();
+  const rows: string[][] = [];
+  for (const tr of html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
+    const row: string[] = [];
+    for (const td of tr[1].matchAll(/<t([dh])\b([^>]*)>([\s\S]*?)<\/t\1>/gi)) {
+      row.push(text(td[3]));
+      for (let k = Number(/colspan="?(\d+)/i.exec(td[2])?.[1] ?? 1); k > 1; k--) row.push("");
+    }
+    if (row.some((c) => c)) rows.push(row);
+  }
+  return rows;
 }

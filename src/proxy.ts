@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import {accessEnabled,currentUser,membership,defaultWorkspace,allowedMemberRoute} from "@/server/lib/user-access";
 import { isAllowedHost } from "@/lib/host-guard";
 import { isLockEnabled, SESSION_COOKIE, touchSession } from "@/server/lib/app-lock";
 
@@ -25,8 +26,24 @@ export function proxy(request: NextRequest) {
   const locked = lockGate(request);
   if (locked) return locked;
 
+  const requestHeaders=new Headers(request.headers);
+  const path=request.nextUrl.pathname;
+  const staticAsset=!path.startsWith("/api/")&&(path.startsWith("/_next/")||/\.[a-z0-9]+$/i.test(path));
+  if(!staticAsset&&accessEnabled()&&path!=="/api/access"&&path!=="/access"&&path!=="/lock"&&path!=="/api/lock/unlock") {
+    const user=currentUser(request);
+    if(!user)return path.startsWith("/api/")?NextResponse.json({error:"sign-in-required"},{status:401}):NextResponse.redirect(new URL("/access",request.url));
+    if(path.startsWith("/api/")) {
+      const raw=request.headers.get("x-workspace-id");
+      const ws=!raw?defaultWorkspace(user):Number(raw);
+      const role=ws&&Number.isSafeInteger(ws)?membership(user,ws):null;
+      if(!user.isAdmin&&path!=="/api/workspaces"&&(!role||!allowedMemberRoute(path,request.method,role)))return NextResponse.json({error:"workspace-access-denied"},{status:403});
+      if(!user.isAdmin&&path==="/api/workspaces"&&request.method!=="GET")return NextResponse.json({error:"owner-required"},{status:403});
+      if(ws)requestHeaders.set("x-workspace-id",String(ws));
+    }
+  }
+
   if (!request.nextUrl.pathname.startsWith("/api/")) {
-    return NextResponse.next();
+    return NextResponse.next({request:{headers:requestHeaders}});
   }
 
   // Browsers mark requests from other sites; no API call, read or write, should come from one.
@@ -37,7 +54,7 @@ export function proxy(request: NextRequest) {
   }
 
   if (!MUTATING_METHODS.has(request.method) && !ORIGIN_CHECKED_GETS.has(request.nextUrl.pathname)) {
-    return NextResponse.next();
+    return NextResponse.next({request:{headers:requestHeaders}});
   }
 
   // SSE streams use POST too (sync), but they're still subject to the
@@ -77,7 +94,7 @@ export function proxy(request: NextRequest) {
     });
   }
 
-  return NextResponse.next();
+  return NextResponse.next({request:{headers:requestHeaders}});
 }
 
 // Reachable without a session: the lock screen, its API, and static files.

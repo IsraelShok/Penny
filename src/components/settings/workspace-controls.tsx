@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Check, Trash2, X } from "lucide-react";
+import Link from "next/link";
+import { Check, Plus, Trash2, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -55,6 +56,7 @@ export function WorkspaceNameCard() {
 function WorkspaceNameCardInner({ workspace }: { workspace: Workspace }) {
   const t = useTranslations("settings.workspace");
   const tCommon = useTranslations("common");
+  const tNav = useTranslations("nav");
   const queryClient = useQueryClient();
   const [name, setName] = useState(workspace.name);
 
@@ -92,6 +94,11 @@ function WorkspaceNameCardInner({ workspace }: { workspace: Workspace }) {
           <Check className="size-4" aria-hidden />
         </IconButton>
       </div>
+      {/* The sidebar switcher only shows once there are two, so the first extra workspace starts here. */}
+      <Link href="/setup?mode=new-workspace" className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+        <Plus className="size-4" aria-hidden />
+        {tNav("newWorkspace")}
+      </Link>
     </SettingCard>
   );
 }

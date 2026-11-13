@@ -6,15 +6,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { getHome, getInsights, getSettings } from "@/lib/api";
 import { PageHeader } from "@/components/layout/app-shell";
-import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { ThisMonthCard } from "./this-month-card";
 import { CashFlowCard } from "./cash-flow-card";
 import { Greeting } from "./greeting";
-import { MarketStrip } from "@/components/markets/markets-view";
 import { SuggestionsCard } from "./suggestions-card";
 import { NextBillCard, SubscriptionsCard } from "./bills-card";
 import { TodayCard } from "./today-card";
+import { HealthCard } from "./health-card";
 import { MoreSection } from "./more-section";
+import { PersonalGrid } from "./personal-grid";
+import { ScenarioCard } from "./scenario-card";
+import { GoalFocus } from "./goal-focus";
 import { HomeTeasers, WelcomePrompt } from "./home-teasers";
 import { CategoryScroll } from "./category-scroll";
 import { HistoricalTrendCard } from "./historical-trend-card";
@@ -25,12 +27,6 @@ import { BankHealthCard } from "./bank-health-card";
 import { SyncFailureBanner } from "./sync-failure-banner";
 import { CardError, CardSkeleton } from "./card-shell";
 import type { HomePayload, HomeSection } from "@/lib/types";
-
-const ROW_1 = "col-span-12 lg:col-span-8";
-const ROW_1_SIDE = "col-span-12 sm:col-span-6 lg:col-span-4";
-const ROW_2 = "col-span-12 md:col-span-6 lg:col-span-7";
-const ROW_2_SIDE = "col-span-12 md:col-span-6 lg:col-span-5";
-const FULL = "col-span-12";
 
 export function HomePage() {
   const queryClient = useQueryClient();
@@ -81,37 +77,15 @@ export function HomePage() {
         />
         <Greeting name={settings?.displayName} />
         <TodayCard home={data} bills={insights?.forecast} homePending={isLoading} homeFailed={isError} onRetry={() => { void queryClient.invalidateQueries({ queryKey: ["home"] }); }} />
+        <HealthCard />
         <WelcomePrompt />
-        <MoreSection>
-        <SuggestionsCard limit={1} />
-        <HomeTeasers />
-        {/* A setup nudge, not today's business: it waits under "more". */}
-        <AINotConnectedBanner className="mb-4 md:mb-5 lg:mb-6" />
-        <MarketStrip />
-        <div className="grid grid-cols-12 gap-3 md:gap-4">
-          {renderSection("thisMonth", data, isLoading, isError, ROW_1, skeletonLabels)}
-          <div className="col-span-12 grid gap-3 sm:grid-cols-2 md:gap-4 lg:col-span-4 lg:grid-cols-1">
-            {insights ? (
-              <>
-                <NextBillCard data={insights} />
-                <SubscriptionsCard data={insights} />
-              </>
-            ) : (
-              <>
-                <CardSkeleton label={t("nextBill")} height={48} />
-                <CardSkeleton label={t("subscriptionsTitle")} height={48} />
-              </>
-            )}
-          </div>
-          {renderSection("needsAttention", data, isLoading, isError, ROW_1_SIDE, skeletonLabels)}
-          {renderSection("cashFlow", data, isLoading, isError, ROW_1_SIDE, skeletonLabels)}
-          {renderSection("historicalTrend", data, isLoading, isError, ROW_1_SIDE, skeletonLabels)}
-          {renderSection("categories", data, isLoading, isError, `${FULL} mt-4 md:mt-6`, skeletonLabels)}
-          {renderSection("recentTransactions", data, isLoading, isError, ROW_2, skeletonLabels)}
-          {renderSection("topMerchants", data, isLoading, isError, ROW_2_SIDE, skeletonLabels)}
-          {renderSection("bankHealth", data, isLoading, isError, FULL, skeletonLabels)}
-        </div>
-        </MoreSection>
+        <PersonalGrid render={id => {
+          if (id === "goals") return <GoalFocus />;
+          if (id === "planner") return <ScenarioCard />;
+          if (id === "bills") return insights ? <div className="space-y-3"><NextBillCard data={insights} /><SubscriptionsCard data={insights} /></div> : <CardSkeleton label={t("nextBill")} />;
+          return renderSection(id, data, isLoading, isError, "", skeletonLabels);
+        }} />
+        <MoreSection><SuggestionsCard limit={1} /></MoreSection>
       </div>
     </>
   );

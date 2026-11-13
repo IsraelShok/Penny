@@ -28,9 +28,13 @@ declare global {
   var _db: Database.Database | undefined;
 }
 
+// Schema revision 041: refresh a reused development connection after adding migrations.
+let migratedConnection: Database.Database | undefined;
+
 export function getDb(): Database.Database {
   if (!globalThis._db) {
     globalThis._db = createDatabase();
   }
+  if (migratedConnection !== globalThis._db) { runMigrations(globalThis._db); migratedConnection = globalThis._db; }
   return globalThis._db;
 }

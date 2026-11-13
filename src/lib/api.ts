@@ -878,6 +878,10 @@ export function deletePeriodic(id: number) {
   return fetchJSON<{ success: boolean }>(`/api/periodic?id=${id}`, { method: "DELETE" });
 }
 
+export function getCashflowHealth() {
+  return fetchJSON<{ hasData: boolean; signs: import("./cashflow-health").CashflowSign[]; level: import("./cashflow-health").CashflowLevel }>(`/api/cashflow-health`);
+}
+
 export function getResilience() {
   return fetchJSON<import("./resilience").Resilience & { ageOfMoney: number | null }>(`/api/resilience`);
 }
@@ -1057,3 +1061,16 @@ export function getIncomeSmoothing() {
 export function getOverdraft() {
   return fetchJSON<import("./overdraft").OverdraftCost & { balance: number | null }>("/api/overdraft");
 }
+
+export function editTransactions(input: { ids?: number[]; categoryId?: number; remember?: boolean; splits?: { categoryId: number; amount: number }[]; undo?: string }) {
+  return fetchJSON<{ success: boolean; undoToken: string | null }>("/api/transactions/edit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+}
+
+export function getControl(month?:string){return fetchJSON<import("./financial-control").ControlPayload>("/api/control"+(month?`?month=${encodeURIComponent(month)}`:""));}
+export function controlAction(body:Record<string,unknown>){return fetchJSON<{success?:boolean;matches?:import("./financial-control").GoalLink[];undoId?:number}>("/api/control",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});}
+export function getPreference(key:string,workspaceId:number|null=getActiveWorkspaceIdSync()){return fetchJSON<{value:unknown;revision:number}>(`/api/preferences?key=${encodeURIComponent(key)}`,{headers:{"x-workspace-id":workspaceId==null?"":String(workspaceId)}});}
+export function putPreference(key:string,value:unknown,revision:number,workspaceId:number|null=getActiveWorkspaceIdSync()){return fetchJSON<{revision:number}>("/api/preferences",{method:"PUT",headers:{"Content-Type":"application/json","x-workspace-id":workspaceId==null?"":String(workspaceId)},body:JSON.stringify({key,value,revision})});}
+
+export type AccessPayload={enabled:boolean;user:{id:number;name:string;username:string;isAdmin:boolean}|null;users:{id:number;name:string;username:string;isAdmin:number;disabled:number}[];members:{userId:number;workspaceId:number;role:"viewer"|"editor"}[];audit:{id:number;name:string;action:string;workspaceId:number|null;createdAt:string}[]};
+export function getAccess(){return fetchJSON<AccessPayload>("/api/access");}
+export function accessAction(body:Record<string,unknown>){return fetchJSON<{success?:boolean;id?:number}>("/api/access",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});}

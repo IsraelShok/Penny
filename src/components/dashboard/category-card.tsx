@@ -80,7 +80,7 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
   const categoryName = translateCategoryName(data.categoryName, tCat);
   const parentName = data.parentName ? translateCategoryName(data.parentName, tCat) : null;
   return (
-    <div className="rounded-2xl bg-card">
+    <div className="studio-category-card rounded-2xl bg-card">
     <button
       type="button"
       onClick={onClick}

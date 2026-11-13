@@ -68,6 +68,12 @@ describe("readXlsx", () => {
     ]);
   });
 
+  it("reads every sheet in order (sheet10 after sheet2)", async () => {
+    const one = (v: string) => `<worksheet><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>${v}</t></is></c></row></sheetData></worksheet>`;
+    const bytes = await zip({ "xl/worksheets/sheet10.xml": one("c"), "xl/worksheets/sheet2.xml": one("b"), "xl/worksheets/sheet1.xml": one("a") }, []);
+    expect(await readXlsx(bytes)).toEqual([["a"], ["b"], ["c"]]);
+  });
+
   it("rejects non-zip input", async () => {
     await expect(readXlsx(new TextEncoder().encode("a,b\n1,2"))).rejects.toThrow();
   });

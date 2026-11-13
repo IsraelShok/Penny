@@ -28,7 +28,7 @@ Encrypted. AI-categorized. Yours.
 
 <div align="center">
 
-![Spent dashboard](public/screenshots/dashboard-light.png)
+![Spent dashboard](public/screenshots/home-light.png)
 
 </div>
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { Forward } from "@/components/ui/dir-chevron";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { SyncActions } from "@/components/layout/sidebar-sync";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import {
@@ -45,7 +46,7 @@ export default function BankSettingsPage() {
     queryKey: ["integrations"],
     queryFn: listIntegrations,
   });
-  const { start, stateFor, anySyncing } = useBankSync();
+  const { start, stateFor } = useBankSync();
   const [sheet, setSheet] = useState<SheetState>({
     open: false,
     mode: "edit",
@@ -62,10 +63,6 @@ export default function BankSettingsPage() {
   }, [integrations]);
 
   const availableToAdd = BANK_PROVIDERS.filter((b) => b.enabled);
-
-  const handleSyncAll = () => {
-    integrations.forEach((i) => start(i.id));
-  };
 
   const sheetIntegration: Integration | null =
     sheet.mode === "edit" && sheet.credentialId != null
@@ -93,14 +90,7 @@ export default function BankSettingsPage() {
             ) : null}
           </div>
           <div className="flex items-center gap-2">
-            <IconButton showLabel
-              label={anySyncing ? t("syncing") : t("syncAll")}
-              variant="outline"
-              onClick={handleSyncAll}
-              disabled={integrations.length === 0 || anySyncing}
-            >
-              <RefreshCw className={anySyncing ? "size-4 animate-spin" : "size-4"} aria-hidden />
-            </IconButton>
+            <Suspense fallback={null}><SyncActions /></Suspense>
             {availableToAdd.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger

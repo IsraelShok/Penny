@@ -73,3 +73,11 @@ describe("buildSuggestions", () => {
     expect(s.map((x) => x.type === "taxRefund" && x.reason)).toEqual(["twoEmployers", "gap"]);
   });
 });
+
+describe("leak suggestions", () => {
+  it("flags 6+ small charges at one merchant in 30 days", () => {
+    const txns = Array.from({ length: 7 }, (_, i) => ({ date: `2026-11-0${i + 1}`, description: "ארומה", amount: -18, kind: "expense" }));
+    const out = buildSuggestions(txns, { today: "2026-11-13", known: [], monthStartDay: 1, priceChanges: [] });
+    expect(out.find((s) => s.type === "leak")).toMatchObject({ name: "ארומה", count: 7, monthly: 126 });
+  });
+});

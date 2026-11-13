@@ -43,6 +43,8 @@ export const CREDIT_CARD_PAYMENT_PATTERNS: readonly RegExp[] = [
   /\bAMERICAN\s+EXPRESS\b/i,
 ];
 
+export const LOAN_DEPOSIT = /הלוואה|הלוואת|\bloan\b/i;
+
 export function isBankProvider(provider: string): provider is BankProvider {
   return BANK_PROVIDERS_SET.has(provider as BankProvider);
 }
@@ -59,6 +61,10 @@ export function detectKind(
   chargedAmount: number
 ): TransactionKind {
   if (isBankProvider(provider) && matchesTransferPattern(description)) {
+    return "transfer";
+  }
+  // A loan landing in the account is borrowed money, not earnings: counting it as income inflates savings.
+  if (isBankProvider(provider) && chargedAmount > 0 && LOAN_DEPOSIT.test(description)) {
     return "transfer";
   }
   if (isBankProvider(provider) && chargedAmount > 0) {

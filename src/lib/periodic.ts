@@ -59,11 +59,11 @@ const KEYWORDS: { key: string; name: string; re: RegExp; month?: number }[] = [
   { key: "car-insurance", name: "ביטוח רכב", re: /ביטוח\s*(רכב|חובה|מקיף)|הראל רכב|ביטוח ישיר רכב/ },
   { key: "car-license", name: "טסט ורישוי רכב", re: /טסט|רישוי|משרד התחבורה|אגרת רכב/ },
   { key: "home-insurance", name: "ביטוח דירה", re: /ביטוח\s*(דירה|מבנה|תכולה)/ },
-  { key: "annual-fee", name: "דמי מנוי שנתי", re: /מנוי שנתי|דמי מנוי|שנתי/ },
+  { key: "annual-fee", name: "דמי מנוי שנתי", re: /מנוי שנתי|דמי מנוי שנתי/ },
   { key: "fees", name: "אגרות", re: /אגרה|אגרת/ },
-  { key: "vaad", name: "ועד בית", re: /ועד/ },
+  { key: "vaad", name: "ועד בית", re: /ועד בית/ },
   { key: "camp", name: "קייטנה", re: /קייטנ/ },
-  { key: "school", name: "חזרה ללימודים", re: /ספרים|ציוד לימוד|חזרה ללימודים|סטימצקי|צומת ספרים/, month: 8 },
+  { key: "school", name: "חזרה ללימודים", re: /ציוד לימוד|חזרה ללימודים/, month: 8 },
 ];
 
 const HOLIDAY_CATEGORY = /groceries|supermarket|gift|סופר|מזון|מתנ/i;
@@ -86,9 +86,17 @@ export function detectPeriodic(charges: Charge[], yearly: YearlySeries[], today:
     if (!known.has(s.autoKey) && s.amount > 0 && !out.some((o) => o.autoKey === s.autoKey)) out.push(s);
   };
   const since = shiftMonth(today.slice(0, 7), -12);
-  const recent = charges.filter((c) => c.date.slice(0, 7) >= since && c.amount > 0);
+  const recent = charges.filter((c) => c.date.slice(0, 7) >= since && c.date <= today && c.amount > 0);
 
   for (const s of yearly) {
+    // A model's yearly label alone is not evidence of an annual commitment.
+    const dates = charges.filter(c => c.description.trim().toLocaleLowerCase() === s.merchant.trim().toLocaleLowerCase() && c.amount > 0)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const annual = dates.some((a, i) => dates.slice(i + 1).some(b => {
+      const gap = (Date.parse(b.date) - Date.parse(a.date)) / 86400000;
+      return gap >= 330 && gap <= 400 && Math.abs(a.amount - b.amount) / Math.max(a.amount, b.amount) <= 0.25;
+    }));
+    if (!annual) continue;
     add({ autoKey: `yearly:${s.merchant}`, name: s.merchant, amount: round10(s.expectedAmount), everyMonths: 12, nextDue: nextDueFrom(s.lastDate, 12, today) });
   }
 
@@ -98,7 +106,11 @@ export function detectPeriodic(charges: Charge[], yearly: YearlySeries[], today:
     for (const h of hits) byMonth.set(h.date.slice(0, 7), (byMonth.get(h.date.slice(0, 7)) ?? 0) + h.amount);
     const n = byMonth.size;
     if (n < 1 || n > 6) continue; // more often than that it is a monthly bill, not a sinking fund
-    const every = k.month ? 12 : Math.round(12 / n);
+    const months = [...byMonth.keys()].sort();
+    const gaps = months.slice(1).map((month, i) => idx(month) - idx(months[i]));
+    const interval = gaps.length ? Math.round([...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)]) : 12;
+    if (!k.month && (interval < 2 || gaps.some(gap => Math.abs(gap - interval) > 1))) continue;
+    const every = k.month ? 12 : interval;
     const last = [...byMonth.keys()].sort().at(-1)!;
     const total = [...byMonth.values()].reduce((a, b) => a + b, 0);
     const nextDue = k.month ? nextDueFrom(`${last.slice(0, 4)}-${String(k.month).padStart(2, "0")}`, 12, today) : nextDueFrom(last, every, today);

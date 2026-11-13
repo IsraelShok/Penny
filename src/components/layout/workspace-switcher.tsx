@@ -73,6 +73,8 @@ export function WorkspaceSwitcher() {
   }, [activeId, workspaces]);
 
   const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
+  // One workspace is the common case: nothing to switch to, so keep the sidebar quiet. Settings › General can add another.
+  if (workspaces.length < 2) return null;
 
   return (
     <SidebarMenu>

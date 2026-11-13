@@ -1,7 +1,7 @@
 "use client";
 
 import { Forward, Back } from "@/components/ui/dir-chevron";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -19,6 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { SplitEditor } from "@/components/transactions/split-editor";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { IconButton } from "@/components/ui/icon-button";
 import {
@@ -43,7 +45,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  updateTransactionCategory,
+  editTransactions,
   setTransactionKind,
   approveTransactionCategory,
   getCategories,
@@ -141,6 +143,29 @@ export function TransactionsTable({
   const locale = useLocale() as Locale;
   const queryClient = useQueryClient();
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [remember, setRemember] = useState(false);
+  const [bulkCategory, setBulkCategory] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [split, setSplit] = useState<TransactionWithCategory | null>(null);
+  const [undoToken, setUndoToken] = useState<string | null>(null);
+  const he = locale === "he";
+  const selectionKey = transactions.map(t => t.id).join(",");
+  useEffect(() => { setSelected([]); }, [selectionKey]);
+  const selectedRows = transactions.filter(t => selected.includes(t.id));
+  const selectedKind = selectedRows[0]?.kind;
+  const bulkCategories = categories.filter(c => c.kind === selectedKind && selectedRows.every(r => r.kind === c.kind) && !categories.some(child => child.parentId === c.id));
+  async function edit(input: Parameters<typeof editTransactions>[0]) {
+    setEditing(true);
+    try {
+      const result = await editTransactions(input);
+      setUndoToken(result.undoToken);
+      setSelected([]);
+      await queryClient.invalidateQueries();
+      toast.success(he ? "השינוי נשמר" : "Changes saved");
+    } catch (error) { toast.error(he ? "לא ניתן לשמור. בדקו שהקטגוריות תואמות ושהתנועות לא השתנו, ונסו שוב." : error instanceof Error ? error.message : "Could not save"); throw error; }
+    finally { setEditing(false); }
+  }
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const otherKinds: Record<Kind, Array<{ value: Kind; label: string }>> = {
@@ -161,11 +186,9 @@ export function TransactionsTable({
   const handleCategoryChange = async (txnId: number, categoryId: number) => {
     setUpdatingId(txnId);
     try {
-      await updateTransactionCategory(txnId, categoryId);
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
-    } finally {
+      await edit({ ids: [txnId], categoryId, remember });
+    } catch { /* edit reports the error */ }
+    finally {
       setUpdatingId(null);
     }
   };
@@ -471,10 +494,17 @@ export function TransactionsTable({
           </div>
         ) : (
           <>
+            {/* Bulk tools appear only once something is selected (or there is an edit to undo). */}
+            {(selected.length > 0 || undoToken) && <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-muted/50 p-3">
+              <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />{he ? "לזכור סיווג לבית העסק להבא" : "Remember category for future transactions"}</label>
+              {undoToken && <Button variant="outline" disabled={editing} onClick={() => void edit({ undo: undoToken }).catch(() => {})}>{he ? "ביטול העריכה האחרונה" : "Undo last edit"}</Button>}
+              {selected.length > 0 && <><span className="text-sm">{selected.length} {he ? "נבחרו" : "selected"}</span><select aria-label={he ? "קטגוריה לתנועות שנבחרו" : "Category for selected transactions"} className="min-h-11 rounded-lg border bg-background px-2" value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}><option value="">{he ? "בחירת קטגוריה" : "Choose category"}</option>{bulkCategories.map(c => <option key={c.id} value={c.id}>{translateCategoryName(c.name, tCat)}</option>)}</select><Button disabled={editing || isFetching || !bulkCategories.some(c => c.id === Number(bulkCategory))} onClick={() => void edit({ ids: selected, categoryId: Number(bulkCategory), remember }).catch(() => {})}>{he ? "סיווג הנבחרות" : "Categorize selected"}</Button><Button variant="ghost" onClick={() => setSelected([])}>{he ? "ניקוי בחירה" : "Clear selection"}</Button>{!bulkCategories.length && <p className="text-xs">{he ? "בחרו רק הוצאות או רק הכנסות כדי לסווג יחד." : "Select only expenses or only income to categorize together."}</p>}</>}
+            </div>}
+            {split && <SplitEditor key={split.id} transaction={split} categories={categories} close={() => setSplit(null)} save={parts => edit({ ids: [split.id], splits: parts })} />}
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[32px]" />
+                  <TableHead className="w-[44px]"><input className="size-4" type="checkbox" aria-label={he ? "בחירת כל התנועות בעמוד" : "Select this page"} disabled={editing || isFetching} checked={transactions.length > 0 && selected.length === transactions.length} onChange={e => setSelected(e.target.checked ? transactions.map(t => t.id) : [])} /></TableHead>
                   <SortableTableHead
                     label={t("headerDate")}
                     field="date"
@@ -547,7 +577,7 @@ export function TransactionsTable({
                       )}
                     >
                       <TableCell>
-                        <div style={{ color: directionColor }}>
+                        <div style={{ color: directionColor }} className="flex items-center gap-2"><input className="size-4" type="checkbox" aria-label={`${he ? "בחירת" : "Select"} ${txn.description}`} disabled={editing || isFetching} checked={selected.includes(txn.id)} onChange={e => setSelected(e.target.checked ? [...selected, txn.id] : selected.filter(id => id !== txn.id))} />
                           {isIncome ? (
                             <ArrowUpRight className="h-4 w-4" aria-label={t("rowIncome")} />
                           ) : (
@@ -622,7 +652,7 @@ export function TransactionsTable({
                           <DropdownMenu>
                             <DropdownMenuTrigger
                               className="inline-flex"
-                              disabled={updatingId === txn.id}
+                              disabled={updatingId === txn.id || editing || isFetching}
                             >
                               <Badge
                                 variant="outline"
@@ -637,7 +667,7 @@ export function TransactionsTable({
                                     : undefined
                                 }
                               >
-                                {categoryName}
+                                {txn.allocations?.length ? `${he ? "מפוצל" : "Split"} · ${txn.allocations.length}` : categoryName}
                               </Badge>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
@@ -663,7 +693,7 @@ export function TransactionsTable({
                               size="icon-xs"
                               variant="outline"
                               onClick={() => handleApprove(txn.id)}
-                              disabled={updatingId === txn.id}
+                              disabled={updatingId === txn.id || editing || isFetching}
                               style={{
                                 borderColor:
                                   "color-mix(in oklch, var(--status-on-track) 35%, transparent)",
@@ -691,12 +721,13 @@ export function TransactionsTable({
                         <DropdownMenu>
                           <DropdownMenuTrigger
                             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-                            disabled={updatingId === txn.id}
+                            disabled={updatingId === txn.id || editing || isFetching}
                             aria-label={t("rowActions")}
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {txn.kind === "expense" && txn.status === "completed" && txn.chargedAmount < 0 && <DropdownMenuItem onClick={() => setSplit(txn)}>{he ? "פיצול לקטגוריות" : "Split categories"}</DropdownMenuItem>}
                             {otherKinds[txn.kind].map((opt) => (
                               <DropdownMenuItem
                                 key={opt.value}
