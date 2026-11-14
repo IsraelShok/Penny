@@ -18,7 +18,7 @@ exports.default = async function afterPack(context) {
 /**
  * Ad-hoc signature (no Apple Developer ID yet), so Apple Silicon runs the app. electron-builder's own signing walks
  * every folder ending in .app, and a server package has a plain JS folder named chrome.app, so sign here instead:
- * native modules one by one, then Electron's helpers and frameworks, then the app. Never --deep.
+ * native modules one by one, then Electron's helpers and frameworks, then the app. --deep only inside Electron's own frameworks and helpers, never over the server files.
  */
 function adHocSign(app) {
   const { execFileSync } = require("node:child_process");
@@ -29,6 +29,6 @@ function adHocSign(app) {
   });
   walk(path.join(app, "Contents", "Resources")).forEach(sign);
   const frameworks = path.join(app, "Contents", "Frameworks");
-  for (const e of fs.readdirSync(frameworks)) sign(path.join(frameworks, e));
+  for (const e of fs.readdirSync(frameworks)) execFileSync("codesign", ["--force", "--deep", "--sign", "-", path.join(frameworks, e)], { stdio: "inherit" });
   sign(app);
 }
