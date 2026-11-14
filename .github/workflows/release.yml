@@ -1,7 +1,7 @@
 name: Release
 
-# Push a tag like v0.2.0 (matching package.json "version") to publish a release with the Windows installer.
-# Running copies see it through the update banner; Docker users update with Penny-update.bat.
+# Push a tag like v0.2.0 (matching package.json "version") to publish a release with the Windows and Mac
+# installers. Running copies see it through the update banner; Docker users update with Penny-update.
 on:
   push:
     tags: ["v*.*.*"]
@@ -10,8 +10,12 @@ permissions:
   contents: write
 
 jobs:
-  windows-installer:
-    runs-on: windows-latest
+  desktop:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,10 +30,30 @@ jobs:
           PUPPETEER_SKIP_DOWNLOAD: "1"
       - run: npm test
       - run: npm run desktop:build
-      - name: Publish the release
+      - name: Collect the installers
         shell: bash
+        run: |
+          mkdir out
+          v="${GITHUB_REF_NAME#v}"
+          if [ "$RUNNER_OS" = "Windows" ]; then cp "dist-desktop/Penny Setup $v.exe" out/Penny-Setup-$v.exe; else cp dist-desktop/*.dmg out/; fi
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ runner.os }}
+          path: out/*
+          if-no-files-found: error
+
+  publish:
+    needs: desktop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installers-*
+          path: out
+          merge-multiple: true
+      - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          cp "dist-desktop/Penny Setup ${GITHUB_REF_NAME#v}.exe" "Penny-Setup.exe"
-          gh release create "$GITHUB_REF_NAME" "Penny-Setup.exe" --title "Penny $GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" out/* --title "Penny $GITHUB_REF_NAME" --notes-file .github/release-notes.md --generate-notes

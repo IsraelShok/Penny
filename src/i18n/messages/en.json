@@ -1000,7 +1000,7 @@
     "tourSearch": "Tip: Ctrl or ⌘ plus K opens quick search for every screen and action."
   },
   "setup": {
-    "docs":"Docs ↗",
+    "docs": "Docs ↗",
     "stepConnect": "Connect",
     "stepAi": "AI",
     "stepTarget": "Target",
@@ -4671,7 +4671,7 @@
   "update": {
     "title": "Penny {version} is available",
     "how_desktop": "Download the new installer and run it. Your data stays.",
-    "how_docker": "Run Penny-update.bat. It backs up your data first.",
+    "how_docker": "Run Penny-update.bat (Windows) or ./Penny-update.sh (Mac). It backs up your data first.",
     "how_source": "Run git pull and restart Penny.",
     "download": "Download",
     "whatsNew": "What's new",
