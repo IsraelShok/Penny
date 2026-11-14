@@ -133,10 +133,10 @@ function tool(key: string): { Icon: LucideIcon; href: string } {
 }
 
 /** One row of an inset grouped list: icon, title, one-line hint, chevron. */
-export function NavRow({ href, Icon, title, hint }: { href: string; Icon: LucideIcon; title: string; hint: string }) {
+export function NavRow({ href, Icon, title, hint, color }: { href: string; Icon: LucideIcon; title: string; hint: string; color?: string }) {
   return (
     <Link href={href} className="flex min-h-16 items-center gap-3 px-4 py-3 transition-[background-color] duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:px-5">
-      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary" aria-hidden><Icon className="size-[1.125rem]" /></span>
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground" style={color ? { backgroundColor: color, color: "#fff" } : undefined} aria-hidden><Icon className="size-[1.125rem]" /></span>
       <span className="min-w-0 flex-1">
         <span className="block font-semibold">{title}</span>
         <span className="block text-footnote text-pretty text-muted-foreground">{hint}</span>
@@ -147,6 +147,9 @@ export function NavRow({ href, Icon, title, hint }: { href: string; Icon: Lucide
 }
 
 export const groupedList = "overflow-hidden rounded-2xl border border-border/60 bg-card divide-y divide-border/60";
+
+/** One saturated colour per life stage, so the seven groups read apart at a glance (white icons stay above 3:1). */
+const STAGE_COLORS = ["#0a7ea4", "#2b8a4e", "#c8384f", "#b86e00", "#5541cc", "#0b63c4", "#8a3fb0"];
 
 export function CalculatorTiles() {
   const t = useTranslations("calculators");
@@ -160,7 +163,7 @@ export function CalculatorTiles() {
         {STAGES.map(([stage, keys], i) => (
           <li key={stage} aria-labelledby={`stage-${stage}`}>
             <div className="mb-2 flex items-start gap-3 px-1">
-              <span className="mt-px grid size-6 shrink-0 place-items-center rounded-full bg-primary text-caption font-semibold text-primary-foreground tabular-nums" aria-hidden>{i + 1}</span>
+              <span style={{ backgroundColor: STAGE_COLORS[i % STAGE_COLORS.length] }} className="mt-px grid size-6 shrink-0 place-items-center rounded-full text-white text-caption font-semibold tabular-nums" aria-hidden>{i + 1}</span>
               <div className="min-w-0">
                 <h3 id={`stage-${stage}`} className="text-headline font-semibold">
                   <span className="sr-only">{t("stageN", { n: i + 1 })} </span>{t(`stage_${stage}`)}
@@ -171,7 +174,7 @@ export function CalculatorTiles() {
             <ul className={groupedList}>
               {keys.map((key) => {
                 const { Icon, href } = tool(key);
-                return <li key={key}><NavRow href={href} Icon={Icon} title={t(`${key}_title`)} hint={t(`${key}_q`)} /></li>;
+                return <li key={key}><NavRow href={href} Icon={Icon} title={t(`${key}_title`)} hint={t(`${key}_q`)} color={STAGE_COLORS[i % STAGE_COLORS.length]} /></li>;
               })}
             </ul>
           </li>
