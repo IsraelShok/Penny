@@ -37,7 +37,7 @@
 .studio-welcome p { font-size: 14px; color: var(--muted-foreground); }
 .studio-customize { display: inline-flex; flex-shrink: 0; align-items: center; gap: 9px; min-height: 46px; padding: 0 18px; background: var(--card); border: 1px solid var(--border); border-radius: 50px; font-size: 13px; font-weight: 500; box-shadow: 0 3px 12px #26203905; cursor: pointer; }
 .studio-customize svg { color: var(--primary); }
-.studio-top-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 22px; align-items: stretch; }
+.studio-top-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 22px; align-items: start; }
 .studio-top-grid.studio-single, [data-studio-layout="stacked"] .studio-top-grid { grid-template-columns: minmax(0, 1fr); }
 .studio-overview { position: relative; overflow: hidden; border-radius: 28px; padding: 28px 30px 20px; background: radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--studio-glow) 45%, transparent), transparent 65%), var(--studio-hero); color: #fff; box-shadow: 0 12px 35px #20133712; }
 .studio-overview::before { content: ""; position: absolute; width: 340px; height: 340px; border: 1px solid #ffffff07; border-radius: 50%; inset-inline-end: -170px; top: -140px; pointer-events: none; }

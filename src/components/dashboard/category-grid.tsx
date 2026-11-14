@@ -193,9 +193,9 @@ export function CategoryGrid({
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 max-w-full items-center gap-3">
           <h2 className="text-title font-semibold">{t("budgetsHeading")}</h2>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="no-scrollbar flex min-w-0 gap-1.5 overflow-x-auto sm:flex-wrap">
             {filterLabels.filter((f) => f.id === "all" || counts[f.id] > 0 || filter === f.id).map((f) => {
               const active = filter === f.id;
               const count = counts[f.id];

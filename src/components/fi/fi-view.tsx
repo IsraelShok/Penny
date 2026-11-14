@@ -231,7 +231,7 @@ function Body({ data }: { data: FiPayload }) {
         <Segmented<Tab> label={t("tabsLabel")} value={tab} onChange={setTab} options={TABS.map((k) => ({ value: k, label: t(`tab_${k}`) }))} />
         <PlanSettingsButton />
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid items-start gap-4 lg:grid-cols-3">
         {tab === "fi" && fiTab}
         {tab === "safety" && <FiExtras data={data} tab="safety" />}
         {tab === "tools" && (simple ? (
