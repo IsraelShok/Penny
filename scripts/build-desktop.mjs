@@ -62,5 +62,6 @@ for (const bad of ["data", "reports", "research_notes", ".claude"]) {
 }
 
 console.log("4/4 Packaging the installer…");
-run("npx electron-builder --config desktop/electron-builder.yml");
+// --publish never: the release workflow uploads the installers itself; a tag alone would make electron-builder try to.
+run("npx electron-builder --config desktop/electron-builder.yml --publish never");
 console.log("Done: see dist-desktop/");
