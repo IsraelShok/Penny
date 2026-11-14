@@ -11,8 +11,12 @@ Your banks, your budget and your future in one place, on your own computer.
 [![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white&style=flat-square)](https://sqlite.org/)
 [![Hebrew first](https://img.shields.io/badge/UI-עברית%20%2F%20English-5541cc?style=flat-square)](#language-and-accessibility)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](#license)
+[![Release](https://img.shields.io/github/v/release/Sergey-Bar/Penny?style=flat-square&color=5541cc)](https://github.com/Sergey-Bar/Penny/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/Sergey-Bar/Penny/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/Sergey-Bar/Penny/actions/workflows/ci.yml)
 
-[עברית](README.md) · [Features](#features) · [Install](#install) · [How it works](#how-it-works) · [Security](#security-at-a-glance) · [Contributing](#contributing)
+[עברית](README.md) · [Download](#install) · [Features](#features) · [How it works](#how-it-works) · [Security](#security-at-a-glance) · [Contributing](#contributing) · [Website](https://sergey-bar.github.io/Penny/en/)
+
+[![Download for Windows](https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![Download for Mac](https://img.shields.io/badge/Download-Mac-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![Run with Docker](https://img.shields.io/badge/Run_with-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#docker)
 
 ![Penny home](public/screenshots/home-light.png)
 
@@ -137,35 +141,43 @@ flowchart LR
 
 ## Requirements
 
-- **Node.js 22+** (not needed for Docker or the desktop installer)
+- **Node.js 22+**, only when installing from source
 - **Windows 11, macOS 13+ or Ubuntu 22+** (with systemd)
 - For the tray companion, built locally: Xcode Command Line Tools on macOS, .NET 8 SDK on Windows. `npm run setup` offers to install them.
 - Bank accounts with **2FA disabled** for automatic sync (One Zero is the exception). Without that, use statement files.
 
 ## Install
 
-### Docker (recommended)
+### Desktop app (recommended)
 
-Runs Penny, its scrapers and Chromium in a container, isolated from your machine.
+The easy way: download, install, open. No Node.js, no terminal. Bank sync uses the Chrome or Edge you already have.
+
+| System | File in the [latest release](https://github.com/Sergey-Bar/Penny/releases/latest) | First launch |
+|---|---|---|
+| Windows 10/11 | `Penny-Setup-<version>.exe` | If SmartScreen warns about an unsigned app: **More info → Run anyway** |
+| Mac with Apple silicon (M1 and newer) | `Penny-<version>-arm64.dmg` | Drag to Applications. First open: **System Settings → Privacy & Security → Open Anyway** |
+| Mac with Intel | `Penny-<version>-x64.dmg` | Same as above |
+
+Data lives in `%APPDATA%\Penny\data` (Windows) or `~/Library/Application Support/Penny/data` (Mac). When a new version is out, Penny shows a banner; run the new installer over the old one and your data stays.
+
+### Docker
+
+Runs Penny, its scrapers and Chromium in a container, isolated from your machine. Works on Windows, Mac and Linux with [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 ```bash
-docker compose up -d --build
+git clone https://github.com/Sergey-Bar/Penny.git
+cd Penny
+./Penny-docker.sh        # Windows: Penny-docker.bat
 ```
 
-On Windows, double-click `Penny-docker.bat`: it builds, starts and opens `http://127.0.0.1:41234`.
+The script builds, starts and opens `http://127.0.0.1:41234`. Or directly: `docker compose up -d --build`.
 
 - Published on `127.0.0.1` only. The database and encryption key live in the data volume and survive updates.
 - Settings go in `.env` (copy `.env.example`).
 - The image build runs the test suite; if tests fail, no image is produced.
-- **Updates:** Penny shows a banner (and a Telegram message, if set up) when a newer release exists. Nothing installs itself. Run `Penny-update.bat` (or `Penny-update.ps1`): it backs up the database and key, builds the newest release (tests included), switches, and rolls back if the new one isn't healthy.
+- **Updates:** Penny shows a banner (and a Telegram message, if set up) when a newer release exists. Run `./Penny-update.sh` (or `Penny-update.bat`): it moves to the newest release, backs up the database and key, builds (tests included), switches, and rolls back if the new one isn't healthy.
 - **Statement files:** drop exports into `imports/` next to `docker-compose.yml`.
 - **Ollama on the host:** set `PENNY_ALLOW_REMOTE_OLLAMA=1` and use `http://host.docker.internal:11434`.
-
-### Desktop app (Windows)
-
-Download **Penny Setup.exe** from the [Releases page](https://github.com/Sergey-Bar/Penny/releases), run it, and open Penny from the Start menu. No Node.js, no terminal. Data stays in `%APPDATA%\Penny\data`, and bank sync uses the Chrome or Edge you already have. To update, run the new installer over the old one.
-
-Build it yourself with `npm run desktop:build` (output in `dist-desktop/`).
 
 ### From source
 
@@ -176,7 +188,7 @@ npm install
 npm run setup
 ```
 
-`npm run setup` builds the app, installs the always-on service (LaunchAgent on macOS, systemd on Linux, Task Scheduler on Windows), builds and registers the tray companion, and opens the app. On Windows it also adds `127.0.0.1 penny.localhost` to your hosts file, the only step that asks for Administrator.
+For developers, or if you want an always-on service and a tray app. `npm run setup` builds the app, installs the always-on service (LaunchAgent on macOS, systemd on Linux, Task Scheduler on Windows), builds and registers the tray companion, and opens the app. On Windows it also adds `127.0.0.1 penny.localhost` to your hosts file, the only step that asks for Administrator.
 
 The first launch of the tray app shows an unsigned-binary warning, because you built it locally: right-click → Open (macOS) or "More info" → "Run anyway" (Windows). Once.
 
@@ -296,7 +308,7 @@ Penny/
 
 ## Contributing
 
-Penny is built for personal use first and open source second. Pull requests are welcome for:
+Penny is built for personal use first and open source second. Setup and rules: [CONTRIBUTING.md](CONTRIBUTING.md). Pull requests are welcome for:
 
 - **Banks:** add to `BANK_PROVIDERS` in [src/lib/types.ts](src/lib/types.ts) and map it in [src/server/scrapers/index.ts](src/server/scrapers/index.ts).
 - **AI providers:** implement `AIProvider` from [src/server/ai/types.ts](src/server/ai/types.ts) and register it in [src/server/ai/factory.ts](src/server/ai/factory.ts).

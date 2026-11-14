@@ -1,0 +1,20 @@
+name: Feature request
+description: An idea that would make Penny more useful
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The problem or situation, not the solution yet.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+  - type: textarea
+    id: israel
+    attributes:
+      label: Israeli details we should know
+      description: A bank, a tax rule, a pension product, with a source if you have one.
