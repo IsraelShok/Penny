@@ -58,3 +58,14 @@ describe("pet", () => {
     expect(parsePet({ snooze: { "tidy:messy": "2026-12-01", "x y": "2026-12-01", "food:overPace": "soon" } }).snooze).toEqual({ "tidy:messy": "2026-12-01" });
   });
 });
+
+import { skinFor } from "@/lib/pet";
+describe("skinFor", () => {
+  it("picks the variant of a look closest to the chosen colour", () => {
+    expect(["303", "312"]).toContain(skinFor("301", "#30d158")); // a green gummy
+    expect(skinFor("301", "#0a84ff")).toBe("301"); // blue gummy
+    expect(skinFor("401", "#ff375f")).not.toBe("401");
+    expect(skinFor("", "#30d158")).toBe("");
+    expect(skinFor("301", "")).toBe("301");
+  });
+});

@@ -135,7 +135,7 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
         if (rows.rest.length) {
           const sum = (k: "spent" | "expected") => rows.rest.reduce((s, c) => s + c[k], 0);
           tracked.push({
-            key: "more", title: t("moreCategories", { count: rows.rest.length }), tone: "var(--muted-foreground)",
+            key: "more", title: t("moreCategories", { count: rows.rest.length }), tone: "var(--chart-4)",
             spent: sum("spent"), expected: sum("expected"), spentLabel: t("spent"), expectedLabel: t("expected"),
             sections: [{ label: t("details"), content: <CompactRows rows={rows.rest.map((c) => ({ id: c.id, name: catName(c.name), spent: c.spent, expected: c.expected, tone: c.color }))} /> }],
           });
@@ -164,7 +164,7 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
           ],
         };
         const offLine: LineView = {
-          key: "off", title: t("offCashflow"), tone: "var(--muted-foreground)", spent: cf.off.expenseTotal, expected: 0,
+          key: "off", title: t("offCashflow"), tone: "var(--chart-2)", spent: cf.off.expenseTotal, expected: 0,
           spentLabel: t("spent"), expectedLabel: t("expected"), noMeter: true,
           sections: [
             { label: t("offIncome"), total: cf.off.incomeTotal, content: <Items items={cf.off.income} /> },
@@ -287,7 +287,7 @@ function LinesChart({ lines, selected, onSelect, label }: { lines: LineView[]; s
             className={`flex h-28 min-w-0 flex-col items-center gap-1 rounded-xl px-1.5 pb-1.5 pt-2 transition-colors focus-visible:outline-2 focus-visible:outline-ring ${sel ? "bg-accent ring-1 ring-primary/30" : "hover:bg-accent/60"}`}
           >
             <bdi className="text-xs font-semibold tabular-nums">{formatCurrency(l.spent)}</bdi>
-            <span className="relative flex w-7 flex-1 items-end overflow-hidden rounded-lg" style={{ background: `color-mix(in oklab, ${l.tone} 16%, transparent)` }} aria-hidden>
+            <span className="relative flex w-7 flex-1 items-end overflow-hidden rounded-lg" style={{ background: `color-mix(in oklab, ${l.tone} 26%, transparent)` }} aria-hidden>
               <span className="w-full rounded-lg transition-[height] duration-500" style={{ height: `${pct}%`, background: over ? "var(--status-over)" : l.tone }} />
             </span>
             <span className={`line-clamp-2 w-full break-words text-center text-xs leading-tight ${sel ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{l.title}</span>

@@ -1,5 +1,7 @@
 /** Pocket Pal: a small household pet whose mood comes from the finances. Pure. */
 
+import { hexToOklch } from "@/lib/category-colors";
+
 export type PetMood = "happy" | "ok" | "hungry" | "caring";
 export type PetStat = "food" | "energy" | "joy" | "health" | "tidy";
 
@@ -70,8 +72,30 @@ export function petSnooze(snooze: Record<string, string>, key: string, until: st
 export const PET_SIZES = { s: 110, m: 140, l: 170 } as const;
 export type PetSize = keyof typeof PET_SIZES;
 /** A few BoopFace skins (full build, loaded only when one is picked). */
-export const PET_SKINS = ["201", "301", "401", "901", "1401", "1601"] as const;
+export const PET_SKINS = ["301", "401", "901", "1401", "1601"] as const;
 export const PET_COLORS = ["#0a84ff", "#30d158", "#ff9f0a", "#ff375f", "#bf5af2", "#64d2ff"] as const;
+/** Each look comes in fixed-colour variants (from the BoopFace catalog: id → main colour); the picked colour chooses the variant. */
+const SKIN_VARIANTS: Record<string, Record<string, string>> = {
+  "301": { 301: "#619bff", 302: "#ff6961", 303: "#92ec55", 304: "#b561ff", 305: "#ff61b0", 306: "#ffa159", 307: "#80d9ff", 309: "#ff1f1f", 310: "#27ecbb", 311: "#ffd642", 312: "#61c876" },
+  "401": { 401: "#337aff", 402: "#ff3a33", 403: "#15d42e", 404: "#a033ff", 405: "#ff3392", 406: "#ff862a" },
+  "901": { 902: "#d4a446", 903: "#e19991", 906: "#ff9962", 911: "#86bfdc", 912: "#8ea0ff", 913: "#ce88ff", 914: "#be5f7e", 915: "#76bab7", 916: "#588272" },
+  "1401": { 1401: "#18517c", 1402: "#ab784c", 1403: "#b5809b", 1405: "#ef899e", 1409: "#f5b267", 1411: "#a82d30", 1412: "#ceb574" },
+  "1601": { 1603: "#cfeeb2", 1604: "#ffeaf2", 1605: "#a9c568", 1606: "#45277f", 1608: "#86bfe0", 1609: "#3f648e" },
+};
+
+/** The variant of a look closest to the picked colour, so two people with the same look but different colours get different Pips. */
+export function skinFor(skin: string, color: string): string {
+  const variants = SKIN_VARIANTS[skin];
+  if (!variants || !/^#[0-9a-f]{6}$/i.test(color)) return skin;
+  const lab = (hex: string) => { const o = hexToOklch(hex); const r = (o.h * Math.PI) / 180; return [o.l, o.c * Math.cos(r), o.c * Math.sin(r)]; };
+  const want = lab(color);
+  let best = skin, bestD = Infinity;
+  for (const [id, hex] of Object.entries(variants)) {
+    const d = lab(hex).reduce((sum, v, i) => sum + (i ? 2 : 1) * (v - want[i]) ** 2, 0); // hue and chroma weigh more than lightness
+    if (d < bestD) { bestD = d; best = id; }
+  }
+  return best;
+}
 
 /** color "" = the theme accent; skin "" = flat color; snooze = issue key → hidden until (YYYY-MM-DD). */
 export interface PetSettings { enabled: boolean; name: string; color: string; size: PetSize; skin: string; snooze: Record<string, string> }

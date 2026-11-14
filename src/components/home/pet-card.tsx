@@ -11,7 +11,7 @@ import { usePlan } from "@/hooks/use-plan";
 import { useA11y } from "@/components/a11y/a11y-menu";
 import { useGentle } from "@/hooks/use-gentle";
 import { shekels } from "@/lib/money";
-import { PET_ACTION, PET_COLORS, PET_SIZES, PET_SKINS, petKey, petLines, petMood, petSnooze, petSnoozeUntil, petToday, petTodo, type PetLine, type PetMood, type PetSettings, type PetStat } from "@/lib/pet";
+import { PET_ACTION, PET_COLORS, skinFor, PET_SIZES, PET_SKINS, petKey, petLines, petMood, petSnooze, petSnoozeUntil, petToday, petTodo, type PetLine, type PetMood, type PetSettings, type PetStat } from "@/lib/pet";
 import { Segmented } from "@/components/ui/segmented";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -266,9 +266,10 @@ export function PetFace({ mood, pet, px }: { mood: PetMood; pet: Pick<PetSetting
     ref.current?.setPointerFollow?.(true); // eyes follow the pointer anywhere on the page (BoopFace listens on window)
     void ref.current?.play?.(PET_ACTION[mood]);
   }, [state, mood, pet.skin]);
+  const skin = pet.skin ? skinFor(pet.skin, pet.color || theme || "") : undefined;
   return (
     <span aria-hidden className="grid place-items-center" style={{ width: px, height: px }}>
-      {state === "ready" ? <boop-face key={pet.skin} ref={ref} size={String(px)} color={pet.color || theme} skin={pet.skin || undefined} motion={still ? "reduce" : "auto"} />
+      {state === "ready" ? <boop-face key={skin} ref={ref} size={String(px)} color={pet.color || theme} skin={skin} motion={still ? "reduce" : "auto"} />
         : state === "failed" ? <span style={{ fontSize: px * 0.45 }}>{FALLBACK[mood]}</span> : null}
     </span>
   );

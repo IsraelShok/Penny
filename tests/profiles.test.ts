@@ -32,7 +32,7 @@ describe("parseAvatar", () => {
 
 describe("Pip avatars", () => {
   it("keeps valid look fields and drops the rest", () => {
-    expect(parsePip({ color: "#30D158", skin: "201", name: " Bo " })).toEqual({ color: "#30d158", skin: "201", name: "Bo" });
+    expect(parsePip({ color: "#30D158", skin: "301", name: " Bo " })).toEqual({ color: "#30d158", skin: "301", name: "Bo" });
     expect(parsePip({ color: "red", skin: "nope" })).toEqual({ color: "", skin: "", name: "" });
     expect(parseAvatar({ avatarPet: null })).toEqual({ avatarPet: null });
     expect(parseAvatar({ avatarPet: "x" })).toHaveProperty("error");
