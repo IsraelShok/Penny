@@ -42,7 +42,7 @@ export default async function PrivacySettingsPage() {
       </SettingCard>
 
       <SettingCard title={t("deleteTitle")}>
-        <Link href="/settings/data#danger" className="-mx-4 -my-3 flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-ring">
+        <Link href="/settings/bank#danger" className="-mx-4 -my-3 flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-ring">
           <span className="min-w-0 flex-1">
             <span className="block font-medium text-destructive">{t("deleteCta")}</span>
             <span className="block text-sm text-muted-foreground">{t("deleteDescription")}</span>

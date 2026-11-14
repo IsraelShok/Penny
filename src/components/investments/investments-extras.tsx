@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -8,6 +9,7 @@ import { Check, Plus, Trash2 } from "lucide-react";
 import { getPlan, savePlan, savePlanItem } from "@/lib/api";
 import { ALLOCATION_CLASSES, BENCHMARK_FEES, CLASS_OF, debtPayoff, feeCost, type AllocationClass, type FinancialPlan } from "@/lib/plan";
 import { shekels } from "@/lib/money";
+import { CMA_SITES } from "@/lib/funds";
 import { amortizationSchedule, refinanceCheck, referenceRate, REFINANCE_GAP } from "@/lib/loans";
 import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import { CardShell } from "@/components/home/card-shell";
@@ -58,7 +60,10 @@ function FeesCard({ assets, years }: { assets: Asset[]; years: number | null }) 
   return (
     <CardShell label={t("feesTitle")}>
       {funds.length === 0 ? (
-        <p className="text-footnote text-muted-foreground">{t("feesEmpty")}</p>
+        <>
+          <p className="text-footnote text-muted-foreground">{t("feesEmpty")}</p>
+          <Link href="/calculators/fees" className="mt-2 text-footnote font-medium text-primary underline-offset-4 hover:underline">{t("feesTypeIn")}</Link>
+        </>
       ) : (
         <>
           {years == null ? (
@@ -103,6 +108,9 @@ function FeesCard({ assets, years }: { assets: Asset[]; years: number | null }) 
             })}
           </ul>
           <p className="mt-3 text-caption text-pretty text-muted-foreground">{t("feesNote")}</p>
+          <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-caption">
+            {Object.entries(CMA_SITES).map(([k, href]) => <a key={k} href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline-offset-4 hover:underline">{t(`fees${k}`)}</a>)}
+          </p>
         </>
       )}
     </CardShell>

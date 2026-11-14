@@ -96,7 +96,7 @@ export function listProfiles() {
   return fetchJSON<Profile[]>("/api/profiles");
 }
 
-export function saveProfile(id: number | null, name: string, avatar: { avatarEmoji?: string | null; avatarColor?: string | null } = {}) {
+export function saveProfile(id: number | null, name: string, avatar: { avatarEmoji?: string | null; avatarColor?: string | null; avatarPet?: import("./profile-avatar").ProfilePip | null } = {}) {
   return fetchJSON<Profile>(id == null ? "/api/profiles" : `/api/profiles/${id}`, {
     method: id == null ? "POST" : "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -143,6 +143,15 @@ export function deleteWorkspace(id: number) {
 
 export function getSetupStatus() {
   return fetchJSON<SetupStatus>("/api/setup/status");
+}
+
+/** Where first-run onboarding stands (resume point), or "complete". */
+export function saveOnboardingStep(step: import("./onboarding").OnboardingStep | "complete") {
+  return fetchJSON<{ success: boolean }>("/api/setup/onboarding", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ step }),
+  });
 }
 
 export function saveBankCredentials(
@@ -792,8 +801,10 @@ export interface PullEvent {
 
 export function listOllamaModels(url?: string) {
   const qs = url ? `?url=${encodeURIComponent(url)}` : "";
+  // The page sends no Referer (Referrer-Policy: no-referrer), but the proxy origin-checks this GET; send it same-origin only.
   return fetchJSON<{ models: string[]; error?: string }>(
-    `/api/ai/ollama/models${qs}`
+    `/api/ai/ollama/models${qs}`,
+    { referrerPolicy: "same-origin" }
   );
 }
 

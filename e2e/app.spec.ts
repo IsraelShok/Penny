@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
 
+// The empty test install would otherwise start at first-run onboarding.
+test.beforeAll(async ({ playwright }) => {
+  const base = "http://127.0.0.1:3100"; // playwright.config.ts PORT; the API wants a same-origin header
+  const api = await playwright.request.newContext({ baseURL: base, extraHTTPHeaders: { origin: base } });
+  await api.put("/api/setup/onboarding", { data: { step: "complete" } });
+  await api.dispose();
+});
+
 test.describe("core screens", () => {
   test("no page scrolls sideways", async ({ page }) => {
     for (const path of ["/", "/learn", "/learn/electric-car", "/calculators", "/car", "/discounted-home", "/calculators/mortgage", "/calculators/debt"]) {

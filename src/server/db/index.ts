@@ -27,7 +27,7 @@ declare global {
   var _db: Database.Database | undefined;
 }
 
-// Schema revision 041: refresh a reused development connection after adding migrations.
+// Schema revision 052b: refresh a reused development connection after adding migrations.
 let migratedConnection: Database.Database | undefined;
 
 export function getDb(): Database.Database {

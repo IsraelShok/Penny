@@ -25,7 +25,7 @@ interface Command {
 
 export const OPEN_COMMAND_PALETTE = "penny:open-command-palette";
 
-const SETTINGS = ["general", "appearance", "bank", "ai", "categories", "rules", "data"] as const;
+const SETTINGS = ["general", "appearance", "bank", "ai", "categories", "rules"] as const;
 
 /** The search field: type to jump to a page, setting or action, or ask a question. Results open right above it. */
 export function CommandPalette({ placeholder, onClose }: { placeholder: string; onClose: () => void }) {

@@ -27,7 +27,8 @@ const INFO: Suggestion["type"][] = ["fees", "interest", "fx", "duplicate", "pric
 
 /** What the rules noticed in your transactions, each one click to add or dismiss. Hidden when there is nothing. */
 /** With `href`, shows at most `limit` and links to the full list instead of expanding. */
-export function SuggestionsCard({ limit = 6, empty = null, href }: { limit?: number; empty?: React.ReactNode; href?: string } = {}) {
+/** With `bare`, renders only the list, for a host card that supplies its own frame. */
+export function SuggestionsCard({ limit = 6, empty = null, href, bare }: { limit?: number; empty?: React.ReactNode; href?: string; bare?: boolean } = {}) {
   const t = useTranslations("suggestions");
   const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale();
@@ -88,14 +89,14 @@ export function SuggestionsCard({ limit = 6, empty = null, href }: { limit?: num
     }
   };
 
-  return (
-    <CardShell label={t("title")} action={<NotifyToggle />} className="mb-6 h-auto scroll-mt-20 md:mb-8" id="suggestions">
+  const body = (
+    <>
       <ul className="divide-y divide-border">
         {items.slice(0, shown).map((s) => {
           const Icon = ICONS[s.type];
           return (
             <li key={s.key} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-muted" aria-hidden>
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary" aria-hidden>
                 <Icon className="size-4" />
               </span>
               <p className="min-w-0 flex-1 text-footnote text-pretty">{text(s)}</p>
@@ -131,12 +132,18 @@ export function SuggestionsCard({ limit = 6, empty = null, href }: { limit?: num
           onSaved={() => dismiss.mutate(dialog.key)}
         />
       )}
+    </>
+  );
+  if (bare) return body;
+  return (
+    <CardShell label={t("title")} action={<NotifyToggle />} className="mb-6 h-auto scroll-mt-20 md:mb-8" id="suggestions">
+      {body}
     </CardShell>
   );
 }
 
 /** Turns on desktop notifications for new findings; the browser asks once. */
-function NotifyToggle() {
+export function NotifyToggle() {
   const t = useTranslations("suggestions");
   const [permission, setPermission] = useState(() => (typeof Notification === "undefined" ? "denied" : Notification.permission));
   if (typeof Notification === "undefined" || permission === "denied") return null;

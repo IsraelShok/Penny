@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { getDb } from "@/server/db/index";
 import { SetupWizard } from "@/components/setup/setup-wizard";
+import { onboardingStep } from "@/server/lib/onboarding";
 
 export const dynamic = "force-dynamic";
 
@@ -8,21 +8,16 @@ interface SetupPageProps {
   searchParams: Promise<{ force?: string; mode?: string }>;
 }
 
-function anyWorkspaceHasBank(): boolean {
-  const row = getDb()
-    .prepare("SELECT COUNT(*) as count FROM bank_credentials")
-    .get() as { count: number };
-  return row.count > 0;
-}
-
 export default async function SetupPage({ searchParams }: SetupPageProps) {
   const { force, mode } = await searchParams;
 
-  const newWorkspaceMode = mode === "new-workspace";
+  if (mode === "new-workspace") return <SetupWizard mode="new-workspace" />;
 
-  if (!newWorkspaceMode && force !== "1" && anyWorkspaceHasBank()) {
-    redirect("/");
-  }
+  // force=1 re-opens it from Settings or Help; otherwise only while onboarding is due.
+  const step = onboardingStep();
+  if (!step && force !== "1") redirect("/");
 
-  return <SetupWizard mode={newWorkspaceMode ? "new-workspace" : "first-run"} />;
+  // Re-opened by choice: start over and don't save progress, so leaving half way never pulls Home back here.
+  if (force === "1") return <SetupWizard mode="first-run" />;
+  return <SetupWizard mode="first-run" initialStep={step ?? "welcome"} resumable />;
 }

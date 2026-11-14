@@ -12,9 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Link from "next/link";
-import { Users } from "lucide-react";
-import { Forward } from "@/components/ui/dir-chevron";
 import { Input, InputGroup } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { SectionShell, SettingCard, SettingList, SettingRow } from "@/components/settings/section-shell";
@@ -72,7 +69,6 @@ export default function GeneralSettingsPage() {
 
   return (
     <SectionShell title={t("title")} description={t("description")}>
-      <ProfilesCard />
       {settings ? (
         <>
           <MonthlyTargetCard
@@ -91,20 +87,6 @@ export default function GeneralSettingsPage() {
       )}
       <StarBanner />
     </SectionShell>
-  );
-}
-
-/** Profiles replace workspaces: each person gets their own data and look, managed on /profiles. */
-function ProfilesCard() {
-  const t = useTranslations("profiles");
-  return (
-    <SettingCard title={t("settingsTitle")} description={t("settingsDescription")}>
-      <Link href="/profiles" className="-mx-4 -my-3 flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-ring">
-        <Users className="size-4 text-primary" aria-hidden />
-        <span className="min-w-0 flex-1 font-medium">{t("manage")}</span>
-        <Forward className="text-muted-foreground" />
-      </Link>
-    </SettingCard>
   );
 }
 

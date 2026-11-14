@@ -230,6 +230,93 @@ export const ARTICLES: Article[] = [
     calculator: { href: "/fi", label: { he: "השוואת דמי ניהול", en: "Fee comparison" } },
   },
   {
+    slug: "investment-tracks",
+    topic: "retirement",
+    minutes: 4,
+    title: { he: "מסלול השקעה וניהול אישי: איך בוחרים", en: "Investment tracks and self-managed funds: how to choose" },
+    summary: { he: "באותה קופה אפשר להחזיק מסלולים שונים מאוד. הבחירה תלויה בזמן עד שתצטרכו את הכסף ובמה שתעשו כשהשוק יורד.", en: "The same fund can hold very different tracks. The choice depends on when you need the money and what you do when markets fall." },
+    sections: [
+      {
+        heading: { he: "סוגי המסלולים", en: "The kinds of track" },
+        body: [
+          { he: "מסלול תלוי גיל הוא ברירת המחדל: הוא מוריד את חלק המניות לבד ככל שמתקרבים לפרישה. מסלול מניות ומסלול מחקה מדד, כמו S&P 500, מחזיקים יותר מניות לאורך כל הדרך. מסלול כללי מערבב מניות ואג״ח, ומסלול אג״ח או שקלי שומר על יציבות.", en: "An age-based track is the default: it trims the share of stocks by itself as retirement gets closer. Equity and index tracks, such as the S&P 500 one, hold more stocks all the way. A general track mixes stocks and bonds, and a bond or shekel track stays steady." },
+          { he: "החלפת מסלול בתוך אותה קופה לא יוצרת אירוע מס ולא עולה כסף. אפשר גם לפצל את היתרה בין שני מסלולים.", en: "Switching track inside the same fund triggers no tax and costs nothing. You can also split the balance between two tracks." },
+        ],
+      },
+      {
+        heading: { he: "ניהול אישי (IRA)", en: "Self-managed (IRA)" },
+        body: [
+          { he: "בניהול אישי בוחרים בעצמכם ניירות ערך בתוך קופת הגמל, ההשתלמות או הפנסיה, ונשארים עם הטבות המס. מצד שני משלמים גם לקופה וגם עמלות קנייה ומשמורת בבית ההשקעות.", en: "In a self-managed account you choose the securities yourself inside the provident, study or pension fund, and keep the tax benefits. On the other hand you pay both the fund and the broker's trading and custody fees." },
+          { he: "זה מתאים בעיקר ביתרה גדולה, למי שמוכן להחזיק לאורך שנים בלי לגעת. ביתרה קטנה העמלות עלולות לבלוע את היתרון, ומסלול מחקה מדד נותן תוצאה דומה בפחות עבודה.", en: "It fits mainly a larger balance and someone willing to hold for years without tinkering. On a small balance the fees can swallow the edge, and an index track gets a similar result with less work." },
+        ],
+      },
+      {
+        heading: { he: "ודמי הניהול", en: "And the fees" },
+        body: [
+          { he: "דמי הניהול נקבעים לפי הקופה ולא לפי המסלול, אז בדרך כלל אפשר לעבור למסלול מחקה מדד בלי לשלם יותר. בדוח השנתי מופיעות גם ההוצאות הישירות, שבמסלולים מחקי מדד נמוכות לרוב.", en: "Fees are set per fund, not per track, so you can usually move to an index track without paying more. The annual report also lists direct expenses, which tend to be lower in index tracks." },
+        ],
+      },
+    ],
+    takeaway: { he: "יותר זמן עד הפרישה ויותר שקט בירידות מאפשרים יותר מניות. הערכה כללית, לא ייעוץ.", en: "More years to retirement and calm in downturns allow more stocks. General guidance, not advice." },
+    calculator: { href: "/calculators/track", label: { he: "עוזר בחירת מסלול", en: "Track helper" } },
+  },
+  {
+    slug: "pension-payout",
+    topic: "retirement",
+    minutes: 5,
+    title: { he: "ביום הפרישה: קצבה, היוון וקיבוע זכויות", en: "On retirement day: annuity, lump sum and fixing rights" },
+    summary: { he: "שלוש החלטות שקובעות כמה מס תשלמו על הפנסיה לכל החיים, ואיך לא לפספס את הפטור.", en: "Three decisions that set how much tax you pay on your pension for life, and how not to miss the exemption." },
+    sections: [
+      {
+        heading: { he: "קצבה או היוון", en: "Annuity or lump sum" },
+        body: [
+          { he: "קצבה היא תשלום חודשי לכל החיים: היתרה מחולקת במקדם ההמרה של הקרן. היוון הוא משיכה של חלק מהקצבה כסכום אחד. בקרן פנסיה אפשר להוון רק חלק, כך שתישאר קצבה מינימלית.", en: "An annuity is a monthly payment for life: the balance divided by the fund's conversion factor. Commuting turns part of the pension into one lump sum. A pension fund lets you commute only part, so a minimum pension remains." },
+          { he: "קצבה מגינה מפני אריכות ימים: היא לא נגמרת. סכום הוני גמיש יותר, אבל אם תחיו הרבה הוא עלול להיגמר. גיל נקודת האיזון עוזר להבין את הפשרה.", en: "An annuity protects against living long: it never runs out. A lump sum is more flexible, but if you live long it may run out. The break-even age helps you see the trade-off." },
+        ],
+      },
+      {
+        heading: { he: "קיבוע זכויות (טופס 161ד)", en: "Fixing rights (form 161d)" },
+        body: [
+          { he: "מגיל הפרישה, חלק מהקצבה פטור ממס. בטופס 161ד מחליטים איך לנצל את סל הפטור: על הקצבה החודשית, על היוון פטור, או שילוב. מענקים פטורים שקיבלתם בעבר מקטינים את הסל.", en: "From retirement age, part of the pension is tax-free. On form 161d you decide how to use the exemption: on the monthly pension, on a tax-free lump sum, or a mix. Tax-free grants you received in the past shrink it." },
+          { he: "את הטופס מגישים לרשות המסים, ובלעדיו הקרן תנכה מס מלא. כדאי לבדוק כמה תרוויחו בכל אפשרות לפני שמגישים.", en: "The form goes to the Tax Authority; without it the fund withholds full tax. Check what each option is worth before you file." },
+        ],
+      },
+      {
+        heading: { he: "תיקון 190", en: "Amendment 190" },
+        body: [
+          { he: "מגיל 60, מי שיש לו קצבה מזכה מעל הסף יכול למשוך קופת גמל להשקעה כקצבה פטורה ממס, ומשיכה הונית חייבת במס מופחת על הרווח הריאלי.", en: "From 60, anyone with a qualifying pension above the threshold can draw an investment provident fund as a tax-free annuity, while a lump-sum withdrawal pays a reduced tax on the real gain." },
+        ],
+      },
+    ],
+    takeaway: { he: "ההחלטות האלה כמעט בלתי הפיכות. מחשבים, ואם הסכומים גדולים, בודקים מול יועץ פרישה מורשה. הערכה, לא ייעוץ.", en: "These choices are close to irreversible. Run the numbers, and with large sums check with a licensed retirement adviser. An estimate, not advice." },
+    calculator: { href: "/calculators/annuity", label: { he: "קצבה מול היוון", en: "Annuity vs lump sum" } },
+  },
+  {
+    slug: "severance",
+    topic: "retirement",
+    minutes: 3,
+    title: { he: "פיצויים כשעוזבים עבודה: למשוך או להשאיר", en: "Severance when you leave a job: withdraw or keep" },
+    summary: { he: "הפיצויים יושבים בקופה שלכם. משיכה נותנת כסף עכשיו, אבל עולה במס ובצמיחה שתפספסו.", en: "Your severance sits in your fund. Withdrawing gives you cash now, but costs tax and the growth you give up." },
+    sections: [
+      {
+        heading: { he: "טופס 161", en: "Form 161" },
+        body: [
+          { he: "כשעוזבים, המעסיק ממלא טופס 161 ומדווח כמה פיצויים מגיעים. בטופס בוחרים: למשוך, או להשאיר בקופה ברצף קצבה (הכסף ימשיך לקצבה) או ברצף פיצויים (הפטור נשמר להמשך).", en: "When you leave, the employer fills in form 161 and reports the severance due. On it you choose: withdraw, or leave it in the fund with pension continuity (it goes toward your pension) or severance continuity (the exemption is kept for later)." },
+          { he: "הפטור ממס מוגבל לסכום קבוע לכל שנת עבודה, ולא יותר מ-1.5 משכורות לשנה. מעבר לזה, מס לפי המדרגה השולית.", en: "The tax exemption is capped at a fixed amount per year of service, and no more than 1.5 salaries a year. Above that, tax at your marginal rate." },
+        ],
+      },
+      {
+        heading: { he: "מה מפסידים כשמושכים", en: "What withdrawing costs" },
+        body: [
+          { he: "גם כשהמשיכה פטורה, הכסף יוצא מהקופה ומפסיק לצמוח בלי מס. אם תשקיעו אותו בתיק, תשלמו מס על הרווח. לאורך עשרות שנים ההפרש מצטבר.", en: "Even when the withdrawal is tax-free, the money leaves the fund and stops growing tax-deferred. Invest it in a brokerage account and you pay tax on the gains. Over decades the gap adds up." },
+          { he: "משיכה הגיונית בעיקר כשהכסף מחליף חוב יקר או משלים קרן חירום שאין לכם.", en: "Withdrawing makes most sense when the money replaces expensive debt or fills an emergency fund you don't have." },
+        ],
+      },
+    ],
+    takeaway: { he: "ברירת המחדל הטובה לרוב היא להשאיר. מושכים רק עם סיבה ברורה. הערכה, לא ייעוץ.", en: "Keeping it is usually the better default. Withdraw only with a clear reason. An estimate, not advice." },
+    calculator: { href: "/calculators/severance", label: { he: "מחשבון פיצויים", en: "Severance calculator" } },
+  },
+  {
     slug: "tax-refund",
     topic: "basics",
     minutes: 3,
@@ -251,7 +338,40 @@ export const ARTICLES: Article[] = [
       },
     ],
     takeaway: { he: "אם היה בשנה האחרונה שינוי בחיים או בעבודה, שווה לבדוק.", en: "If anything changed in your life or job last year, it is worth checking." },
-    calculator: { href: "/fi", label: { he: "מחשבון משכורת נטו", en: "Take-home pay calculator" } },
+    calculator: { href: "/calculators/credit-points", label: { he: "בדיקת נקודות זיכוי והחזר מס", en: "Credit points and refund check" } },
+  },
+  {
+    slug: "investment-tax",
+    topic: "investing",
+    minutes: 5,
+    title: { he: "מס על השקעות: רווחים, הפסדים וקרנות סל", en: "Tax on investments: gains, losses and ETFs" },
+    summary: { he: "כמה מס משלמים על רווח בתיק, איך הפסד מקטין אותו, ולמה חשוב איפה רשומה קרן הסל.", en: "How much tax a portfolio gain costs, how a loss lowers it, and why an ETF's home country matters." },
+    sections: [
+      {
+        heading: { he: "25% על הרווח הריאלי", en: "25% on the real gain" },
+        body: [
+          { he: "כשמוכרים נייר ערך ברווח, משלמים מס של 25% על הרווח שמעבר לאינפלציה. החלק שרק שמר על ערך הכסף לא ממוסה. גם דיבידנד וריבית ממוסים בדרך כלל ב-25%.", en: "When you sell a security at a profit, you pay 25% on the gain above inflation. The part that only kept up with prices isn't taxed. Dividends and interest are usually taxed at 25% too." },
+          { he: "בבית השקעות ישראלי המס מנוכה אוטומטית בכל מכירה. בחשבון בחו״ל אתם מדווחים ומשלמים בעצמכם, בדוח שנתי.", en: "An Israeli broker withholds the tax automatically on each sale. With a foreign account you report and pay it yourself, in an annual return." },
+        ],
+      },
+      {
+        heading: { he: "קיזוז הפסדים וטופס 867", en: "Offsetting losses and Form 867" },
+        body: [
+          { he: "הפסד שמימשתם מקזז רווח מאותה שנה, וגם דיבידנד או ריבית שחויבו ב-25%. הפסד שנשאר עובר לשנים הבאות, אבל רק מול רווחי הון.", en: "A realised loss offsets gains from the same year, and also dividends or interest taxed at 25%. Any loss left carries forward, but only against capital gains." },
+          { he: "בתוך אותו בית השקעות הקיזוז קורה לבד. בין בנקים שונים צריך להגיש בקשה או דוח, ולצרף את טופס 867 שכל גוף שולח בתחילת השנה.", en: "Within one broker the offset happens on its own. Across different banks you file a request or a return, attaching the Form 867 each institution sends early in the year." },
+        ],
+      },
+      {
+        heading: { he: "קרן אירית מול קרן אמריקאית", en: "Irish- vs US-domiciled ETFs" },
+        body: [
+          { he: "קרן סל שרשומה בארה״ב מנכה 25% מס במקור מהדיבידנדים למשקיע ישראלי שמילא טופס W-8BEN. קרן שרשומה באירלנד ומשקיעה במניות אמריקאיות משלמת ברמת הקרן 15%, ולרוב צוברת את הדיבידנד במקום לחלק אותו.", en: "A US-domiciled ETF withholds 25% on dividends for an Israeli investor with a W-8BEN on file. An Irish-domiciled ETF holding US stocks pays 15% at the fund level, and usually accumulates dividends instead of paying them out." },
+          { he: "יש גם מס עיזבון אמריקאי: מי שאינו אזרח ארה״ב ומחזיק נכסים אמריקאיים בשווי של יותר מ-60 אלף דולר עלול לחייב את היורשים במס גבוה. קרן אירית אינה נכס אמריקאי ולכן לא חשופה למס הזה.", en: "There is also US estate tax: a non-US person holding US assets above $60,000 can leave the heirs a large tax bill. An Irish fund isn't a US asset, so it isn't exposed." },
+          { he: "מנגד, קרן אירית יכולה להיות בדמי ניהול מעט גבוהים יותר ובמחזור מסחר נמוך יותר. כדאי להשוות את שני הצדדים.", en: "On the other hand, an Irish fund may charge slightly more and trade less. Compare both sides." },
+        ],
+      },
+    ],
+    takeaway: { he: "לפני סוף השנה בדקו אם יש לכם הפסד שאפשר לממש מול רווח, ובחרו קרן לפי המקום שבו היא רשומה, לא רק לפי המדד. זה מידע כללי, לא ייעוץ.", en: "Before year end, check whether a loss can be realised against a gain, and pick funds by where they are registered, not only by the index. General information, not advice." },
+    calculator: { href: "/calculators/lossOffset", label: { he: "כמה מס חוסך קיזוז הפסד", en: "Tax saved by offsetting a loss" } },
   },
   {
     slug: "kids-savings",
@@ -302,6 +422,63 @@ export const ARTICLES: Article[] = [
     ],
     takeaway: { he: "תקציב עם רזרבה, תשלום לפי שלבים, ומימון בלי מינוס.", en: "A budget with a buffer, payment by stages, and no overdraft funding." },
     calculator: { href: "/calculators/renovation", label: { he: "מחשבון תקציב שיפוץ", en: "Renovation budget" } },
+  },
+  {
+    slug: "forgotten-money",
+    topic: "retirement",
+    minutes: 3,
+    title: { he: "כסף שנשכח בקופות ישנות", en: "Money left in old funds" },
+    summary: { he: "כל מקום עבודה פותח קופה. אחרי כמה החלפות, חלק מהכסף פשוט נשכח.", en: "Every job opens a fund. After a few job changes, some of that money is simply forgotten." },
+    sections: [
+      {
+        heading: { he: "למה זה קורה", en: "Why it happens" },
+        body: [
+          { he: "כשעוזבים עבודה, ההפקדות נעצרות אבל הקופה נשארת. היא ממשיכה לגבות דמי ניהול, ואם זו קרן פנסיה, הכיסוי הביטוחי שבה עלול להיגמר.", en: "When you leave a job the deposits stop but the fund stays. It keeps charging fees, and in a pension fund the insurance cover inside it may end." },
+        ],
+      },
+      {
+        heading: { he: "שלוש החלטות אפשריות", en: "Three possible decisions" },
+        body: [
+          { he: "איחוד: מצרפים קרן פנסיה ישנה לזו שמפקידים אליה היום. ניוד: מעבירים קופת גמל או השתלמות למקום זול יותר. דרישה: חשבון בנק רדום או פוליסה של קרוב שנפטר דורשים פנייה לגוף עצמו.", en: "Merge: fold an old pension fund into the one you pay into today. Move: transfer a provident or study fund somewhere cheaper. Claim: a dormant bank account or a late relative's policy needs a request to the company itself." },
+        ],
+      },
+    ],
+    takeaway: { he: "החיפוש הרשמי חינמי ולוקח כמה דקות. אין צורך לשלם למתווך. מידע כללי, לא ייעוץ.", en: "The official search is free and takes minutes. No need to pay a middleman. General information, not advice." },
+    calculator: { href: "/calculators/lost-money", label: { he: "צ׳ק־ליסט כסף שנשכח", en: "Forgotten money checklist" } },
+  },
+  {
+    slug: "bank-fees",
+    topic: "basics",
+    minutes: 2,
+    title: { he: "עמלות בנק: מסלול שחוסך", en: "Bank fees: a track that saves" },
+    summary: { he: "כל בנק חייב להציע מסלול עמלות במחיר קבוע. רבים משלמים יותר בלי לדעת.", en: "Every bank must offer a flat-price fee track. Many people pay more without knowing." },
+    sections: [
+      {
+        heading: { he: "איך בודקים", en: "How to check" },
+        body: [
+          { he: "סופרים כמה פעולות עושים בחודש, ישירות ודרך פקיד, ומשווים את סך העמלות בדף החשבון למחיר המסלול. אם המסלול זול יותר, מבקשים לעבור. אפשר לחזור בכל זמן.", en: "Count your monthly actions, direct and by a teller, and compare the fees on your statement with the track's price. If the track is cheaper, ask to switch. You can switch back any time." },
+        ],
+      },
+    ],
+    takeaway: { he: "בדיקה של חמש דקות פעם בשנה. הערכה, לא ייעוץ.", en: "A five-minute check once a year. An estimate, not advice." },
+    calculator: { href: "/calculators/bank-fees", label: { he: "בדיקת עמלות בנק", en: "Bank fees check" } },
+  },
+  {
+    slug: "benefits-check",
+    topic: "family",
+    minutes: 2,
+    title: { he: "זכויות שלא מגיעות מעצמן", en: "Benefits that don't arrive on their own" },
+    summary: { he: "חלק מההטבות משולמות רק למי שמבקש. שווה לבדוק פעם בשנה.", en: "Some benefits are paid only to those who ask. Worth checking once a year." },
+    sections: [
+      {
+        heading: { he: "מה שכדאי לבדוק", en: "What to check" },
+        body: [
+          { he: "מענק עבודה לעובדים בשכר נמוך, הטבות למשרתי מילואים, חיסכון לכל ילד בקופת גמל, הנחה בארנונה וסיוע בשכר דירה. רובם דורשים טופס, וחלקם אפשר לבקש גם על שנים קודמות.", en: "A work grant for low-wage workers, reserve-duty benefits, child savings in a provident fund, property-tax discounts and rent help. Most need a form, and some can be claimed for past years." },
+        ],
+      },
+    ],
+    takeaway: { he: "הזכאות נקבעת באתר הרשמי. הבדיקה כאן היא הערכה, לא ייעוץ.", en: "Eligibility is decided on the official site. This check is an estimate, not advice." },
+    calculator: { href: "/calculators/rights", label: { he: "בדיקת זכויות", en: "Benefits check" } },
   },
 ];
 

@@ -11,7 +11,6 @@ import {
   Send,
   Sparkles,
   Layers,
-  ShieldAlert,
   ListFilter,
   Users,
   HeartHandshake,
@@ -19,6 +18,7 @@ import {
   Accessibility,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePlan } from "@/hooks/use-plan";
 
 interface NavItem {
   href: string;
@@ -112,12 +112,6 @@ export const SETTINGS_GROUPS: NavGroup[] = [
         match: (p) => p.startsWith("/settings/privacy"),
       },
       {
-        href: "/settings/data",
-        labelKey: "data",
-        Icon: ShieldAlert,
-        match: (p) => p.startsWith("/settings/data"),
-      },
-      {
         href: "/settings/legacy",
         labelKey: "legacy.nav",
         Icon: HeartHandshake,
@@ -136,12 +130,14 @@ export function SettingsMobileNav() {
   const t = (k: string) => (k.includes(".") ? tRoot(k) : tSidebar(k));
   const allItems = GROUPS.flatMap((g) => g.items);
   const navRef = useRef<HTMLElement>(null);
+  const simple = usePlan().plan.simpleMode;
   // The strip scrolls sideways; keep the current section in view instead of off the edge.
   useEffect(() => {
     navRef.current?.querySelector<HTMLElement>('[aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "center" });
   }, [pathname]);
   return (
-    <nav ref={navRef} aria-label={tSidebar("title")} className="no-scrollbar -mx-4 mb-4 overflow-x-auto border-b border-border/40 px-4 md:hidden">
+    // Desktop has these sections in the side menu, except in simple mode (no side menu there).
+    <nav ref={navRef} aria-label={tSidebar("title")} className={cn("no-scrollbar -mx-4 mb-4 overflow-x-auto border-b border-border/40 px-4", !simple && "md:hidden")}>
       <div className="flex gap-1.5 pb-3 pt-1">
         {allItems.map((item) => {
           const active = item.match(pathname);

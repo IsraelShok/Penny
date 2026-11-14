@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import os from "os";
 import path from "path";
 import fs from "fs";
-import { AVATAR_ART, avatarArtId, parseAvatar, profileName } from "@/lib/profile-avatar";
+import { AVATAR_ART, avatarArtId, parseAvatar, parsePip, profileName } from "@/lib/profile-avatar";
 
 type Q = typeof import("@/server/db/queries/workspaces");
 let q: Q;
@@ -27,6 +27,21 @@ describe("parseAvatar", () => {
     expect(parseAvatar({ avatarEmoji: "123456789" })).toHaveProperty("error");
     expect(parseAvatar({ avatarColor: "#ff0000" })).toHaveProperty("error");
     expect(parseAvatar({ avatarEmoji: 5 })).toHaveProperty("error");
+  });
+});
+
+describe("Pip avatars", () => {
+  it("keeps valid look fields and drops the rest", () => {
+    expect(parsePip({ color: "#30D158", skin: "201", name: " Bo " })).toEqual({ color: "#30d158", skin: "201", name: "Bo" });
+    expect(parsePip({ color: "red", skin: "nope" })).toEqual({ color: "", skin: "", name: "" });
+    expect(parseAvatar({ avatarPet: null })).toEqual({ avatarPet: null });
+    expect(parseAvatar({ avatarPet: "x" })).toHaveProperty("error");
+  });
+  it("is stored per profile and survives a rename", () => {
+    const p = pq.createProfile("Pip owner", { avatarPet: { color: "#ff9f0a", skin: "", name: "Ziggy" } });
+    expect(p.avatarPet).toEqual({ color: "#ff9f0a", skin: "", name: "Ziggy" });
+    expect(pq.updateProfile(p.id, "Renamed").avatarPet).toEqual({ color: "#ff9f0a", skin: "", name: "Ziggy" });
+    expect(pq.createProfile("No pip").avatarPet).toBeNull();
   });
 });
 

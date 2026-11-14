@@ -43,3 +43,6 @@ export function searchFunds(all: Fund[], query: string, limit = 20): Fund[] {
     .sort((a, b) => (b.totalAssets ?? 0) - (a.totalAssets ?? 0))
     .slice(0, limit);
 }
+
+/** Capital Market Authority comparison sites (Gemel-Net, Pensia-Net, Bituach-Net). Plain links, nothing fetched. */
+export const CMA_SITES = { GemelNet: "https://gemelnet.cma.gov.il", PensiaNet: "https://pensyanet.cma.gov.il", BituachNet: "https://bituachnet.cma.gov.il" } as const;

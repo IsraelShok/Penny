@@ -10,11 +10,16 @@ import {
   Loader2,
   CircleCheck,
   CircleAlert,
+  FileUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ProviderBadge } from "@/components/setup/provider-badge";
-import { SectionShell } from "@/components/settings/section-shell";
+import { SectionShell, SettingCard, SettingList, SettingRow } from "@/components/settings/section-shell";
+import { StatementImportCard } from "@/components/settings/statement-import-card";
+import { FolderImportCard } from "@/components/settings/folder-import-card";
+import { DangerZone, ExcludedMerchantsCard, ShowBrowserCard } from "@/components/settings/data-cards";
+import { WipeCard } from "@/components/settings/wipe-card";
 import { BankDetailSheet } from "@/components/settings/bank-detail-sheet";
 import { useBankSync } from "@/components/settings/use-bank-sync";
 import { listIntegrations } from "@/lib/api";
@@ -23,6 +28,12 @@ import { translateProviderName, useFormatterLabels } from "@/lib/i18n-data";
 import { formatLastSync } from "@/lib/formatters";
 import type { Integration } from "@/lib/types";
 import { InvestmentHouses } from "@/components/settings/investment-houses";
+
+// The manual path: jump to the import card and open its file picker.
+function pickStatementFile() {
+  document.getElementById("import")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.getElementById("statement-file")?.click();
+}
 
 interface SheetState {
   open: boolean;
@@ -72,9 +83,21 @@ export default function BankSettingsPage() {
   return (
     <>
       <SectionShell title={t("title")} description={t("description")}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Two ways in for every account: connect it, or bring a file. */}
+        <SettingCard title={t("waysTitle")}>
+          <SettingList>
+            <SettingRow label={t("autoLabel")} hint={t("autoHint")}>
+              <Button variant="outline" size="sm" onClick={() => document.getElementById("connect")?.scrollIntoView({ behavior: "smooth", block: "start" })}>{t("autoCta")}</Button>
+            </SettingRow>
+            <SettingRow label={t("manualLabel")} hint={t("manualHint")}>
+              <Button variant="outline" size="sm" onClick={pickStatementFile}><FileUp className="size-4" aria-hidden />{t("manualCta")}</Button>
+            </SettingRow>
+          </SettingList>
+        </SettingCard>
+
+        <div id="connect" className="flex scroll-mt-20 flex-wrap items-center justify-between gap-2">
           <div className="px-4 text-footnote text-muted-foreground">
-            {countLabel}
+            {!isPending && !isError && countLabel}
             {lastSync ? (
               <>
                 {" · "}
@@ -199,6 +222,7 @@ export default function BankSettingsPage() {
                           <ProviderBadge color={b.color} name={name} domain={b.domain} size={36} radius={9} />
                           <span title={name} className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
                           <Button variant="outline" size="sm" onClick={() => setSheet({ open: true, mode: "add", providerId: b.id, credentialId: null })}>{t("connect")}</Button>
+                          <IconButton label={t("importFor", { name })} className="shrink-0 text-muted-foreground" onClick={pickStatementFile}><FileUp className="size-4" aria-hidden /></IconButton>
                         </li>
                       );
                     })}
@@ -209,6 +233,22 @@ export default function BankSettingsPage() {
           );
         })()}
         <InvestmentHouses />
+
+        <section id="import" aria-label={t("groupImport")} className="scroll-mt-20 space-y-7">
+          <StatementImportCard />
+          <FolderImportCard />
+        </section>
+
+        <section aria-labelledby="data-heading" className="space-y-7 border-t border-border/60 pt-6">
+          <h2 id="data-heading" className="px-4 text-lg font-semibold">{t("groupData")}</h2>
+          <ExcludedMerchantsCard />
+          <ShowBrowserCard />
+          {/* The one place to delete data; Privacy links here. */}
+          <div id="danger" className="scroll-mt-20 space-y-7">
+            <DangerZone />
+            <WipeCard />
+          </div>
+        </section>
       </SectionShell>
 
       <BankDetailSheet

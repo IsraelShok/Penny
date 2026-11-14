@@ -19,7 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { shekels } from "@/lib/money";
 import { wealthGroups, type WealthGroup } from "@/lib/wealth-growth";
-import { buildCashflow, cashflowMonth, trackedRows } from "@/lib/simple-cashflow";
+import { buildCashflow, cashflowMonth, trackedRows, type Week } from "@/lib/simple-cashflow";
 
 /**
  * Simple mode: one scrolling page, one card per cash-flow line, newest month first.
@@ -98,21 +98,6 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
         <div className="wallet h-64 rounded-3xl px-5 pt-[22px] min-[600px]:rounded-[28px] min-[600px]:px-[30px] min-[600px]:pt-7"><div className="flex justify-end">{monthNav}</div><div role="status" className="mt-6 h-24 animate-pulse rounded-2xl bg-white/10"><span className="sr-only">{t("loading")}</span></div></div>
       ) : (() => {
         const growthTotal = wealth.reduce((sum, g) => sum + groups![g].growth, 0);
-        const weeksTable = (
-          <table className="w-full text-sm">
-            <thead><tr className="text-muted-foreground"><th className="py-2 text-start font-normal" /><th className="text-start font-normal">{t("weekBudget")}</th><th className="text-start font-normal">{t("spent")}</th><th className="text-start font-normal">{t("leftToSpend")}</th></tr></thead>
-            <tbody>
-              {cf.weeks.map((w, i) => (
-                <tr key={i} className={`border-t border-border ${w.future ? "text-muted-foreground" : ""}`}>
-                  <td className="py-2.5">{t("week", { n: i + 1 })}</td>
-                  <td className="tabular-nums text-muted-foreground"><bdi>{formatCurrency(w.share)}</bdi></td>
-                  <td className="tabular-nums"><bdi>{formatCurrency(w.spent)}</bdi></td>
-                  <td className="tabular-nums"><bdi>{formatCurrency(w.left)}</bdi></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        );
         const growthList = (
           <>
             <ul className="divide-y divide-border text-sm">
@@ -142,7 +127,10 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
                 onStop={() => void act(updateBudget(c.id, null).then(() => updateCategoryBudgetMode(c.id, "tracking"))).catch(() => {})}
               />
             ),
-            sections: c.items.length ? [{ label: t("details"), content: <Items items={c.items} /> }] : [],
+            sections: [
+              { label: t("byWeek"), content: <WeeksList weeks={c.weeks} /> },
+              ...(c.items.length ? [{ label: t("details"), content: <Items items={c.items} /> }] : []),
+            ],
           }));
         if (rows.rest.length) {
           const sum = (k: "spent" | "expected") => rows.rest.reduce((s, c) => s + c[k], 0);
@@ -154,7 +142,7 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
         }
         const variableLine: LineView = {
           key: "variable", title: t("variable"), tone: "var(--chart-1)", spent: cf.variable.spent, expected: cf.variable.expected,
-          spentLabel: t("spent"), expectedLabel: t("recommended"), sections: [{ label: t("byWeek"), content: weeksTable }],
+          spentLabel: t("spent"), expectedLabel: t("recommended"), sections: [{ label: t("byWeek"), content: <WeeksList weeks={cf.weeks} /> }],
         };
         const savingsLine: LineView = {
           key: "savings", title: t("savingsDeposits"), tone: RING.savings, spent: cf.savings.spent, expected: cf.savings.expected,
@@ -577,6 +565,52 @@ function Meter({ title, spent, expected, spentLabel, expectedLabel, tone, showLe
           {isOver ? t("overBy", { amount: formatCurrency(over) }) : t("leftAmount", { amount: formatCurrency(-over) })}
         </p>
       )}
+    </div>
+  );
+}
+
+/** A line's month by weeks: per week what was spent of its budget, a bar, and what is left or over. This week stands out. */
+function WeeksList({ weeks }: { weeks: Week[] }) {
+  const t = useTranslations("home.simple");
+  const formatCurrency = useMoney();
+  const dates = new Intl.DateTimeFormat(useLocale(), { day: "numeric", month: "numeric" });
+  return (
+    <div className="pb-3">
+      <p className="flex justify-end pb-1 text-xs text-muted-foreground">{t("spent")} / {t("weekBudget")}</p>
+      <ol className="-mx-3 space-y-1">
+        {weeks.map((w, i) => {
+          const over = w.left < 0;
+          const pct = w.share > 0 ? Math.min(100, (w.spent / w.share) * 100) : w.spent > 0 ? 100 : 0;
+          const tone = over ? "var(--expense)" : "var(--status-on-track)";
+          return (
+            <li key={i} aria-current={w.current ? "date" : undefined}
+              className={`rounded-xl px-3 py-2.5 ${w.current ? "bg-accent ring-1 ring-primary/30" : ""} ${w.future ? "text-muted-foreground" : ""}`}>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
+                  {t("week", { n: i + 1 })}
+                  {w.current && <span className="rounded-full bg-primary px-2 py-px text-[11px] font-semibold text-primary-foreground">{t("thisWeek")}</span>}
+                </span>
+                <span className="shrink-0 text-sm tabular-nums">
+                  <bdi className="font-semibold">{formatCurrency(w.spent)}</bdi>
+                  <span className="text-muted-foreground"> / <bdi>{formatCurrency(w.share)}</bdi></span>
+                </span>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar"
+                aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label={t("week", { n: i + 1 })}
+                aria-valuetext={t("meterText", { spent: formatCurrency(w.spent), expected: formatCurrency(w.share) })}>
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: tone }} />
+              </div>
+              <div className="mt-1 flex items-baseline justify-between gap-2 text-xs">
+                <bdi className="tabular-nums text-muted-foreground">{dates.formatRange(w.from, w.to)}</bdi>
+                <span className={`flex items-center gap-1 font-medium tabular-nums ${w.future ? "" : over ? "text-expense" : "text-status-on-track"}`}>
+                  {over && <AlertCircle className="size-3.5" aria-hidden />}
+                  {over ? t("overBy", { amount: formatCurrency(w.left) }) : t("leftAmount", { amount: formatCurrency(w.left) })}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

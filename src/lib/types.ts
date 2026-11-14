@@ -16,6 +16,8 @@ export interface Profile {
   name: string;
   avatarEmoji: string | null;
   avatarColor: string | null;
+  /** The profile's own Pip; null = not picked yet (the legacy art avatar shows). */
+  avatarPet: import("./profile-avatar").ProfilePip | null;
   createdAt: string;
 }
 
@@ -914,7 +916,7 @@ export interface Goal {
   dated?: boolean;
 }
 
-export const POLICY_KINDS = ["health", "life", "disability", "long_term_care", "home", "car", "travel", "other"] as const;
+export const POLICY_KINDS = ["health", "shaban", "life", "mortgage_life", "disability", "long_term_care", "home", "car", "travel", "other"] as const;
 
 export interface InsurancePolicy {
   id: number;
@@ -924,6 +926,8 @@ export interface InsurancePolicy {
   monthlyPremium: number;
   /** YYYY-MM the policy renews, if known. */
   renewalMonth?: string | null;
+  /** Who the policy covers, free text (a name); empty means the whole household. */
+  insured?: string | null;
 }
 
 export interface PlanPayload {

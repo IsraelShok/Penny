@@ -84,7 +84,7 @@ function Row({
           <span className="text-foreground/80">{icon}</span>
           {label}
         </span>
-        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-xs font-medium tabular-nums group-hover:bg-foreground/15">
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium tabular-nums text-primary group-hover:bg-primary/15">
           {count}
         </span>
       </Link>

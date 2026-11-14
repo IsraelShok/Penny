@@ -63,7 +63,7 @@ export function leaseVsBuy(i: LeaseBuyInputs) {
 }
 
 /** Pages under /calculators/[slug]. */
-export const CALC_SLUGS = ["compound", "fees", "inflation", "goal", "mortgage", "loan", "credit", "leaseBuy", "net", "budget", "emergency", "fire"] as const;
+export const CALC_SLUGS = ["compound", "fees", "inflation", "goal", "mortgage", "loan", "credit", "leaseBuy", "net", "budget", "emergency", "fire", "annuity", "severance", "lossOffset"] as const;
 export type CalcSlug = (typeof CALC_SLUGS)[number];
 
 

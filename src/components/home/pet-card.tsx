@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -203,6 +203,35 @@ export function PetCustomizer() {
   );
 }
 
+/** Colour and look of one Pip, controlled (the profile editor uses it for each person's own Pip). */
+export function PipPicker({ value, onChange }: { value: Pick<PetSettings, "color" | "skin">; onChange: (v: Pick<PetSettings, "color" | "skin">) => void }) {
+  const t = useTranslations("pet");
+  const id = useId();
+  const swatch = "size-11 rounded-full ring-offset-2 ring-offset-background focus-visible:outline-2 focus-visible:outline-ring aria-checked:ring-2 aria-checked:ring-foreground";
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <span id={id} className="block text-sm font-medium">{t("colorLabel")}</span>
+        <div role="radiogroup" aria-labelledby={id} className="flex flex-wrap items-center gap-3">
+          <button type="button" role="radio" aria-checked={!value.color} aria-label={t("colorTheme")} onClick={() => onChange({ ...value, color: "" })} className={`${swatch} bg-primary`} />
+          {PET_COLORS.map((c, i) => (
+            <button key={c} type="button" role="radio" aria-checked={value.color === c} aria-label={t(`color_${i + 1}`)} onClick={() => onChange({ ...value, color: c })} className={swatch} style={{ background: c }} />
+          ))}
+          <label className="inline-flex min-h-11 items-center gap-2 text-footnote">
+            <input type="color" value={value.color || "#0a84ff"} onChange={(e) => onChange({ ...value, color: e.target.value })} className="size-11 cursor-pointer rounded-full border border-border bg-transparent" />
+            {t("colorCustom")}
+          </label>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <span className="block text-sm font-medium">{t("skinLabel")}</span>
+        <Segmented label={t("skinLabel")} value={value.skin} onChange={(skin) => onChange({ ...value, skin })}
+          options={["", ...PET_SKINS].map((s) => ({ value: s, label: t(`skin_${s || "none"}`) }))} />
+      </div>
+    </div>
+  );
+}
+
 declare module "react" {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
@@ -219,7 +248,7 @@ type Face = HTMLElement & { play?: (a: string) => unknown; setPointerFollow?: (o
  * The face is BoopFace (CX ArtLab, MIT): a client-only web component, loaded on demand (the lite build; the full one with its skin painters only once a skin is picked).
  * Until it is ready the box stays empty: no emoji underneath and no flat face before the skin, so a refresh never shows layers. The emoji is only for a failed load.
  */
-function PetFace({ mood, pet, px }: { mood: PetMood; pet: PetSettings; px: number }) {
+export function PetFace({ mood, pet, px }: { mood: PetMood; pet: Pick<PetSettings, "color" | "skin">; px: number }) {
   const ref = useRef<Face>(null);
   const still = useA11y().prefs.stopMotion; // the menu's "Stop animations" (BoopFace already honors the OS setting under motion="auto")
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading");

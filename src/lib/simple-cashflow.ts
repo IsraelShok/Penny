@@ -56,7 +56,6 @@ export function buildCashflow(
   const income = { received: 0, expected: previousMonth.totals.income, fixed: [] as Item[], variable: [] as Item[] };
   const off = { income: [] as Item[], expenses: [] as Item[], incomeTotal: 0, expenseTotal: 0 };
   const seen = new Set<number>();
-  const varParts: { date: string; spent: number }[] = [];
 
   const lineFor = (c: Category | undefined) => {
     if (!c) return variable;
@@ -88,7 +87,6 @@ export function buildCashflow(
     if (c && !seen.has(c.id) && !parents.has(c.id)) { l.expected += expectedOf(c.id); seen.add(c.id); }
     l.spent -= amount; // a refund (amount > 0) lowers spend
     l.items.push(item(t, amount));
-    if (l === variable) varParts.push({ date: t.date, spent: -amount });
   };
 
   for (const t of txns) {
@@ -105,23 +103,8 @@ export function buildCashflow(
     }
   }
 
-  // Weeks of 7 days from the start. Each week's share is what is still left, spread over the weeks still to come,
-  // so an expensive week shrinks the next ones instead of every week keeping a fixed slice.
-  const DAY = 86_400_000;
-  const start = new Date(range.from.getFullYear(), range.from.getMonth(), range.from.getDate());
-  const days = Math.round((range.to.getTime() - start.getTime()) / DAY) + 1;
-  const weekCount = Math.ceil(days / 7);
-  const weeks = Array.from({ length: weekCount }, (_, i) => ({ spent: 0, share: 0, left: 0, future: new Date(start.getTime() + i * 7 * DAY) > today }));
-  for (const p of varParts) {
-    const d = Math.floor((new Date(p.date.slice(0, 10) + "T00:00:00").getTime() - start.getTime()) / DAY);
-    weeks[Math.min(weekCount - 1, Math.max(0, Math.floor(d / 7)))].spent += p.spent;
-  }
-  let before = 0;
-  weeks.forEach((w, i) => {
-    w.share = Math.max(0, (variable.expected - before) / (weekCount - i));
-    w.left = Math.max(0, w.share - w.spent);
-    before += w.spent;
-  });
+  const weeksOf = (l: Line) => splitWeeks(l, range, today);
+  const weeks = weeksOf(variable);
 
   const expenseLines = [variable, fixed, savings, ...tracked.values()];
   const totalSpent = expenseLines.reduce((s, l) => s + l.spent, 0);
@@ -135,7 +118,7 @@ export function buildCashflow(
     forecast,
     variable: { ...variable, left: variable.expected - variable.spent },
     weeks,
-    tracked: [...tracked.values()].sort((a, b) => b.expected - a.expected),
+    tracked: [...tracked.values()].sort((a, b) => b.expected - a.expected).map((l) => ({ ...l, weeks: weeksOf(l) })),
     fixed,
     savings,
     totalSpent,
@@ -143,4 +126,37 @@ export function buildCashflow(
     income,
     off,
   };
+}
+
+export type Week = { from: Date; to: Date; spent: number; share: number; left: number; future: boolean; current: boolean };
+
+/**
+ * A line's month in weeks of 7 days from the month start (the last one may be shorter). Each week's share is what is
+ * still left, spread by days over the rest of the month, so an expensive week shrinks the next ones. `left` < 0 is over.
+ */
+function splitWeeks(l: Line, range: { from: Date; to: Date }, today: Date): Week[] {
+  const DAY = 86_400_000;
+  const start = new Date(range.from.getFullYear(), range.from.getMonth(), range.from.getDate());
+  const days = Math.round((range.to.getTime() - start.getTime()) / DAY) + 1;
+  const count = Math.ceil(days / 7);
+  // Day indexes by calendar date (not ms), so a DST change never shifts a day into the next week.
+  const at = (i: number) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+  const weeks: Week[] = Array.from({ length: count }, (_, i) => ({
+    from: at(i * 7), to: at(Math.min(days - 1, i * 7 + 6)), spent: 0, share: 0, left: 0,
+    future: at(i * 7) > today, current: at(i * 7) <= today && today < at(Math.min(days, i * 7 + 7)),
+  }));
+  for (const x of l.items) {
+    const d = Math.round((new Date(x.date.slice(0, 10) + "T00:00:00").getTime() - start.getTime()) / DAY);
+    weeks[Math.min(count - 1, Math.max(0, Math.floor(d / 7)))].spent -= x.amount;
+  }
+  let before = 0;
+  weeks.forEach((w, i) => {
+    // By days, so a short last week gets a short week's share.
+    const len = Math.min(7, days - i * 7);
+    w.share = Math.max(0, ((l.expected - before) * len) / (days - i * 7));
+    w.left = w.share - w.spent;
+    // A week not over yet is assumed to use its share, so later weeks don't swell with money it may still spend.
+    before += w.future || w.current ? Math.max(w.spent, w.share) : w.spent;
+  });
+  return weeks;
 }

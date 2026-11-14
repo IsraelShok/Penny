@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp } from "lucide-react";
@@ -63,6 +63,8 @@ const RESET_MS = 700;
  * to go back. The end of every page has a "Continue to …" button that fills as the pull builds
  * (and works on click or Enter); pulling up past the top shows a matching "Back to …" button.
  */
+const noSubscribe = () => () => {};
+
 export function PageWheelNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -73,6 +75,8 @@ export function PageWheelNav() {
   const { plan } = usePlan();
   const pages = pagingOrder(plan.simpleMode && plan.homeStyle !== "companion");
   const index = plan.wheelPaging ? pagingIndex(pages, pathname, tab, view) : -1;
+  // The plan can differ between the server render and the client (cached locally), so the buttons appear after hydration.
+  const hydrated = useSyncExternalStore(noSubscribe, () => true, () => false);
   const [pull, setPull] = useState(0);
   const pullRef = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -120,7 +124,7 @@ export function PageWheelNav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, pages.length, router]);
 
-  if (index < 0) return null;
+  if (!hydrated || index < 0) return null;
   const next = pages[index + 1];
   const prev = pages[index - 1];
   const fill = (dir: number) => (Math.sign(pull) === dir ? Math.min(1, Math.abs(pull) / THRESHOLD) : 0);

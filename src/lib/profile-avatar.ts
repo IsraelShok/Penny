@@ -1,4 +1,5 @@
 // Shared by the API (validation) and the /profiles UI (pickers).
+import { PET_COLORS, PET_SKINS } from "./pet";
 export const AVATAR_COLORS = [
   "#3d2fd3", "#7c5cff", "#e0679b", "#f08a4b", "#e8b931", "#4caf7a", "#2fa7c9", "#6b7280",
 ] as const;
@@ -23,9 +24,27 @@ export function profileName(name: string, me: string) {
   return name === "Default" ? me : name;
 }
 
+/** A profile's own Pip: the same face as the household pet, in its own look. color "" = theme accent, skin "" = flat. */
+export interface ProfilePip { color: string; skin: string; name: string }
+
+/** A stable starting Pip for a profile that has none yet. */
+export const defaultPip = (id: number): ProfilePip => ({ color: PET_COLORS[Math.abs(id - 1) % PET_COLORS.length], skin: "", name: "" });
+
+/** null when it isn't a Pip (stored JSON is read through this too). */
+export function parsePip(raw: unknown): ProfilePip | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  return {
+    color: typeof r.color === "string" && /^#[0-9a-f]{6}$/i.test(r.color) ? r.color.toLowerCase() : "",
+    skin: (PET_SKINS as readonly unknown[]).includes(r.skin) ? String(r.skin) : "",
+    name: typeof r.name === "string" ? r.name.trim().slice(0, 24) : "",
+  };
+}
+
 export interface AvatarInput {
   avatarEmoji?: string | null;
   avatarColor?: string | null;
+  avatarPet?: ProfilePip | null;
 }
 
 /** Picks avatar fields out of a request body. Absent = untouched, null/"" = cleared. */
@@ -44,6 +63,11 @@ export function parseAvatar(body: unknown): AvatarInput | { error: string } {
     else if (typeof v === "string" && (AVATAR_COLORS as readonly string[]).includes(v.toLowerCase()))
       out.avatarColor = v.toLowerCase();
     else return { error: "avatarColor must be one of the palette colours" };
+  }
+  if ("avatarPet" in b) {
+    const v = b.avatarPet;
+    if (v === null) out.avatarPet = null;
+    else if ((out.avatarPet = parsePip(v)) == null) return { error: "avatarPet must be an object" };
   }
   return out;
 }

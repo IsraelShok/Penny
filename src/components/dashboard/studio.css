@@ -8,10 +8,12 @@
   --sidebar: var(--background); --sidebar-foreground: var(--foreground); --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground); --sidebar-accent: var(--studio-accent-soft);
   --sidebar-accent-foreground: var(--primary); --sidebar-border: var(--border); --sidebar-ring: var(--ring);
-  --chart-1: var(--primary); --chart-2: var(--studio-ring-end); --chart-3: #308c71; --chart-4: #a88bce; --chart-5: #b87526;
+  --chart-1: var(--primary); --chart-2: var(--studio-ring-end); --chart-3: #308c71; --chart-4: #c2397f; --chart-5: #b87526;
   --studio-hero: #242039; --studio-glow: #9b87e3; --studio-accent-soft: #ede9fc;
   --status-on-track: #17643d; --status-over: #b42e41; --status-heads-up: #945000;
   --status-plenty-left: #4c39b8; --expense: #a63a4f; --segmented: #e9e7f1; --segmented-thumb: #fff;
+  /* Simple-mode tones (dark hero and light cards alike): income green, spending rose like --expense, savings blue. */
+  --ring-income: #6fdc8c; --ring-spending: #ff8fa3; --ring-savings: #5aa9ff;
   color: var(--foreground); color-scheme: light;
 }
 :is(html.app-studio, .budget-studio)[data-studio-accent="ocean"] { --primary: #1167a2; --ring: #1167a2; --action: #1167a2; --studio-ring-start: #93d6f5; --studio-ring-end: #489cdd; --studio-hero: #192f42; --studio-glow: #6ebfef; --studio-accent-soft: #e4f1fa; }
@@ -134,9 +136,9 @@
 .studio-swatch { display: block; border-radius: 50%; width: 17px; height: 17px; }
 .swatch-violet { background: #6650d9; }.swatch-ocean { background: #207fbc; }.swatch-jade { background: #238b68; }.swatch-rose { background: #ba477e; }
 .studio-toggle { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
-.studio-toggle input[type="checkbox"] { appearance: none; width: 38px; height: 22px; border-radius: 20px; background: var(--muted-foreground); position: relative; cursor: pointer; flex-shrink: 0; }
+.studio-toggle input[type="checkbox"] { appearance: none; width: 38px; height: 22px; border-radius: 20px; background: var(--input); position: relative; cursor: pointer; flex-shrink: 0; }
 .studio-toggle input[type="checkbox"]::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; inset-inline-start: 3px; top: 3px; transition: transform .2s; }
-.studio-toggle input[type="checkbox"]:checked { background: var(--primary); }.studio-toggle input[type="checkbox"]:checked::after { transform: translateX(16px); }
+.studio-toggle input[type="checkbox"]:checked { background: var(--status-on-track); }.studio-toggle input[type="checkbox"]:checked::after { transform: translateX(16px); }
 .studio-toggle input[type="checkbox"]:checked:dir(rtl)::after { transform: translateX(-16px); }
 .studio-toggle input:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 /* The custom colour is a colour picker, not a switch: a swatch of the chosen colour. */

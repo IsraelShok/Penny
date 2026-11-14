@@ -65,12 +65,21 @@ function TipItem({ tip, onDismiss }: { tip: Tip; onDismiss: () => void }) {
 
 const Disclaimer = () => <p className="mt-3 text-caption text-muted-foreground">{useLabels().l.disclaimer}</p>;
 
-/** Rotating tip of the day, preferring tips that match the household. */
-export function DailyTip() {
+/** Rotating tip of the day, preferring tips that match the household. With `bare`, no card frame (for a host card). */
+export function DailyTip({ bare }: { bare?: boolean } = {}) {
   const { l } = useLabels();
   const s = useTipState();
   const tip = s.ready ? tipOfDay(s.signals, s.dismissed, s.today) : null;
   if (!tip) return null;
+  if (bare) return (
+    <>
+      <TipItem tip={tip} onDismiss={() => s.dismiss(tip.id)} />
+      <div className="flex items-center justify-between gap-3">
+        <Disclaimer />
+        <Link href="/tips" className="mt-3 inline-flex min-h-11 items-center text-footnote font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{l.library}</Link>
+      </div>
+    </>
+  );
   return (
     <CardShell label={l.daily} action={<Link href="/tips" className="hover:underline">{l.library}</Link>} className="h-auto">
       <TipItem tip={tip} onDismiss={() => s.dismiss(tip.id)} />

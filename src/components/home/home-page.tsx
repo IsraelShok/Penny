@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { ThisMonthCard } from "./this-month-card";
 import { CashFlowCard } from "./cash-flow-card";
 import { Greeting } from "./greeting";
-import { SuggestionsCard } from "./suggestions-card";
+import { SuggestionsTipsCard } from "./suggestions-tips-card";
 import { NextBillCard, SubscriptionsCard } from "./bills-card";
 import { HealthCard } from "./health-card";
 import { MonthCelebration } from "./month-celebration";
@@ -32,7 +32,6 @@ import { PetHeroAside } from "./pet-card";
 import { usePlan } from "@/hooks/use-plan";
 import { CardError, CardSkeleton } from "./card-shell";
 import type { HomePayload, HomeSection } from "@/lib/types";
-import { DailyTip } from "@/components/tips/tips";
 
 export function HomePage() {
   const router = useRouter();
@@ -124,8 +123,7 @@ export function HomePage() {
         <Greeting name={settings?.displayName} />
         {/* The same forecast card as Simple mode: forecast, rings, legend and the month so far. */}
         <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
-        <SuggestionsCard limit={3} href="/more#suggestions" />
-        <div className="mb-6 md:mb-8"><DailyTip /></div>
+        <SuggestionsTipsCard />
         <HealthCard />
         <MonthCelebration />
         <WelcomePrompt />

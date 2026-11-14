@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Banknote, Calculator, ChevronLeft, Car, CreditCard, Flame, House, Landmark, LifeBuoy, PieChart, Percent, PiggyBank, Plane, Scale, Target, TrendingUp, type LucideIcon } from "lucide-react";
+import { ShieldCheck, SearchCheck, HandHeart, Building2 } from "lucide-react";
+import { Banknote, Calculator,ChevronLeft, Car, CreditCard, Briefcase, Coins, Receipt, TrendingDown,Compass, FileSearch, Flame, House, Landmark, LifeBuoy, PieChart, Percent, PiggyBank, Plane, Scale, Sunset, Target, TrendingUp, type LucideIcon } from "lucide-react";
 import { CardShell } from "@/components/home/card-shell";
 import { NumberField, numberError } from "@/components/ui/number-field";
 import { shekels } from "@/lib/money";
@@ -11,15 +12,22 @@ import { IL } from "@/lib/il-defaults";
 import { inflation, leaseVsBuy, loan, mortgage, savingsGoal, split503020, type CalcSlug } from "@/lib/calculators";
 import { projectBalance, debtPayoff } from "@/lib/plan";
 import { fiNumber, yearsToTarget } from "@/lib/fi";
+import { BENCHMARK_FEES, feeCost } from "@/lib/plan";
+import { annuityVsLump, severanceChoice } from "@/lib/retirement";
+import { CMA_SITES } from "@/lib/funds";
 import { netSalary } from "@/lib/net-salary";
+import { lossOffset } from "@/lib/tax-benefits";
 
 type N = (k: string) => number;
 /** head: [message key, values]; rows: [label key, already-formatted value]. */
 type Out = { head: [string, Record<string, string | number>]; rows: [string, string][] };
-type Calc = { group: Group; Icon: LucideIcon; fields: [string, string, ("%" | undefined)?][]; run: (n: N, money: (x: number) => string) => Out };
+type Calc = { group: Group; Icon: LucideIcon; fields: [string, string, ("%" | undefined)?][]; run: (n: N, money: (x: number) => string) => Out; links?: [string, string][] };
 
 export const GROUPS = ["savings", "loans", "income", "planning"] as const;
 type Group = (typeof GROUPS)[number];
+
+/** Official comparison sites, shown under the fees calculator. */
+const FUND_LINKS = Object.entries(CMA_SITES).map(([k, href]): [string, string] => [`link${k}`, href]);
 
 const CALCS: Record<CalcSlug, Calc> = {
   compound: { group: "savings", Icon: TrendingUp, fields: [["initial", "50000"], ["monthly", "1000"], ["years", "20"], ["ret", "5", "%"]], run: (n, m) => {
@@ -30,8 +38,10 @@ const CALCS: Record<CalcSlug, Calc> = {
   fees: { group: "savings", Icon: Percent, fields: [["balance", "300000"], ["monthly", "2500"], ["years", "25"], ["ret", "5", "%"], ["feeDeposit", "1.5", "%"], ["feeBalance", "0.3", "%"]], run: (n, m) => {
     const free = projectBalance(n("balance"), n("monthly"), n("years"), n("ret") / 100, 0, 0);
     const paid = projectBalance(n("balance"), n("monthly"), n("years"), n("ret") / 100, n("feeDeposit"), n("feeBalance"));
-    return { head: ["feesHead", { amount: m(free - paid), years: n("years") }], rows: [["withFees", m(paid)], ["noFees", m(free)]] };
-  } },
+    // A deposit fee means a pension fund; none means study/provident, which charge on balance only.
+    const vs = feeCost(n("feeDeposit") > 0 ? "pension" : "study_fund", n("balance"), n("monthly"), n("years"), n("feeDeposit"), n("feeBalance"), n("ret") / 100);
+    return { head: ["feesHead", { amount: m(free - paid), years: n("years") }], rows: [["withFees", m(paid)], ["noFees", m(free)], ["vsMarket", m(vs?.cost ?? 0)]] };
+  }, links: FUND_LINKS },
   inflation: { group: "savings", Icon: Banknote, fields: [["amount", "100000"], ["infl", "2.5", "%"], ["years", "10"]], run: (n, m) => {
     const r = inflation(n("amount"), n("infl"), n("years"));
     return { head: ["inflationHead", { amount: m(n("amount")), real: m(r.realValue), years: n("years") }], rows: [["needed", m(r.needed)]] };
@@ -68,6 +78,18 @@ const CALCS: Record<CalcSlug, Calc> = {
     const target = n("expenses") * n("months");
     return { head: ["emergencyHead", { amount: m(target) }], rows: [["gap", m(Math.max(0, target - n("saved")))], ["covered", n("expenses") > 0 ? (n("saved") / n("expenses")).toFixed(1) : "0"]] };
   } },
+  annuity: { group: "planning", Icon: Sunset, fields: [["balance", "1200000"], ["factor", "200"], ["age", "67"], ["untilAge", "87"], ["ret", "4", "%"], ["lumpTax", "0", "%"]], run: (n, m) => {
+    const r = annuityVsLump({ balance: n("balance"), factor: n("factor"), age: n("age"), untilAge: n("untilAge"), returnPct: n("ret"), lumpTaxPct: n("lumpTax") });
+    return { head: ["annuityHead", { annuity: m(r.annuity), lump: m(r.lumpMonthly), age: n("untilAge") }], rows: [["lumpNet", m(r.lumpNet)], ["breakEven", r.breakEvenAge == null ? "—" : r.breakEvenAge.toFixed(1)]] };
+  }, links: [["linkA190", "/fi?tab=tools"], ["linkPayoutGuide", "/learn/pension-payout"]] },
+  severance: { group: "planning", Icon: Briefcase, fields: [["amount", "120000"], ["serviceYears", "6"], ["salary", "18000"], ["yearsToRetire", "25"], ["ret", "5", "%"], ["tax", "31", "%"]], run: (n, m) => {
+    const r = severanceChoice({ amount: n("amount"), serviceYears: n("serviceYears"), salary: n("salary"), yearsToRetire: n("yearsToRetire"), returnPct: n("ret"), taxPct: n("tax"), exemptPerYear: IL.severanceExemptPerYear });
+    return { head: ["severanceHead", { amount: m(r.lost), years: n("yearsToRetire") }], rows: [["exempt", m(r.exempt)], ["taxNow", m(r.taxNow)], ["keepValue", m(r.keep)], ["withdrawValue", m(r.withdrawInvested)]] };
+  }, links: [["linkSeveranceGuide", "/learn/severance"]] },
+  lossOffset: { group: "savings", Icon: TrendingDown, fields: [["gains", "40000"], ["losses", "10000"]], run: (n, m) => {
+    const r = lossOffset(n("gains"), n("losses"));
+    return { head: ["lossOffsetHead", { amount: m(r.saved) }], rows: [["taxBefore", m(r.taxBefore)], ["taxAfter", m(r.taxAfter)], ["carryForward", m(r.carryForward)]] };
+  }, links: [["linkInvestTaxGuide", "/learn/investment-tax"]] },
   fire: { group: "planning", Icon: Flame, fields: [["spend", "12000"], ["saved", "200000"], ["monthly", "4000"], ["ret", "5", "%"], ["withdraw", "4", "%"]], run: (n, m) => {
     const target = fiNumber(n("spend") * 12, n("withdraw") / 100);
     const y = yearsToTarget(n("saved"), n("monthly"), n("ret") / 100, target);
@@ -76,24 +98,33 @@ const CALCS: Record<CalcSlug, Calc> = {
 };
 
 /** Counts, not money: no ₪ unit. */
-const UNITLESS = new Set(["years", "months", "points"]);
+const UNITLESS = new Set(["years", "months", "points", "age", "untilAge", "factor", "serviceYears", "yearsToRetire"]);
+
 
 /** Calculators that already live on the investments page. */
 const ELSEWHERE = [
   { key: "rentBuy", Icon: Scale, group: "planning" },
   { key: "investTools", Icon: PiggyBank, group: "savings" },
   { key: "vacation", Icon: Plane, group: "savings", href: "/journey#vacation" },
+  { key: "creditPoints", Icon: Receipt, group: "income", href: "/calculators/credit-points" },
+  { key: "deposits", Icon: Coins, group: "savings", href: "/calculators/deposits" },
+  { key: "track", Icon: Compass, group: "savings", href: "/calculators/track" },
+  { key: "clearingHouse", Icon: FileSearch, group: "savings", href: "/calculators/clearing-house" },
+  { key: "insurance", Icon: ShieldCheck, group: "planning", href: "/fi?tab=safety" },
+  { key: "lostMoney", Icon: SearchCheck, group: "savings", href: "/calculators/lost-money" },
+  { key: "rights", Icon: HandHeart, group: "income", href: "/calculators/rights" },
+  { key: "bankFees", Icon: Building2, group: "income", href: "/calculators/bank-fees" },
 ] as const;
 
 /** The order a household meets money decisions in: month → safety → debt → goals → invest → big moves → freedom. */
 const STAGES = [
-  ["month", ["budget", "net"]],
-  ["safety", ["emergency"]],
+  ["month", ["budget", "net", "creditPoints", "rights", "bankFees"]],
+  ["safety", ["emergency", "insurance", "lostMoney"]],
   ["debt", ["credit", "loan"]],
   ["goals", ["goal", "inflation", "vacation"]],
-  ["invest", ["compound", "fees", "investTools"]],
-  ["decisions", ["mortgage", "rentBuy", "leaseBuy"]],
-  ["freedom", ["fire"]],
+  ["invest", ["deposits", "compound", "fees", "lossOffset","track", "clearingHouse", "investTools"]],
+  ["decisions", ["mortgage", "rentBuy", "leaseBuy", "severance"]],
+  ["freedom", ["fire", "annuity"]],
 ] as const;
 
 function tool(key: string): { Icon: LucideIcon; href: string } {
@@ -160,7 +191,7 @@ export function CalculatorView({ slug }: { slug: CalcSlug }) {
   const out = c.run(n, (x) => shekels(Number.isFinite(x) ? x : 0, locale));
   return (
     <CardShell>
-      <p className="text-footnote text-pretty text-muted-foreground">{t(`${slug}_explain`, { year: IL.year, prime: IL.primeRate })}</p>
+      <p className="text-footnote text-pretty text-muted-foreground">{t(`${slug}_explain`, { year: IL.year, prime: IL.primeRate, pDep: BENCHMARK_FEES.pension.deposit, pBal: BENCHMARK_FEES.pension.balance, gBal: BENCHMARK_FEES.study_fund.balance, exempt: IL.severanceExemptPerYear.toLocaleString(locale) })}</p>
       <div className="mt-5 grid grid-cols-1 gap-4 min-[22rem]:grid-cols-2 md:grid-cols-3">
         {c.fields.map(([k, , suffix]) => (
           <NumberField key={k} id={`calc-${k}`} label={t(`f_${k}`)} value={v[k]} onChange={(x) => setV({ ...v, [k]: x })}
@@ -180,7 +211,21 @@ export function CalculatorView({ slug }: { slug: CalcSlug }) {
           </dl>
         )}
       </div>
-      <p className="mt-4 text-caption text-muted-foreground">{t("notAdvice")}</p>
+      {c.links && (
+        <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-footnote">
+          {c.links.map(([k, href]) => (
+            <li key={k}>
+              {href.startsWith("http")
+                ? <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline-offset-4 hover:underline">{t(k)}</a>
+                : <Link href={href} className="font-medium text-primary underline-offset-4 hover:underline">{t(k)}</Link>}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-4 text-caption text-muted-foreground">{t("notAdvice")}{IL_BASED.has(slug) && ` ${t("asOf", { year: IL.year })}`}</p>
     </CardShell>
   );
 }
+
+/** Calculators whose numbers come from il-defaults, so they show the year they are correct for. */
+const IL_BASED = new Set<string>(["net", "mortgage", "lossOffset", "severance"]);

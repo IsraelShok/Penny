@@ -40,10 +40,18 @@ describe("buildCashflow", () => {
   it("buckets variable spend by week and forecasts the month", () => {
     expect(r.weeks.map((w) => w.spent)).toEqual([100, 50, 0, 0, 0]);
     expect(r.weeks[2].future).toBe(true);
-    // 700 spread over 5 weeks; week 1 spent 100, so the 600 left is spread over the 4 weeks after it.
-    expect(r.weeks[0].share).toBeCloseTo(140);
-    expect(r.weeks[1].share).toBeCloseTo(150);
-    expect(r.weeks[2].share).toBeCloseTo((700 - 150) / 3);
+    // 700 spread by days over 30 (weeks of 7,7,7,7,2); week 1 spent 100, so the 600 left is spread over the 23 days after it.
+    expect(r.weeks[0].share).toBeCloseTo((700 * 7) / 30);
+    const perDay = 600 / 23;
+    // This week (week 2) and the weeks after it share the rest evenly by days, and it all adds up to the budget.
+    expect(r.weeks.slice(1).map((w) => w.share / perDay)).toEqual([7, 7, 7, 2].map((n) => expect.closeTo(n)));
+    expect(r.weeks.reduce((s, w, i) => s + (i === 0 ? w.spent : w.share), 0)).toBeCloseTo(700);
+    expect(r.weeks.map((w) => w.current)).toEqual([false, true, false, false, false]);
+    expect(r.weeks[4].to).toEqual(new Date(2026, 10, 30));
+    // Each tracked category gets its own weeks: 500 over 30 days, 600 spent in week 1 is over its share.
+    expect(r.tracked[0].weeks[0]).toMatchObject({ spent: 600 });
+    expect(r.tracked[0].weeks[0].left).toBeCloseTo((500 * 7) / 30 - 600);
+    expect(r.tracked[0].weeks[1].share).toBe(0);
     // 10000 expected income − (700 + 3000 + 1000 + 600 over budget)
     expect(r.forecast).toBe(10000 - 5300);
   });

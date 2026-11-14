@@ -3,15 +3,25 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { Home, Landmark, LifeBuoy, PiggyBank, Plus, Scale, TrendingUp, Wallet, type LucideIcon } from "lucide-react";
 import { getAssets, getCashAhead, getCashflowHealth } from "@/lib/api";
 import { usePlan } from "@/hooks/use-plan";
 import { useHousehold } from "@/hooks/use-household";
-import { buildMoneyMap, type MapRow } from "@/lib/money-map";
+import { buildMoneyMap, type MapArea, type MapRow } from "@/lib/money-map";
 import { shekels } from "@/lib/money";
-import { Forward } from "@/components/ui/dir-chevron";
 import { CardShell, CardSkeleton } from "./card-shell";
 
-/** "Your whole picture": one row per money area; a failed or empty area invites instead of showing a number. */
+const AREA: Record<MapArea, { icon: LucideIcon; tone: string }> = {
+  cashflow: { icon: Wallet, tone: "var(--status-on-track)" },
+  cushion: { icon: LifeBuoy, tone: "var(--chart-2)" },
+  investments: { icon: TrendingUp, tone: "var(--chart-1)" },
+  pension: { icon: PiggyBank, tone: "var(--chart-5)" },
+  debts: { icon: Landmark, tone: "var(--expense)" },
+  property: { icon: Home, tone: "var(--chart-4)" },
+  netWorth: { icon: Scale, tone: "var(--primary)" },
+};
+
+/** "Your whole picture": a grid of compact tiles, one per money area; an empty area is a dashed invitation, never a 0. */
 export function MoneyMap() {
   const t = useTranslations("home.map");
   const locale = useLocale();
@@ -21,7 +31,7 @@ export function MoneyMap() {
   const { plan } = usePlan();
   const { household, loading } = useHousehold();
 
-  if (assets.isPending || health.isPending || cash.isPending || loading) return <CardSkeleton label={t("title")} height={320} className="mb-6" />;
+  if (assets.isPending || health.isPending || cash.isPending || loading) return <CardSkeleton label={t("title")} height={220} className="mb-6" />;
 
   const { rows, more } = buildMoneyMap({
     forecast: cash.data?.safeToSpend ?? null,
@@ -31,22 +41,55 @@ export function MoneyMap() {
     hasHomeEvent: household.events.some((e) => e.type === "homePurchase" || e.type === "movedIn"),
   });
 
-  const row = (r: MapRow) => {
+  const tile = (r: MapRow) => {
+    const { icon: Icon } = AREA[r.area];
     const v = r.value == null ? null : Math.round(r.value);
-    const text = v == null ? t(`invite.${r.area}`)
+    const bad = v != null && v < 0 && r.area !== "debts";
+    const owed = r.area === "debts" && v != null && v > 0;
+    // Status colour: red for a shortfall or debt, green for "no debts", else the area's own hue.
+    const tone = bad || owed ? "var(--expense)" : r.area === "debts" && v === 0 ? "var(--status-on-track)" : AREA[r.area].tone;
+    const cushionPct = r.area === "cushion" && v != null && r.target ? Math.min(100, (v / r.target) * 100) : null;
+    const caption = v == null ? null
       : r.area === "debts" && v === 0 ? t("noDebts")
-      : r.area === "cushion" && r.months != null ? t("value.cushionMonths", { amount: shekels(v, locale), months: r.months })
-      : r.area === "cashflow" && v < 0 ? t("value.cashflowNegative", { amount: shekels(-v, locale) })
-      : r.area === "debts" && r.count ? t("value.debtsCount", { amount: shekels(v, locale), count: r.count })
-      : t(`value.${r.area}`, { amount: shekels(v, locale) });
+      : r.area === "cashflow" && v < 0 ? t("caption.cashflowNegative")
+      : r.area === "cushion" && r.months != null ? t("caption.cushionMonths", { months: r.months, target: plan.emergencyMonths })
+      : r.area === "debts" && r.count ? t("caption.debtsCount", { count: r.count })
+      : t(`caption.${r.area}`);
+
     return (
       <li key={r.area}>
-        <Link href={r.href} className="flex min-h-11 items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
-          <span className="min-w-0 flex-1">
-            <span className="block text-footnote font-semibold">{t(`area.${r.area}`)}</span>
-            <span className={`block text-footnote ${v == null ? "text-primary" : "text-muted-foreground"}`}>{text}</span>
+        <Link
+          href={r.href}
+          className={`flex h-full min-h-24 flex-col gap-1.5 rounded-2xl border p-3 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring ${v == null ? "border-dashed border-border" : "border-border/70"}`}
+        >
+          <span className="flex items-center gap-2">
+            <span
+              className="grid size-7 shrink-0 place-items-center rounded-full"
+              style={v == null ? undefined : { backgroundColor: `color-mix(in oklch, ${tone} 16%, transparent)`, color: `color-mix(in oklch, ${tone} 70%, var(--foreground))` }}
+              aria-hidden
+            >
+              <Icon className={`size-3.5 ${v == null ? "text-muted-foreground" : ""}`} />
+            </span>
+            <span className="line-clamp-2 min-w-0 text-footnote font-semibold leading-tight">{t(`area.${r.area}`)}</span>
           </span>
-          <Forward className="size-4 shrink-0 text-muted-foreground" />
+          {v == null ? (
+            <span className="mt-auto flex items-start gap-1 text-caption text-primary">
+              <Plus className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+              <span className="line-clamp-2">{t(`invite.${r.area}`)}</span>
+            </span>
+          ) : (
+            <>
+              <span className="mt-auto text-headline font-semibold tabular-nums" style={owed || bad ? { color: "var(--expense)" } : undefined}>
+                <bdi>{shekels(Math.abs(v), locale)}</bdi>
+              </span>
+              {cushionPct != null && (
+                <span className="h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+                  <span className="block h-full rounded-full" style={{ width: `${cushionPct}%`, backgroundColor: cushionPct >= 100 ? "var(--status-on-track)" : "var(--status-heads-up)" }} />
+                </span>
+              )}
+              <span className="line-clamp-2 text-caption text-muted-foreground">{caption}</span>
+            </>
+          )}
         </Link>
       </li>
     );
@@ -54,13 +97,7 @@ export function MoneyMap() {
 
   return (
     <CardShell label={t("title")} className="mb-6 h-auto">
-      <ul className="-mx-2 divide-y divide-border/60">{rows.map(row)}</ul>
-      {more.length > 0 && (
-        <details className="mt-2">
-          <summary className="flex min-h-11 cursor-pointer items-center px-0 text-footnote font-medium text-primary">{t("more")}</summary>
-          <ul className="-mx-2 divide-y divide-border/60">{more.map(row)}</ul>
-        </details>
-      )}
+      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">{[...rows, ...more].map(tile)}</ul>
     </CardShell>
   );
 }

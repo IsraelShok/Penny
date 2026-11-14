@@ -40,7 +40,7 @@ export function runMigrations(db: Database.Database): void {
     .sort();
 
   // Existing install about to get profiles: keep a copy first (fresh installs have nothing to lose).
-  const backup = applied.size > 0 && [PROFILES_MIGRATION, "047_household_preferences.sql", CATEGORY_HIERARCHY_MIGRATION, FAMILY_COLORS_MIGRATION, SATURATED_COLORS_MIGRATION].some((f) => !applied.has(f) && files.includes(f)) ? backupBeforeProfiles(db) : null;
+  const backup = applied.size > 0 && [PROFILES_MIGRATION, "047_household_preferences.sql", CATEGORY_HIERARCHY_MIGRATION, FAMILY_COLORS_MIGRATION, SATURATED_COLORS_MIGRATION, "052_profile_pip.sql", "053_policy_cover.sql"].some((f) => !applied.has(f) && files.includes(f)) ? backupBeforeProfiles(db) : null;
 
   for (const file of files) {
     if (applied.has(file)) continue;
@@ -76,6 +76,8 @@ export function runMigrations(db: Database.Database): void {
       if (report) writeProfilesReport(db, report, backup);
     }
   }
+  // Checked on every start, not only with 052: cheap, and it can't be skipped by a server that read the file before this code.
+  addProfilePip(db);
 }
 
 /** Idempotent: SQLite has no ADD COLUMN IF NOT EXISTS. */
@@ -83,4 +85,10 @@ function addGoalDetails(db: Database.Database) {
   const cols = new Set((db.pragma("table_info(goals)") as { name: string }[]).map((c) => c.name));
   if (!cols.has("kind")) db.exec("ALTER TABLE goals ADD COLUMN kind TEXT NOT NULL DEFAULT 'general'");
   if (!cols.has("details")) db.exec("ALTER TABLE goals ADD COLUMN details TEXT");
+}
+
+/** Each profile's own Pip (JSON: color, skin, name); idempotent, see 052_profile_pip.sql. */
+function addProfilePip(db: Database.Database) {
+  const cols = new Set((db.pragma("table_info(profiles)") as { name: string }[]).map((c) => c.name));
+  if (!cols.has("avatar_pet")) db.exec("ALTER TABLE profiles ADD COLUMN avatar_pet TEXT");
 }

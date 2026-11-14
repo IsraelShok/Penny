@@ -7,7 +7,9 @@ import { parsePet, type PetSettings } from "./pet";
  * Typical competitive fees in Israel (% a year), used as the "market" comparison. Rough reference points,
  * not quotes: pension from deposit and balance, study and provident funds on balance only.
  */
-// Pension: the level of the default ('kranot bererat mechdal') funds, about 1% / 0.22%. Study/provident: a typical competitive level. Caps are in il-defaults.
+// Pension: the fee locked for 10 years in the CMA-selected default funds (kranot bererat mechdal), 1% / 0.22% (CMA tender, 2024; per funder.co.il and bizportal.co.il, checked Nov 2026).
+// Study/provident: 0.6% of balance, a typical negotiated level; the median charged in 2025 was lower, about 0.18% (study) and 0.16% (investment gemel)
+// per the 2025 direct-expenses report as quoted by TheMarker's fee calculator, so 0.6% is a lenient bar. Caps are in il-defaults.
 export const BENCHMARK_FEES: Record<string, { deposit: number; balance: number }> = {
   pension: { deposit: 1, balance: 0.22 },
   study_fund: { deposit: 0, balance: 0.6 },

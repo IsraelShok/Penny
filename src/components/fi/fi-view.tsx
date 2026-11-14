@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { getFi } from "@/lib/api";
 import { fmt, shekels } from "@/lib/money";
 import { useGentle } from "@/hooks/use-gentle";
-import { carCost, fiNumber, fiOdds, yearsToTarget, yearsToTargetWithEvents, type CarInputs } from "@/lib/fi";
+import { carCost, coastCheck, fiBridge, fiNumber, fiOdds, yearsBySavingsRate, yearsToTarget, yearsToTargetWithEvents, type CarInputs } from "@/lib/fi";
 import { amendment190, bracketTax, brokerOutcome, fundSwitch, gemelVsBroker, moneyMarket, payoffVsInvest, rentalYield, rentVsBuy } from "@/lib/tools";
 import { projectBalance } from "@/lib/plan";
 import { IL } from "@/lib/il-defaults";
@@ -217,6 +217,7 @@ function Body({ data }: { data: FiPayload }) {
         <div className="grid gap-4 lg:col-span-3 lg:grid-cols-2">
           <AggressiveSaving spend={spend} income={income} savings={savings} annualReturn={annualReturn} rate={plan.rate} />
           <Inflation data={data.inflation} />
+          <Bridge age={age} years={years} spend={spend} income={income} savings={savings} annualReturn={annualReturn} rate={plan.rate} />
         </div>
       )}
     </>
@@ -294,6 +295,74 @@ function AggressiveSaving({ spend, income, savings, annualReturn, rate }: { spen
       <p className="mt-4 text-footnote">
         {t("cutResult", { factor: Math.round(12 / rate), amount: shekels(before.target - next.target, locale) })}
       </p>
+    </CardShell>
+  );
+}
+
+/** Assumed inflation for turning the nominal return into a real one. shortcut: fixed 2.5%; upgrade to data.inflation if it drifts. */
+const BRIDGE_INFLATION = 0.025;
+
+/** Early retirement: the gap years until pensions start, whether you can stop saving now, and years to FI by savings rate. */
+function Bridge({ age, years, spend, income, savings, annualReturn, rate }: { age: number | null; years: number | null; spend: number; income: number; savings: number; annualReturn: number; rate: number }) {
+  const t = useTranslations("fi");
+  const locale = useLocale();
+  const [v, setV] = useStored("fi-bridge", { age: "", pension: "" });
+  const myAge = v.age.trim() !== "" && Number.isFinite(Number(v.age)) ? Number(v.age) : age ?? 40;
+  const pension = Number(v.pension) || 0;
+  const real = Math.max(0, annualReturn - BRIDGE_INFLATION);
+  const fiAge = years == null ? null : myAge + years;
+  const b = fiBridge({ fiAge: fiAge ?? IL.pensionAge, pensionAge: IL.pensionAge, monthlySpend: spend, monthlyPension: pension, withdrawalRate: rate, realReturn: real });
+  const coast = coastCheck(savings, real, IL.pensionAge - myAge, b.after);
+  const table = yearsBySavingsRate(income, savings, annualReturn, rate);
+  const current = income > 0 ? (income - spend) / income : 0;
+  const closest = table.reduce((a, r) => (Math.abs(r.rate - current) < Math.abs(a.rate - current) ? r : a), table[0]);
+
+  return (
+    <CardShell label={t("bridgeTitle")} className="lg:col-span-2">
+      <p className="text-caption text-pretty text-muted-foreground">{t("bridgeIntro", { age: IL.pensionAge })}</p>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <Field id="bridge-age" label={t("bridgeAge")} value={v.age} placeholder={String(myAge)} onChange={(x) => setV({ ...v, age: x })} />
+        <Field id="bridge-pension" label={t("bridgePension", { age: IL.pensionAge })} value={v.pension} placeholder="0" onChange={(x) => setV({ ...v, pension: x })} />
+      </div>
+      <div className="mt-5 grid gap-6 md:grid-cols-3" aria-live="polite">
+        <div>
+          <h3 className="text-footnote font-semibold">{t("bridgeGapTitle")}</h3>
+          <p className="mt-1 text-footnote text-pretty">
+            {fiAge == null ? t("bridgeNoFi") : b.gapYears === 0 ? t("bridgeNoGap", { age: IL.pensionAge }) : t("bridgeGap", { fiAge: Math.round(fiAge), years: fmt(b.gapYears, locale, 0), age: IL.pensionAge })}
+          </p>
+          {fiAge != null && b.gapYears > 0 && (
+            <dl className="mt-2 space-y-1.5 text-footnote tabular-nums">
+              <ResultRow label={t("bridgeCapital")} value={shekels(b.bridge, locale)} />
+              <ResultRow label={t("bridgeAfter", { age: IL.pensionAge })} value={shekels(b.after, locale)} />
+              <ResultRow label={t("bridgeTotal")} value={shekels(b.total, locale)} />
+            </dl>
+          )}
+        </div>
+        <div>
+          <h3 className="text-footnote font-semibold">{t("coastTitle")}</h3>
+          <p className="mt-1 text-footnote text-pretty">
+            {myAge >= IL.pensionAge ? t("coastPast", { age: IL.pensionAge }) : coast.canStop
+              ? t("coastYes", { amount: shekels(coast.atTarget, locale), age: IL.pensionAge })
+              : t("coastNo", { need: shekels(coast.coastNumber, locale), have: shekels(savings, locale) })}
+          </p>
+          <p className="mt-1 text-caption text-pretty text-muted-foreground">{t("coastHint")}</p>
+        </div>
+        <div>
+          <h3 className="text-footnote font-semibold">{t("rateTitle")}</h3>
+          <table className="mt-1 w-full text-footnote tabular-nums">
+            <thead className="sr-only"><tr><th>{t("rateCol")}</th><th>{t("rateYearsCol")}</th></tr></thead>
+            <tbody>
+              {table.map((r) => (
+                <tr key={r.rate} className={cn(r === closest && "font-semibold text-primary")} aria-current={r === closest || undefined}>
+                  <td className="py-0.5">{Math.round(r.rate * 100)}%</td>
+                  <td className="py-0.5 text-end">{r.years == null ? t("never") : r.years === 0 ? t("already") : t("years", { years: fmt(r.years, locale, 1) })}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p className="mt-4 text-caption text-pretty text-muted-foreground">{t("bridgeNote", { infl: BRIDGE_INFLATION * 100 })}</p>
     </CardShell>
   );
 }

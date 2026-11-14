@@ -11,21 +11,24 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { markProfileChosen, useProfiles, useSwitchProfile } from "@/components/layout/workspace-switcher";
 import { deleteProfile, saveProfile } from "@/lib/api";
-import { AVATAR_ART, avatarArtId, profileName } from "@/lib/profile-avatar";
+import { defaultPip, profileName, type ProfilePip } from "@/lib/profile-avatar";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { PipPicker } from "@/components/home/pet-card";
 import { ProfileAvatar } from "./profile-avatar";
-import { AvatarArt } from "./avatar-art";
 
 // Immersive "who's using?" screen: always dark, whatever the app theme.
 const tile = "group flex min-h-11 flex-col items-center gap-3 rounded-3xl p-2 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 const square =
-  "size-24 text-5xl sm:size-36 sm:text-6xl ring-white/0 ring-offset-4 ring-offset-[#0c0b14] motion-safe:transition motion-safe:duration-200 group-hover:ring-4 group-hover:ring-white group-focus-visible:ring-4 group-focus-visible:ring-white motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105 motion-safe:group-active:scale-95";
+  "size-24 text-5xl md:size-36 md:text-6xl ring-white/0 ring-offset-4 ring-offset-[#0c0b14] motion-safe:transition motion-safe:duration-200 group-hover:ring-4 group-hover:ring-white group-focus-visible:ring-4 group-focus-visible:ring-white motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105 motion-safe:group-active:scale-95";
 
-type Draft = { id: number | null; name: string; avatarEmoji: string };
+type Draft = { id: number | null; name: string; pip: ProfilePip };
 
 export function ProfilesPage() {
   const t = useTranslations("profiles");
+  const tPet = useTranslations("pet");
+  const px = useIsMobile() ? 88 : 132; // a little inside the 96/144 square
   const nameOf = (p: Profile) => profileName(p.name, t("me"));
   const router = useRouter();
   const qc = useQueryClient();
@@ -45,7 +48,7 @@ export function ProfilesPage() {
   const onError = (e: unknown) => toast.error(e instanceof Error ? e.message : t("error"));
 
   const save = useMutation({
-    mutationFn: (d: Draft) => saveProfile(d.id, d.name, { avatarEmoji: d.avatarEmoji }),
+    mutationFn: (d: Draft) => saveProfile(d.id, d.name, { avatarPet: d.pip }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profiles"] });
       qc.invalidateQueries({ queryKey: ["settings"] });
@@ -70,8 +73,8 @@ export function ProfilesPage() {
     setConfirmDelete(false);
     setDraft(
       p
-        ? { id: p.id, name: nameOf(p), avatarEmoji: `@${avatarArtId(p.avatarEmoji) ?? AVATAR_ART[Math.abs(p.id - 1) % AVATAR_ART.length]}` }
-        : { id: null, name: "", avatarEmoji: `@${AVATAR_ART[profiles.length % AVATAR_ART.length]}` }
+        ? { id: p.id, name: nameOf(p), pip: p.avatarPet ?? defaultPip(p.id) }
+        : { id: null, name: "", pip: defaultPip(profiles.length + 1) }
     );
   };
 
@@ -91,7 +94,7 @@ export function ProfilesPage() {
               aria-label={managing ? t("editProfile", { name: nameOf(p) }) : nameOf(p)}
             >
               <span className="relative">
-                <ProfileAvatar profile={p} className={cn(square, managing && "brightness-50")} />
+                <ProfileAvatar profile={p} px={px} className={cn(square, managing && "brightness-50")} />
                 {managing ? (
                   <span className="absolute inset-0 flex items-center justify-center">
                     <span className="flex size-12 items-center justify-center rounded-full border-2 border-white bg-black/40">
@@ -132,7 +135,7 @@ export function ProfilesPage() {
       </Button>
 
       <Dialog open={draft != null} onOpenChange={(open) => !open && setDraft(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto">
           {draft ? (
             <form
               className="flex flex-col gap-5"
@@ -147,8 +150,9 @@ export function ProfilesPage() {
 
               <div className="flex justify-center">
                 <ProfileAvatar
-                  profile={{ id: draft.id ?? 1, name: draft.name, avatarEmoji: draft.avatarEmoji, avatarColor: null }}
-                  className="size-24"
+                  profile={{ id: draft.id ?? 1, name: draft.name, avatarEmoji: null, avatarColor: null, avatarPet: draft.pip }}
+                  className="size-28"
+                  px={104}
                 />
               </div>
 
@@ -164,28 +168,19 @@ export function ProfilesPage() {
                 />
               </label>
 
-              <fieldset>
-                <legend className="mb-2 text-sm font-medium">{t("avatar")}</legend>
-                <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                  {AVATAR_ART.map((id) => {
-                    const on = draft.avatarEmoji === `@${id}`;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        aria-label={t(`art.${id}`)}
-                        aria-pressed={on}
-                        onClick={() => setDraft({ ...draft, avatarEmoji: `@${id}` })}
-                        className={cn(
-                          "aspect-square overflow-hidden rounded-[28%] outline-none ring-offset-2 ring-offset-background focus-visible:ring-2 focus-visible:ring-ring motion-safe:transition-transform hover:scale-105",
-                          on && "ring-[3px] ring-primary"
-                        )}
-                      >
-                        <AvatarArt id={id} className="size-full" />
-                      </button>
-                    );
-                  })}
-                </div>
+              <fieldset className="space-y-4">
+                <legend className="mb-2 text-sm font-medium">{t("pip")}</legend>
+                <PipPicker value={draft.pip} onChange={(v) => setDraft({ ...draft, pip: { ...draft.pip, ...v } })} />
+                <label className="flex flex-col gap-1.5 text-sm font-medium">
+                  {t("pipName")}
+                  <Input
+                    maxLength={24}
+                    value={draft.pip.name}
+                    placeholder={tPet("defaultName")}
+                    onChange={(e) => setDraft({ ...draft, pip: { ...draft.pip, name: e.target.value } })}
+                    className="h-11"
+                  />
+                </label>
               </fieldset>
 
               {confirmDelete ? (

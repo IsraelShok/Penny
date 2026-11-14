@@ -8,12 +8,13 @@ import { getCashflowHealth, getResilience } from "@/lib/api";
 import { CardShell } from "./card-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfoTip } from "@/components/ui/info-tip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-const BAND_COLOR = { building: "var(--chart-4)", steady: "var(--chart-1)", strong: "var(--status-on-track, var(--chart-3))" } as const;
+const BAND_COLOR = { building: "var(--chart-5)", steady: "var(--chart-1)", strong: "var(--status-on-track, var(--chart-3))" } as const;
 
 /**
  * The one financial-health card (Home and Overview): the resilience score as a ring, each factor as a bar,
- * and the cash-flow warning signs as more rows in the same list. Band and signs are in words, so color is never the only signal.
+ * and the cash-flow warning signs behind one button with their count. Band and signs are in words, so color is never the only signal.
  */
 export function HealthCard({ details = true }: { details?: boolean }) {
   const t = useTranslations("resilience");
@@ -67,16 +68,29 @@ export function HealthCard({ details = true }: { details?: boolean }) {
                 {tc("level_healthy")}
               </li>
             )}
-            {signs?.map((s) => (
-              <li key={s} className="flex gap-2 text-footnote">
-                <TriangleAlert className="mt-0.5 size-4 shrink-0 text-status-heads-up" aria-hidden />
-                <span>
-                  <span className="font-medium">{tc(`sign_${s}`)}</span>
-                  <span className="block text-caption text-muted-foreground">{tc(`fix_${s}`)}</span>
-                </span>
-              </li>
-            ))}
           </ul>
+          {!!signs?.length && (
+            // Every warning sits behind one button; Base UI's popover handles Escape and returns focus to the button.
+            <Popover>
+              <PopoverTrigger className="inline-flex min-h-11 items-center gap-2 rounded-full bg-status-heads-up/10 px-4 text-footnote font-medium hover:bg-status-heads-up/20 focus-visible:outline-2 focus-visible:outline-ring">
+                <TriangleAlert className="size-4 shrink-0 text-status-heads-up" aria-hidden />
+                {th("warnings", { n: signs.length })}
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-80" aria-label={th("warnings", { n: signs.length })}>
+                <ul className="space-y-3">
+                  {signs.map((s) => (
+                    <li key={s} className="flex gap-2 text-footnote">
+                      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-status-heads-up" aria-hidden />
+                      <span>
+                        <span className="font-medium">{tc(`sign_${s}`)}</span>
+                        <span className="block text-caption text-muted-foreground">{tc(`fix_${s}`)}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </PopoverContent>
+            </Popover>
+          )}
           {d.score < 100 && <p className="text-footnote"><span className="font-medium">{t("nextStep")}</span> {t(`next_${d.weakest}`)}</p>}
           {d.ageOfMoney != null && (
             <p className="flex items-center gap-1 border-t border-border/60 pt-3 text-footnote">

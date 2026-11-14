@@ -11,6 +11,7 @@ import { goalMonthly, type FinancialPlan } from "@/lib/plan";
 import { fmt, shekels } from "@/lib/money";
 import { IL } from "@/lib/il-defaults";
 import { renewalIn, RENEWAL_HEADS_UP_DAYS } from "@/lib/renewals";
+import { HAR_HABITUACH_URL, insuranceOverlaps } from "@/lib/insurance";
 import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import { CardShell } from "@/components/home/card-shell";
 import { TakeHome } from "@/components/fi/take-home";
@@ -270,12 +271,13 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
   const tr = useTranslations("debts2");
   const locale = useLocale();
   const queryClient = useQueryClient();
-  const [draft, setDraft] = useState({ name: "", kind: "health" as InsurancePolicy["kind"], provider: "", monthlyPremium: "", renewalMonth: "" });
+  const ti = useTranslations("lifeTools.insurance");
+  const [draft, setDraft] = useState({ name: "", kind: "health" as InsurancePolicy["kind"], provider: "", monthlyPremium: "", renewalMonth: "", insured: "" });
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["plan"] });
   const add = useMutation({
     mutationFn: () => savePlanItem("policy", draft),
     onSuccess: () => {
-      setDraft({ ...draft, name: "", provider: "", monthlyPremium: "", renewalMonth: "" });
+      setDraft({ ...draft, name: "", provider: "", monthlyPremium: "", renewalMonth: "", insured: "" });
       refresh();
     },
     onError: (e: Error) => toast.error(e.message || t("saveFailed")),
@@ -293,10 +295,7 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
   });
   const remove = useUndoableDelete<InsurancePolicy & Record<string, unknown>>("policy", "plan", (p) => p.id, (p) => p.name);
   const total = policies.reduce((s, p) => s + p.monthlyPremium, 0);
-  const counts = new Map<string, number>();
-  for (const p of policies) counts.set(p.kind, (counts.get(p.kind) ?? 0) + 1);
-  // Two policies of the same kind (except "other") are a classic duplicate to check in Har HaBituach.
-  const duplicates = [...counts.entries()].filter(([k, n]) => n > 1 && k !== "other").map(([k]) => t(`policy_${k}`));
+  const overlaps = insuranceOverlaps(policies);
 
   return (
     <CardShell label={t("insuranceTitle")} className="lg:col-span-2">
@@ -306,7 +305,18 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
           <p className="text-footnote text-muted-foreground">{t("insuranceShare", { pct: Math.round((total / monthlyExpenses) * 100) })}</p>
         )}
       </div>
-      {duplicates.length > 0 && <p className="mt-2 text-footnote text-status-heads-up" role="status">{t("insuranceDuplicates", { kinds: duplicates.join(", ") })}</p>}
+      {overlaps.length > 0 && (
+        <div className="mt-3 rounded-xl bg-status-heads-up/10 p-3 text-footnote" role="status">
+          <ul className="space-y-1.5">
+            {overlaps.map((o) => (
+              <li key={`${o.kind}-${o.who}-${o.policyKind}`} className="text-pretty">
+                {ti(`overlap_${o.kind}`, { who: o.who || ti("household"), kind: t(`policy_${o.policyKind}`), names: o.names.join(", ") })}
+              </li>
+            ))}
+          </ul>
+          <a href={HAR_HABITUACH_URL} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-11 items-center font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{ti("harLink")}</a>
+        </div>
+      )}
       {soon.length > 0 && (
         <p className="mt-2 text-footnote text-status-heads-up" role="status">{tr("renewalSoon", { names: soon.map((p) => p.name).join(", ") })}</p>
       )}
@@ -316,7 +326,7 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
             <li key={p.id} className="flex items-center justify-between gap-3 py-2 text-footnote">
               <span className="min-w-0">
                 <span className="block truncate font-medium">{p.name}</span>
-                <span className="text-caption text-muted-foreground">{t(`policy_${p.kind}`)}{p.provider ? ` · ${p.provider}` : ""}</span>
+                <span className="text-caption text-muted-foreground">{t(`policy_${p.kind}`)}{p.provider ? ` · ${p.provider}` : ""}{p.insured ? ` · ${p.insured}` : ""}</span>
                 {p.renewalMonth && (
                   <span className="block text-caption text-muted-foreground tabular-nums">
                     {(() => {
@@ -345,7 +355,7 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
         </ul>
       )}
       <form
-        className="mt-4 grid grid-cols-2 items-end gap-3 md:grid-cols-[2fr_1fr_1fr_1fr_auto]"
+        className="mt-4 grid grid-cols-2 items-end gap-3 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]"
         onSubmit={(e) => {
           e.preventDefault();
           add.mutate();
@@ -367,6 +377,10 @@ function Insurance({ policies, monthlyExpenses }: { policies: InsurancePolicy[];
         <div className="space-y-1.5">
           <Label htmlFor="pol-provider">{t("policyProvider")}</Label>
           <Input id="pol-provider" maxLength={60} value={draft.provider} onChange={(e) => setDraft({ ...draft, provider: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="pol-insured">{ti("insured")}</Label>
+          <Input id="pol-insured" maxLength={40} placeholder={ti("insuredHint")} value={draft.insured} onChange={(e) => setDraft({ ...draft, insured: e.target.value })} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="pol-premium">{t("policyPremium")}</Label>

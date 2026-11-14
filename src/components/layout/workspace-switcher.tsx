@@ -61,7 +61,7 @@ export function useProfiles() {
   return { ...query, profiles, active: active ?? profiles[0], activeId };
 }
 
-export function WorkspaceSwitcher() {
+export function WorkspaceSwitcher({ side = "top" }: { side?: "top" | "bottom" }) {
   const router = useRouter();
   const tp = useTranslations("profiles");
   const switchProfile = useSwitchProfile();
@@ -83,7 +83,8 @@ export function WorkspaceSwitcher() {
             }
           >
             {active ? (
-              <ProfileAvatar profile={active} className="size-7 text-base" />
+              // The menu button shrinks every svg to 16px; the avatar art must fill its 28px box.
+              <ProfileAvatar profile={active} className="size-7 text-base [&_svg]:size-full!" />
             ) : (
               <div className="size-7 shrink-0 rounded-[28%] bg-primary" />
             )}
@@ -97,7 +98,7 @@ export function WorkspaceSwitcher() {
 
           <DropdownMenuContent
             align="start"
-            side="top"
+            side={side}
             sideOffset={8}
             className="min-w-[14rem]"
           >
@@ -107,7 +108,7 @@ export function WorkspaceSwitcher() {
                 onClick={() => switchProfile(w)}
                 className="gap-2"
               >
-                <ProfileAvatar profile={w} className="size-5 text-xs" />
+                <ProfileAvatar profile={w} className="size-5 text-xs" px={20} />
                 <span className="flex-1 truncate">{profileName(w.name, tp("me"))}</span>
                 {w.id === activeId ? (
                   <Check className="size-4 text-primary" />

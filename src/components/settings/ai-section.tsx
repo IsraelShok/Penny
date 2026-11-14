@@ -67,8 +67,10 @@ export function AISection() {
   const { data: agents } = useQuery({ queryKey: ["ai-agents"], queryFn: getInstalledAgents });
   const { data: ollama } = useQuery({
     queryKey: ["ollama-models", settings?.ollamaUrl],
-    queryFn: () => listOllamaModels(settings?.ollamaUrl),
+    // Not installed or not running answers 503; show that instead of "checking…" forever.
+    queryFn: () => listOllamaModels(settings?.ollamaUrl).catch((e: unknown) => ({ models: [] as string[], error: e instanceof Error ? e.message : "unavailable" })),
     enabled: !!settings,
+    retry: false,
   });
 
   if (!settings) {

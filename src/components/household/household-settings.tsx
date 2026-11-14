@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/select";
 import { SectionShell, SettingCard, SettingList, SettingRow } from "@/components/settings/section-shell";
 import { useHousehold } from "@/hooks/use-household";
+import { useProfiles } from "@/components/layout/workspace-switcher";
+import { ProfileAvatar } from "@/components/profiles/profile-avatar";
+import { profileName } from "@/lib/profile-avatar";
 import {
   INCOME_SHAPES,
   LIFE_EVENTS,
@@ -46,6 +49,7 @@ export function HouseholdSettings() {
       ) : (
         <>
           {shouldSuggestGentle(household) && <GentleSuggestion />}
+          <ProfilesCard />
           <MembersCard />
           <MoneyShapeCard />
           <GentleModeCard />
@@ -59,6 +63,34 @@ export function HouseholdSettings() {
         </>
       )}
     </SectionShell>
+  );
+}
+
+/** Each person's profile and Pip; editing happens on /profiles. */
+function ProfilesCard() {
+  const t = useTranslations("profiles");
+  const tOn = useTranslations("onboarding");
+  const { profiles } = useProfiles();
+  const row = "-mx-4 flex min-h-11 items-center gap-3 rounded-2xl px-4 py-2 hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-ring";
+  return (
+    <SettingCard title={t("household")} description={t("householdDescription")}>
+      <ul className="flex flex-wrap gap-4">
+        {profiles.map((p) => (
+          <li key={p.id} className="flex flex-col items-center gap-1">
+            <ProfileAvatar profile={p} className="size-14 bg-muted" px={52} />
+            <span className="max-w-20 truncate text-footnote">{profileName(p.name, t("me"))}</span>
+          </li>
+        ))}
+      </ul>
+      <Link href="/profiles" className={`${row} mt-3 font-medium`}>
+        <span className="min-w-0 flex-1">{t("manage")}</span>
+        <Forward className="text-muted-foreground" />
+      </Link>
+      <Link href="/setup?force=1" className={`${row} font-medium`}>
+        <span className="min-w-0 flex-1">{tOn("reopen")}</span>
+        <Forward className="text-muted-foreground" />
+      </Link>
+    </SettingCard>
   );
 }
 

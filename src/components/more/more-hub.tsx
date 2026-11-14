@@ -27,7 +27,7 @@ const GROUPS = [
   ] },
   { key: "documents", items: [
     { href: "/settings/legacy", key: "legacy", Icon: FileHeart },
-    { href: "/settings/data", key: "import", Icon: FileUp },
+    { href: "/settings/bank#import", key: "import", Icon: FileUp },
   ] },
 ] as const;
 

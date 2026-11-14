@@ -22,6 +22,32 @@ export function yearsToTarget(current: number, monthlySaving: number, annualRetu
   return null;
 }
 
+/**
+ * Early-retirement bridge: retiring at `fiAge`, the savings must carry you alone until pensions start at `pensionAge`,
+ * then only the part of spending the pensions don't cover. Today's money, with `realReturn` a year.
+ */
+export function fiBridge(i: { fiAge: number; pensionAge: number; monthlySpend: number; monthlyPension: number; withdrawalRate: number; realReturn: number }) {
+  const gapYears = Math.max(0, i.pensionAge - i.fiAge);
+  const after = fiNumber(Math.max(0, i.monthlySpend - i.monthlyPension) * 12, i.withdrawalRate);
+  // Spend through the gap, then have `after` left at pension age; both discounted back to fiAge.
+  const r = Math.pow(1 + i.realReturn, 1 / 12) - 1;
+  const n = Math.round(gapYears * 12);
+  const bridge = r === 0 ? i.monthlySpend * n : (i.monthlySpend * (1 - (1 + r) ** -n)) / r;
+  const total = bridge + after / (1 + r) ** n;
+  return { gapYears, bridge, after, total };
+}
+
+/** "Can I stop saving now": does today's balance grow, with no more deposits, to `target` in `years`? */
+export function coastCheck(current: number, annualReturn: number, years: number, target: number) {
+  const f = (1 + annualReturn) ** Math.max(0, years);
+  return { atTarget: current * f, coastNumber: target / f, canStop: current * f >= target };
+}
+
+/** Years to FI at each savings rate, for a given income, current savings, return and withdrawal rate. */
+export function yearsBySavingsRate(income: number, current: number, annualReturn: number, withdrawalRate: number, rates = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]) {
+  return rates.map((s) => ({ rate: s, years: yearsToTarget(current, income * s, annualReturn, fiNumber(income * (1 - s) * 12, withdrawalRate)) }));
+}
+
 export interface CarInputs {
   purchasePrice: number;
   currentValue: number;

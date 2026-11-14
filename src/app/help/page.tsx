@@ -13,6 +13,7 @@ const KEYS = [["Ctrl / ⌘ + K", "palette"], ["/", "search"], ["Esc", "close"], 
 export default async function HelpPage() {
   const t = await getTranslations("help");
   const tc = await getTranslations("concepts");
+  const tOn = await getTranslations("onboarding");
   const section = "card-surface";
   return (
     <AppShell>
@@ -23,6 +24,7 @@ export default async function HelpPage() {
           <ol className="mt-4 list-decimal space-y-3 ps-5 marker:font-semibold marker:text-primary leading-6">
             {STEPS.map((s) => <li key={s}><span className="font-semibold">{t(`step_${s}_title`)}</span><span className="block text-muted-foreground">{t(`step_${s}_body`)}</span></li>)}
           </ol>
+          <Link href="/setup?force=1" className={`${buttonVariants({ variant: "ghost" })} mt-4`}>{tOn("reopen")}</Link>
         </section>
 
         <section className={section} aria-labelledby="help-concepts">
@@ -40,7 +42,7 @@ export default async function HelpPage() {
         <section className={section} aria-labelledby="help-import">
           <h2 id="help-import" className="card-title">{t("importTitle")}</h2>
           <div className="mt-4"><ImportGuide /></div>
-          <Link href="/settings/data" className={`${buttonVariants({ variant: "ghost" })} mt-4`}>{t("importCta")}</Link>
+          <Link href="/settings/bank#import" className={`${buttonVariants({ variant: "ghost" })} mt-4`}>{t("importCta")}</Link>
         </section>
 
         <section className={`${section} hidden md:block`} aria-labelledby="help-keys">

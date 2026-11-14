@@ -5,8 +5,10 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
+import { SimpleTopBar } from "./simple-top-bar";
 import { PageWheelNav } from "./page-wheel-nav";
 import { AlertNotifier } from "./alert-notifier";
 import { UpdateBanner } from "./update-banner";
@@ -31,11 +33,15 @@ export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; c
 
 export function AppShell({ children }: { children: ReactNode }) {
   const t = useTranslations("nav");
+  const { isMobile } = useSidebar();
+  // Simple mode drops the side menu on desktop for a top bar; phones keep the menu sheet.
+  const topBar = usePlan().plan.simpleMode && !isMobile;
   return (
     <>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-background focus:px-5 focus:py-3 focus:outline-2">{t("skipToContent")}</a>
-      <AppSidebar />
+      {!topBar && <AppSidebar />}
       <SidebarInset id="main-content" tabIndex={-1} className="mobile-dock-content">
+        {topBar && <SimpleTopBar />}
         <UpdateBanner />
         {children}
         <Suspense fallback={null}><PageWheelNav /></Suspense>
