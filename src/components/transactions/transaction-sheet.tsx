@@ -114,7 +114,7 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
   const field = "flex flex-col gap-1.5";
   const control = "h-11 w-full rounded-lg border bg-background px-3 text-base sm:text-sm";
   const tone = kind === "income" ? "var(--status-on-track)" : "var(--expense)";
-  const yesterday = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date(Date.now() - 864e5));
+  const [yesterday] = useState(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date(Date.now() - 864e5)));
   const chip = (on: boolean) => `inline-flex min-h-11 items-center rounded-full px-4 text-footnote font-medium focus-visible:outline-2 focus-visible:outline-ring ${on ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-accent"}`;
   // Optional fields stay folded on a new entry; an edit opens them when one is already filled.
   const hasDetails = !!(txn && (memo || tags || owner || excluded || (account && account !== "cash")));

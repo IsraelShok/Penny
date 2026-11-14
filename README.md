@@ -12,8 +12,12 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white&style=flat-square)](https://sqlite.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](#רישיון)
+[![Release](https://img.shields.io/github/v/release/Sergey-Bar/Penny?style=flat-square&color=5541cc)](https://github.com/Sergey-Bar/Penny/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/Sergey-Bar/Penny/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/Sergey-Bar/Penny/actions/workflows/ci.yml)
 
-[יכולות](#יכולות) · [התקנה](#התקנה) · [איך זה עובד](#איך-זה-עובד) · [אבטחה](#אבטחה-במבט-אחד) · [תרומה לפרויקט](#תרומה-לפרויקט) · [English](README.en.md)
+[הורדה](#התקנה) · [יכולות](#יכולות) · [איך זה עובד](#איך-זה-עובד) · [אבטחה](#אבטחה-במבט-אחד) · [תרומה לפרויקט](#תרומה-לפרויקט) · [אתר](https://sergey-bar.github.io/Penny/) · [English](README.en.md)
+
+[![הורדה ל-Windows](https://img.shields.io/badge/הורדה-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![הורדה ל-Mac](https://img.shields.io/badge/הורדה-Mac-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![Docker](https://img.shields.io/badge/הרצה_ב-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#docker)
 
 ![מסך הבית](public/screenshots/home-light.png)
 
@@ -142,42 +146,47 @@ flowchart LR
 
 ## דרישות
 
-- **Node.js 22 ומעלה** (לא נדרש ב-Docker או בהתקנה לשולחן העבודה)
+- **Node.js 22 ומעלה**, רק להתקנה מקוד המקור
 - **Windows 11, macOS 13 ומעלה או Ubuntu 22 ומעלה** (עם systemd)
 - לאפליקציית המגש, שנבנית מקומית: Xcode Command Line Tools ב-macOS, ‏.NET 8 SDK ב-Windows. ‏`npm run setup` מציע להתקין אותם.
 - חשבונות בנק **בלי אימות דו-שלבי** לסנכרון אוטומטי (וואן זירו היא החריגה). בלי זה, משתמשים בקבצי דוחות.
 
 ## התקנה
 
-### Docker (מומלץ)
+### אפליקציה לשולחן העבודה (מומלץ)
 
-מריץ את האפליקציה, הסקרייפרים ו-Chromium בקונטיינר, מבודד מהמחשב.
+הדרך הקלה: מורידים, מתקינים, פותחים. בלי Node.js ובלי טרמינל. הסנכרון משתמש ב-Chrome או Edge שכבר מותקנים.
+
+| מערכת | קובץ ב[גרסה האחרונה](https://github.com/Sergey-Bar/Penny/releases/latest) | פעם ראשונה |
+|---|---|---|
+| Windows 10/11 | `Penny-Setup-<גרסה>.exe` | אם SmartScreen מזהיר על אפליקציה לא חתומה: "מידע נוסף" ← "הפעל בכל זאת" |
+| Mac עם שבב Apple (M1 ומעלה) | `Penny-<גרסה>-arm64.dmg` | גוררים ל-Applications. בפתיחה הראשונה: הגדרות המערכת ← פרטיות ואבטחה ← "פתח בכל זאת" |
+| Mac עם מעבד Intel | `Penny-<גרסה>-x64.dmg` | כמו למעלה |
+
+הנתונים נשמרים ב-`%APPDATA%\Penny\data` ‏(Windows) או ב-`~/Library/Application Support/Penny/data` ‏(Mac). כשיוצאת גרסה חדשה מופיע באנר באפליקציה; מריצים את המתקין החדש מעל הישן והנתונים נשארים.
+
+### Docker
+
+מריץ את האפליקציה, הסקרייפרים ו-Chromium בקונטיינר, מבודד מהמחשב. עובד ב-Windows, ב-Mac ובלינוקס עם [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 <div dir="ltr">
 
 ```bash
-docker compose up -d --build
+git clone https://github.com/Sergey-Bar/Penny.git
+cd Penny
+./Penny-docker.sh        # Windows: Penny-docker.bat
 ```
 
 </div>
 
-או בלחיצה אחת, שבונה, מפעילה ופותחת את `http://127.0.0.1:41234`: ב-Windows לוחצים פעמיים על `Penny-docker.bat`, ובמק או בלינוקס מריצים `./Penny-docker.sh`.
+הסקריפט בונה, מפעיל ופותח את `http://127.0.0.1:41234`. אפשר גם ישירות: `docker compose up -d --build`.
 
 - זמין רק בכתובת `127.0.0.1`. מסד הנתונים ומפתח ההצפנה נשמרים בווליום ושורדים עדכונים.
 - הגדרות נכנסות ל-`.env` (העתיקו מ-`.env.example`).
 - הבנייה מריצה את כל הבדיקות. אם בדיקה נכשלת, לא נוצר אימג'.
-- **עדכונים:** כשיוצאת גרסה חדשה מופיע באנר (והודעה בטלפון בטלגרם, אם הוגדר). שום דבר לא מתקין את עצמו. מריצים `Penny-update.bat` ב-Windows או `./Penny-update.sh` במק ובלינוקס. הסקריפט עובר לגרסה האחרונה שפורסמה, הוא מגבה את מסד הנתונים והמפתח, בונה את הגרסה החדשה (כולל בדיקות), מחליף, וחוזר לגרסה הקודמת אם החדשה לא תקינה.
+- **עדכונים:** כשיוצאת גרסה חדשה מופיע באנר (והודעה בטלגרם, אם הוגדר). מריצים `./Penny-update.sh` (או `Penny-update.bat`): הסקריפט עובר לגרסה האחרונה שפורסמה, מגבה את מסד הנתונים והמפתח, בונה (כולל בדיקות), מחליף, וחוזר לגרסה הקודמת אם החדשה לא תקינה.
 - **קבצי דוחות:** שמים אותם בתיקייה `imports/` ליד `docker-compose.yml`.
 - **Ollama על המחשב המארח:** מגדירים `PENNY_ALLOW_REMOTE_OLLAMA=1` ומשתמשים ב-`http://host.docker.internal:11434`.
-
-### אפליקציה לשולחן העבודה (Windows ו-Mac)
-
-מורידים את המתקין מ[עמוד הגרסאות](https://github.com/Sergey-Bar/Penny/releases). בלי Node.js ובלי טרמינל. הסנכרון משתמש ב-Chrome או Edge שכבר מותקנים. לעדכון, מריצים את המתקין החדש מעל הישן.
-
-- **Windows:** מריצים את `Penny-Setup-<גרסה>.exe` ופותחים מתפריט התחל. הנתונים נשמרים ב-`%APPDATA%\Penny\data`. אם SmartScreen מזהיר על אפליקציה לא חתומה: \"מידע נוסף\" ← \"הפעל בכל זאת\".
-- **Mac:** פותחים את קובץ ה-`.dmg` (`arm64` למחשבי Apple Silicon, ‏`x64` לאינטל) וגוררים את Penny ל-Applications. הנתונים נשמרים ב-`~/Library/Application Support/Penny/data`. האפליקציה עדיין לא מאושרת ע"י Apple, אז בפעם הראשונה: הגדרות המערכת ← פרטיות ואבטחה ← "פתח בכל זאת".
-
-לבנייה עצמית: `npm run desktop:build` על המערכת שבונים עבורה (הפלט ב-`dist-desktop/`). גרסאות רשמיות נבנות אוטומטית ב-GitHub כשדוחפים תגית `vX.Y.Z`.
 
 ### מקוד המקור
 
@@ -192,7 +201,7 @@ npm run setup
 
 </div>
 
-‏`npm run setup` בונה את האפליקציה, מתקין שירות שרץ תמיד (LaunchAgent ב-macOS, ‏systemd בלינוקס, Task Scheduler ב-Windows), בונה ורושם את אפליקציית המגש, ופותח את האפליקציה. ב-Windows הוא גם מוסיף את השורה `127.0.0.1 penny.localhost` לקובץ hosts, וזה השלב היחיד שמבקש הרשאות מנהל.
+למפתחים, או למי שרוצה שירות שרץ תמיד ואפליקציה במגש המערכת. ‏`npm run setup` בונה את האפליקציה, מתקין שירות שרץ תמיד (LaunchAgent ב-macOS, ‏systemd בלינוקס, Task Scheduler ב-Windows), בונה ורושם את אפליקציית המגש, ופותח את האפליקציה. ב-Windows הוא גם מוסיף את השורה `127.0.0.1 penny.localhost` לקובץ hosts, וזה השלב היחיד שמבקש הרשאות מנהל.
 
 בהפעלה הראשונה של אפליקציית המגש תופיע אזהרה על קובץ לא חתום, כי בניתם אותו בעצמכם: לחיצה ימנית ← Open ‏(macOS) או "מידע נוסף" ← "הפעל בכל זאת" (Windows). פעם אחת בלבד.
 
@@ -320,7 +329,7 @@ Penny/
 
 ## תרומה לפרויקט
 
-הפרויקט נבנה קודם כול לשימוש אישי, ואחר כך כקוד פתוח. נשמח ל-Pull Requests על:
+הפרויקט נבנה קודם כול לשימוש אישי, ואחר כך כקוד פתוח. ההוראות המלאות להתקנת סביבת פיתוח: [CONTRIBUTING.md](CONTRIBUTING.md). נשמח ל-Pull Requests על:
 
 - **בנקים:** מוסיפים ל-`BANK_PROVIDERS` ב-[src/lib/types.ts](src/lib/types.ts) וממפים ב-[src/server/scrapers/index.ts](src/server/scrapers/index.ts).
 - **ספקי AI:** מממשים את `AIProvider` מ-[src/server/ai/types.ts](src/server/ai/types.ts) ורושמים ב-[src/server/ai/factory.ts](src/server/ai/factory.ts).
