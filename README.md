@@ -1,116 +1,119 @@
+<div dir="rtl">
+
 <div align="center">
 
 # Penny
 
-**A calm, local-first money app for Israeli households.**
-Your banks, your budget and your future in one place, on your own computer.
+**אפליקציית כסף רגועה למשקי בית בישראל, שרצה אצלכם במחשב.**
+הבנקים, התקציב והעתיד שלכם במקום אחד, בלי שהנתונים יוצאים מהבית.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs&logoColor=white&style=flat-square)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white&style=flat-square)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white&style=flat-square)](https://sqlite.org/)
-[![Hebrew first](https://img.shields.io/badge/UI-עברית%20%2F%20English-5541cc?style=flat-square)](#language-and-accessibility)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](#license)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](#רישיון)
 
-[Features](#features) · [Install](#install) · [How it works](#how-it-works) · [Security](#security-at-a-glance) · [Contributing](#contributing)
+[יכולות](#יכולות) · [התקנה](#התקנה) · [איך זה עובד](#איך-זה-עובד) · [אבטחה](#אבטחה-במבט-אחד) · [תרומה לפרויקט](#תרומה-לפרויקט) · [English](README.en.md)
 
-![Penny home](public/screenshots/home-light.png)
+![מסך הבית](public/screenshots/home-light.png)
 
 </div>
 
 > [!WARNING]
-> Penny is a personal, local-only tool. Scraping financial institutions may violate their terms of service. Use it only for your own accounts, on your own machine. **Do not deploy it as a hosted service.**
+> זה כלי אישי שרץ רק על המחשב שלכם. משיכת נתונים אוטומטית מבנקים עלולה להפר את תנאי השימוש שלהם. השתמשו בו רק לחשבונות שלכם ועל המחשב שלכם. **אל תפעילו אותו כשירות באינטרנט.**
 
-## Why Penny?
+## למה?
 
-Israeli banks have poor exports, global budgeting apps don't understand shekels, credit points or study funds, and most cloud finance apps want your bank password on their servers.
+הבנקים בישראל לא מאפשרים לייצא נתונים בצורה נוחה, אפליקציות תקציב בינלאומיות לא מכירות שקלים, נקודות זיכוי או קרן השתלמות, ורוב אפליקציות הכסף בענן מבקשות את סיסמת הבנק שלכם לשרתים שלהן.
 
-Penny runs on your laptop. It pulls transactions straight from your banks and credit cards, keeps them in one SQLite file you can copy and back up, and lets an AI of your choice sort them into categories, or none at all. Then it helps with the questions that actually matter in Israel: am I on track this month, do I have a safety net, am I paying too much in fees, and am I getting every tax benefit I'm owed.
+כאן הכול רץ על המחשב שלכם. התנועות נמשכות ישירות מהבנקים ומחברות האשראי, נשמרות בקובץ SQLite אחד שאפשר להעתיק ולגבות, ומסווגות לקטגוריות על ידי AI לבחירתכם, או בלי AI בכלל. ואז האפליקציה עוזרת בשאלות שבאמת חשובות בישראל: האם אני עומד בתקציב החודש, האם יש לי כרית ביטחון, האם אני משלם יותר מדי דמי ניהול, והאם אני מקבל את כל הטבות המס שמגיעות לי.
 
-Nothing leaves your machine except the calls you choose: to your bank, and to an AI provider if you pick a cloud one.
+שום דבר לא יוצא מהמחשב, חוץ מהפניות שאתם בוחרים: לבנק, ולספק AI אם בחרתם ספק בענן.
 
-## Features
+## יכולות
 
-### Everyday money
-- **Two modes.** *Simple* shows one clear number, this month by rows, and every category week by week (budget for the week, spent, left). *Advanced* adds the full dashboard, insights and a customizable home grid.
-- **Transactions** grouped by week, with category colours, search, filters, bulk edit, splits and tags. Add cash or manual transactions in a quick, amount-first sheet.
-- **Budgets** with pacing, 50/30/20 view, monthly hero card and per-category detail.
-- **Category families.** Groups and subcategories share a colour family; pick categories by colour, A-Z or group, and create your own.
-- **Financial health** score with one warnings button that lists everything that needs care.
-- **What's ahead.** Upcoming charges, recurring bills and a cash-flow forecast.
+### הכסף של היום-יום
+- **שני מצבים.** *פשוט* מציג מספר אחד ברור, את החודש לפי שורות, וכל קטגוריה לפי שבועות (תקציב לשבוע, הוצאה, נשאר). *מתקדם* מוסיף לוח מלא, תובנות ומסך בית שאפשר לסדר.
+- **תנועות** לפי שבועות, עם צבעי קטגוריות, חיפוש, סינון, עריכה מרובה, פיצול ותגיות. הוספת מזומן או תנועה ידנית בטופס מהיר שמתחיל מהסכום.
+- **תקציבים** עם קצב הוצאה, תצוגת 50/30/20, כרטיס חודשי ופירוט לכל קטגוריה.
+- **משפחות קטגוריות.** קבוצות ותתי-קטגוריות חולקות משפחת צבע. בוחרים קטגוריה לפי צבע, א-ב או קבוצה, ויוצרים קטגוריות משלכם.
+- **בריאות פיננסית** עם ציון, וכפתור אזהרות אחד שמרכז את כל מה שדורש תשומת לב.
+- **מה צפוי.** חיובים קרובים, חיובים קבועים ותחזית תזרים.
 
-### Israeli money tools
-More than 25 calculators and guided tools, ordered by life stage, each marked with the year its figures are valid for:
+### כלים לכסף בישראל
+יותר מ-25 מחשבונים וכלים מודרכים, מסודרים לפי שלבי החיים. כל כלי מציין לאיזו שנה הנתונים שלו נכונים.
 
-| Area | Tools |
+| תחום | כלים |
 |---|---|
-| Tax | Credit points and tax-refund check (with a Form 135 checklist), tax-benefit deposits to pension and study fund, loss offset (Form 867), net from gross |
-| Pension and retirement | Your fees against the market (links to Gemel-Net, Pensia-Net, Bituach-Net), clearing-house report guide, investment track choice, annuity vs lump sum, severance when changing jobs, early-retirement bridge to 67 |
-| Safety net | Emergency fund, insurance list with double-insurance check, forgotten money (Har HaKesef) checklist, benefits check (work grant, reserve duty, child savings, arnona discounts) |
-| Big decisions | Mortgage with 5-year variable tracks and Bank of Israel rules, prepay vs invest, rent vs buy, discounted-home lottery, car cost, lease vs buy |
-| Everyday | Bank fee audit against the basic track, debt payoff, loan cost, savings goals, vacation budget, kids' investing |
+| מס | בדיקת נקודות זיכוי והחזר מס (כולל רשימת מסמכים לטופס 135), הפקדות עם הטבת מס לפנסיה ולקרן השתלמות, קיזוז הפסדים (טופס 867), נטו מברוטו |
+| פנסיה ופרישה | דמי הניהול שלכם מול השוק (עם קישורים לגמל-נט, פנסיה-נט וביטוח-נט), מדריך לדוח המסלקה הפנסיונית, בחירת מסלול השקעה, קצבה או היוון, פיצויים במעבר עבודה, גשר לפרישה מוקדמת עד גיל 67 |
+| רשת ביטחון | קרן חירום, רשימת ביטוחים ובדיקת ביטוח כפול, צ'קליסט הר הכסף לכסף שנשכח, בדיקת זכויות (מענק עבודה, מילואים, חיסכון לכל ילד, הנחה בארנונה) |
+| החלטות גדולות | משכנתא עם מסלולים משתנים כל 5 שנים ומגבלות בנק ישראל, פירעון מוקדם מול השקעה, שכירות או קנייה, דירה בהנחה, עלות רכב, ליסינג או קנייה |
+| יום-יום | בדיקת עמלות בנק מול המסלול הבסיסי, יציאה מחובות, עלות הלוואה, יעדי חיסכון, תקציב חופשה, השקעה לילדים |
 
-Plus a **knowledge center** of short original guides in Hebrew and English, and daily tips.
+וגם **מרכז ידע** עם מדריכים קצרים ומקוריים בעברית ובאנגלית, וטיפ יומי.
 
-### Household
-- **Profiles that share one household,** in a "who's using?" screen. Each person keeps their own home layout and accessibility choices.
-- **Pip,** a small companion whose mood follows the household's finances. Every profile picks its own Pip as its avatar.
-- **Goals,** net worth, investments and pension balances (synced from Clal, Harel, Meitav, Menora and Migdal), and a "family document" for the day someone else needs to find everything.
+### משק הבית
+- **פרופילים שחולקים משק בית אחד**, עם מסך "מי משתמש?". כל אחד שומר סידור בית והגדרות נגישות משלו.
+- **פיפ**, חבר קטן שמצב הרוח שלו משקף את מצב הכסף של הבית. כל פרופיל בוחר לעצמו פיפ, והוא גם תמונת הפרופיל.
+- **יעדים**, שווי נקי, השקעות ויתרות פנסיה (מסונכרנות מכלל, הראל, מיטב, מנורה ומגדל), ו"מסמך למשפחה" ליום שמישהו אחר יצטרך למצוא הכול.
 
-### Getting data in
-- **Automatic:** 18 Israeli banks and card companies via [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), on a daily schedule.
-- **Manual:** drop a CSV, XLSX or XLS statement into the app or into a watched import folder. A transaction that comes from both is stored once.
-- **Onboarding** walks a new user through profile and Pip, connecting or importing, a monthly target, budgets, an optional AI provider and a short tour. It can be skipped, resumed and reopened.
+### הכנסת נתונים
+- **אוטומטי:** 18 בנקים וחברות אשראי בישראל דרך [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), בסנכרון יומי.
+- **ידני:** גוררים קובץ CSV, XLSX או XLS לאפליקציה או לתיקיית ייבוא שהיא עוקבת אחריה. תנועה שמגיעה משני המקורות נשמרת פעם אחת.
+- **אונבורדינג** שמלווה משתמש חדש: פרופיל ופיפ, חיבור או ייבוא, יעד חודשי, תקציבים, ספק AI (אופציונלי) וסיור קצר. אפשר לדלג, להמשיך מאותה נקודה ולפתוח אותו שוב.
 
-### Language and accessibility
-- **Hebrew first,** with a full right-to-left layout, and English. Bank names, categories, numbers and dates are localized.
-- **Accessibility menu** (Alt+A): text size, contrast, stop animations, readable font, link highlighting and more, saved per profile, with an accessibility statement in line with IS 5568 and WCAG 2.2 AA.
-- **Privacy mode** (Ctrl/⌘+Shift+P) hides amounts on screen.
-- **Themes:** light, dark (midnight) and glass, in four accent colours or your own.
+### שפה ונגישות
+- **עברית קודם כול**, עם פריסה מלאה מימין לשמאל, וגם אנגלית. שמות בנקים, קטגוריות, מספרים ותאריכים מותאמים לשפה.
+- **תפריט נגישות** (Alt+A): גודל טקסט, ניגודיות, עצירת אנימציות, גופן קריא, הדגשת קישורים ועוד, נשמר לכל פרופיל. כולל הצהרת נגישות לפי ת"י 5568 ו-WCAG 2.2 AA.
+- **מצב פרטיות** (Ctrl/⌘+Shift+P) מסתיר סכומים מהמסך.
+- **ערכות נושא:** בהיר, כהה וזכוכית, בארבעה צבעי הדגשה או בצבע שלכם.
 
-### Also
-- **Ask your money** in plain language, and a **Telegram bot** for instant spending feedback.
-- **Phone access on your Wi-Fi** (opt-in), installable as a web app.
-- **Menu bar / tray companion** on macOS and Windows.
+### ועוד
+- **לשאול את הכסף** בשפה רגילה, ו**בוט טלגרם** עם משוב מיידי על הוצאות.
+- **גישה מהטלפון ברשת הביתית** (בהפעלה מפורשת), עם אפשרות להתקין כאפליקציה.
+- **אפליקציה בשורת התפריטים / מגש המערכת** ב-macOS וב-Windows.
 
-## Screenshots
+## צילומי מסך
 
 <table>
 <tr>
-<td width="50%"><img src="public/screenshots/dashboard-light.png" alt="Budget dashboard, light theme"></td>
-<td width="50%"><img src="public/screenshots/dashboard-dark.png" alt="Budget dashboard, dark theme"></td>
+<td width="50%"><img src="public/screenshots/dashboard-light.png" alt="לוח התקציב, ערכה בהירה"></td>
+<td width="50%"><img src="public/screenshots/dashboard-dark.png" alt="לוח התקציב, ערכה כהה"></td>
 </tr>
 <tr>
-<td><img src="public/screenshots/transactions-light.png" alt="Transactions grouped by week"></td>
-<td><img src="public/screenshots/settings-bank-light.png" alt="Accounts and import settings"></td>
+<td><img src="public/screenshots/transactions-light.png" alt="תנועות לפי שבועות"></td>
+<td><img src="public/screenshots/settings-bank-light.png" alt="הגדרות חשבונות וייבוא"></td>
 </tr>
 </table>
 
-Regenerate them with `npm run docs:screenshots`.
+ליצירה מחדש: `npm run docs:screenshots`.
 
-## Supported institutions
+## מוסדות נתמכים
 
-| Type | Institutions |
+| סוג | מוסדות |
 |---|---|
-| Banks | Hapoalim, Leumi, Discount, Mizrahi Tefahot, Mercantile, First International (FIBI), Otsar Hahayal, Pagi, Yahav, Massad, Union, One Zero, Beyahad Bishvilha, Behatsdaa |
-| Credit cards | Isracard, Visa Cal, Max, American Express |
-| Pension and savings | Clal, Harel, Meitav, Menora, Migdal (balances, via `israeli-pension-scrapers`) |
+| בנקים | הפועלים, לאומי, דיסקונט, מזרחי טפחות, מרכנתיל, הבינלאומי, אוצר החייל, פאגי, יהב, מסד, איגוד, וואן זירו, ביחד בשבילך, בהצדעה |
+| כרטיסי אשראי | ישראכרט, ויזה כאל, מקס, אמריקן אקספרס |
+| פנסיה וחיסכון | כלל, הראל, מיטב, מנורה, מגדל (יתרות, דרך `israeli-pension-scrapers`) |
 
-Not listed? Import its statement files, or add a scraper (see [Contributing](#contributing)).
+המוסד שלכם לא ברשימה? ייבאו את קבצי הדוחות שלו, או הוסיפו סקרייפר (ראו [תרומה לפרויקט](#תרומה-לפרויקט)).
 
-## AI providers
+## ספקי AI
 
-AI is optional. It categorizes new transactions and answers "ask your money" questions.
+ה-AI אופציונלי. הוא מסווג תנועות חדשות לקטגוריות ועונה על שאלות ב"לשאול את הכסף".
 
-| | Claude API | Ollama | Coding-agent CLI | None |
+| | Claude API | Ollama | כלי CLI של סוכן קוד | בלי |
 |---|---|---|---|---|
-| Runs | Anthropic cloud | Your machine | Vendor cloud, via the CLI you already use | Nowhere |
-| Cost | A fraction of a shekel per sync | Free | Your existing plan | Free |
-| Setup | API key | Install Ollama and pull a model | Claude Code, Codex, Gemini CLI, OpenCode or Kilo, in read-only mode | Nothing |
+| איפה רץ | הענן של Anthropic | המחשב שלכם | הענן של הספק, דרך ה-CLI שכבר יש לכם | בשום מקום |
+| עלות | שבריר שקל לסנכרון | חינם | המנוי הקיים שלכם | חינם |
+| הגדרה | מפתח API | התקנת Ollama והורדת מודל | Claude Code, Codex, Gemini CLI, OpenCode או Kilo, במצב קריאה בלבד | כלום |
 
-Change provider any time in **Settings → AI**. Categories you corrected are remembered per merchant either way.
+אפשר להחליף ספק בכל רגע ב**הגדרות ← AI**. קטגוריות שתיקנתם נזכרות לכל בית עסק בכל מקרה.
 
-## How it works
+## איך זה עובד
+
+<div dir="ltr">
 
 ```mermaid
 flowchart LR
@@ -135,39 +138,47 @@ flowchart LR
     end
 ```
 
-## Requirements
+</div>
 
-- **Node.js 22+** (not needed for Docker or the desktop installer)
-- **Windows 11, macOS 13+ or Ubuntu 22+** (with systemd)
-- For the tray companion, built locally: Xcode Command Line Tools on macOS, .NET 8 SDK on Windows. `npm run setup` offers to install them.
-- Bank accounts with **2FA disabled** for automatic sync (One Zero is the exception). Without that, use statement files.
+## דרישות
 
-## Install
+- **Node.js 22 ומעלה** (לא נדרש ב-Docker או בהתקנה לשולחן העבודה)
+- **Windows 11, macOS 13 ומעלה או Ubuntu 22 ומעלה** (עם systemd)
+- לאפליקציית המגש, שנבנית מקומית: Xcode Command Line Tools ב-macOS, ‏.NET 8 SDK ב-Windows. ‏`npm run setup` מציע להתקין אותם.
+- חשבונות בנק **בלי אימות דו-שלבי** לסנכרון אוטומטי (וואן זירו היא החריגה). בלי זה, משתמשים בקבצי דוחות.
 
-### Docker (recommended)
+## התקנה
 
-Runs Penny, its scrapers and Chromium in a container, isolated from your machine.
+### Docker (מומלץ)
+
+מריץ את האפליקציה, הסקרייפרים ו-Chromium בקונטיינר, מבודד מהמחשב.
+
+<div dir="ltr">
 
 ```bash
 docker compose up -d --build
 ```
 
-On Windows, double-click `Penny-docker.bat`: it builds, starts and opens `http://127.0.0.1:41234`.
+</div>
 
-- Published on `127.0.0.1` only. The database and encryption key live in the data volume and survive updates.
-- Settings go in `.env` (copy `.env.example`).
-- The image build runs the test suite; if tests fail, no image is produced.
-- **Updates:** Penny shows a banner (and a Telegram message, if set up) when a newer release exists. Nothing installs itself. Run `Penny-update.bat` (or `Penny-update.ps1`): it backs up the database and key, builds the newest release (tests included), switches, and rolls back if the new one isn't healthy.
-- **Statement files:** drop exports into `imports/` next to `docker-compose.yml`.
-- **Ollama on the host:** set `PENNY_ALLOW_REMOTE_OLLAMA=1` and use `http://host.docker.internal:11434`.
+ב-Windows אפשר פשוט ללחוץ פעמיים על `Penny-docker.bat`: הוא בונה, מפעיל ופותח את `http://127.0.0.1:41234`.
 
-### Desktop app (Windows)
+- זמין רק בכתובת `127.0.0.1`. מסד הנתונים ומפתח ההצפנה נשמרים בווליום ושורדים עדכונים.
+- הגדרות נכנסות ל-`.env` (העתיקו מ-`.env.example`).
+- הבנייה מריצה את כל הבדיקות. אם בדיקה נכשלת, לא נוצר אימג'.
+- **עדכונים:** כשיוצאת גרסה חדשה מופיע באנר (והודעה בטלפון בטלגרם, אם הוגדר). שום דבר לא מתקין את עצמו. מריצים `Penny-update.bat` (או `Penny-update.ps1`): הוא מגבה את מסד הנתונים והמפתח, בונה את הגרסה החדשה (כולל בדיקות), מחליף, וחוזר לגרסה הקודמת אם החדשה לא תקינה.
+- **קבצי דוחות:** שמים אותם בתיקייה `imports/` ליד `docker-compose.yml`.
+- **Ollama על המחשב המארח:** מגדירים `PENNY_ALLOW_REMOTE_OLLAMA=1` ומשתמשים ב-`http://host.docker.internal:11434`.
 
-Download **Penny Setup.exe** from the [Releases page](https://github.com/Sergey-Bar/Penny/releases), run it, and open Penny from the Start menu. No Node.js, no terminal. Data stays in `%APPDATA%\Penny\data`, and bank sync uses the Chrome or Edge you already have. To update, run the new installer over the old one.
+### אפליקציה לשולחן העבודה (Windows)
 
-Build it yourself with `npm run desktop:build` (output in `dist-desktop/`).
+מורידים את **Penny Setup.exe** מ[עמוד הגרסאות](https://github.com/Sergey-Bar/Penny/releases), מריצים, ופותחים מתפריט התחל. בלי Node.js ובלי טרמינל. הנתונים נשמרים ב-`%APPDATA%\Penny\data`, והסנכרון משתמש ב-Chrome או Edge שכבר מותקנים. לעדכון, מריצים את המתקין החדש מעל הישן.
 
-### From source
+לבנייה עצמית: `npm run desktop:build` (הפלט ב-`dist-desktop/`).
+
+### מקוד המקור
+
+<div dir="ltr">
 
 ```bash
 git clone https://github.com/Sergey-Bar/Penny.git
@@ -176,79 +187,87 @@ npm install
 npm run setup
 ```
 
-`npm run setup` builds the app, installs the always-on service (LaunchAgent on macOS, systemd on Linux, Task Scheduler on Windows), builds and registers the tray companion, and opens the app. On Windows it also adds `127.0.0.1 penny.localhost` to your hosts file, the only step that asks for Administrator.
+</div>
 
-The first launch of the tray app shows an unsigned-binary warning, because you built it locally: right-click → Open (macOS) or "More info" → "Run anyway" (Windows). Once.
+‏`npm run setup` בונה את האפליקציה, מתקין שירות שרץ תמיד (LaunchAgent ב-macOS, ‏systemd בלינוקס, Task Scheduler ב-Windows), בונה ורושם את אפליקציית המגש, ופותח את האפליקציה. ב-Windows הוא גם מוסיף את השורה `127.0.0.1 penny.localhost` לקובץ hosts, וזה השלב היחיד שמבקש הרשאות מנהל.
 
-Then open **`http://penny.localhost:41234`** and bookmark it.
+בהפעלה הראשונה של אפליקציית המגש תופיע אזהרה על קובץ לא חתום, כי בניתם אותו בעצמכם: לחיצה ימנית ← Open ‏(macOS) או "מידע נוסף" ← "הפעל בכל זאת" (Windows). פעם אחת בלבד.
 
-## Importing statement files
+אחר כך פותחים את **`http://penny.localhost:41234`** ושומרים כמועדף.
 
-For accounts Penny can't sync, or months the bank no longer shows:
+## ייבוא קבצי דוחות
 
-- **Upload:** Settings → Accounts & import → "Import a file", then pick the account.
-- **Import folder:** Penny watches a folder (shown on the same page; `./imports` in Docker) with one subfolder per account, such as `max (1234)`. A file dropped there is imported and moved to `imported/`, or to `failed/` with a note saying why. For an account Penny doesn't sync, create a folder with its name.
+לחשבונות שאי אפשר לסנכרן, או לחודשים שהבנק כבר לא מציג:
 
-A transaction that arrives from both sync and a file is stored once (same account and amount, at most a day apart). The synced copy wins and keeps your category, notes and tags.
+- **העלאה:** הגדרות ← חשבונות וייבוא ← "ייבוא קובץ", ובוחרים את החשבון.
+- **תיקיית ייבוא:** האפליקציה עוקבת אחרי תיקייה (מוצגת באותו עמוד; ב-Docker זו `./imports`) עם תת-תיקייה לכל חשבון, למשל `max (1234)`. קובץ שנזרק לשם מיובא ועובר ל-`imported/`, או ל-`failed/` עם הסבר למה. לחשבון שלא מסתנכרן, יוצרים תיקייה בשם שלו.
 
-## Everyday commands
+תנועה שמגיעה גם מהסנכרון וגם מקובץ נשמרת פעם אחת (אותו חשבון ואותו סכום, בהפרש של יום לכל היותר). הגרסה מהסנכרון מנצחת ושומרת את הקטגוריה, ההערות והתגיות שלכם.
 
-| What you want | Run |
+## פקודות שימושיות
+
+| מה רוצים | מה מריצים |
 |---|---|
-| Use the app | Open `http://penny.localhost:41234` |
-| Develop with hot reload | `npm run dev` → `http://127.0.0.1:3000` |
-| Apply your edits to the always-on app | `npm run service:reload` |
-| Run the tests | `npx vitest run` (unit) · `npx playwright test` (end to end) |
-| Type-check and lint | `npx tsc --noEmit` · `npm run lint` |
+| להשתמש באפליקציה | לפתוח את `http://penny.localhost:41234` |
+| לפתח עם רענון חי | `npm run dev` ← `http://127.0.0.1:3000` |
+| להחיל שינויים על השירות שרץ תמיד | `npm run service:reload` |
+| להריץ בדיקות | `npx vitest run` (יחידה) · `npx playwright test` (מקצה לקצה) |
+| בדיקת טיפוסים ולינט | `npx tsc --noEmit` · `npm run lint` |
 
-### Service commands
+### פקודות השירות
 
-| Command | What it does |
+| פקודה | מה היא עושה |
 |---|---|
-| `npm run service:status` | Running? Bound to loopback? |
-| `npm run service:start` / `:stop` | Start or stop now |
-| `npm run service:reload` | Rebuild and restart |
-| `npm run service:logs` | Tail server logs |
-| `npm run service:open` | Open the app in your browser |
-| `npm run service:uninstall` | Remove auto-start and the hosts entry. `data/` is untouched. |
+| `npm run service:status` | האם רץ? האם מאזין רק ל-loopback? |
+| `npm run service:start` / `:stop` | הפעלה או עצירה עכשיו |
+| `npm run service:reload` | בנייה מחדש והפעלה |
+| `npm run service:logs` | צפייה בלוגים של השרת |
+| `npm run service:open` | פתיחת האפליקציה בדפדפן |
+| `npm run service:uninstall` | הסרת ההפעלה האוטומטית ושורת ה-hosts. התיקייה `data/` לא נגעת. |
 
-## Uninstall
+## הסרה
+
+<div dir="ltr">
 
 ```bash
 npm run uninstall
 ```
 
-Stops and removes the service, removes the hosts entry on Windows, and removes the tray app and its login item.
+</div>
 
-**Kept on purpose:** `data/` (your transactions, budgets and encryption key) and the repository itself. To remove everything: `rm -rf data/ && cd .. && rm -rf Penny/`.
+עוצר ומסיר את השירות, מסיר את שורת ה-hosts ב-Windows, ומסיר את אפליקציית המגש וההפעלה שלה בכניסה למערכת.
 
-## Security at a glance
+**נשאר בכוונה:** התיקייה `data/` (התנועות, התקציבים ומפתח ההצפנה) והמאגר עצמו. להסרה מלאה: `rm -rf data/ && cd .. && rm -rf Penny/`.
 
-| Concern | Defense |
+## אבטחה במבט אחד
+
+| חשש | הגנה |
 |---|---|
-| Credentials at rest | AES-256-GCM; the key file must be mode `0600` or the server refuses to start |
-| Network exposure | Bound to `127.0.0.1` only. Phone access on your Wi-Fi is opt-in and protected by an access code |
-| Browser CSRF | Origin / Referer checks on every request; destructive endpoints need an explicit confirmation |
-| App lock | Optional passcode lock with automatic timeout |
-| Bot detection | Chromium sandbox on by default (`PENNY_DISABLE_CHROMIUM_SANDBOX=1` to opt out) |
-| Supply chain | `israeli-bank-scrapers`, `better-sqlite3` and `@anthropic-ai/sdk` pinned to exact versions |
-| Browser hardening | Strict CSP, `X-Frame-Options: DENY`, a locked-down `Permissions-Policy` |
-| Schema changes | The database is backed up automatically before any migration that rewrites data |
+| פרטי התחברות שמורים | AES-256-GCM. קובץ המפתח חייב הרשאות `0600`, אחרת השרת לא עולה |
+| חשיפה ברשת | מאזין רק ל-`127.0.0.1`. גישה מהטלפון ברשת הביתית היא בהפעלה מפורשת ומוגנת בקוד גישה |
+| CSRF בדפדפן | בדיקת Origin / Referer בכל בקשה. פעולות מחיקה דורשות אישור מפורש |
+| נעילת אפליקציה | קוד נעילה אופציונלי עם נעילה אוטומטית |
+| זיהוי בוטים | ארגז החול של Chromium פעיל כברירת מחדל (`PENNY_DISABLE_CHROMIUM_SANDBOX=1` לביטול) |
+| שרשרת אספקה | `israeli-bank-scrapers`, ‏`better-sqlite3` ו-`@anthropic-ai/sdk` נעולים לגרסאות מדויקות |
+| הקשחת דפדפן | CSP קפדני, `X-Frame-Options: DENY`, ‏`Permissions-Policy` נעול |
+| שינויי סכמה | גיבוי אוטומטי של מסד הנתונים לפני כל מיגרציה שמשנה נתונים |
 
-**Turn on full-disk encryption** (BitLocker, FileVault or LUKS). The key file sits next to the database, so disk encryption is your last line of defense if the laptop is lost.
+**הפעילו הצפנת דיסק מלאה** (BitLocker, ‏FileVault או LUKS). קובץ המפתח יושב ליד מסד הנתונים, כך שהצפנת הדיסק היא קו ההגנה האחרון אם המחשב הולך לאיבוד.
 
-Full threat model and disclosure policy: [SECURITY.md](SECURITY.md).
+מודל האיומים המלא ומדיניות הדיווח על חולשות: [SECURITY.md](SECURITY.md).
 
-## Where your data lives
+## איפה הנתונים שלכם
 
-- `data/penny.db`: transactions, categories, budgets, profiles, settings
-- `data/.encryption-key`: the 32-byte AES key, mode `0600`
-- `data/*.bak`: automatic backups taken before data migrations
-- Service logs: `~/Library/Logs/Penny/` (macOS), `~/.local/state/penny/log/` (Linux)
+- `data/penny.db`: תנועות, קטגוריות, תקציבים, פרופילים והגדרות
+- `data/.encryption-key`: מפתח AES של 32 בתים, בהרשאות `0600`
+- `data/*.bak`: גיבויים אוטומטיים לפני מיגרציות
+- לוגים של השירות: `~/Library/Logs/Penny/` ‏(macOS), ‏`~/.local/state/penny/log/` (לינוקס)
 
-Back up `data/` like any folder. To move to a new machine, copy `data/` over and run `npm run service:install`.
+מגבים את `data/` כמו כל תיקייה. כדי לעבור למחשב חדש, מעתיקים את `data/` ומריצים `npm run service:install`.
 
-## Code map
+## מפת הקוד
+
+<div dir="ltr">
 
 ```
 Penny/
@@ -268,57 +287,61 @@ Penny/
 │       ├── scrapers/     Bank and card sync
 │       ├── pension/      Pension and savings sync
 │       └── lib/          Encryption, dedupe, transfer detection, import folder
-├── tests/                Vitest unit tests (and tests/e2e scanners for overlap and contrast)
+├── tests/                Vitest unit tests (and tests/e2e overlap and contrast scanners)
 ├── e2e/                  Playwright end-to-end tests
 ├── menubar/              Tray companions (Swift for macOS, C# for Windows)
 ├── scripts/service/      Service installers
 └── data/                 Database and key (gitignored)
 ```
 
-## Troubleshooting
+</div>
 
-- **Port 41234 in use:** `netstat -ano | findstr :41234` (Windows) or `lsof -nP -iTCP:41234 -sTCP:LISTEN`. Stop the other process and start again.
-- **`penny.localhost` doesn't resolve on Windows:** re-run setup from an elevated terminal, or use `http://127.0.0.1:41234`, which always works.
-- **Linux: "systemd user instance not available":** `loginctl enable-linger $USER`.
-- **A bank sync fails with a Cloudflare page:** try `PENNY_DISABLE_CHROMIUM_SANDBOX=1`, or import that month's statement file.
-- **Something looks stale after an update:** hard-refresh the page (Ctrl+F5).
+## פתרון בעיות
 
-## Roadmap
+- **פורט 41234 תפוס:** `netstat -ano | findstr :41234` ‏(Windows) או `lsof -nP -iTCP:41234 -sTCP:LISTEN`. עוצרים את התהליך האחר ומפעילים שוב.
+- **`penny.localhost` לא נפתח ב-Windows:** מריצים את ההתקנה שוב מטרמינל עם הרשאות מנהל, או משתמשים ב-`http://127.0.0.1:41234`, שתמיד עובד.
+- **לינוקס: "systemd user instance not available":** ‏`loginctl enable-linger $USER`.
+- **סנכרון בנק נכשל עם דף של Cloudflare:** נסו `PENNY_DISABLE_CHROMIUM_SANDBOX=1`, או ייבאו את קובץ הדוח של אותו חודש.
+- **משהו נראה ישן אחרי עדכון:** רעננו את הדף בכוח (Ctrl+F5).
 
-- [x] Hebrew-first UI with full right-to-left layout
-- [x] 18 banks and card companies, plus statement-file import
-- [x] Custom categories with colour families
-- [x] Household profiles, onboarding and accessibility menu
-- [x] Israeli tax, pension, insurance and mortgage tools
-- [ ] Parse the pension clearing-house report automatically
-- [ ] CSV / OFX export
-- [ ] Native mobile companion
+## מפת דרכים
 
-## Contributing
+- [x] עברית קודם כול, עם פריסה מלאה מימין לשמאל
+- [x] 18 בנקים וחברות אשראי, ועוד ייבוא קבצי דוחות
+- [x] קטגוריות מותאמות עם משפחות צבע
+- [x] פרופילים למשק הבית, אונבורדינג ותפריט נגישות
+- [x] כלי מס, פנסיה, ביטוח ומשכנתא לישראל
+- [ ] קריאה אוטומטית של דוח המסלקה הפנסיונית
+- [ ] ייצוא CSV / OFX
+- [ ] אפליקציה ייעודית לטלפון
 
-Penny is built for personal use first and open source second. Pull requests are welcome for:
+## תרומה לפרויקט
 
-- **Banks:** add to `BANK_PROVIDERS` in [src/lib/types.ts](src/lib/types.ts) and map it in [src/server/scrapers/index.ts](src/server/scrapers/index.ts).
-- **AI providers:** implement `AIProvider` from [src/server/ai/types.ts](src/server/ai/types.ts) and register it in [src/server/ai/factory.ts](src/server/ai/factory.ts).
-- **Israeli figures:** tax brackets, ceilings and rates live in [src/lib/il-defaults.ts](src/lib/il-defaults.ts), each with its year and source. Updates with an official source are especially welcome.
-- **Languages:** add `<locale>.json` under [src/i18n/messages/](src/i18n/messages/) mirroring `en.json`, and list it in [src/i18n/routing.ts](src/i18n/routing.ts).
+הפרויקט נבנה קודם כול לשימוש אישי, ואחר כך כקוד פתוח. נשמח ל-Pull Requests על:
 
-Conventions:
+- **בנקים:** מוסיפים ל-`BANK_PROVIDERS` ב-[src/lib/types.ts](src/lib/types.ts) וממפים ב-[src/server/scrapers/index.ts](src/server/scrapers/index.ts).
+- **ספקי AI:** מממשים את `AIProvider` מ-[src/server/ai/types.ts](src/server/ai/types.ts) ורושמים ב-[src/server/ai/factory.ts](src/server/ai/factory.ts).
+- **נתונים ישראליים:** מדרגות מס, תקרות ושיעורים נמצאים ב-[src/lib/il-defaults.ts](src/lib/il-defaults.ts), כל אחד עם השנה והמקור שלו. עדכונים עם מקור רשמי מבורכים במיוחד.
+- **שפות:** מוסיפים `<locale>.json` תחת [src/i18n/messages/](src/i18n/messages/) לפי המפתחות של `en.json`, ורושמים ב-[src/i18n/routing.ts](src/i18n/routing.ts).
 
-- TypeScript strict. No `any` without a comment explaining why.
-- Every new pure function gets a Vitest test. `npx tsc --noEmit` and `npx vitest run` must pass.
-- Conventional commits: `feat:`, `fix:`, `style:`, `chore:`, `docs:`, `refactor:`.
-- Comments explain *why*, not *what*. No em dashes in code, commits or docs.
-- UI copy never names competitors, and Hebrew copy doesn't use the product name.
+כללים:
 
-## License
+- TypeScript במצב strict. בלי `any` בלי הערה שמסבירה למה.
+- כל פונקציה טהורה חדשה מקבלת בדיקת Vitest. ‏`npx tsc --noEmit` ו-`npx vitest run` חייבים לעבור.
+- קומיטים לפי Conventional Commits: ‏`feat:`, ‏`fix:`, ‏`style:`, ‏`chore:`, ‏`docs:`, ‏`refactor:`.
+- הערות בקוד מסבירות *למה*, לא *מה*. בלי מקפים ארוכים (em dash) בקוד, בקומיטים ובתיעוד.
+- טקסט בממשק לא מזכיר מתחרים, והטקסט העברי לא משתמש בשם המוצר.
 
-MIT. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for upstream attribution.
+## רישיון
 
-## Acknowledgments
+MIT. ראו [LICENSE](LICENSE) ו-[NOTICE.md](NOTICE.md) לקרדיט לפרויקטים שעליהם נבנינו.
 
-- [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), the heart of every bank integration
-- [Next.js](https://nextjs.org/), [React](https://react.dev/), [`shadcn/ui`](https://ui.shadcn.com/) on [`base-ui`](https://base-ui.com/)
-- [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3) and [`next-intl`](https://next-intl.dev/)
-- [BoopFace](https://github.com/CX-ArtLab/BoopFace) by CX ArtLab (MIT), the face behind Pip
-- [Anthropic Claude](https://www.anthropic.com/) and [Ollama](https://ollama.com/)
+## תודות
+
+- [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), הלב של כל חיבור לבנק
+- [Next.js](https://nextjs.org/),‏ [React](https://react.dev/),‏ [`shadcn/ui`](https://ui.shadcn.com/) על [`base-ui`](https://base-ui.com/)
+- [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3) ו-[`next-intl`](https://next-intl.dev/)
+- [BoopFace](https://github.com/CX-ArtLab/BoopFace) של CX ArtLab ‏(MIT), הפנים של פיפ
+- [Anthropic Claude](https://www.anthropic.com/) ו-[Ollama](https://ollama.com/)
+
+</div>
