@@ -137,7 +137,7 @@ export function CategoryGrid({
 
   if (loading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-44 rounded-2xl" />
         ))}
@@ -227,7 +227,7 @@ export function CategoryGrid({
           {t("noMatchingFilter")}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((c) => (
             <CategoryCard
               key={c.categoryId}

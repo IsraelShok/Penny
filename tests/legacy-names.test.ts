@@ -30,10 +30,15 @@ describe("dbPath", () => {
     const d = dir();
     expect(dbPath(d)).toBe(path.join(d, "penny.db"));
   });
-  it("keeps using the old database when only it exists", () => {
+  it("renames the old database and its WAL files when only it exists", () => {
     const d = dir();
-    fs.writeFileSync(path.join(d, "spent.db"), "");
-    expect(dbPath(d)).toBe(path.join(d, "spent.db"));
+    fs.writeFileSync(path.join(d, "spent.db"), "main");
+    fs.writeFileSync(path.join(d, "spent.db-wal"), "wal");
+    expect(dbPath(d)).toBe(path.join(d, "penny.db"));
+    expect(fs.readFileSync(path.join(d, "penny.db"), "utf8")).toBe("main");
+    expect(fs.readFileSync(path.join(d, "penny.db-wal"), "utf8")).toBe("wal");
+    expect(fs.existsSync(path.join(d, "spent.db"))).toBe(false);
+    expect(fs.existsSync(path.join(d, "penny.db-shm"))).toBe(false);
   });
   it("prefers penny.db when both exist", () => {
     const d = dir();

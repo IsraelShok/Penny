@@ -106,6 +106,7 @@ function MembersCard() {
                   {t(`role.${m.role}`)}
                   {m.birthYear ? ` · ${m.birthYear}` : ""}
                 </span>
+                {m.role === "child" && <Link href="/investments#kids" className="ms-2 text-primary hover:underline">{t("kidsInvestLink")}</Link>}
               </span>
               <Button
                 size="icon"

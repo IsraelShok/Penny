@@ -12,13 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check } from "lucide-react";
+import Link from "next/link";
+import { Check, Users } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input, InputGroup } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
-import { WorkspaceNameCard } from "@/components/settings/workspace-controls";
+import { StarBanner } from "@/components/settings/star-banner";
 import { DataState } from "@/components/ui/data-state";
 import { getSettings, getSummary, updateSettings } from "@/lib/api";
 import { formatCurrency } from "@/lib/formatters";
@@ -52,10 +53,7 @@ export default function GeneralSettingsPage() {
 
   return (
     <SectionShell title={t("title")} description={t("description")}>
-      {settings ? (
-        <DisplayNameCard key={`name:${settings.displayName}`} initialName={settings.displayName} />
-      ) : null}
-      <WorkspaceNameCard />
+      <ProfilesCard />
       {settings ? (
         <>
           <MonthlyTargetCard
@@ -81,51 +79,20 @@ export default function GeneralSettingsPage() {
           <div className="text-sm text-muted-foreground">{tCommon("loading")}</div>
         </SettingCard>
       )}
+      <StarBanner />
     </SectionShell>
   );
 }
 
-function DisplayNameCard({ initialName }: { initialName: string }) {
-  const t = useTranslations("settings.general");
-  const tCommon = useTranslations("common");
-  const queryClient = useQueryClient();
-  const [value, setValue] = useState(initialName);
-  const mutation = useMutation({
-    mutationFn: updateSettings,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
-      toast.success(tCommon("saved"));
-    },
-  });
-  const dirty = value.trim() !== initialName;
+/** Profiles replace workspaces: each person gets their own data and look, managed on /profiles. */
+function ProfilesCard() {
+  const t = useTranslations("profiles");
   return (
-    <SettingCard title={t("displayNameTitle")} description={t("displayNameDescription")}>
-      <form
-        className="flex flex-wrap items-end gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          mutation.mutate({ displayName: value });
-        }}
-      >
-        <div className="min-w-0 flex-1 space-y-2 sm:max-w-xs">
-          <Label htmlFor="display-name">{t("displayNameLabel")}</Label>
-          <Input
-            id="display-name"
-            maxLength={40}
-            autoComplete="given-name"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-          />
-        </div>
-        <IconButton showLabel
-          label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
-          variant="default"
-          type="submit"
-          disabled={!dirty || mutation.isPending}
-        >
-          <Check className="size-4" aria-hidden />
-        </IconButton>
-      </form>
+    <SettingCard title={t("settingsTitle")} description={t("settingsDescription")}>
+      <Link href="/profiles" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary hover:underline">
+        <Users className="size-4" aria-hidden />
+        {t("manage")}
+      </Link>
     </SettingCard>
   );
 }
@@ -241,11 +208,11 @@ function GeneralForm({
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
-          <div className="text-xs font-medium text-foreground/80">
+          <div id="sync-months-label" className="text-xs font-medium text-foreground/80">
             {t("monthsToSync")}
           </div>
           <Select value={months} onValueChange={(v) => v && setMonths(v)}>
-            <SelectTrigger>
+            <SelectTrigger aria-labelledby="sync-months-label">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -261,9 +228,9 @@ function GeneralForm({
           </p>
         </div>
         <div className="space-y-2">
-          <div className="text-xs font-medium text-foreground/80">{t("payday")}</div>
+          <div id="payday-label" className="text-xs font-medium text-foreground/80">{t("payday")}</div>
           <Select value={paydayDay} onValueChange={(v) => v && setPaydayDay(v)}>
-            <SelectTrigger>
+            <SelectTrigger aria-labelledby="payday-label">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

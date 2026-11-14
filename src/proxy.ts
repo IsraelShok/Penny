@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import {accessEnabled,currentUser,membership,defaultWorkspace,allowedMemberRoute} from "@/server/lib/user-access";
 import { isAllowedHost } from "@/lib/host-guard";
 import { isLockEnabled, SESSION_COOKIE, touchSession } from "@/server/lib/app-lock";
+import { isLanEnabled } from "@/server/lib/lan-access";
 
 /**
  * Same-origin enforcement for mutating API requests.
@@ -19,7 +20,8 @@ const ORIGIN_CHECKED_GETS = new Set(["/api/ai/ollama/models"]);
 
 export function proxy(request: NextRequest) {
   // Every request, page or API, must be addressed to localhost (blocks DNS rebinding).
-  if (!isAllowedHost(request.headers.get("host"))) {
+  // Phone access admits private LAN hosts, but only while the app lock guards every request.
+  if (!isAllowedHost(request.headers.get("host"), undefined, isLanEnabled() && isLockEnabled())) {
     return new NextResponse("Forbidden: unexpected host", { status: 403 });
   }
 

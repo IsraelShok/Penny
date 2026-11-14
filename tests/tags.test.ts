@@ -64,6 +64,11 @@ describe("ownerSummary", () => {
     expect(s.settlements).toEqual([{ from: "b", to: "a", amount: 100 }]);
   });
 
+  it("does not make children pay toward shared costs", () => {
+    const s = ownerSummary([{ amount: -300, owner: "shared", accountNumber: "1111" }], accounts, ["a", "b", "kid"], ["a", "b"]);
+    expect(s.settlements).toEqual([{ from: "b", to: "a", amount: 150 }]);
+  });
+
   it("ignores owners of removed members", () => {
     const s = ownerSummary([{ amount: -10, owner: "gone", accountNumber: "x" }], {}, members);
     expect(s.unset).toBe(10);

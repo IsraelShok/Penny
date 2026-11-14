@@ -14,6 +14,8 @@ import { dirFor, isLocale, defaultLocale } from "@/i18n/routing";
 import { PRIVACY_COOKIE } from "@/lib/privacy";
 import "./globals.css";
 import "@/components/dashboard/studio.css";
+import "./a11y.css";
+import { A11yProvider } from "@/components/a11y/a11y-menu";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -75,6 +77,8 @@ export default async function RootLayout({
             __html: `try{var p=JSON.parse(localStorage.getItem("shekel.budget-studio.v1")||"null");if(p){var r=document.documentElement,t=p.theme==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"midnight":"pearl"):p.theme;localStorage.setItem("theme",p.theme==="system"?"system":t==="midnight"?"dark":"light");r.classList.add("app-studio");r.classList.toggle("dark",t==="midnight");r.style.colorScheme=t==="midnight"?"dark":"light";r.dataset.studioTheme=t;r.dataset.studioAccent=p.accent;r.dataset.studioDensity=p.density;r.dataset.studioMotion=String(p.motion);r.dataset.studioCustom=String(!!p.customColor);if(p.customColor)r.style.setProperty("--custom-primary",p.customColor)}}catch(e){}`,
           }}
         />
+        {/* Accessibility menu choices, before first paint (mirrors A11yProvider). */}
+        <script dangerouslySetInnerHTML={{ __html: `try{var c=localStorage.getItem("penny.a11y.classes");if(c)document.documentElement.classList.add.apply(document.documentElement.classList,c.split(" ").filter(Boolean))}catch(e){}` }} />
       </head>
       <body className="min-h-full flex flex-col">
         <I18nProvider locale={locale} messages={messages as Record<string, unknown>}>
@@ -82,7 +86,9 @@ export default async function RootLayout({
             <StudioProvider>
             <QueryProvider>
               <TooltipProvider>
+                <A11yProvider>
                 <SidebarRoot defaultOpen={sidebarOpen}>{children}</SidebarRoot>
+                </A11yProvider>
                 <Toaster />
                 <ServiceWorkerRegister />
               </TooltipProvider>

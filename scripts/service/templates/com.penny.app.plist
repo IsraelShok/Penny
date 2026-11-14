@@ -8,11 +8,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>{{nodePath}}</string>
-        <string>{{repoRoot}}/node_modules/next/dist/bin/next</string>
-        <string>start</string>
-        <string>-H</string>
-        <string>127.0.0.1</string>
-        <string>-p</string>
+        <string>{{repoRoot}}/scripts/serve.mjs</string>
         <string>{{port}}</string>
     </array>
 

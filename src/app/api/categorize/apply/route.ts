@@ -36,7 +36,10 @@ interface ApplyBody {
 
 export async function POST(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json()) as ApplyBody;
+  const body = (await request.json().catch(() => null)) as ApplyBody | null;
+  if (!body || !Array.isArray(body.assignments)) {
+    return NextResponse.json({ error: "assignments is required" }, { status: 400 });
+  }
   const approved = new Set(
     (body.approvedNewCategoryNames ?? []).map((n) => n.toLowerCase())
   );

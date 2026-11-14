@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { GoalsHero } from "@/components/ui/page-hero";
 import { GoalFocus } from "@/components/home/goal-focus";
+import { VacationPlans } from "./vacation-plans";
+import { CustomGoals } from "./custom-goals";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { getAssets, getFi, getPlan, getRecap } from "@/lib/api";
@@ -68,23 +71,29 @@ export function JourneyView() {
     }
   }
 
-  if (loading || assets.isLoading) return <p className="text-subheadline text-muted-foreground">{t("loading")}</p>;
+  const hero = <div className="mx-auto mb-6 max-w-xl"><GoalsHero /></div>;
+  if (loading || assets.isLoading) return <>{hero}<p className="mx-auto max-w-xl text-subheadline text-muted-foreground">{t("loading")}</p></>;
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-border/60 bg-card p-6 text-center">
+      <>{hero}<div className="mx-auto max-w-xl card-surface text-center">
         <div className="mb-6 text-start"><GoalFocus /></div>
+        <div className="mb-6 text-start"><CustomGoals /></div>
+        <div className="mb-6 text-start"><VacationPlans /></div>
         <p className="text-body">{t("empty")}</p>
         <Link href="/settings/household" className="mt-3 inline-block text-subheadline text-primary hover:underline">
           {t("addEvent")}
         </Link>
-      </div>
+      </div></>
     );
   }
 
   return (
     <div className="mx-auto max-w-xl">
+      <div className="mb-6"><GoalsHero /></div>
       <div className="mb-6"><GoalFocus /></div>
+      <div className="mb-6"><CustomGoals /></div>
+      <div className="mb-6"><VacationPlans /></div>
       <p className="mb-6 text-subheadline text-muted-foreground">{me ? t("introNamed", { name: me }) : t("intro")}</p>
       <ol className="relative space-y-6 border-s-2 border-border ps-6">
         {items.map((it) => (

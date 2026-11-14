@@ -9,7 +9,7 @@ export default async function OverviewPage() {
   const t = await getTranslations("overview");
   return (
     <AppShell>
-      <PageHeader title={t("title")} meta={t("subtitle")} />
+      <PageHeader title={t("title")} largeTitle={false} />
       <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
         <Suspense>
           <OverviewTabs />

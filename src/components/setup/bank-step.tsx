@@ -23,7 +23,8 @@ import {
 } from "@/lib/api";
 import { ProviderBadge } from "./provider-badge";
 import { TwoFactorSection } from "./two-factor-section";
-import { translateProviderBlurb, translateProviderName } from "@/lib/i18n-data";
+import { useSyncErrorText } from "@/hooks/use-sync-error-text";
+import { translateCredentialField, translateProviderBlurb, translateProviderName } from "@/lib/i18n-data";
 
 type Sub = "pick" | "form" | "ready";
 
@@ -351,6 +352,7 @@ function PickerCard({
         value={search}
         onChange={(e) => onSearch(e.target.value)}
         placeholder={t("bankSearchPlaceholder")}
+        aria-label={t("bankSearchPlaceholder")}
         className="mb-3"
       />
       <div className="flex flex-col gap-0.5">
@@ -479,6 +481,7 @@ function CredentialForm({
   onSaved: () => void;
 }) {
   const t = useTranslations("setup");
+  const errorText = useSyncErrorText();
   const tCommon = useTranslations("common");
   const tBanks = useTranslations("banks");
   const tDetail = useTranslations("settings.bankDetail");
@@ -559,7 +562,7 @@ function CredentialForm({
         setStatus("testing-ok");
       } else {
         setStatus("testing-fail");
-        setErrorMsg(res.message);
+        setErrorMsg(errorText(res.message).message);
       }
     } catch {
       setStatus("testing-fail");
@@ -632,7 +635,8 @@ function CredentialForm({
               placeholder={tDetail("accountLabelPlaceholder", { name })}
             />
           </div>
-          {info.credentialFields.map((field) => {
+          {info.credentialFields.map((rawField) => {
+        const field = { ...rawField, ...translateCredentialField(info.id, rawField, tBanks) };
             const value = credentials[field.key] ?? "";
             const tooShort =
               field.exactLength != null &&
@@ -674,7 +678,8 @@ function CredentialForm({
                       [field.key]: next,
                     }));
                   }}
-                  placeholder={field.placeholder ?? field.label}
+                  placeholder={field.placeholder}
+                  dir={field.numeric || ["email", "tel"].includes(field.type) ? "ltr" : undefined}
                   className={field.numeric ? "font-mono" : undefined}
                 />
                 {field.hint && (

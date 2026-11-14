@@ -95,3 +95,11 @@ export function forecastBalance(input: {
     nextPayday: paydays.find((d) => d > low.date) ?? null,
   };
 }
+
+/** Splits a month's charges into small / medium / large by thirds of the month itself; returns the tier of an amount. */
+export function sizeTier(amounts: number[]): (amount: number) => 0 | 1 | 2 {
+  const sorted = [...amounts].sort((a, b) => a - b);
+  const lo = sorted[Math.floor(sorted.length / 3)] ?? 0;
+  const hi = sorted[Math.floor((2 * sorted.length) / 3)] ?? 0;
+  return (n) => (n >= hi && n > lo ? 2 : n >= lo && n > sorted[0] ? 1 : 0);
+}

@@ -1,6 +1,6 @@
 /**
  * Seasonal budget templates (sinking funds) for the big Israeli money months.
- * Amounts are starting points from moneyplan.co.il's 2025 estimates; the user edits them.
+ * Amounts are rough 2025 starting points; the user edits them.
  */
 import type { PeriodicSuggestion } from "./periodic";
 

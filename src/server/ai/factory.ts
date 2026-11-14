@@ -3,6 +3,8 @@ import "server-only";
 import type { AIProvider } from "./types";
 import { ClaudeProvider } from "./providers/claude";
 import { OllamaProvider } from "./providers/ollama";
+import { CliAgentProvider } from "./providers/cli-agent";
+import { isCliAgent } from "./cli-agent";
 import { getSetting } from "../db/queries/settings";
 import { decrypt, isKeyLocked } from "../lib/encryption";
 
@@ -30,6 +32,8 @@ export function createAIProvider(): AIProvider | null {
     const model = getSetting("ai_ollama_model") ?? "llama3.1";
     return new OllamaProvider(url, model);
   }
+
+  if (isCliAgent(provider)) return new CliAgentProvider(provider);
 
   return null;
 }

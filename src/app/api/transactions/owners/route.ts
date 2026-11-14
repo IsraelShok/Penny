@@ -22,20 +22,21 @@ const memberIdsOf = (workspaceId: number) => getAppSettings(workspaceId).househo
 export async function GET(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const q = new URL(request.url).searchParams;
-  const memberIds = memberIdsOf(workspaceId);
+  const members = getAppSettings(workspaceId).household.members;
+  const memberIds = members.map((m) => m.id);
   const accountOwners = readAccountOwners(workspaceId, memberIds);
   const rows = getOwnerRows(workspaceId, q.get("from") ?? "0000", q.get("to") ?? "9999");
   return NextResponse.json({
     accountOwners,
     accounts: getAccountNumbers(workspaceId),
-    summary: ownerSummary(rows, accountOwners, memberIds),
+    summary: ownerSummary(rows, accountOwners, memberIds, members.filter((m) => m.role !== "child").map((m) => m.id)),
   });
 }
 
 /** Sets (or clears, with owner null) the default owner of one account: { accountNumber, owner }. */
 export async function PUT(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json().catch(() => ({}))) as { accountNumber?: unknown; owner?: unknown };
+  const body = ((await request.json().catch(() => null)) ?? {}) as { accountNumber?: unknown; owner?: unknown };
   const memberIds = memberIdsOf(workspaceId);
   if (typeof body.accountNumber !== "string" || body.accountNumber.length === 0 || body.accountNumber.length > 64) {
     return NextResponse.json({ error: "accountNumber is required" }, { status: 400 });

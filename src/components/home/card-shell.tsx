@@ -22,21 +22,15 @@ export function CardShell({ label, wallet, action, children, className, id }: Ca
     <div
       id={id}
       className={cn(
-        "flex h-full flex-col rounded-2xl border border-border/60 bg-card p-5 sm:p-6",
+        "card-surface flex h-full flex-col",
         wallet && "wallet",
         className
       )}
     >
       {(label || action) && (
-        <div className="mb-4 flex items-center justify-between gap-3">
-          {label && (
-            <h2 className="text-footnote font-semibold text-muted-foreground">
-              {label}
-            </h2>
-          )}
-          {action && (
-            <div className="text-footnote text-primary">{action}</div>
-          )}
+        <div className="card-head items-center">
+          {label && <h2 className="card-title">{label}</h2>}
+          {action && <div className="card-action">{action}</div>}
         </div>
       )}
       {children}

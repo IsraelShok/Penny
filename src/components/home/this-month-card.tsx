@@ -59,7 +59,7 @@ export function ThisMonthCard({ data }: Props) {
       >
         <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
           <div className="flex flex-col">
-            <span className="figure text-[3.5rem] leading-none">
+            <span className="figure text-[clamp(2.5rem,13vw,3.5rem)] leading-none">
               {formatCurrency(spent)}
             </span>
             <span className={`mt-2 text-sm ${verdictClass}`}>{verdict}</span>

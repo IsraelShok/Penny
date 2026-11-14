@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/server/db/index";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
+const CONFIRM_DELETE_ALL = "delete-all-transactions";
+
 export async function DELETE(request: Request) {
+  // Destructive and unrecoverable: refuse unless the caller explicitly confirms (the settings dialog does).
+  const confirm = ((await request.json().catch(() => null)) as { confirm?: unknown } | null)?.confirm;
+  if (confirm !== CONFIRM_DELETE_ALL) return NextResponse.json({ error: "confirm" }, { status: 400 });
   const workspaceId = getWorkspaceIdFromRequest(request);
   const db = getDb();
 

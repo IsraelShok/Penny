@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ChevronDown, FileUp, Pencil, Plus, RotateCw, Trash2 } from "lucide-react";
+import { FileUp, Pencil, Plus, RotateCw, Trash2 } from "lucide-react";
 import { fmt, shekels } from "@/lib/money";
 import { createAssets, deleteAsset, getAssets, updateAsset } from "@/lib/api";
 import { CardShell } from "@/components/home/card-shell";
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { AssetDialog } from "./asset-dialog";
 import { ImportDialog } from "./import-dialog";
 import { InvestmentsExtras } from "./investments-extras";
+import { KidsInvestments } from "./kids-investments";
 import { MarketsView } from "@/components/markets/markets-view";
 import type { Asset, AssetsPayload } from "@/lib/types";
 
@@ -30,7 +31,6 @@ export function InvestmentsView() {
   const [editing, setEditing] = useState<Asset | "new" | null>(null);
   const simple = usePlanSimple();
   const [importing, setImporting] = useState(false);
-  const [marketsOpen, setMarketsOpen] = useState(false);
   const query = useQuery({ queryKey: ["assets"], queryFn: getAssets });
 
   return (
@@ -70,12 +70,11 @@ export function InvestmentsView() {
         <Body data={query.data} onEdit={setEditing} />
       )}
 
-      {!simple && <section id="markets" className="scroll-mt-20 rounded-2xl border border-border/60 bg-card p-5">
-        <button type="button" aria-expanded={marketsOpen} aria-controls="market-details" onClick={() => setMarketsOpen(!marketsOpen)} className="flex min-h-11 w-full items-center justify-between gap-4 text-start font-semibold focus-visible:outline-2 focus-visible:outline-ring">
-          <span>{t("marketsTitle")}<span className="mt-1 block text-sm font-normal text-muted-foreground">{t("marketsHint")}</span></span>
-          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", marketsOpen && "rotate-180")} aria-hidden />
-        </button>
-        <div id="market-details" hidden={!marketsOpen}>{marketsOpen && <div className="pt-6"><MarketsView /></div>}</div>
+      <KidsInvestments />
+
+      {!simple && <section id="markets" className="card-surface scroll-mt-20">
+        <h2 className="text-headline font-semibold">{t("marketsTitle")}<span className="card-sub block font-normal">{t("marketsHint")}</span></h2>
+        <div className="pt-6"><MarketsView /></div>
       </section>}
 
       {editing && <AssetDialog asset={editing} onClose={() => setEditing(null)} />}
@@ -87,39 +86,14 @@ export function InvestmentsView() {
 function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => void }) {
   const t = useTranslations("investments");
   const locale = useLocale();
-  const { totals } = data;
-  const first = data.history[0];
-  const change = first && data.history.length > 1 ? totals.netWorth - first.netWorth : null;
   const owned = data.assets.filter((a) => !a.isLiability);
   const owed = data.assets.filter((a) => a.isLiability);
   const missing = data.assets.filter((a) => a.valueIls == null);
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-3">
-        <CardShell wallet label={t("netWorth")} className="md:col-span-2">
-          <p className="figure text-[3.5rem] leading-none">{shekels(totals.netWorth, locale)}</p>
-          {change != null && (
-            <p className="mt-1 text-footnote text-muted-foreground">
-              <span className={cn("font-semibold tabular-nums", change >= 0 ? "text-status-on-track" : "text-status-over")}>
-                {shekels(change, locale)}
-              </span>{" "}
-              {t("sinceFirst", { date: new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${first.date}T12:00:00`)) })}
-            </p>
-          )}
-          {data.history.length > 1 && (
-            <Sparkline values={data.history.map((h) => h.netWorth)} color="var(--foreground)" label={t("netWorthTrend")} fitToRange className="mt-4 h-16 w-full" />
-          )}
-          <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 text-footnote sm:grid-cols-4">
-            <Figure label={t("totalAssets")} value={shekels(totals.assets, locale)} />
-            <Figure label={t("totalLiabilities")} value={shekels(-totals.liabilities, locale)} />
-            <Figure label={t("deferredTax")} value={shekels(-totals.deferredTax, locale)} hint={t("deferredTaxHint")} />
-            <Figure label={t("liquidNetWorth")} value={shekels(totals.liquidNetWorth, locale)} hint={t("liquidNetWorthHint")} />
-          </dl>
-        </CardShell>
-
-        <Benchmarks data={data} />
-      </div>
+      {/* Net worth itself lives in FutureHero at the top of the page. */}
+      <Benchmarks data={data} />
 
       {missing.length > 0 && (
         <p className="rounded-2xl bg-card px-4 py-3 text-footnote text-status-heads-up" role="status">
@@ -136,15 +110,6 @@ function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => voi
       {owed.length > 0 && <HoldingsList title={t("liabilitiesTitle")} assets={owed} onEdit={onEdit} />}
       {!usePlanSimple() && <InvestmentsExtras data={data} />}
     </>
-  );
-}
-
-function Figure({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div title={hint}>
-      <dt className="text-caption text-muted-foreground">{label}</dt>
-      <dd className="font-semibold tabular-nums">{value}</dd>
-    </div>
   );
 }
 
@@ -169,7 +134,7 @@ function Allocation({ title, parts }: { title: string; parts: { label: string; v
           <li key={p.label} className="flex items-baseline justify-between gap-3 text-footnote">
             <span className="flex min-w-0 items-center gap-2">
               <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: ALLOC_COLORS[i] }} aria-hidden />
-              <span className="truncate">{p.label}</span>
+              <span className="truncate" title={p.label}>{p.label}</span>
             </span>
             <span className="shrink-0 tabular-nums">
               <span className="font-semibold">{total ? `${Math.round((p.value / total) * 100)}%` : "—"}</span>

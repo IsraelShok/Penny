@@ -17,8 +17,8 @@ export function KidSummary({ member, month }: { member: string; month: string })
   const { child, summary, transactions } = q.data;
   const age = child.birthYear ? new Date().getFullYear() - child.birthYear : null;
   return (
-    <section aria-label={child.name} className="rounded-2xl border border-border/60 bg-card p-4">
-      <h3 className="text-base font-semibold">{child.name}{age != null && <span className="ms-2 text-sm font-normal text-muted-foreground">{t("age", { age })}</span>}</h3>
+    <section aria-label={child.name} className="card-surface">
+      <h3 className="card-title">{child.name}{age != null && <span className="ms-2 text-sm font-normal text-muted-foreground">{t("age", { age })}</span>}</h3>
       <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
         <div><dt className="text-xs text-muted-foreground">{t("thisMonth")}</dt><dd className="text-lg font-semibold tabular-nums">{money(summary.month)}</dd></div>
         <div><dt className="text-xs text-muted-foreground">{t("thisYear")}</dt><dd className="text-lg font-semibold tabular-nums">{money(summary.year)}</dd></div>

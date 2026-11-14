@@ -1,4 +1,6 @@
 import "server-only";
+import { CATEGORY_PARENT_OF } from "../category-hierarchy";
+import { childColor } from "@/lib/category-colors";
 
 import { getDb } from "../index";
 import type { Category, CategoryKind, CostType, NeedType } from "@/lib/types";
@@ -236,22 +238,24 @@ export function createParentCategory(
     color?: string;
     icon?: string;
     description?: string | null;
+    parentId?: number | null;
   }
 ): Category {
   const trimmed = input.name.trim();
-  const color = input.color ?? pickColor(trimmed.toLowerCase());
+  const parentId = input.parentId ?? null;
+  const color = input.color ?? defaultColor(trimmed, parentId);
   const icon = input.icon ?? "circle-dot";
   const description = input.description?.trim() || null;
 
   const result = getDb()
     .prepare(
-      "INSERT INTO categories (workspace_id, parent_id, name, color, icon, kind, description) VALUES (?, NULL, ?, ?, ?, ?, ?)"
+      "INSERT INTO categories (workspace_id, parent_id, name, color, icon, kind, description) VALUES (?, ?, ?, ?, ?, ?, ?)"
     )
-    .run(workspaceId, trimmed, color, icon, input.kind, description);
+    .run(workspaceId, parentId, trimmed, color, icon, input.kind, description);
 
   return {
     id: Number(result.lastInsertRowid),
-    parentId: null,
+    parentId,
     name: trimmed,
     color,
     icon,
@@ -270,29 +274,7 @@ export function createParentCategory(
  * names (truly novel proposals) stay as orphan leaves; the user can either
  * leave them ungrouped or reassign in Settings.
  */
-export const SEEDED_CATEGORY_PARENTS: Record<string, string> = {
-  Groceries: "Food",
-  Restaurants: "Food",
-  "Coffee & Cafes": "Food",
-  Transport: "Transportation",
-  Travel: "Transportation",
-  Shopping: "Lifestyle",
-  Entertainment: "Lifestyle",
-  "Personal Care": "Lifestyle",
-  "Sports & Hobbies": "Lifestyle",
-  "Bills & Utilities": "Home & Bills",
-  Home: "Home & Bills",
-  Insurance: "Home & Bills",
-  Subscriptions: "Home & Bills",
-  Health: "Health & Family",
-  Education: "Health & Family",
-  "Kids & Childcare": "Health & Family",
-  "Pet Care": "Health & Family",
-  "Cash & ATM": "Money Movement",
-  Transfers: "Money Movement",
-  "Gifts & Donations": "Money Movement",
-  "Fees & Taxes": "Money Movement",
-};
+export const SEEDED_CATEGORY_PARENTS: Record<string, string> = CATEGORY_PARENT_OF;
 
 // Palette for AI-proposed new categories. Distinct hues, none colliding
 // with the 16 seeded category colors. Picked deterministically via a hash
@@ -322,6 +304,14 @@ function pickColor(seed: string): string {
   return NEW_CATEGORY_PALETTE[idx];
 }
 
+/** A subcategory gets the next shade of its group's family; anything else a palette color. */
+function defaultColor(name: string, parentId: number | null): string {
+  const parent = parentId == null ? undefined : (getDb()
+    .prepare("SELECT p.color, (SELECT COUNT(*) FROM categories c WHERE c.parent_id = p.id) AS n FROM categories p WHERE p.id = ?")
+    .get(parentId) as { color: string; n: number } | undefined);
+  return parent ? childColor(parent.color, parent.n) : pickColor(name.toLowerCase());
+}
+
 /**
  * Create a category if it doesn't already exist (case-insensitive).
  * Returns the category record (existing or newly created). When the name
@@ -346,7 +336,7 @@ export function ensureCategory(
     if (parent && parent.parentId === null) parentId = parent.id;
   }
 
-  const color = pickColor(trimmed.toLowerCase());
+  const color = defaultColor(trimmed, parentId);
   const result = getDb()
     .prepare(
       "INSERT INTO categories (workspace_id, parent_id, name, color, icon, kind) VALUES (?, ?, ?, ?, ?, ?)"

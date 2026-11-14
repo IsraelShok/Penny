@@ -45,6 +45,28 @@ export function translateProviderBlurb(
   }
 }
 
+/** Localized label/placeholder/hint for a scraper credential field, falling back to the raw English. */
+export function translateCredentialField(
+  providerId: string,
+  field: { key: string; label: string; placeholder?: string; hint?: string },
+  tBanks: TranslatorFn,
+): { label: string; placeholder?: string; hint?: string } {
+  const base =
+    field.key === "password" && providerId === "isracard" ? "isracardPassword"
+    : field.key === "password" && providerId === "oneZero" ? "oneZeroPassword"
+    : field.key;
+  const tr = (prop: string, fallback?: string) => {
+    if (fallback === undefined) return undefined;
+    const key = `fields.${base}.${prop}`;
+    return tBanks.has(key) ? tBanks(key) : fallback;
+  };
+  return {
+    label: tr("label", field.label)!,
+    placeholder: tr(field.key === "num" ? `${providerId}Placeholder` : "placeholder", field.placeholder),
+    hint: tr("hint", field.hint),
+  };
+}
+
 export function useFormatterLabels(): FormatLastSyncLabels {
   const t = useTranslations("formatters");
   return {

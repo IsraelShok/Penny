@@ -49,8 +49,8 @@ function TopMerchants({ merchants, loading }: TopMerchantsProps) {
   const t = useTranslations("transactions");
   const locale = useLocale() as Locale;
   return (
-    <div className="h-full rounded-2xl bg-card p-5">
-      <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
+    <div className="card-surface h-full">
+      <div className="card-title">
         {t("topMerchants")}
       </div>
       <div className="mt-3 space-y-2">
@@ -117,8 +117,8 @@ function PendingReview({ count, loading }: PendingReviewProps) {
 
   if (!loading && count === 0) {
     return (
-      <div className="rounded-2xl bg-card p-5">
-        <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
+      <div className="card-surface">
+        <div className="card-title">
           {t("pendingReview")}
         </div>
         <div className="mt-2 text-sm text-muted-foreground">
@@ -130,9 +130,9 @@ function PendingReview({ count, loading }: PendingReviewProps) {
 
   return (
     <>
-      <div className="rounded-2xl bg-card p-5">
+      <div className="card-surface">
         <div className="flex items-center justify-between">
-          <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
+          <div className="card-title">
             {t("pendingReview")}
           </div>
           <div
@@ -146,7 +146,7 @@ function PendingReview({ count, loading }: PendingReviewProps) {
             <HelpCircle className="h-4 w-4" />
           </div>
         </div>
-        <div className="mt-2 font-semibold text-3xl tabular-nums">
+        <div className="card-figure mt-2">
           {loading ? <span className="text-muted-foreground">—</span> : count}
         </div>
         <div className="mt-0.5 text-xs text-muted-foreground">
@@ -192,8 +192,8 @@ interface OutliersProps {
 function Outliers({ largestIncome, largestExpense, loading }: OutliersProps) {
   const t = useTranslations("transactions");
   return (
-    <div className="rounded-2xl bg-card p-5">
-      <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
+    <div className="card-surface">
+      <div className="card-title">
         {t("outliers")}
       </div>
       <div className="mt-3 space-y-3">

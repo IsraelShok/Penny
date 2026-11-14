@@ -52,15 +52,18 @@ export interface LegacyInput {
   /** Accounts seen in transactions (card / bank account numbers). */
   accounts: { accountNumber: string; label: string | null; provider: string }[];
   recurring: { merchant: string; account: string; expectedAmount: number; cadence: string }[];
+  /** Localized provider name; defaults to the English name. */
+  providerName?: (id: string) => string;
 }
 
-const providerName = (id: string) => BANK_PROVIDERS.find((b) => b.id === id)?.name ?? id;
+const englishProviderName = (id: string) => BANK_PROVIDERS.find((b) => b.id === id)?.name ?? id;
 const providerKind = (id: string) => BANK_PROVIDERS.find((b) => b.id === id)?.kind;
 const last4 = (s: string) => s.replace(/\D/g, "").slice(-4);
 const PENSION = new Set(["pension", "study_fund", "provident"]);
 
 /** Assembles the document from whitelisted fields only, so secrets cannot leak in. */
 export function buildLegacySections(d: LegacyInput): LegacySection[] {
+  const providerName = d.providerName ?? englishProviderName;
   const own = d.assets.filter((a) => !a.isLiability);
   const cardAccounts = d.accounts.filter((a) => providerKind(a.provider) === "card");
   const cardProviders = new Set(cardAccounts.map((a) => a.provider));

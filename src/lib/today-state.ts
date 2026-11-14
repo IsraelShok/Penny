@@ -5,7 +5,6 @@ export function todayState(input: {
   hasCash: boolean;
   balance: number | null;
   connected: boolean;
-  checkedThisWeek: boolean;
   needsReview: boolean;
   hasSuggestions: boolean;
 }) {
@@ -13,7 +12,6 @@ export function todayState(input: {
   if (input.pending || !input.hasCash) return "loading";
   if (input.balance == null) return input.connected ? "sync" : "connect";
   if (input.balance < 0) return "cash";
-  if (!input.checkedThisWeek) return "checkin";
   if (input.needsReview) return "review";
   if (input.hasSuggestions) return "suggestions";
   return "done";

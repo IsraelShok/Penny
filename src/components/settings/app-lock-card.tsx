@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Segmented } from "@/components/ui/segmented";
-import { SettingCard } from "@/components/settings/section-shell";
+import { SettingCard, StatusChip } from "@/components/settings/section-shell";
 
 export interface LockStatus { enabled: boolean; idleMinutes: number }
 
@@ -42,7 +42,7 @@ export function AppLockCard() {
   const error = run.error?.message;
 
   return (
-    <SettingCard title={t("lockTitle")} description={t("lockDescription")}>
+    <SettingCard title={t("lockTitle")} description={t("lockDescription")} aside={status.data && <StatusChip on={enabled} label={enabled ? t("statusOn") : t("statusOff")} />}>
       <form
         className="space-y-4"
         onSubmit={(e) => {
@@ -50,7 +50,7 @@ export function AppLockCard() {
           run.mutate(enabled ? "change" : "enable");
         }}
       >
-        <p className="text-sm font-medium" aria-live="polite">{enabled ? t("lockOn") : t("lockOff")}</p>
+        <p className="sr-only" aria-live="polite">{enabled ? t("lockOn") : t("lockOff")}</p>
         {enabled && (
           <div className="space-y-2">
             <Label htmlFor="lock-current">{t("lockCurrent")}</Label>

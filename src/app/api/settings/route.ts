@@ -4,18 +4,22 @@ import {
   updateAppSettings,
 } from "@/server/db/queries/settings";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
+import { profileFromRequest } from "@/server/db/queries/profiles";
 import { LOCALE_COOKIE } from "@/i18n/routing";
 
 export async function GET(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  return NextResponse.json(getAppSettings(workspaceId));
+  return NextResponse.json(getAppSettings(workspaceId, profileFromRequest(request, workspaceId)?.name));
 }
 
 export async function PUT(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "invalid body" }, { status: 400 });
+  }
   try {
-    const updated = updateAppSettings(workspaceId, body);
+    const updated = updateAppSettings(workspaceId, body, profileFromRequest(request, workspaceId));
     if (body.autoSyncEnabled !== undefined || body.autoSyncTime !== undefined) {
       const { reschedule } = await import("@/server/sync/scheduler");
       reschedule();

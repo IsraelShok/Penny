@@ -56,7 +56,7 @@ export function InvestmentHouses() {
               <div className="flex items-center gap-3">
                 <ProviderBadge color={h.color} name={name} domain={h.domain} size={36} radius={9} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{name}</p>
+                  <p title={name} className="truncate text-sm font-medium">{name}</p>
                   {c && <p className="truncate text-xs text-muted-foreground" role="status">{statusLine(c)}</p>}
                 </div>
                 {!wired ? (

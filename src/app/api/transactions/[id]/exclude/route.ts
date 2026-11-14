@@ -18,7 +18,7 @@ export async function POST(
     return NextResponse.json({ error: "invalid id" }, { status: 400 });
   }
 
-  const body = (await request.json().catch(() => ({}))) as {
+  const body = ((await request.json().catch(() => null)) ?? {}) as {
     excluded?: unknown;
     alwaysForMerchant?: unknown;
   };

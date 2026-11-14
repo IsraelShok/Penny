@@ -9,6 +9,16 @@ export interface Workspace {
   updatedAt: string;
 }
 
+/** A person using the household: name, avatar and UI preferences. All profiles share workspaceId's data. */
+export interface Profile {
+  id: number;
+  workspaceId: number;
+  name: string;
+  avatarEmoji: string | null;
+  avatarColor: string | null;
+  createdAt: string;
+}
+
 export interface Transaction {
   id: number;
   accountNumber: string;
@@ -300,7 +310,7 @@ export interface SetupStatus {
 
 export interface AppSettings {
   monthsToSync: number;
-  aiProvider: "claude" | "ollama" | "none";
+  aiProvider: "claude" | "ollama" | "codex" | "gemini" | "opencode" | "kilo" | "none";
   ollamaUrl: string;
   ollamaModel: string;
   showBrowser: boolean;
@@ -760,6 +770,8 @@ export interface OverviewCategoryRow {
   name: string;
   color: string;
   icon: string | null;
+  /** Spend per 50/30/20 bucket; sub-categories can sit in different buckets than their parent. */
+  byNeed: Partial<Record<NeedType, number>>;
   spent: number;
   /** YYYY-MM -> spent, for every month in the period. */
   monthly: Record<string, number>;
@@ -888,6 +900,18 @@ export interface Goal {
   /** YYYY-MM */
   targetDate: string;
   savedAmount: number;
+  /** "vacation" goals carry a trip plan; targetAmount is its lines' total and targetDate its start month. */
+  kind?: "general" | "vacation";
+  trip?: import("./trip").Trip | null;
+  /** Vacation spending recorded between the trip's dates (Travel category and its subcategories). */
+  actual?: number;
+  /** Custom ("general") goal extras, kept in details. */
+  icon?: string | null;
+  color?: import("./plan").GoalColor | null;
+  /** Planned monthly contribution, if the user set one. */
+  monthly?: number | null;
+  /** false when the user set no date and targetDate was derived from the monthly contribution. */
+  dated?: boolean;
 }
 
 export const POLICY_KINDS = ["health", "life", "disability", "long_term_care", "home", "car", "travel", "other"] as const;
@@ -967,4 +991,6 @@ export interface PropertyEstimate {
 
 export interface Asset {
   estimate?: PropertyEstimate | null;
+  /** When the ILS value last changed (snapshot date, null = today) and by how much. */
+  change?: { since: string | null; prevIls: number | null; changeIls: number | null; changePct: number | null } | null;
 }

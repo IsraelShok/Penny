@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
-import { setSetting } from "@/server/db/queries/settings";
+import { getSetting, setSetting } from "@/server/db/queries/settings";
 import { encrypt } from "@/server/lib/encryption";
 import { normalizeOllamaUrl, OLLAMA_URL_ERROR } from "@/lib/url-guard";
+import { CLI_AGENTS } from "@/server/ai/cli-agent";
+import type { AppSettings } from "@/lib/types";
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as {
-    provider: "claude" | "ollama" | "none";
+  const body = ((await request.json().catch(() => null)) ?? {}) as {
+    provider: AppSettings["aiProvider"];
     apiKey?: string;
     ollamaUrl?: string;
     ollamaModel?: string;
   };
 
+  if (!["claude", "ollama", "none", ...Object.keys(CLI_AGENTS)].includes(body.provider)) {
+    return NextResponse.json({ error: "invalid provider" }, { status: 400 });
+  }
   if (body.provider === "ollama" && body.ollamaUrl && !normalizeOllamaUrl(body.ollamaUrl)) {
     return NextResponse.json({ error: OLLAMA_URL_ERROR }, { status: 400 });
   }
@@ -29,4 +34,9 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ success: true });
+}
+
+/** Whether a Claude API key is stored (never the key itself). */
+export async function GET() {
+  return NextResponse.json({ hasClaudeKey: !!getSetting("ai_api_key_encrypted") });
 }

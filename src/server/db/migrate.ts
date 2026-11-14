@@ -3,6 +3,9 @@ import "server-only";
 import type Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
+import { CATEGORY_HIERARCHY_MIGRATION, applyCategoryHierarchy } from "./category-hierarchy";
+import { FAMILY_COLORS_MIGRATION, SATURATED_COLORS_MIGRATION, applyFamilyColors } from "./category-colors";
+import { PROFILES_MIGRATION, backupBeforeProfiles, seedProfiles, writeProfilesReport } from "./profiles-migration";
 
 const MIGRATIONS_DIR = path.join(__dirname, "migrations");
 
@@ -36,6 +39,9 @@ export function runMigrations(db: Database.Database): void {
     .filter((f) => f.endsWith(".sql"))
     .sort();
 
+  // Existing install about to get profiles: keep a copy first (fresh installs have nothing to lose).
+  const backup = applied.size > 0 && [PROFILES_MIGRATION, "047_household_preferences.sql", CATEGORY_HIERARCHY_MIGRATION, FAMILY_COLORS_MIGRATION, SATURATED_COLORS_MIGRATION].some((f) => !applied.has(f) && files.includes(f)) ? backupBeforeProfiles(db) : null;
+
   for (const file of files) {
     if (applied.has(file)) continue;
 
@@ -50,6 +56,9 @@ export function runMigrations(db: Database.Database): void {
     try {
       db.transaction(() => {
         db.exec(sql);
+        if (file === CATEGORY_HIERARCHY_MIGRATION) applyCategoryHierarchy(db);
+        if (file === "049_goal_details.sql") addGoalDetails(db);
+        if (file === FAMILY_COLORS_MIGRATION || file === SATURATED_COLORS_MIGRATION) applyFamilyColors(db);
         db.prepare("INSERT INTO _migrations (name) VALUES (?)").run(file);
       })();
 
@@ -62,5 +71,16 @@ export function runMigrations(db: Database.Database): void {
     } finally {
       db.pragma("foreign_keys = ON");
     }
+    if (file === PROFILES_MIGRATION) {
+      const report = seedProfiles(db);
+      if (report) writeProfilesReport(db, report, backup);
+    }
   }
+}
+
+/** Idempotent: SQLite has no ADD COLUMN IF NOT EXISTS. */
+function addGoalDetails(db: Database.Database) {
+  const cols = new Set((db.pragma("table_info(goals)") as { name: string }[]).map((c) => c.name));
+  if (!cols.has("kind")) db.exec("ALTER TABLE goals ADD COLUMN kind TEXT NOT NULL DEFAULT 'general'");
+  if (!cols.has("details")) db.exec("ALTER TABLE goals ADD COLUMN details TEXT");
 }

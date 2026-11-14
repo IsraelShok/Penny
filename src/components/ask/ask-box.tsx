@@ -28,7 +28,7 @@ export function AskBox() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
-      <form onSubmit={(e) => { e.preventDefault(); void ask(q); }} className="flex items-center gap-2 rounded-2xl border border-border bg-popover px-4 shadow-sm">
+      <form onSubmit={(e) => { e.preventDefault(); void ask(q); }} className="flex items-center gap-2 rounded-2xl border border-border bg-popover px-4 shadow-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring">
         <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("placeholder")} aria-label={t("title")} className="h-14 min-w-0 flex-1 bg-transparent text-[0.9375rem] outline-none placeholder:text-muted-foreground" />
         <Button type="submit" disabled={state === "loading"}>

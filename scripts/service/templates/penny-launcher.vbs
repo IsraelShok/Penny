@@ -6,5 +6,5 @@ Option Explicit
 Dim shell
 Set shell = CreateObject("WScript.Shell")
 shell.CurrentDirectory = "{{repoRoot}}"
-shell.Run """{{nodePath}}"" ""{{repoRoot}}\node_modules\next\dist\bin\next"" start -H 127.0.0.1 -p {{port}}", 0, True
+shell.Run """{{nodePath}}"" ""{{repoRoot}}\scripts\serve.mjs"" {{port}}", 0, True
 Set shell = Nothing

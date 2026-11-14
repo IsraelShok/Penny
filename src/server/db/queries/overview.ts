@@ -75,13 +75,13 @@ export function getCategoryRows(
   const sumBy = (from: string, to: string, byMonth: boolean) =>
     db
       .prepare(
-        `SELECT COALESCE(c.parent_id, c.id) as key${byMonth ? `, ${month} as month` : ""},
+        `SELECT COALESCE(c.parent_id, c.id) as key${byMonth ? `, ${month} as month, c.need_type as needType` : ""},
            SUM(-t.charged_amount) as amount
          FROM category_transactions t JOIN categories c ON c.id = t.category_id
          WHERE ${BASE} AND t.kind = 'expense'
-         GROUP BY key${byMonth ? ", month" : ""}`
+         GROUP BY key${byMonth ? ", month, needType" : ""}`
       )
-      .all(...(byMonth ? [shift] : []), workspaceId, from, to) as { key: number; month?: string; amount: number }[];
+      .all(...(byMonth ? [shift] : []), workspaceId, from, to) as { key: number; month?: string; needType?: NeedType; amount: number }[];
 
   const current = sumBy(r.from, r.to, true);
   const prev = new Map(sumBy(previous.from, previous.to, false).map((x) => [x.key, x.amount]));
@@ -98,9 +98,10 @@ export function getCategoryRows(
     if (!cat) continue;
     const row =
       rows.get(x.key) ??
-      { categoryId: cat.id, name: cat.name, color: cat.color, icon: cat.icon, spent: 0, monthly: Object.fromEntries(r.months.map((m) => [m, 0])), previous: prev.get(x.key) ?? 0, lastYear: ly.get(x.key) ?? 0 };
+      { categoryId: cat.id, name: cat.name, color: cat.color, icon: cat.icon, byNeed: {}, spent: 0, monthly: Object.fromEntries(r.months.map((m) => [m, 0])), previous: prev.get(x.key) ?? 0, lastYear: ly.get(x.key) ?? 0 };
     row.spent += x.amount;
     if (x.month) row.monthly[x.month] = (row.monthly[x.month] ?? 0) + x.amount;
+    if (x.needType) row.byNeed[x.needType] = (row.byNeed[x.needType] ?? 0) + x.amount;
     rows.set(x.key, row);
   }
   return [...rows.values()].sort((a, b) => b.spent - a.spent);

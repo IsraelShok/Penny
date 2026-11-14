@@ -1,4 +1,5 @@
-import { parseAmount } from "@/lib/csv";
+import { parseAmount, parseCsv } from "@/lib/csv";
+import { readXlsx } from "@/lib/xlsx";
 
 /** Bank / credit-card statement import: header detection, column mapping and row parsing. */
 export const IMPORT_FIELDS = ["date", "description", "amount", "debit", "credit"] as const;
@@ -134,4 +135,32 @@ export function parseHtmlTable(html: string): string[][] {
     if (row.some((c) => c)) rows.push(row);
   }
   return rows;
+}
+
+/** The file types the reader below understands; the import guide's table and the file picker come from this list. */
+export const IMPORT_FORMATS = [
+  { ext: ".csv", label: "CSV", note: "csv" },
+  { ext: ".xlsx", label: "Excel (xlsx)", note: "xlsx" },
+  { ext: ".xls", label: "Excel (xls)", note: "xls" },
+] as const;
+export const IMPORT_EXTS: readonly string[] = IMPORT_FORMATS.map((f) => f.ext);
+
+/** Raw rows of a statement file. Throws "xlsNotSupported" for a real legacy binary .xls. */
+export async function readStatementTable(bytes: Uint8Array, name: string): Promise<string[][]> {
+  // Some .xls downloads are really .xlsx; check the zip signature, not the name.
+  if (bytes[0] === 0x50 && bytes[1] === 0x4b) return readXlsx(bytes);
+  // Israeli bank CSVs are often Windows-1255, not UTF-8.
+  let text = new TextDecoder("utf-8").decode(bytes);
+  if (text.includes("�")) text = new TextDecoder("windows-1255").decode(bytes);
+  if (/<table/i.test(text)) return parseHtmlTable(text);
+  if (name.toLowerCase().endsWith(".xls")) throw new Error("xlsNotSupported");
+  return parseCsv(text);
+}
+
+/** File → transactions with the auto-detected columns (the unattended folder import). Throws "noHeader". */
+export async function statementRows(bytes: Uint8Array, name: string, positiveIsExpense = true) {
+  const table = await readStatementTable(bytes, name);
+  const h = findHeaderRow(table);
+  if (h < 0) throw new Error("noHeader");
+  return buildImportRows(table.slice(h + 1), guessColumns(table[h]), positiveIsExpense);
 }

@@ -4,12 +4,16 @@ import { useLocale, useTranslations } from "next-intl";
 import { AlertTriangle, TrendingUp } from "lucide-react";
 import { CardShell } from "@/components/home/card-shell";
 import type { InsightsPayload } from "@/lib/api";
-import { addDays, chargesBetween, monthDay, nthCharge } from "@/lib/balance-forecast";
+import { addDays, chargesBetween, monthDay, nthCharge, sizeTier } from "@/lib/balance-forecast";
 import { shekels } from "@/lib/money";
 
 interface Item { name: string; amount: number; flag?: "late" | "up" }
 
 const OVERDUE_DAYS = 5;
+const SIZES = ["small", "medium", "large"] as const;
+/** One hue, light to strong, by the charge's size within the month; the size is also in words for screen readers. */
+const TIER_EDGE = ["color-mix(in oklab, var(--chart-1) 30%, var(--card))", "color-mix(in oklab, var(--chart-1) 60%, var(--card))", "var(--chart-1)"];
+const TIER_BG = ["color-mix(in oklab, var(--chart-1) 6%, transparent)", "color-mix(in oklab, var(--chart-1) 14%, transparent)", "color-mix(in oklab, var(--chart-1) 24%, transparent)"];
 
 /** This month's expected recurring charges and card bills on a Sunday-first grid (RTL flows it right to left). */
 export function RecurringCalendar({ data, today }: { data: InsightsPayload; today: string }) {
@@ -35,6 +39,7 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
   }
 
   const count = [...byDay.values()].reduce((n, items) => n + items.length, 0);
+  const tier = sizeTier([...byDay.values()].flat().map((it) => it.amount));
   const lead = new Date(`${first}T12:00:00Z`).getUTCDay();
   const days = Number(last.slice(8));
   const weekday = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" });
@@ -46,6 +51,16 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
     <CardShell label={t("calendarTitle")}>
       <p className="text-base font-medium">{t("calendarSummary", { count })}</p>
       {late.length > 0 && <p className="mt-1 text-sm text-[var(--status-heads-up)]">{t("lateSummary", { names: late.join(", ") })}</p>}
+      {count > 1 && (
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted-foreground">
+          {SIZES.map((sz, i) => (
+            <span key={sz} className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-sm border-s-[3px]" style={{ borderColor: TIER_EDGE[i], backgroundColor: TIER_BG[i] }} aria-hidden />
+              {t(`size_${sz}`)}
+            </span>
+          ))}
+        </p>
+      )}
       <div className="mt-3 grid grid-cols-7 gap-1 text-xs">
         {Array.from({ length: 7 }, (_, i) => (
           <div key={i} className="pb-1 text-center font-medium text-muted-foreground" aria-hidden>
@@ -58,7 +73,7 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
           const d = monthDay(y, m - 1, i + 1);
           const items = byDay.get(d) ?? [];
           const label = items.length
-            ? `${longDay.format(new Date(`${d}T12:00:00Z`))}: ${items.map((it) => `${it.name} ${money(it.amount)} ${flagText(it.flag)}`.trim()).join(", ")}`
+            ? `${longDay.format(new Date(`${d}T12:00:00Z`))}: ${items.map((it) => `${it.name} ${money(it.amount)} (${t(`size_${SIZES[tier(it.amount)]}`)}) ${flagText(it.flag)}`.trim()).join(", ")}`
             : undefined;
           return (
             <div
@@ -72,7 +87,7 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
               <div className={`tabular-nums ${d === today ? "font-semibold text-primary" : "text-muted-foreground"}`} aria-hidden>{i + 1}</div>
               <ul aria-hidden className="grid gap-0.5">
                 {items.map((it, k) => (
-                  <li key={k} className="min-w-0">
+                  <li key={k} className="min-w-0 rounded-sm border-s-[3px] ps-0.5" style={{ borderColor: TIER_EDGE[tier(it.amount)], backgroundColor: TIER_BG[tier(it.amount)] }}>
                     <span className="flex min-w-0 items-center gap-0.5">{it.flag === "late" ? <AlertTriangle className="size-3.5 shrink-0" aria-hidden /> : it.flag === "up" ? <TrendingUp className="size-3.5 shrink-0" aria-hidden /> : null}<span className="truncate">{it.name}</span></span>
                     <span className="block tabular-nums text-muted-foreground">{money(it.amount)}</span>
                     {it.flag && <span className="block text-[var(--status-heads-up)]">{flagText(it.flag)}</span>}

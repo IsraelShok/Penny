@@ -15,6 +15,7 @@ import {
   Users,
   HeartHandshake,
   Lock,
+  Accessibility,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +31,7 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const GROUPS: NavGroup[] = [
+export const SETTINGS_GROUPS: NavGroup[] = [
   {
     titleKey: "groupGeneral",
     items: [
@@ -51,6 +52,12 @@ const GROUPS: NavGroup[] = [
         labelKey: "appearance",
         Icon: Palette,
         match: (p) => p.startsWith("/settings/appearance"),
+      },
+      {
+        href: "/settings/accessibility",
+        labelKey: "a11y.nav",
+        Icon: Accessibility,
+        match: (p) => p.startsWith("/settings/accessibility"),
       },
     ],
   },
@@ -118,6 +125,8 @@ const GROUPS: NavGroup[] = [
     ],
   },
 ];
+
+const GROUPS = SETTINGS_GROUPS;
 
 export function SettingsSidebar() {
   const pathname = usePathname();

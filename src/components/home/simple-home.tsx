@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronDown, Plus, AlertCircle, Menu, MoreVertical, Landmark, CalendarDays, Tags, ArrowLeftRight, PiggyBank, Settings, SlidersHorizontal } from "lucide-react";
-import { Back, Forward } from "@/components/ui/dir-chevron";
+import { ChevronDown, Plus, AlertCircle, Menu, MoreVertical, Landmark, CalendarDays, Tags, ArrowLeftRight, PiggyBank, Settings, SlidersHorizontal, Search } from "lucide-react";
+import { Forward } from "@/components/ui/dir-chevron";
+import { MonthNav, MonthStrip, monthKey, shiftMonth } from "@/components/ui/month-nav";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { toast } from "sonner";
 import {
@@ -18,27 +19,25 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { shekels } from "@/lib/money";
 import { wealthGroups, type WealthGroup } from "@/lib/wealth-growth";
-import { buildCashflow, cashflowMonth } from "@/lib/simple-cashflow";
-import { allocate, liquidCash } from "@/lib/allocation";
+import { buildCashflow, cashflowMonth, trackedRows } from "@/lib/simple-cashflow";
 
 /**
  * Simple mode: one scrolling page, one card per cash-flow line, newest month first.
  * Order: month bar, end-of-month forecast, variable spending by week, each tracked category,
  * savings deposits, fixed costs, total, income (with savings growth), off-cash-flow.
  */
-/** `cardOnly`: just this month's forecast card (rings included), for Advanced mode's Home. */
-export function SimpleHome({ name, cardOnly, extra }: { name?: string | null; cardOnly?: boolean; /** Shown under the bank balance (Advanced mode puts its next step here). */ extra?: React.ReactNode }) {
+/** `cardOnly`: just this month's forecast card , for Advanced mode's Home. */
+export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string | null; cardOnly?: boolean; /** Shown under the bank balance (Advanced mode puts its next step here). */ extra?: React.ReactNode; /** Beside the forecast figure, at the end side (visual left in Hebrew); shrinks on phones. */ heroAside?: React.ReactNode }) {
   const formatCurrency = useMoney();
   const t = useTranslations("home.simple");
   const locale = useLocale();
   const [offset, setOffset] = useState(0);
-  const [justTracked, setJustTracked] = useState<number[]>([]);
-  const goMonth = (o: number) => { setOffset(o); setJustTracked([]); };
   // Desktop: which line the detail panel shows.
   const [selected, setSelected] = useState("variable");
 
   const queryClient = useQueryClient();
   const tCat = useTranslations("categoriesSeeded");
+  const tManual = useTranslations("manualTxn");
   const catName = (n: string) => translateCategoryName(n, tCat);
   // One month start for the whole app: the plan's, which the overview API also uses.
   const { plan, loaded: planLoaded, failed: planFailed } = usePlan();
@@ -46,6 +45,11 @@ export function SimpleHome({ name, cardOnly, extra }: { name?: string | null; ca
   const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   // Named after the month most of the range falls in.
   const monthName = new Date(first.getFullYear(), first.getMonth(), first.getDate() + 14).toLocaleDateString(locale, { month: "long", year: "numeric" });
+  // The month picker speaks "YYYY-MM"; this page counts months back from the current one.
+  const month = monthKey(new Date(first.getFullYear(), first.getMonth(), first.getDate() + 14));
+  const thisMonth = shiftMonth(month, offset);
+  const goMonth = (m: string) => { const [y, mo] = m.split("-").map(Number), [cy, cm] = thisMonth.split("-").map(Number); setOffset(Math.max(0, (cy - y) * 12 + cm - mo)); };
+  const monthNav = <MonthNav value={month} onChange={goMonth} max={thisMonth} />;
 
   const txns = useQuery({
     queryKey: ["simple-txns", iso(first), iso(last)],
@@ -75,24 +79,14 @@ export function SimpleHome({ name, cardOnly, extra }: { name?: string | null; ca
   const cf = ready ? buildCashflow(txns.data!, cats.data!, budgets.data!, overview.data!, { from: first, to: last }) : null;
   // Anything that isn't a fixed bill or savings can be tracked (variable and unplanned alike); parents roll up their children.
   const parentIds = new Set((cats.data ?? []).map((c) => c.parentId).filter((x): x is number => x != null));
-  const untracked = (cats.data ?? []).filter((c) => c.kind === "expense" && c.budgetMode !== "budgeted" && c.costType !== "fixed" && c.needType !== "saving" && !parentIds.has(c.id));
+  const trackable = (cats.data ?? []).filter((c) => c.kind === "expense" && c.costType !== "fixed" && c.needType !== "saving" && !parentIds.has(c.id));
   const groups = assets.data ? wealthGroups(assets.data.assets) : null;
   const wealth = groups ? (Object.keys(groups) as WealthGroup[]).filter((g) => groups[g].value > 0) : [];
 
   return (
     <div className={cardOnly ? "" : "mx-auto max-w-md lg:max-w-6xl"}>
-      {/* Month bar */}
-      {!cardOnly && <nav className="sticky top-0 z-10 mb-4 flex items-center gap-1 rounded-2xl border border-border/60 bg-card px-2 py-1.5 lg:static lg:mx-auto lg:mb-3 lg:max-w-md" aria-label={t("monthNav")}>
-        <SimpleMenu name={name} run={run} />
-        <button type="button" className="grid size-11 place-items-center rounded-full hover:bg-accent" onClick={() => goMonth(offset + 1)} aria-label={t("prevMonth")}>
-          <Back className="size-5" />
-        </button>
-        <span className="flex-1 text-center text-headline font-semibold">{monthName}</span>
-        <button type="button" className="grid size-11 place-items-center rounded-full hover:bg-accent disabled:opacity-30" disabled={offset === 0} onClick={() => goMonth(offset - 1)} aria-label={t("nextMonth")}>
-          <Forward className="size-5" />
-        </button>
-      </nav>}
-
+      {/* Menu and quick-add (opens the add sheet on Transactions); the month picker lives in the card below. */}
+      <div className="mb-2 flex items-center justify-between gap-2">{!cardOnly ? <SimpleMenu name={name} run={run} /> : <span />}<Link href="/transactions?add=1" className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"><Plus className="size-4" aria-hidden />{tManual("addTitle")}</Link></div>
       {failed ? (
         <Card>
           <div role="alert" className="flex flex-col items-start gap-3 p-5 sm:p-6">
@@ -101,7 +95,7 @@ export function SimpleHome({ name, cardOnly, extra }: { name?: string | null; ca
           </div>
         </Card>
       ) : !cf ? (
-        <div role="status" className="wallet h-64 animate-pulse rounded-3xl"><span className="sr-only">{t("loading")}</span></div>
+        <div className="wallet h-64 rounded-3xl p-6">{monthNav}<div role="status" className="mt-6 h-24 animate-pulse rounded-2xl bg-white/10"><span className="sr-only">{t("loading")}</span></div></div>
       ) : (() => {
         const growthTotal = wealth.reduce((sum, g) => sum + groups![g].growth, 0);
         const weeksTable = (
@@ -134,8 +128,9 @@ export function SimpleHome({ name, cardOnly, extra }: { name?: string | null; ca
         );
 
         // Every cash-flow line once; phones render them as cards, desktop as a chart plus one detail panel.
-        const tracked: LineView[] = cf.tracked
-          .filter((c) => c.expected > 0 || c.spent > 0 || justTracked.includes(c.id))
+        // Every picked category stays (₪0 included); with many, the smallest fold into one "more" line.
+        const rows = trackedRows(cf.tracked);
+        const tracked: LineView[] = rows.shown
           .map((c) => ({
             key: `cat-${c.id}`, title: catName(c.name), tone: c.color, spent: c.spent, expected: c.expected,
             spentLabel: t("spent"), expectedLabel: t("expected"), showLeft: true,
@@ -149,6 +144,14 @@ export function SimpleHome({ name, cardOnly, extra }: { name?: string | null; ca
             ),
             sections: c.items.length ? [{ label: t("details"), content: <Items items={c.items} /> }] : [],
           }));
+        if (rows.rest.length) {
+          const sum = (k: "spent" | "expected") => rows.rest.reduce((s, c) => s + c[k], 0);
+          tracked.push({
+            key: "more", title: t("moreCategories", { count: rows.rest.length }), tone: "var(--muted-foreground)",
+            spent: sum("spent"), expected: sum("expected"), spentLabel: t("spent"), expectedLabel: t("expected"),
+            sections: [{ label: t("details"), content: <CompactRows rows={rows.rest.map((c) => ({ id: c.id, name: catName(c.name), spent: c.spent, expected: c.expected, tone: c.color }))} /> }],
+          });
+        }
         const variableLine: LineView = {
           key: "variable", title: t("variable"), tone: "var(--chart-1)", spent: cf.variable.spent, expected: cf.variable.expected,
           spentLabel: t("spent"), expectedLabel: t("recommended"), sections: [{ label: t("byWeek"), content: weeksTable }],
@@ -183,111 +186,58 @@ export function SimpleHome({ name, cardOnly, extra }: { name?: string | null; ca
         const lines = [variableLine, ...tracked, savingsLine, fixedLine, incomeLine, offLine];
         const current = lines.find((l) => l.key === selected) ?? variableLine;
 
-        const rings = [
-          { label: t("income"), value: cf.income.received, goal: cf.income.expected, color: RING.income },
-          { label: t("spendingRing"), value: cf.totalSpent, goal: cf.totalExpected, color: RING.spending },
-          { label: t("savingsDeposits"), value: cf.savings.spent, goal: cf.savings.expected, color: RING.savings },
-        ];
-        const growth = offset === 0 && wealth.length > 0 ? { label: t("wealthGrowth"), value: growthTotal } : null;
-        // Same order as the allocation card: one-month buffer, then emergency fund, then the market.
-        const alloc = offset === 0 && assets.data ? allocate({ income: Math.max(cf.income.received, cf.income.expected), expenses: cf.totalExpected, liquidNow: liquidCash(assets.data.assets) }) : null;
-        const investLine = alloc && alloc.surplus > 0 && (
-          <Link href="/investments" className="-my-3 block py-3 font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">
-            {alloc.monthly.market > 0
-              ? t("freeToInvest", { amount: formatCurrency(alloc.monthly.market) })
-              : t("safetyFirst", { amount: formatCurrency(alloc.surplus) })}
-          </Link>
-        );
+        const spentPct = cf.totalExpected > 0 ? Math.min(100, (cf.totalSpent / cf.totalExpected) * 100) : cf.totalSpent > 0 ? 100 : 0;
         const hero = (
-          <section className="wallet flex flex-col overflow-hidden rounded-3xl border border-white/10 shadow-sm">
-            <div className="p-6">
-              <div className="flex items-baseline justify-between gap-3 text-footnote text-muted-foreground">
-                <span className="truncate">{name && !cardOnly ? t("hi", { name }) : null}</span>
-                <SyncLine run={run} />
+          <section className="wallet shrink-0 overflow-hidden rounded-3xl border border-white/10 p-6 shadow-sm">
+            <div className="mb-3">{monthNav}</div>
+            <div className="flex items-baseline justify-between gap-3 text-footnote text-muted-foreground">
+              <span className="truncate">{name && !cardOnly ? t("hi", { name }) : null}</span>
+              <SyncLine run={run} />
+            </div>
+            <div className="hero-with-aside"><div className="min-w-0 flex-1">
+            <h2 className="mt-3 text-base font-medium text-pretty">{t(offset === 0 ? "forecastTitle" : "endedTitle", { month: monthName })}</h2>
+            {cf.forecast < 0 && <p className="mt-2 flex items-center gap-1 text-footnote font-medium text-status-heads-up"><AlertCircle className="size-4 shrink-0" aria-hidden />{t("forecastShort")}</p>}
+            <p className={`mt-1 text-5xl font-medium tracking-tight tabular-nums ${cf.forecast < 0 ? "text-status-heads-up" : ""}`}>
+              <Signed n={cf.forecast} />
+            </p>
+            {offset === 0 && <BalancePill bank={cash.data?.bank ?? null} accounts={cash.data?.accounts ?? []} />}
+            </div>{heroAside && <div className="hero-aside">{heroAside}</div>}</div>
+            <div className="mt-5">
+              <div className="flex items-baseline justify-between gap-3 text-footnote">
+                <span className="text-muted-foreground">{t("spentSoFar")}</span>
+                <span className="tabular-nums"><bdi className="font-semibold">{formatCurrency(cf.totalSpent)}</bdi> / <bdi className="text-muted-foreground">{formatCurrency(cf.totalExpected)}</bdi></span>
               </div>
-              <h2 className="mt-3 text-lg font-medium text-pretty lg:mt-2 lg:text-base">{t(offset === 0 ? "forecastTitle" : "endedTitle", { month: monthName })}</h2>
-              {cf.forecast < 0 && <p className="mt-2 flex items-center gap-1 text-footnote font-medium text-status-heads-up"><AlertCircle className="size-4 shrink-0" aria-hidden />{t("forecastShort")}</p>}
-              <p className={`mt-1 text-5xl font-medium tracking-tight tabular-nums lg:text-4xl ${cf.forecast < 0 ? "text-status-heads-up" : ""}`}>
-                <Signed n={cf.forecast} />
-              </p>
-              {offset === 0 && <BalancePill bank={cash.data?.bank ?? null} accounts={cash.data?.accounts ?? []} />}
-              {extra}
-              <MonthRings rings={rings} growth={growth} />
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/15" role="progressbar"
+                aria-valuenow={Math.round(spentPct)} aria-valuemin={0} aria-valuemax={100} aria-label={t("spentSoFar")}
+                aria-valuetext={t("meterText", { spent: formatCurrency(cf.totalSpent), expected: formatCurrency(cf.totalExpected) })}>
+                <div className="h-full rounded-full" style={{ width: `${spentPct}%`, background: RING.spending }} />
+              </div>
             </div>
-            <div className="space-y-2 border-t border-white/10 px-6 py-4 text-sm leading-relaxed lg:px-5 lg:py-3">
-              <p className="text-pretty">
-                {t.rich("totalLine", {
-                  spent: formatCurrency(cf.totalSpent),
-                  expected: formatCurrency(cf.totalExpected),
-                  b: (x) => <bdi className="font-semibold tabular-nums">{x}</bdi>,
-                })}
-              </p>
-              {offset === 0 && (
-                <p className={`font-medium ${cf.variable.left > 0 ? "" : "text-status-heads-up"}`}>
-                  {t("variableLeft", { amount: formatCurrency(Math.max(0, cf.variable.left)) })} · <span className="font-normal text-muted-foreground">{t("untilMonthEnd")}</span>
-                </p>
-              )}
-              {investLine}
-            </div>
+            {extra}
+            <MonthStrip value={month} onChange={goMonth} max={thisMonth} />
           </section>
         );
         const trackButton = (
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card/40 px-4 text-sm font-medium text-primary hover:bg-accent disabled:opacity-50 max-lg:min-h-14" disabled={untracked.length === 0}>
-              {untracked.length === 0 ? t("allTracked") : <><Plus className="size-4" aria-hidden /> {t("trackCategory")}</>}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="max-h-80 overflow-y-auto">
-              {untracked.map((c) => (
-                <DropdownMenuItem key={c.id} onClick={() => { setJustTracked((j) => [...j, c.id]); setSelected(`cat-${c.id}`); void act(updateCategoryBudgetMode(c.id, "budgeted")).catch(() => {}); }}>{catName(c.name)}</DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <TrackPicker
+            options={trackable.map((c) => ({ id: c.id, name: catName(c.name), on: c.budgetMode === "budgeted" }))}
+            onChange={(ids, on) => {
+              if (on && ids.length === 1) setSelected(`cat-${ids[0]}`);
+              void act(Promise.all(ids.map((id) => updateCategoryBudgetMode(id, on ? "budgeted" : "tracking")))).catch(() => {});
+            }}
+          />
         );
-        const panel = (l: LineView, open = false) => (
+        const panel = (l: LineView) => (
           <>
             <Head title={l.title}>{l.menu}</Head>
             {!l.noMeter && <Meter title={l.title} spent={l.spent} expected={l.expected} spentLabel={l.spentLabel} expectedLabel={l.expectedLabel} tone={l.tone} showLeft={l.showLeft} />}
             {l.noMeter && <div className="h-3" />}
-            {l.sections.map((s) => <Expand key={s.label} label={s.label} total={s.total} open={open}>{s.content}</Expand>)}
+            {l.sections.map((s) => <Expand key={s.label} id={`home.${l.key}.${s.label}`} label={s.label} total={s.total}>{s.content}</Expand>)}
           </>
         );
         const card = (l: LineView) => <Card key={l.key}>{panel(l)}</Card>;
 
-        const strip = (
-              <section className="wallet grid shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1.2fr)] items-center gap-6 xl:grid-cols-[minmax(14rem,1fr)_auto_minmax(16rem,1.2fr)_minmax(14rem,1fr)] rounded-2xl border border-white/10 px-6 py-4">
-                <div className="min-w-0">
-                  <div className="flex items-baseline justify-between gap-3 text-footnote text-muted-foreground">
-                <span className="truncate">{name && !cardOnly ? t("hi", { name }) : null}</span>
-                    <SyncLine run={run} />
-                  </div>
-                  <h2 className="mt-1.5 text-base font-medium text-pretty">{t(offset === 0 ? "forecastTitle" : "endedTitle", { month: monthName })}</h2>
-                  {cf.forecast < 0 && <p className="mt-1 flex items-center gap-1 text-footnote font-medium text-status-heads-up"><AlertCircle className="size-4 shrink-0" aria-hidden />{t("forecastShort")}</p>}
-                  <p className={`mt-0.5 text-4xl font-medium tracking-tight tabular-nums ${cf.forecast < 0 ? "text-status-heads-up" : ""}`}><Signed n={cf.forecast} /></p>
-                  {offset === 0 && <BalancePill bank={cash.data?.bank ?? null} accounts={cash.data?.accounts ?? []} />}
-              {extra}
-                </div>
-                <MonthRings rings={rings} growth={growth} part="rings" />
-                <MonthRings rings={rings} growth={growth} part="legend" />
-                <div className="col-span-full min-w-0 space-y-2 border-t border-white/10 pt-3 text-sm leading-relaxed xl:col-span-1 xl:border-s xl:border-t-0 xl:ps-6 xl:pt-0">
-                  <p className="text-pretty">
-                    {t.rich("totalLine", {
-                      spent: formatCurrency(cf.totalSpent),
-                      expected: formatCurrency(cf.totalExpected),
-                      b: (x) => <bdi className="font-semibold tabular-nums">{x}</bdi>,
-                    })}
-                  </p>
-                  {offset === 0 && (
-                    <p className={`font-medium ${cf.variable.left > 0 ? "" : "text-status-heads-up"}`}>
-                      {t("variableLeft", { amount: formatCurrency(Math.max(0, cf.variable.left)) })} · <span className="font-normal text-muted-foreground">{t("untilMonthEnd")}</span>
-                    </p>
-                  )}
-                  {investLine}
-                </div>
-              </section>
-        );
-
-        // Advanced mode borrows just the forecast card: stacked on phones, the wide strip on desktop.
-        if (cardOnly) return <div className="mb-6 md:mb-8"><div className="lg:hidden">{hero}</div><div className="hidden lg:block">{strip}</div></div>;
+        // Advanced mode borrows just the forecast card.
+        if (cardOnly) return <div className="mb-6 md:mb-8">{hero}</div>;
 
         return (
           <>
@@ -299,10 +249,10 @@ export function SimpleHome({ name, cardOnly, extra }: { name?: string | null; ca
               {[savingsLine, fixedLine, incomeLine, offLine].map((l) => card(l))}
             </div>
 
-            {/* Desktop, one screen, top to bottom: the forecast as one wide strip (words, rings, legend, summary),
+            {/* Desktop, one screen, top to bottom: the forecast card,
                 the chart across the full width so every column fits one row, then the picked line's detail. */}
             <div className="hidden lg:flex lg:h-[calc(100dvh-12.5rem)] lg:min-h-[34rem] lg:flex-col lg:gap-3">
-              {strip}
+              {hero}
               <Card>
                 <div className="px-3 pt-3">
                   <div className="flex items-center justify-between gap-4 px-2">
@@ -313,7 +263,8 @@ export function SimpleHome({ name, cardOnly, extra }: { name?: string | null; ca
                 </div>
               </Card>
               <section aria-live="polite" className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card">
-                <div key={current.key} className="min-h-0 flex-1 overflow-y-auto pb-2">{panel(current, true)}</div>
+                {/* Focusable so keyboard users can scroll it (WCAG 2.1.1). */}
+                <div key={current.key} tabIndex={0} role="region" aria-label={t("linesTitle")} className="min-h-0 flex-1 overflow-y-auto pb-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">{panel(current)}</div>
               </section>
             </div>
           </>
@@ -359,15 +310,80 @@ function LinesChart({ lines, selected, onSelect, label }: { lines: LineView[]; s
   );
 }
 
+/** Which categories get their own row: searchable checklist with select/clear all and a count. */
+function TrackPicker({ options, onChange }: { options: { id: number; name: string; on: boolean }[]; onChange: (ids: number[], on: boolean) => void }) {
+  const t = useTranslations("home.simple");
+  const [q, setQ] = useState("");
+  const count = options.filter((o) => o.on).length;
+  const shown = options.filter((o) => o.name.toLowerCase().includes(q.trim().toLowerCase()));
+  const bulk = (on: boolean) => { const ids = shown.filter((o) => o.on !== on).map((o) => o.id); if (ids.length) onChange(ids, on); };
+  return (
+    <Popover>
+      <PopoverTrigger className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card/40 px-4 text-sm font-medium text-primary hover:bg-accent disabled:opacity-50 max-lg:min-h-14" disabled={options.length === 0}>
+        <Plus className="size-4" aria-hidden /> {t("trackCategory")}
+        {count > 0 && <span className="rounded-full bg-primary/10 px-2 text-xs tabular-nums">{count}</span>}
+      </PopoverTrigger>
+      <PopoverContent className="flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 p-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("searchCategories") + "…"} aria-label={t("searchCategories")}
+            className="min-h-11 w-full rounded-lg border border-border bg-background ps-8 pe-2 text-sm" />
+        </div>
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <span className="text-muted-foreground" aria-live="polite">{t("selectedCount", { count, total: options.length })}</span>
+          <span className="flex gap-1">
+            <button type="button" className="min-h-9 rounded-md px-2 font-medium text-primary hover:bg-accent" onClick={() => bulk(true)}>{t("selectAll")}</button>
+            <button type="button" className="min-h-9 rounded-md px-2 font-medium text-primary hover:bg-accent" onClick={() => bulk(false)}>{t("clearAll")}</button>
+          </span>
+        </div>
+        <ul className="max-h-72 overflow-y-auto">
+          {shown.map((o) => (
+            <li key={o.id}>
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm hover:bg-accent">
+                <input type="checkbox" checked={o.on} onChange={(e) => onChange([o.id], e.target.checked)} className="size-4 accent-[var(--primary)]" />
+                <span className="min-w-0 flex-1 truncate">{o.name}</span>
+              </label>
+            </li>
+          ))}
+          {shown.length === 0 && <li className="px-2 py-3 text-sm text-muted-foreground">{t("noMatches")}</li>}
+        </ul>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** Folded categories: one compact line each; ₪0 ones stay, dimmed, so nothing vanishes silently. */
+function CompactRows({ rows }: { rows: { id: number; name: string; spent: number; expected: number; tone: string }[] }) {
+  const formatCurrency = useMoney();
+  return (
+    <ul className="divide-y divide-border pb-1 text-sm">
+      {rows.map((r) => {
+        const pct = r.expected > 0 ? Math.min(100, (r.spent / r.expected) * 100) : r.spent > 0 ? 100 : 0;
+        return (
+          <li key={r.id} className={`py-2 ${r.spent === 0 ? "text-muted-foreground" : ""}`}>
+            <div className="flex items-baseline justify-between gap-3">
+              <bdi className="min-w-0 truncate">{r.name}</bdi>
+              <span className="shrink-0 tabular-nums"><bdi>{formatCurrency(r.spent)}</bdi>{r.expected > 0 && <span className="text-xs text-muted-foreground"> / <bdi>{formatCurrency(r.expected)}</bdi></span>}</span>
+            </div>
+            <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted" aria-hidden>
+              <div className="h-full rounded-full" style={{ width: `${pct}%`, background: r.spent > r.expected && r.expected > 0 ? "var(--status-over)" : r.tone }} />
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /** Bank balance, with the accounts behind it, without leaving Simple mode. */
 function BalancePill({ bank, accounts }: { bank: number | null; accounts: { provider: string; accountNumber: string; balance: number; updatedAt: string }[] }) {
   const t = useTranslations("home.simple");
   const formatCurrency = useMoney();
   return (
     <Popover>
-      <PopoverTrigger className="mt-5 inline-flex min-h-11 items-center gap-1.5 rounded-full glass-tile px-4 text-sm font-medium hover:bg-white/25 lg:mt-4">
+      <PopoverTrigger className="-ms-2 inline-flex min-h-11 items-center gap-1 rounded-full px-2 text-footnote text-muted-foreground hover:bg-white/10 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
         {t("bankBalance")}
-        <span className="font-semibold tabular-nums">{bank != null ? <Signed n={bank} /> : "—"}</span>
+        <span className="font-medium tabular-nums">{bank != null ? <Signed n={bank} /> : "—"}</span>
         <ChevronDown className="size-4" aria-hidden />
       </PopoverTrigger>
       <PopoverContent className="w-72">
@@ -390,54 +406,6 @@ function BalancePill({ bank, accounts }: { bank: number | null; accounts: { prov
 
 /** Ring colors: lavender, gold and sky, readable on the dark hero in every theme. */
 const RING = { income: "var(--ring-income)", spending: "var(--ring-spending)", savings: "var(--ring-savings)" } as const;
-
-/** Three concentric progress rings (outer first), centered, with the "value / goal" legend underneath. */
-function MonthRings({ rings, growth, part }: {
-  rings: { label: string; value: number; goal: number; color: string }[];
-  growth: { label: string; value: number } | null;
-  part?: "rings" | "legend";
-}) {
-  const formatCurrency = useMoney();
-  const size = 132, stroke = 13, gap = 3;
-  return (
-    <div className={part ? "min-w-0" : "mt-5 flex flex-col items-center gap-5"}>
-      {part !== "legend" && <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 -rotate-90 lg:w-28" aria-hidden>
-        {rings.map((r, i) => {
-          const radius = size / 2 - stroke / 2 - i * (stroke + gap);
-          const c = 2 * Math.PI * radius;
-          const pct = r.goal > 0 ? Math.min(1, r.value / r.goal) : 0;
-          return (
-            <g key={r.label}>
-              <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={r.color} strokeOpacity={0.22} strokeWidth={stroke} />
-              <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={r.color} strokeWidth={stroke} strokeLinecap="round"
-                strokeDasharray={`${pct * c} ${c}`} className="transition-[stroke-dasharray] duration-700" />
-            </g>
-          );
-        })}
-      </svg>}
-      {part !== "rings" && <dl className={part ? "grid grid-cols-2 gap-x-5 gap-y-2" : "w-full space-y-3"}>
-        {rings.map((r) => (
-          <div key={r.label}>
-            <dt className="flex items-center gap-1.5 text-footnote text-muted-foreground">
-              <span className="size-2.5 shrink-0 rounded-full" style={{ background: r.color }} aria-hidden />{r.label}
-            </dt>
-            {/* Value and goal wrap as one unit each, so a narrow column never pushes text into the card's edge. */}
-            <dd className="flex flex-wrap items-baseline gap-x-1 text-lg font-semibold tabular-nums">
-              <bdi>{formatCurrency(r.value)}</bdi>
-              {r.goal > 0 && <span className="whitespace-nowrap text-sm font-normal text-muted-foreground">/ <bdi>{formatCurrency(r.goal)}</bdi></span>}
-            </dd>
-          </div>
-        ))}
-        {growth && (
-          <div>
-            <dt className="text-footnote text-muted-foreground">{growth.label}</dt>
-            <dd className="text-lg font-semibold tabular-nums"><Signed n={growth.value} /></dd>
-          </div>
-        )}
-      </dl>}
-    </div>
-  );
-}
 
 /** Signed amount; shekels() keeps the minus with the number inside an isolate, so it never flips in RTL. */
 function Signed({ n }: { n: number }) {
@@ -470,7 +438,7 @@ function Card({ children }: { children: React.ReactNode }) {
 function Head({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-2 px-5 pt-5 sm:px-6">
-      <h2 className="text-headline font-semibold">{title}</h2>
+      <h2 className="card-title">{title}</h2>
       {children}
     </div>
   );
@@ -612,19 +580,17 @@ function Meter({ title, spent, expected, spentLabel, expectedLabel, tone, showLe
   );
 }
 
-function Expand({ label, total, open, children }: { label: string; total?: number; open?: boolean; children: React.ReactNode }) {
+/** A card's section, always shown: a label row, then its content. */
+function Expand({ label, total, children }: { id: string; label: string; total?: number; children: React.ReactNode }) {
   const formatCurrency = useMoney();
   return (
-    <details className="group border-t border-border" open={open}>
-      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-5 text-sm font-medium hover:bg-accent/50 sm:px-6">
+    <section className="border-t border-border">
+      <h3 className="flex min-h-12 items-center justify-between px-5 text-sm font-medium sm:px-6">
         <span>{label}</span>
-        <span className="flex items-center gap-2 font-normal tabular-nums">
-          {total != null && <bdi>{formatCurrency(total)}</bdi>}
-          <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden />
-        </span>
-      </summary>
+        {total != null && <bdi className="font-normal tabular-nums">{formatCurrency(total)}</bdi>}
+      </h3>
       <div className="px-5 sm:px-6">{children}</div>
-    </details>
+    </section>
   );
 }
 

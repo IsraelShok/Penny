@@ -2,90 +2,82 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { markProfileChosen, useSwitchWorkspace } from "@/components/layout/workspace-switcher";
-import { createWorkspace, deleteWorkspace, listWorkspaces, renameWorkspace } from "@/lib/api";
-import { AVATAR_COLORS, AVATAR_EMOJIS } from "@/lib/profile-avatar";
-import { setActiveWorkspaceId, useActiveWorkspaceId } from "@/lib/workspace-store";
+import { markProfileChosen, useProfiles, useSwitchProfile } from "@/components/layout/workspace-switcher";
+import { deleteProfile, saveProfile } from "@/lib/api";
+import { AVATAR_ART, avatarArtId, profileName } from "@/lib/profile-avatar";
 import { cn } from "@/lib/utils";
-import type { Workspace } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 import { ProfileAvatar } from "./profile-avatar";
+import { AvatarArt } from "./avatar-art";
 
-const tile =
-  "group flex min-h-11 flex-col items-center gap-3 rounded-3xl p-2 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background";
+// Immersive "who's using?" screen: always dark, whatever the app theme.
+const tile = "group flex min-h-11 flex-col items-center gap-3 rounded-3xl p-2 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 const square =
-  "size-24 text-5xl sm:size-32 sm:text-6xl motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:scale-105 motion-safe:group-active:scale-95";
+  "size-24 text-5xl sm:size-36 sm:text-6xl ring-white/0 ring-offset-4 ring-offset-[#0c0b14] motion-safe:transition motion-safe:duration-200 group-hover:ring-4 group-hover:ring-white group-focus-visible:ring-4 group-focus-visible:ring-white motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105 motion-safe:group-active:scale-95";
 
-type Draft = { id: number | null; name: string; avatarEmoji: string | null; avatarColor: string };
+type Draft = { id: number | null; name: string; avatarEmoji: string };
 
 export function ProfilesPage() {
   const t = useTranslations("profiles");
+  const nameOf = (p: Profile) => profileName(p.name, t("me"));
   const router = useRouter();
   const qc = useQueryClient();
-  const switchWorkspace = useSwitchWorkspace();
-  const activeId = useActiveWorkspaceId();
+  const switchProfile = useSwitchProfile();
   const [managing, setManaging] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const { data: profiles = [] } = useQuery<Workspace[]>({
-    queryKey: ["workspaces"],
-    queryFn: listWorkspaces,
-  });
+  const { profiles, activeId } = useProfiles();
 
-  const choose = (id: number) => {
+  const choose = (p: Profile) => {
     markProfileChosen();
-    switchWorkspace(id);
+    switchProfile(p);
     router.push("/");
   };
 
   const onError = (e: unknown) => toast.error(e instanceof Error ? e.message : t("error"));
 
   const save = useMutation({
-    mutationFn: (d: Draft) => {
-      const avatar = { avatarEmoji: d.avatarEmoji, avatarColor: d.avatarColor };
-      return d.id == null ? createWorkspace(d.name, avatar) : renameWorkspace(d.id, d.name, avatar);
-    },
+    mutationFn: (d: Draft) => saveProfile(d.id, d.name, { avatarEmoji: d.avatarEmoji }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["workspaces"] });
+      qc.invalidateQueries({ queryKey: ["profiles"] });
+      qc.invalidateQueries({ queryKey: ["settings"] });
       setDraft(null);
     },
     onError,
   });
 
   const remove = useMutation({
-    mutationFn: (id: number) => deleteWorkspace(id),
+    // Removes the profile and its preferences only; the household's data stays.
+    mutationFn: (id: number) => deleteProfile(id),
     onSuccess: (_r, id) => {
-      if (id === activeId) setActiveWorkspaceId(profiles.find((p) => p.id !== id)?.id ?? null);
-      qc.invalidateQueries();
+      const next = profiles.find((p) => p.id !== id);
+      if (id === activeId && next) switchProfile(next);
+      qc.invalidateQueries({ queryKey: ["profiles"] });
       setDraft(null);
     },
     onError,
   });
 
-  const openEditor = (p?: Workspace) => {
+  const openEditor = (p?: Profile) => {
     setConfirmDelete(false);
     setDraft(
       p
-        ? { id: p.id, name: p.name, avatarEmoji: p.avatarEmoji, avatarColor: p.avatarColor ?? AVATAR_COLORS[0] }
-        : {
-            id: null,
-            name: "",
-            avatarEmoji: AVATAR_EMOJIS[profiles.length % AVATAR_EMOJIS.length],
-            avatarColor: AVATAR_COLORS[profiles.length % AVATAR_COLORS.length],
-          }
+        ? { id: p.id, name: nameOf(p), avatarEmoji: `@${avatarArtId(p.avatarEmoji) ?? AVATAR_ART[Math.abs(p.id - 1) % AVATAR_ART.length]}` }
+        : { id: null, name: "", avatarEmoji: `@${AVATAR_ART[profiles.length % AVATAR_ART.length]}` }
     );
   };
 
   return (
-    <main className="flex min-h-dvh w-full flex-col items-center justify-center bg-background px-4 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+    <main className="fixed inset-0 z-40 flex flex-col items-center justify-center overflow-y-auto bg-[#0c0b14] bg-[radial-gradient(ellipse_at_top,#2a2160_0%,transparent_60%)] px-4 py-12 text-white">
+      <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
         {managing ? t("manageTitle") : t("title")}
       </h1>
 
@@ -95,19 +87,21 @@ export function ProfilesPage() {
             <button
               type="button"
               className={tile}
-              onClick={() => (managing ? openEditor(p) : choose(p.id))}
-              aria-label={managing ? t("editProfile", { name: p.name }) : p.name}
+              onClick={() => (managing ? openEditor(p) : choose(p))}
+              aria-label={managing ? t("editProfile", { name: nameOf(p) }) : nameOf(p)}
             >
               <span className="relative">
-                <ProfileAvatar profile={p} className={cn(square, managing && "opacity-60")} />
+                <ProfileAvatar profile={p} className={cn(square, managing && "brightness-50")} />
                 {managing ? (
                   <span className="absolute inset-0 flex items-center justify-center">
-                    <Pencil className="size-8 text-white drop-shadow" />
+                    <span className="flex size-12 items-center justify-center rounded-full border-2 border-white bg-black/40">
+                      <Pencil className="size-6 text-white" />
+                    </span>
                   </span>
                 ) : null}
               </span>
-              <span className="max-w-32 truncate text-base text-muted-foreground group-hover:text-foreground">
-                {p.name}
+              <span className="max-w-36 truncate text-lg text-white/60 group-hover:text-white group-focus-visible:text-white">
+                {nameOf(p)}
               </span>
             </button>
           </li>
@@ -117,20 +111,20 @@ export function ProfilesPage() {
             <span
               className={cn(
                 square,
-                "flex items-center justify-center rounded-[28%] border-2 border-dashed border-border text-muted-foreground group-hover:border-primary group-hover:text-primary"
+                "flex items-center justify-center rounded-[28%] bg-white/10 text-white/70 group-hover:bg-white/20 group-hover:text-white"
               )}
             >
               <Plus className="size-10" />
             </span>
-            <span className="text-base text-muted-foreground group-hover:text-foreground">{t("add")}</span>
+            <span className="text-lg text-white/60 group-hover:text-white group-focus-visible:text-white">{t("add")}</span>
           </button>
         </li>
       </ul>
 
       <Button
-        variant={managing ? "default" : "outline"}
+        variant="outline"
         size="lg"
-        className="mt-12"
+        className={cn("mt-14 border-white/50 bg-transparent px-8 text-white/80 hover:bg-white hover:text-black", managing && "bg-white text-black")}
         aria-pressed={managing}
         onClick={() => setManaging((m) => !m)}
       >
@@ -153,8 +147,8 @@ export function ProfilesPage() {
 
               <div className="flex justify-center">
                 <ProfileAvatar
-                  profile={{ id: draft.id ?? 1, name: draft.name, avatarEmoji: draft.avatarEmoji, avatarColor: draft.avatarColor }}
-                  className="size-20 text-4xl"
+                  profile={{ id: draft.id ?? 1, name: draft.name, avatarEmoji: draft.avatarEmoji, avatarColor: null }}
+                  className="size-24"
                 />
               </div>
 
@@ -171,46 +165,26 @@ export function ProfilesPage() {
               </label>
 
               <fieldset>
-                <legend className="mb-2 text-sm font-medium">{t("emoji")}</legend>
-                <div className="grid grid-cols-8 gap-1">
-                  {AVATAR_EMOJIS.map((em) => (
-                    <button
-                      key={em}
-                      type="button"
-                      aria-pressed={draft.avatarEmoji === em}
-                      onClick={() => setDraft({ ...draft, avatarEmoji: em })}
-                      className={cn(
-                        "flex size-11 items-center justify-center rounded-xl text-2xl outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
-                        draft.avatarEmoji === em && "bg-accent ring-2 ring-primary"
-                      )}
-                    >
-                      {em}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-
-              <fieldset>
-                <legend className="mb-2 text-sm font-medium">{t("color")}</legend>
-                <div className="flex flex-wrap gap-1">
-                  {AVATAR_COLORS.map((c, i) => (
-                    <button
-                      key={c}
-                      type="button"
-                      aria-label={t("colorN", { n: i + 1 })}
-                      aria-pressed={draft.avatarColor === c}
-                      onClick={() => setDraft({ ...draft, avatarColor: c })}
-                      className="flex size-11 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <span
+                <legend className="mb-2 text-sm font-medium">{t("avatar")}</legend>
+                <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                  {AVATAR_ART.map((id) => {
+                    const on = draft.avatarEmoji === `@${id}`;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        aria-label={t(`art.${id}`)}
+                        aria-pressed={on}
+                        onClick={() => setDraft({ ...draft, avatarEmoji: `@${id}` })}
                         className={cn(
-                          "size-8 rounded-full",
-                          draft.avatarColor === c && "ring-2 ring-foreground ring-offset-2 ring-offset-background"
+                          "aspect-square overflow-hidden rounded-[28%] outline-none ring-offset-2 ring-offset-background focus-visible:ring-2 focus-visible:ring-ring motion-safe:transition-transform hover:scale-105",
+                          on && "ring-[3px] ring-primary"
                         )}
-                        style={{ backgroundColor: c }}
-                      />
-                    </button>
-                  ))}
+                      >
+                        <AvatarArt id={id} className="size-full" />
+                      </button>
+                    );
+                  })}
                 </div>
               </fieldset>
 

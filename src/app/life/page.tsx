@@ -8,7 +8,7 @@ export default async function Page() {
   const t = await getTranslations("life");
   return (
     <AppShell>
-      <PageHeader title={t("title")} meta={t("subtitle")} />
+      <PageHeader title={t("title")} largeTitle={false} />
       <div className="mx-auto w-full max-w-3xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
         <LifeStages />
       </div>

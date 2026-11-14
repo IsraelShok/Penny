@@ -1,12 +1,13 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 /** Longer explanations stay out of the way: a small "i" that opens the text on click, tap or Enter. */
-export function InfoTip({ text, className }: { text: string; className?: string }) {
+export function InfoTip({ text, className }: { text: ReactNode; className?: string }) {
   const t = useTranslations("common");
   return (
     <Popover>

@@ -722,7 +722,7 @@ function BudgetStat({
               cancel();
             }
           }}
-          className="mt-0.5 w-full rounded-md border border-border bg-background/70 px-1.5 py-0.5 font-semibold text-xl tabular-nums outline-none focus:border-foreground/40 disabled:opacity-60"
+          className="mt-0.5 w-full rounded-md border border-border bg-background/70 px-1.5 py-0.5 font-semibold text-xl tabular-nums outline-none focus:border-foreground/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60"
           placeholder={tb("auto")}
         />
       ) : (

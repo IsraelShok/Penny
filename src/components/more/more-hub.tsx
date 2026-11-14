@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { MoreHero } from "@/components/ui/page-hero";
 import { SuggestionsCard } from "@/components/home/suggestions-card";
-import { CalendarCheck, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, Sparkles } from "lucide-react";
+import { CalculatorTiles } from "@/components/more/calculators";
+import { ChevronLeft, LayoutDashboard, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, Sparkles } from "lucide-react";
+import { DailyTip } from "@/components/tips/tips";
 
 /** Everything that isn't daily, in one calm place: the menu stays short, nothing gets lost. */
 const GROUPS = [
   { key: "rituals", items: [
-    { href: "/checkin", key: "checkin", Icon: CalendarCheck },
     { href: "/recap", key: "recap", Icon: Sparkles },
     { href: "/wellbeing", key: "wellbeing", Icon: HeartPulse },
   ] },
@@ -31,8 +33,22 @@ export function MoreHub() {
   const t = useTranslations("moreHub");
   return (
     <div className="space-y-8">
+      <MoreHero />
+      <Link
+        href="/control"
+        className="flex items-center gap-4 rounded-2xl bg-primary p-5 text-primary-foreground transition-opacity duration-150 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      >
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-foreground/15" aria-hidden><LayoutDashboard className="size-5" /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-caption font-semibold opacity-80">{t("control_badge")}</span>
+          <span className="block text-headline font-semibold">{t("control_title")}</span>
+          <span className="mt-0.5 block text-footnote text-pretty opacity-85">{t("control_hint")}</span>
+        </span>
+        <ChevronLeft className="size-5 shrink-0 opacity-80 ltr:rotate-180" aria-hidden />
+      </Link>
+      <DailyTip />
+      <CalculatorTiles />
       <SuggestionsCard limit={50} />
-      <Link href="/control" className="block rounded-2xl border bg-card p-5"><strong className="text-lg">מרכז הכסף</strong><p className="mt-2 text-muted-foreground">נתונים, התחייבויות, יעדים, כללים, דוחות ותכנון חובות</p></Link>
       {GROUPS.map((g) => (
         <section key={g.key} aria-labelledby={`more-${g.key}`}>
           <h2 id={`more-${g.key}`} className="mb-3 px-1 text-footnote font-semibold text-muted-foreground">{t(`group_${g.key}`)}</h2>

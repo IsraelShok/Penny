@@ -10,6 +10,8 @@ import { BalanceForecastCard } from "./balance-forecast-card";
 import { RecurringCalendar } from "./recurring-calendar";
 import { OverdraftCard } from "./overdraft-card";
 import { More } from "@/components/overview/more";
+import { AheadHero, RecurringHero } from "@/components/ui/page-hero";
+import { addDays, nthCharge } from "@/lib/balance-forecast";
 
 const PER_MONTH = { weekly: 52 / 12, monthly: 1, yearly: 1 / 12 } as const;
 
@@ -22,12 +24,19 @@ export function InsightsView({ part }: { part: "ahead" | "recurring" }) {
   const query = useQuery({ queryKey: ["insights"], queryFn: getInsights });
   const banks = useQuery({ queryKey: ["integrations"], queryFn: listIntegrations });
   const data = query.data;
-  if (query.isError || banks.isError) return <DataState error onRetry={() => { void query.refetch(); void banks.refetch(); }} />;
-  if (!data || banks.isPending) return <DataState loading />;
-  if (!banks.data?.some((bank) => bank.lastSyncAt) && data.forecast.length === 0 && data.series.length === 0 && data.installments.plans.length === 0) return <DataState />;
+  const retry = () => { void query.refetch(); void banks.refetch(); };
+  const state = { loading: !data || banks.isPending, error: query.isError || banks.isError, onRetry: retry };
+  const fixed = data?.series.filter((s) => s.status !== "candidate") ?? [];
+  const hero = part === "recurring"
+    ? <RecurringHero {...state} count={fixed.length} monthly={fixed.reduce((sum, s) => sum + s.expectedAmount * PER_MONTH[s.cadence], 0)} />
+    : <AheadHero {...state} forecast={data?.forecast} />;
+  if (state.error) return <div className="grid gap-6">{hero}<DataState error onRetry={retry} /></div>;
+  if (!data || banks.isPending) return <div className="grid gap-6">{hero}</div>;
+  if (!banks.data?.some((bank) => bank.lastSyncAt) && data.forecast.length === 0 && data.series.length === 0 && data.installments.plans.length === 0) return <div className="grid gap-6">{hero}<DataState /></div>;
 
   if (part === "recurring") return (
     <div className="grid gap-6">
+      {hero}
       <Subscriptions data={data} money={money} />
       {data.installments.plans.length > 0 && <OpenInstallments data={data.installments} locale={locale} />}
     </div>
@@ -35,6 +44,7 @@ export function InsightsView({ part }: { part: "ahead" | "recurring" }) {
 
   return (
     <div className="grid gap-6">
+      {hero}
       <BalanceForecastCard />
       <RecurringCalendar data={data} today={new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date())} />
       <Card>
@@ -63,7 +73,7 @@ export function InsightsView({ part }: { part: "ahead" | "recurring" }) {
         subscriptionsMonthly={data.series.filter((s) => s.status !== "candidate").reduce((sum, s) => sum + s.expectedAmount * PER_MONTH[s.cadence], 0)}
       />
 
-      <More>
+      <More id={part}>
       <Card>
         <CardHeader>
           <CardTitle>{t("anomalies")}</CardTitle>
@@ -132,32 +142,57 @@ function OpenInstallments({ data, locale }: { data: InsightsPayload["installment
 
 function Subscriptions({ data, money }: { data: InsightsPayload; money: (n: number) => string }) {
   const t = useTranslations("insights");
+  const ta = useTranslations("ahead");
+  const locale = useLocale();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date());
+  const chipDate = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" });
+  // Soonest charge first, so the list reads as "what's next".
+  const rows = data.series
+    .map((s) => ({ s, next: nthCharge(s.cadence, s.lastDate, 1) }))
+    .sort((a, b) => a.next.localeCompare(b.next));
+  const monthly = data.series.filter((s) => s.status !== "candidate").reduce((sum, s) => sum + s.expectedAmount * PER_MONTH[s.cadence], 0);
+  const chip = "rounded-full px-2 py-0.5 text-xs font-medium";
   return (
     <Card id="subscriptions" className="scroll-mt-20">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-baseline justify-between gap-3">
         <CardTitle>{t("subscriptions")}</CardTitle>
+        {rows.length > 0 && <span className="text-sm text-muted-foreground tabular-nums"><bdi>{t("perMonth", { amount: money(monthly) })}</bdi></span>}
       </CardHeader>
       <CardContent>
-        {data.series.length === 0 ? (
-          <p className="text-muted-foreground">{t("noSubscriptions")}</p>
+        {rows.length === 0 ? (
+          <p className="py-6 text-center text-muted-foreground">{t("noSubscriptions")}</p>
         ) : (
-          <ul className="grid gap-3">
-            {data.series.map((s) => (
-              <li key={`${s.merchant}|${s.currency}`} className="flex flex-wrap items-baseline justify-between gap-x-4">
-                <span className="font-medium">
-                  {s.merchant}
-                  {s.status === "candidate" ? <span className="ms-2 text-sm text-muted-foreground">({t("maybe")})</span> : null}
-                </span>
-                <span className="tabular-nums">
-                  {money(s.expectedAmount)} · {t(s.cadence)}
-                </span>
-                {s.priceChange ? (
-                  <span className="w-full text-sm text-[var(--status-heads-up)]">
-                    {t("priceChanged", { from: money(s.priceChange.from), to: money(s.priceChange.to) })}
+          <ul className="-mx-2 divide-y divide-border">
+            {rows.map(({ s, next }) => {
+              const late = next < addDays(today, -5);
+              return (
+                <li key={`${s.merchant}|${s.currency}`} className="flex min-h-16 items-center gap-3 px-2 py-3">
+                  <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-base font-semibold text-primary">
+                    {s.merchant.trim().charAt(0).toUpperCase()}
                   </span>
-                ) : null}
-              </li>
-            ))}
+                  <div className="min-w-0 flex-1">
+                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="truncate font-semibold">{s.merchant}</span>
+                      {s.status === "candidate" && <span className={`${chip} bg-muted text-muted-foreground`}>{t("maybe")}</span>}
+                      {late && <span className={`${chip} bg-[var(--status-heads-up)]/10 text-[var(--status-heads-up)]`}>{ta("late")}</span>}
+                    </p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      {t(s.cadence)}
+                      {s.cadence === "monthly" && <> · {t("usuallyOn", { day: Number(s.lastDate.slice(8)) })}</>}
+                    </p>
+                    {s.priceChange && (
+                      <p className="mt-1 text-xs text-[var(--status-heads-up)]">
+                        {t("priceChanged", { from: money(s.priceChange.from), to: money(s.priceChange.to) })}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <span className="font-semibold tabular-nums"><bdi>{money(s.expectedAmount)}</bdi></span>
+                    <span className={`${chip} bg-muted text-muted-foreground tabular-nums`}>{chipDate.format(new Date(`${next}T12:00:00Z`))}</span>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </CardContent>

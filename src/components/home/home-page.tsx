@@ -26,10 +26,13 @@ import { NeedsAttentionCard } from "./needs-attention-card";
 import { BankHealthCard } from "./bank-health-card";
 import { SyncFailureBanner } from "./sync-failure-banner";
 import { SimpleHome } from "./simple-home";
+import { MoneyMap } from "./money-map";
 import { NextStep } from "./today-card";
+import { PetHeroAside } from "./pet-card";
 import { usePlan } from "@/hooks/use-plan";
 import { CardError, CardSkeleton } from "./card-shell";
 import type { HomePayload, HomeSection } from "@/lib/types";
+import { DailyTip } from "@/components/tips/tips";
 
 export function HomePage() {
   const router = useRouter();
@@ -65,9 +68,12 @@ export function HomePage() {
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const { data: insights } = useQuery({ queryKey: ["insights"], queryFn: getInsights });
   const { plan, loaded, update } = usePlan();
-  const simple = plan.simpleMode;
   const detail = searchParams.get("view") === "detail";
+  // ?view=detail shows the advanced home without changing the saved mode (wheel paging lands here from Simple).
+  const simple = plan.simpleMode && !(detail && plan.homeStyle !== "companion");
   const companion = plan.homeStyle === "companion";
+  // Pocket Pal sits in the purple card, at its end side (visual left in Hebrew).
+  const petAside = loaded && plan.pet.enabled ? <PetHeroAside /> : undefined;
   const nextStep = <NextStep home={data} homePending={isLoading} homeFailed={isError} />;
   const linkClass = "mx-auto flex min-h-11 w-fit items-center rounded-full px-4 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring";
 
@@ -79,9 +85,10 @@ export function HomePage() {
         <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
           <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
           <Greeting name={settings?.displayName} />
-          <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} />
+          <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
+          {loaded && companion && <MoneyMap />}
           {loaded && <WelcomePrompt />}
-          {loaded && <Link href="/?view=detail" className={linkClass}>{t("detailLink")}</Link>}
+          {loaded && !simple && <Link href="/?view=detail" className={linkClass}>{t("detailLink")}</Link>}
         </div>
       </>
     );
@@ -95,7 +102,7 @@ export function HomePage() {
         actions={
           <div role="group" aria-label={t("simple.modeLabel")} className="inline-flex rounded-full bg-muted p-0.5 text-sm">
             {[true, false].map((v) => (
-              <button key={String(v)} type="button" aria-pressed={simple === v} onClick={() => { if (simple !== v) void update({ simpleMode: v }); }}
+              <button key={String(v)} type="button" aria-pressed={simple === v} onClick={() => { if (simple !== plan.simpleMode) router.replace("/", { scroll: false }); if (plan.simpleMode !== v) void update({ simpleMode: v }); }}
                 className={`relative rounded-full px-3 py-1 after:absolute after:-inset-y-2 after:inset-x-0 ${simple === v ? "bg-background font-medium shadow-sm" : "text-muted-foreground"}`}>
                 {t(v ? "simple.simple" : "simple.advanced")}
               </button>
@@ -106,7 +113,7 @@ export function HomePage() {
       {/* The detail view of the Companion style always offers the way back. */}
       {companion && <div className="mx-auto w-full max-w-6xl px-4 pt-3 md:px-6 lg:px-8"><Link href="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-footnote font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{t("companionLink")}</Link></div>}
       {simple ? (
-        <div className="px-4 pb-8 pt-3"><SimpleHome name={settings?.displayName} extra={nextStep} /></div>
+        <div className="px-4 pb-8 pt-3"><SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} /></div>
       ) : (
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
@@ -116,8 +123,9 @@ export function HomePage() {
         />
         <Greeting name={settings?.displayName} />
         {/* The same forecast card as Simple mode: forecast, rings, legend and the month so far. */}
-        <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} />
+        <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
         <SuggestionsCard limit={3} href="/more#suggestions" />
+        <div className="mt-4"><DailyTip /></div>
         <HealthCard />
         <MonthCelebration />
         <WelcomePrompt />

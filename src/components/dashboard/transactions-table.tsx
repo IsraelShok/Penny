@@ -1,7 +1,7 @@
 "use client";
 
 import { Forward, Back } from "@/components/ui/dir-chevron";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -27,23 +27,27 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { NewCategoryDialog } from "@/components/settings/new-category-dialog";
+import { CategoryPicker, CategoryBrowserHeader, CategorySectionList, categoryListKeyDown, useCategoryBrowser } from "@/components/dashboard/category-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   MoreHorizontal,
   HelpCircle,
   Check,
-  ArrowDownRight,
-  ArrowUpRight,
   Wallet,
   Tags,
   EyeOff,
   Eye,
   X,
+  Plus,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { signedShekels } from "@/lib/money";
+import { groupByWeek, localToday, weekRelation } from "@/lib/weeks";
+import { InfoTip } from "@/components/ui/info-tip";
 import {
   editTransactions,
   setTransactionKind,
@@ -83,6 +87,8 @@ import type { HouseholdMember } from "@/lib/household";
 import type { AccountOwners } from "@/lib/tags";
 import { TagChips } from "@/components/transactions/tag-chips";
 import { OwnerPicker } from "@/components/transactions/owner-picker";
+import { deleteWithUndo, isManualTxn } from "@/components/transactions/transaction-sheet";
+import { updateTransactionFields } from "@/lib/api";
 
 type Kind = "expense" | "income" | "transfer";
 
@@ -109,6 +115,10 @@ interface TransactionsTableProps {
   onTagClick?: (tag: string) => void;
   members?: HouseholdMember[];
   accountOwners?: AccountOwners;
+  /** Opens the edit sheet for a row (row tap, description, or the row menu). */
+  onEdit?: (txn: TransactionWithCategory) => void;
+  /** Shows a "+" (add transaction) button after the category filter, desktop only. */
+  onAdd?: () => void;
 }
 
 const PAGE_SIZE = 50;
@@ -135,11 +145,18 @@ export function TransactionsTable({
   onTagClick,
   members = [],
   accountOwners = {},
+  onEdit,
+  onAdd,
 }: TransactionsTableProps) {
+  const catBrowser = useCategoryBrowser(categories);
+  const catListId = useId();
+  const tManual = useTranslations("manualTxn");
   const tTags = useTranslations("tags");
   const t = useTranslations("transactions");
   const tCat = useTranslations("categoriesSeeded");
   const tBanks = useTranslations("banks");
+  const tSettingsCat = useTranslations("settings.categories");
+  const [newCatFor, setNewCatFor] = useState<{ txnId: number; kind: "expense" | "income" } | null>(null);
   const locale = useLocale() as Locale;
   const queryClient = useQueryClient();
   const [updatingId, setUpdatingId] = useState<number | null>(null);
@@ -166,6 +183,19 @@ export function TransactionsTable({
     } catch (error) { toast.error(he ? t("saveFailedHe") : error instanceof Error ? error.message : "Could not save"); throw error; }
     finally { setEditing(false); }
   }
+  const selectedManual = selectedRows.filter(isManualTxn).map(r => r.id);
+  async function bulk(run: () => Promise<unknown>) {
+    setEditing(true);
+    try { await run(); setSelected([]); }
+    catch (error) { toast.error(error instanceof Error ? error.message : tManual("failed")); await queryClient.invalidateQueries(); }
+    finally { setEditing(false); }
+  }
+  const bulkExclude = () => bulk(async () => {
+    await Promise.all(selected.map(id => updateTransactionFields(id, { excluded: true })));
+    await queryClient.invalidateQueries();
+    toast.success(tManual("bulkExcluded", { count: selected.length }));
+  });
+  const bulkDelete = () => bulk(() => deleteWithUndo(selectedManual, tManual, () => void queryClient.invalidateQueries()));
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const otherKinds: Record<Kind, Array<{ value: Kind; label: string }>> = {
@@ -325,6 +355,22 @@ export function TransactionsTable({
   const hasActiveFilters =
     categoryFilter.length > 0 || accountFilter.length > 0;
 
+  const bcp = he ? "he-IL" : "en-IL";
+  const dayFmt = new Intl.DateTimeFormat(bcp, { weekday: "short", timeZone: "UTC" });
+  const rangeFmt = new Intl.DateTimeFormat(bcp, { day: "numeric", month: "short", timeZone: "UTC" });
+  const utc = (iso: string) => new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+  // "יום ו׳ 14.11": the week header carries the rest of the date.
+  const dayLabel = (iso: string) => `${dayFmt.format(utc(iso))} ${+iso.slice(8, 10)}.${+iso.slice(5, 7)}`;
+  const today = localToday();
+  // Weeks only make sense in date order; other sorts show one flat list.
+  // shortcut: week totals cover the rows on this page (50), so a week split across pages shows partial totals; sum server-side if that bites.
+  const weeks = sortField === "date" ? groupByWeek(transactions) : [{ start: "", end: "", items: transactions }];
+  const weekLabel = (start: string, end: string) => {
+    const range = rangeFmt.formatRange(utc(start), utc(end));
+    const rel = weekRelation(start, today);
+    return rel ? `${t(rel === "this" ? "weekThis" : "weekLast")} · ${range}` : range;
+  };
+
   const handleClearFilters = () => {
     onCategoryFilterChange([]);
     onAccountFilterChange([]);
@@ -338,63 +384,32 @@ export function TransactionsTable({
   ];
   const allAccountIds = accountOptions.map((o) => o.integration.id);
 
-  const renderCategoryFilterOptions = (
-    parentId: number | null,
-    depth: number
-  ): React.ReactNode[] => {
-    const items = categories
-      .filter((c) => c.parentId === parentId)
-      .sort((a, b) => a.name.localeCompare(b.name));
-    const nodes: React.ReactNode[] = [];
-    for (const cat of items) {
-      const hasChildren = categories.some((c) => c.parentId === cat.id);
-      const name = translateCategoryName(cat.name, tCat);
-      nodes.push(
-        <MultiFilterOption
-          key={cat.id}
-          selected={isCategoryFilterChecked(
-            cat.id,
-            categoryFilter,
-            categories
-          )}
-          onToggle={() =>
-            onCategoryFilterChange(
-              toggleCategoryFilterSelection(
-                categoryFilter,
-                cat.id,
-                categories
-              )
-            )
-          }
-          className={depth > 0 ? "ps-2" : undefined}
-        >
-          <div
-            className={cn(
-              "flex items-center gap-2",
-              hasChildren && "font-semibold"
-            )}
-            style={{ paddingInlineStart: depth > 0 ? depth * 12 : 0 }}
-          >
-            <div
-              className="h-2 w-2 shrink-0 rounded-full"
-              style={{ backgroundColor: cat.color }}
-            />
-            {name}
-          </div>
-        </MultiFilterOption>
-      );
-      nodes.push(...renderCategoryFilterOptions(cat.id, depth + 1));
-    }
-    return nodes;
-  };
+  const catOption = (cat: Category, indented: boolean, isGroup = false) => (
+    <MultiFilterOption
+      key={cat.id}
+      selected={isCategoryFilterChecked(cat.id, categoryFilter, categories)}
+      onToggle={() => onCategoryFilterChange(toggleCategoryFilterSelection(categoryFilter, cat.id, categories))}
+      className={indented ? "ps-5" : undefined}
+    >
+      <div className={cn("flex min-w-0 items-center gap-2", isGroup && "font-semibold")}>
+        <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ backgroundColor: cat.color }} />
+        <span className="truncate">{catBrowser.label(cat)}</span>
+      </div>
+    </MultiFilterOption>
+  );
 
   return (
-    <Card className="rounded-2xl bg-card shadow-none">
+    // overflow-clip (not hidden) so the sticky week headers can stick to the page.
+    <Card className="overflow-clip rounded-2xl bg-card shadow-none">
+      <NewCategoryDialog
+        open={newCatFor !== null}
+        onOpenChange={(o) => !o && setNewCatFor(null)}
+        kind={newCatFor?.kind ?? "expense"}
+        onCreated={(cat) => newCatFor && void handleCategoryChange(newCatFor.txnId, cat.id)}
+      />
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <CardTitle className="font-semibold text-2xl">
-            {t("pageTitle")}
-          </CardTitle>
+          <CardTitle>{t("pageTitle")}</CardTitle>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Input
               placeholder={t("search")}
@@ -451,9 +466,25 @@ export function TransactionsTable({
               clearLabel={t("filterClearSelection")}
               onSelectAll={() => onCategoryFilterChange(allCategoryIds)}
               onClear={() => onCategoryFilterChange([])}
+              header={<CategoryBrowserHeader browser={catBrowser} listId={catListId} />}
+              onOpenChange={catBrowser.onOpenChange}
+              onListKeyDown={categoryListKeyDown}
             >
-              {renderCategoryFilterOptions(null, 0)}
+              <CategorySectionList
+                browser={catBrowser}
+                listId={catListId}
+                renderItem={(c, indented) => catOption(c, indented)}
+                renderTitle={(sec) => {
+                  const parent = categories.find((c) => c.id === sec.parentId);
+                  return parent ? catOption(parent, false, true) : null;
+                }}
+              />
             </TransactionMultiFilter>
+            {onAdd ? (
+              <IconButton label={tManual("addTitle")} type="button" variant="outline" size="icon-sm" className="hidden shrink-0 md:inline-flex" onClick={onAdd}>
+                <Plus className="size-4" aria-hidden />
+              </IconButton>
+            ) : null}
             {hasActiveFilters ? (
               <IconButton
                 label={t("filterClear")}
@@ -465,16 +496,13 @@ export function TransactionsTable({
                 <X className="size-4" aria-hidden />
               </IconButton>
             ) : null}
+            {(hasActiveFilters || search.trim().length > 0) && <InfoTip text={t("filterScopedToList")} />}
           </div>
         </div>
-        {hasActiveFilters || search.trim().length > 0 ? (
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t("filterScopedToList")}
-          </p>
-        ) : null}
       </CardHeader>
       <CardContent
         className={cn(
+          "max-lg:px-3",
           isFetching &&
             !loading &&
             "opacity-60 transition-opacity duration-200"
@@ -498,21 +526,23 @@ export function TransactionsTable({
             {(selected.length > 0 || undoToken) && <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-muted/50 p-3">
               <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />{t("rememberCategoryForFuture")}</label>
               {undoToken && <Button variant="outline" disabled={editing} onClick={() => void edit({ undo: undoToken }).catch(() => {})}>{t("undoLastEdit")}</Button>}
-              {selected.length > 0 && <><span className="text-sm">{selected.length} {t("selected")}</span><select aria-label={t("categoryForSelectedTransactions")} className="min-h-11 rounded-lg border bg-background px-2" value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}><option value="">{t("chooseCategory")}</option>{bulkCategories.map(c => <option key={c.id} value={c.id}>{translateCategoryName(c.name, tCat)}</option>)}</select><Button disabled={editing || isFetching || !bulkCategories.some(c => c.id === Number(bulkCategory))} onClick={() => void edit({ ids: selected, categoryId: Number(bulkCategory), remember }).catch(() => {})}>{t("categorizeSelected")}</Button><Button variant="ghost" onClick={() => setSelected([])}>{t("filterClearSelection")}</Button>{!bulkCategories.length && <p className="text-xs">{t("selectOnlyExpensesOr")}</p>}</>}
+              {selected.length > 0 && <><span className="text-sm">{selected.length} {t("selected")}</span><select aria-label={t("categoryForSelectedTransactions")} className="min-h-11 rounded-lg border bg-background px-2" value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}><option value="">{t("chooseCategory")}</option>{bulkCategories.map(c => <option key={c.id} value={c.id}>{translateCategoryName(c.name, tCat)}</option>)}</select><Button disabled={editing || isFetching || !bulkCategories.some(c => c.id === Number(bulkCategory))} onClick={() => void edit({ ids: selected, categoryId: Number(bulkCategory), remember }).catch(() => {})}>{t("categorizeSelected")}</Button><Button variant="outline" className="min-h-11" disabled={editing} onClick={() => void bulkExclude()}><EyeOff className="size-4" aria-hidden />{tManual("bulkExclude")}</Button>{selectedManual.length > 0 && <Button variant="outline" className="min-h-11 text-destructive" disabled={editing} onClick={() => void bulkDelete()}>{tManual("bulkDelete")} ({selectedManual.length})</Button>}<Button variant="ghost" onClick={() => setSelected([])}>{t("filterClearSelection")}</Button>{!bulkCategories.length && <p className="text-xs">{t("selectOnlyExpensesOr")}</p>}</>}
             </div>}
             {split && <SplitEditor key={split.id} transaction={split} categories={categories} close={() => setSplit(null)} save={parts => edit({ ids: [split.id], splits: parts })} />}
             {/* First and last columns keep a card-edge gutter, so text never sits on the card's edge while the table scrolls. */}
-            <Table className="[&_td:first-child]:ps-4 [&_th:first-child]:ps-4 [&_td:last-child]:pe-4 [&_th:last-child]:pe-4">
+            {/* Clip instead of scroll: a scrolling box would stop the week headers from sticking. Columns hide below lg so rows fit. */}
+            <div className="[&>[data-slot=table-container]]:overflow-x-clip">
+            <Table className="lg:[&_td:first-child]:ps-4 lg:[&_th:first-child]:ps-4 lg:[&_td:last-child]:pe-4 lg:[&_th:last-child]:pe-4">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[44px]"><input className="size-4" type="checkbox" aria-label={t("selectThisPage")} disabled={editing || isFetching} checked={transactions.length > 0 && selected.length === transactions.length} onChange={e => setSelected(e.target.checked ? transactions.map(t => t.id) : [])} /></TableHead>
+                  <TableHead className="w-9 lg:w-[52px]"><input className="size-4" type="checkbox" aria-label={t("selectThisPage")} disabled={editing || isFetching} checked={transactions.length > 0 && selected.length === transactions.length} onChange={e => setSelected(e.target.checked ? transactions.map(t => t.id) : [])} /></TableHead>
                   <SortableTableHead
                     label={t("headerDate")}
                     field="date"
                     activeField={sortField}
                     activeOrder={sortOrder}
                     onSort={onSortChange}
-                    className="w-[100px]"
+                    className="hidden w-[96px] lg:table-cell"
                     sortAscLabel={t("sortAsc")}
                     sortDescLabel={t("sortDesc")}
                   />
@@ -531,7 +561,7 @@ export function TransactionsTable({
                     activeField={sortField}
                     activeOrder={sortOrder}
                     onSort={onSortChange}
-                    className="w-[150px]"
+                    className="hidden w-[150px] lg:table-cell"
                     sortAscLabel={t("sortAsc")}
                     sortDescLabel={t("sortDesc")}
                   />
@@ -541,7 +571,7 @@ export function TransactionsTable({
                     activeField={sortField}
                     activeOrder={sortOrder}
                     onSort={onSortChange}
-                    className="hidden w-[130px] md:table-cell"
+                    className="hidden w-[130px] xl:table-cell"
                     sortAscLabel={t("sortAsc")}
                     sortDescLabel={t("sortDesc")}
                   />
@@ -551,47 +581,111 @@ export function TransactionsTable({
                     activeField={sortField}
                     activeOrder={sortOrder}
                     onSort={onSortChange}
-                    className="w-[120px]"
+                    className="lg:w-[116px]"
                     align="end"
                     sortAscLabel={t("sortAsc")}
                     sortDescLabel={t("sortDesc")}
                   />
-                  <TableHead className="w-[40px]" />
+                  <TableHead className="w-9 lg:w-[48px]" />
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {transactions.map((txn) => {
+              {weeks.map((week) => {
+                const live = week.items.filter((x) => !x.isExcluded);
+                const weekIn = live.filter((x) => x.kind === "income").reduce((s, x) => s + x.chargedAmount, 0);
+                const weekOut = -live.filter((x) => x.kind === "expense").reduce((s, x) => s + x.chargedAmount, 0);
+                return (
+              <TableBody key={week.start || "all"}>
+                {week.start && (
+                  <tr>
+                    <th colSpan={7} scope="colgroup" className="sticky top-[var(--app-header-h,0px)] z-10 bg-popover px-4 pb-1.5 pt-4 text-start text-xs font-semibold text-muted-foreground">
+                      <div className="flex items-center justify-between gap-3">
+                        <span>{weekLabel(week.start, week.end)}</span>
+                        <span className="flex gap-3 font-medium tabular-nums">
+                          {weekIn !== 0 && <span className="text-status-on-track">{signedShekels(weekIn, locale)}</span>}
+                          {weekOut !== 0 && <span className="text-foreground">{signedShekels(-weekOut, locale)}</span>}
+                        </span>
+                      </div>
+                    </th>
+                  </tr>
+                )}
+                {week.items.map((txn) => {
                   const isIncome = txn.chargedAmount > 0;
-                  const directionColor = isIncome
-                    ? "var(--status-on-track)"
-                    : "var(--foreground)";
+                  // One convention app-wide: income green with "+", expense plain with "−", transfers uncolored.
+                  const amountTone = txn.kind === "income" ? "text-status-on-track" : txn.kind === "transfer" ? "text-muted-foreground" : undefined;
                   const categoryKind: Kind = isIncome ? "income" : "expense";
                   const categoryName = txn.categoryName
                     ? translateCategoryName(txn.categoryName, tCat)
                     : t("rowUncategorized");
+                  const isSelected = selected.includes(txn.id);
+                  const categoryControl = (
+                        <div className="flex items-center gap-1.5">
+                          <CategoryPicker
+                            categories={categoriesForKind(categoryKind)}
+                            currentId={txn.categoryId}
+                            disabled={updatingId === txn.id || editing || isFetching}
+                            onSelect={(id) => handleCategoryChange(txn.id, id)}
+                            onCreate={() => setNewCatFor({ txnId: txn.id, kind: isIncome ? "income" : "expense" })}
+                            createLabel={tSettingsCat("newCategoryButton")}
+                            trigger={
+                              <Badge
+                                variant="outline"
+                                className="cursor-pointer transition-colors hover:bg-accent"
+                                style={
+                                  txn.categoryColor
+                                    ? {
+                                        borderColor: txn.categoryColor + "66",
+                                        backgroundColor: txn.categoryColor + "26",
+                                        color: "var(--foreground)",
+                                      }
+                                    : undefined
+                                }
+                              >
+                                {txn.allocations?.length ? t("splitCount", { count: txn.allocations.length }) : categoryName}
+                              </Badge>
+                            }
+                          />
+                          {txn.needsReview && (
+                            <IconButton
+                              label={t("rowApprove")}
+                              size="icon-xs"
+                              variant="outline"
+                              onClick={() => handleApprove(txn.id)}
+                              disabled={updatingId === txn.id || editing || isFetching}
+                              style={{
+                                borderColor:
+                                  "color-mix(in oklch, var(--status-on-track) 35%, transparent)",
+                                color: "var(--status-on-track)",
+                              }}
+                            >
+                              <Check className="size-3" aria-hidden />
+                            </IconButton>
+                          )}
+                        </div>
+                  );
                   return (
                     <TableRow
                       key={txn.id}
+                      data-state={isSelected ? "selected" : undefined}
                       className={cn(
-                        "transition-colors duration-200 hover:bg-muted/50",
+                        "group/row transition-colors duration-200 hover:bg-muted/50",
+                        onEdit && "cursor-pointer",
                         txn.isExcluded && "opacity-50",
                       )}
+                      // Row tap edits; taps on the row's own controls (checkbox, pickers, menu, tags) keep their job.
+                      onClick={onEdit ? (e) => { if (!(e.target as HTMLElement).closest("button,input,select,a,label,[role=button],[role=menu],[role=menuitem],[role=dialog],[role=listbox]")) onEdit(txn); } : undefined}
                     >
                       <TableCell>
-                        <div style={{ color: directionColor }} className="flex items-center gap-2"><input className="size-4" type="checkbox" aria-label={t("selectRow", { name: txn.description })} disabled={editing || isFetching} checked={selected.includes(txn.id)} onChange={e => setSelected(e.target.checked ? [...selected, txn.id] : selected.filter(id => id !== txn.id))} />
-                          {isIncome ? (
-                            <ArrowUpRight className="h-4 w-4" aria-label={t("rowIncome")} />
-                          ) : (
-                            <ArrowDownRight className="h-4 w-4" aria-label={t("rowExpense")} />
-                          )}
-                        </div>
+                        <input className="size-4" type="checkbox" aria-label={t("selectRow", { name: txn.description })} disabled={editing || isFetching} checked={isSelected} onChange={e => setSelected(e.target.checked ? [...selected, txn.id] : selected.filter(id => id !== txn.id))} />
                       </TableCell>
-                      <TableCell className="text-sm tabular-nums text-muted-foreground">
-                        {formatDate(txn.date)}
+                      <TableCell className="hidden whitespace-nowrap text-xs tabular-nums text-muted-foreground lg:table-cell">
+                        {dayLabel(txn.date)}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium">{txn.description}</div>
+                      <TableCell className="whitespace-normal [overflow-wrap:anywhere]">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          {onEdit ? (
+                            <button type="button" className="min-h-11 text-start font-medium hover:underline focus-visible:outline-2 focus-visible:outline-ring lg:min-h-0" aria-label={tManual("editRow", { name: txn.description })} onClick={() => onEdit(txn)}>{txn.description}</button>
+                          ) : <div className="font-medium">{txn.description}</div>}
+                          {isManualTxn(txn) && <Badge variant="outline" className="text-xs font-normal">{tManual("manualBadge")}</Badge>}
                           {txn.needsReview && (
                             <span
                               className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium"
@@ -615,6 +709,15 @@ export function TransactionsTable({
                               )}
                             </span>
                           )}
+                          {onTagClick && (
+                            // "Add tag" shows on row hover or keyboard focus; on touch only for a selected row (the edit sheet has tags too).
+                            <TagChips id={txn.id} tags={txn.tags ?? []} allTags={allTags} onFilter={onTagClick} className="mt-0"
+                              addClassName="[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/row:opacity-100 group-focus-within/row:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:hidden [@media(hover:none)]:group-data-[state=selected]/row:inline-flex" />
+                          )}
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs tabular-nums text-muted-foreground lg:hidden">
+                          {dayLabel(txn.date)}
+                          {categoryControl}
                         </div>
                         {txn.memo && (
                           <div className="text-xs text-muted-foreground">
@@ -631,92 +734,29 @@ export function TransactionsTable({
                               })}
                             </div>
                           )}
-                        <div className="flex flex-wrap items-center gap-2">
-                          {onTagClick && (
-                            <TagChips id={txn.id} tags={txn.tags ?? []} allTags={allTags} onFilter={onTagClick} />
-                          )}
-                          {members.length >= 2 && (
-                            <div className="mt-1">
-                              <OwnerPicker
-                                label={tTags("ownerLabel")}
-                                value={txn.owner ?? null}
-                                fallback={accountOwners[txn.accountNumber] ?? null}
-                                members={members}
-                                onChange={(owner) => void handleOwnerChange(txn.id, owner)}
-                              />
-                            </div>
-                          )}
-                        </div>
+                        {members.length >= 2 && (
+                          <div className="mt-1">
+                            <OwnerPicker
+                              label={tTags("ownerLabel")}
+                              value={txn.owner ?? null}
+                              fallback={accountOwners[txn.accountNumber] ?? null}
+                              members={members}
+                              onChange={(owner) => void handleOwnerChange(txn.id, owner)}
+                            />
+                          </div>
+                        )}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              className="inline-flex"
-                              disabled={updatingId === txn.id || editing || isFetching}
-                            >
-                              <Badge
-                                variant="outline"
-                                className="cursor-pointer transition-colors hover:bg-accent"
-                                style={
-                                  txn.categoryColor
-                                    ? {
-                                        borderColor: txn.categoryColor + "40",
-                                        backgroundColor: txn.categoryColor + "15",
-                                        color: "var(--foreground)",
-                                      }
-                                    : undefined
-                                }
-                              >
-                                {txn.allocations?.length ? t("splitCount", { count: txn.allocations.length }) : categoryName}
-                              </Badge>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                              {categoriesForKind(categoryKind).map((cat) => (
-                                <DropdownMenuItem
-                                  key={cat.id}
-                                  onClick={() =>
-                                    handleCategoryChange(txn.id, cat.id)
-                                  }
-                                >
-                                  <div
-                                    className="me-2 h-2 w-2 rounded-full"
-                                    style={{ backgroundColor: cat.color }}
-                                  />
-                                  {translateCategoryName(cat.name, tCat)}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                          {txn.needsReview && (
-                            <IconButton
-                              label={t("rowApprove")}
-                              size="icon-xs"
-                              variant="outline"
-                              onClick={() => handleApprove(txn.id)}
-                              disabled={updatingId === txn.id || editing || isFetching}
-                              style={{
-                                borderColor:
-                                  "color-mix(in oklch, var(--status-on-track) 35%, transparent)",
-                                color: "var(--status-on-track)",
-                              }}
-                            >
-                              <Check className="size-3" aria-hidden />
-                            </IconButton>
-                          )}
-                        </div>
+                      <TableCell className="hidden lg:table-cell">
+                        {categoryControl}
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">
+                      <TableCell className="hidden xl:table-cell">
                         <TransactionSourceCell
                           provider={txn.provider}
                           accountLabel={txn.accountLabel}
                         />
                       </TableCell>
-                      <TableCell
-                        className="text-end font-medium tabular-nums"
-                        style={{ color: directionColor }}
-                      >
-                        <bdi>{isIncome ? "+" : ""}{formatCurrency(txn.chargedAmount, "ILS", locale)}</bdi>
+                      <TableCell className={cn("whitespace-nowrap text-end font-medium tabular-nums", amountTone)}>
+                        {signedShekels(txn.chargedAmount, locale, 2)}
                       </TableCell>
                       <TableCell className="text-end">
                         <DropdownMenu>
@@ -728,6 +768,7 @@ export function TransactionsTable({
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {onEdit && <DropdownMenuItem onClick={() => onEdit(txn)}>{tManual("editTitle")}</DropdownMenuItem>}
                             {txn.kind === "expense" && txn.status === "completed" && txn.chargedAmount < 0 && <DropdownMenuItem onClick={() => setSplit(txn)}>{t("splitCategories")}</DropdownMenuItem>}
                             {otherKinds[txn.kind].map((opt) => (
                               <DropdownMenuItem
@@ -767,7 +808,10 @@ export function TransactionsTable({
                   );
                 })}
               </TableBody>
+                );
+              })}
             </Table>
+            </div>
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between pt-4">

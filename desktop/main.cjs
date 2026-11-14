@@ -39,11 +39,11 @@ function findBrowser() {
 }
 
 /** A free port on localhost, so a second app or dev server never clashes. */
-function freePort() {
+function freePort(preferred = 0, host = "127.0.0.1") {
   return new Promise((resolve, reject) => {
     const s = net.createServer();
-    s.once("error", reject);
-    s.listen(0, "127.0.0.1", () => {
+    s.once("error", (e) => (preferred ? resolve(freePort(0, host)) : reject(e)));
+    s.listen(preferred, host, () => {
       const { port } = s.address();
       s.close(() => resolve(port));
     });
@@ -72,9 +72,12 @@ async function start() {
     dialog.showErrorBox("Penny", `The app files are missing (${entry}). Reinstall Penny.`);
     return app.quit();
   }
-  const port = await freePort();
   const dataDir = path.join(app.getPath("userData"), "data");
   fs.mkdirSync(dataDir, { recursive: true });
+  // Phone access (Settings > Privacy) listens on the network, on a fixed port so the phone URL stays the same.
+  const lan = fs.existsSync(path.join(dataDir, "lan-access.json"));
+  const host = lan ? "0.0.0.0" : "127.0.0.1";
+  const port = await freePort(lan ? 41234 : 0, host);
   const browser = findBrowser();
 
   server = spawn(process.execPath, [entry], {
@@ -85,7 +88,9 @@ async function start() {
       NODE_ENV: "production",
       NEXT_TELEMETRY_DISABLED: "1",
       PORT: String(port),
-      HOSTNAME: "127.0.0.1",
+      HOSTNAME: host,
+      PENNY_LISTEN_HOST: host,
+      PENNY_RESTARTABLE: "1",
       PENNY_DATA_DIR: dataDir,
       ...(browser ? { PUPPETEER_EXECUTABLE_PATH: browser } : {}),
     },
@@ -96,6 +101,12 @@ async function start() {
   server.stdout.pipe(log);
   server.stderr.pipe(log);
   server.on("exit", (code) => {
+    if (code === 75) {
+      // Restart asked from Settings (phone access changed): relaunch so the server binds again.
+      app.isQuitting = true;
+      app.relaunch();
+      return app.exit(0);
+    }
     if (!app.isQuitting) dialog.showErrorBox("Penny", `Penny stopped unexpectedly (code ${code}). Details: ${path.join(app.getPath("userData"), "server.log")}`);
   });
 

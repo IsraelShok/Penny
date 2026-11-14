@@ -1,6 +1,5 @@
 "use client";
 
-import { Forward, Back } from "@/components/ui/dir-chevron";
 import { usePlan } from "@/hooks/use-plan";
 import { useGentle } from "@/hooks/use-gentle";
 import { useEffect, useState } from "react";
@@ -10,22 +9,22 @@ import { CircleDot, Printer, RotateCw } from "lucide-react";
 import { getOverview, listIntegrations } from "@/lib/api";
 import { ICON_MAP } from "@/components/dashboard/category-card";
 import { CardShell } from "@/components/home/card-shell";
-import { ResilienceCard } from "@/components/overview/resilience-card";
+import { HealthCard } from "@/components/home/health-card";
 import { More } from "@/components/overview/more";
 import { AllocationCard } from "@/components/overview/allocation-card";
-import { CashflowHealthCard } from "@/components/overview/cashflow-health-card";
+import { PeriodHero } from "@/components/ui/page-hero";
+import { PagerNav } from "@/components/ui/month-nav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataState } from "@/components/ui/data-state";
-import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
 import { IconButton } from "@/components/ui/icon-button";
+import { InfoTip } from "@/components/ui/info-tip";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { cn } from "@/lib/utils";
 import type { PeriodKind } from "@/lib/period";
-import type { CostType, NeedType, OverviewPayload, OverviewTotals } from "@/lib/types";
+import type { CostType, OverviewPayload, OverviewTotals } from "@/lib/types";
 
 const KINDS: PeriodKind[] = ["month", "quarter", "half", "year"];
-const NEED_COLORS: Record<NeedType, string> = { need: "var(--chart-1)", want: "var(--chart-2)", saving: "var(--chart-3)" };
 const COST_COLORS: Record<CostType, string> = { fixed: "var(--chart-1)", variable: "var(--chart-4)", unplanned: "var(--chart-5)" };
 
 const fmt = (n: number, locale: string) =>
@@ -57,9 +56,15 @@ export function OverviewView() {
     queryKey: ["overview", kind, offset],
     queryFn: () => getOverview(kind, offset),
   });
+  // The period before: its arrow is disabled when it has no data.
+  const older = useQuery({ queryKey: ["overview", kind, offset + 1], queryFn: () => getOverview(kind, offset + 1) });
+  const olderEmpty = older.data != null && older.data.totals.income === 0 && older.data.totals.expenses === 0;
 
   return (
     <div className="space-y-4 md:space-y-6">
+      <PeriodHero totals={query.data?.totals} loading={!query.data && !query.isError} error={query.isError} onRetry={() => query.refetch()}
+        nav={<PagerNav label={query.data ? <PeriodLabel period={query.data.period} /> : "…"} ariaLabel={t("periodPicker")} prevLabel={t("prev")} nextLabel={t("next")}
+          onPrev={() => setOffset((o) => o + 1)} onNext={() => setOffset((o) => Math.max(0, o - 1))} prevDisabled={olderEmpty} nextDisabled={offset === 0} />} />
       {query.data && (
         <div className="hidden print:block">
           <p className="text-title font-semibold">{t("reportTitle")} · <PeriodLabel period={query.data.period} /></p>
@@ -76,26 +81,9 @@ export function OverviewView() {
             setOffset(0);
           }}
         />
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" aria-label={t("prev")} onClick={() => setOffset((o) => o + 1)}>
-            <Back />
-          </Button>
-          <span className="min-w-28 text-center text-headline font-semibold tabular-nums" aria-live="polite">
-            {query.data ? <PeriodLabel period={query.data.period} /> : "…"}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t("next")}
-            disabled={offset === 0}
-            onClick={() => setOffset((o) => Math.max(0, o - 1))}
-          >
-            <Forward />
-          </Button>
-          <IconButton label={t("print")} variant="ghost" className="ms-2" onClick={() => window.print()} disabled={!query.data}>
-            <Printer className="size-4" aria-hidden />
-          </IconButton>
-        </div>
+        <IconButton label={t("print")} variant="ghost" onClick={() => window.print()} disabled={!query.data}>
+          <Printer className="size-4" aria-hidden />
+        </IconButton>
       </div>
 
       {query.isError ? (
@@ -139,9 +127,9 @@ function Body({ data }: { data: OverviewPayload }) {
 
   return (
     <>
-      <ResilienceCard />
-      <CashflowHealthCard />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {!empty && data.categories.length > 0 && <CategoryList data={data} />}
+      <HealthCard details={false} />
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-3">
         <Stat label={t("income")} value={shekels(data.totals.income, locale)} cur={data.totals.income} prev={data.previous.income} ly={data.lastYear.income} goodWhenUp />
         <Stat label={t("expenses")} value={shekels(data.totals.expenses, locale)} cur={data.totals.expenses} prev={data.previous.expenses} ly={data.lastYear.expenses} />
         <Stat label={t("net")} value={shekels(data.totals.net, locale)} cur={data.totals.net} prev={data.previous.net} ly={data.lastYear.net} goodWhenUp tone={data.totals.net < 0 ? "bad" : undefined} />
@@ -154,28 +142,18 @@ function Body({ data }: { data: OverviewPayload }) {
         <>
           {data.monthly.length > 1 && <FlowChart monthly={data.monthly} />}
 
-          <SplitCard
-            title={t("ruleTitle")}
-            hint={t("ruleHint")}
-            parts={(["need", "want", "saving"] as const).map((k) => ({ key: k, label: t(k), value: data.byNeed[k], color: NEED_COLORS[k] }))}
-            uncategorized={data.uncategorized}
-          />
-
-          <AllocationCard income={data.totals.income / months} expenses={avgMonthly} byNeed={{ need: data.byNeed.need / months, want: data.byNeed.want / months, saving: data.byNeed.saving / months }} fixed={data.byCost.fixed / months} />
-
-          <CategoryList data={data} />
+          <AllocationCard income={data.totals.income / months} expenses={avgMonthly} byNeed={{ need: data.byNeed.need / months, want: data.byNeed.want / months, saving: data.byNeed.saving / months }} fixed={data.byCost.fixed / months} uncategorized={data.uncategorized / months} categories={data.categories} />
           {!simple && (
-            <More>
+            <More id="period">
               <SplitCard
                 title={t("costTitle")}
                 parts={(["fixed", "variable", "unplanned"] as const).map((k) => ({ key: k, label: t(k), value: data.byCost[k], color: COST_COLORS[k] }))}
                 uncategorized={data.uncategorized}
               />
               {data.period.months.length > 1 && <YearTable data={data} />}
-              <p className="px-1 text-footnote text-muted-foreground" title={t("lifeCostHint")}>
-                <span className="font-medium text-foreground">{t("lifeCost", { amount: fmt(avgMonthly * 300, locale) })}</span>
-                {" · "}
-                {t("lifeCostHint")}
+              <p className="flex items-center gap-1 px-1 text-footnote font-medium">
+                {t("lifeCost", { amount: fmt(avgMonthly * 300, locale) })}
+                <InfoTip text={t("lifeCostHint")} />
               </p>
             </More>
           )}
@@ -207,7 +185,7 @@ function Stat({
   const gentle = useGentle();
   return (
     <CardShell label={label}>
-      <p className={cn("figure text-[2rem] leading-tight", tone === "bad" && !gentle && "text-status-over")}>{value}</p>
+      <p className={cn("figure text-[clamp(1.5rem,7vw,2rem)] leading-tight", tone === "bad" && !gentle && "text-status-over")}>{value}</p>
       <div className="mt-2 space-y-0.5">
         <Delta cur={cur} base={prev} goodWhenUp={goodWhenUp} label={t("vsPrevShort")} />
         <Delta cur={cur} base={ly} goodWhenUp={goodWhenUp} label={t("vsLyShort")} />
@@ -231,7 +209,7 @@ function SavingsStat({ totals, previous, lastYear }: { totals: OverviewTotals; p
     ) : null;
   return (
     <CardShell label={t("savingsRate")}>
-      <p className={cn("figure text-[2rem] leading-tight", !gentle && rate != null && rate < 0 && "text-status-over")} dir="ltr">
+      <p className={cn("figure text-[clamp(1.5rem,7vw,2rem)] leading-tight", !gentle && rate != null && rate < 0 && "text-status-over")} dir="ltr">
         {rate == null ? "—" : pct(rate)}
       </p>
       {rate == null ? (
@@ -257,9 +235,11 @@ function FlowChart({ monthly }: { monthly: OverviewPayload["monthly"] }) {
     <CardShell
       label={t("cashFlowTitle")}
       action={
-        <span className="flex items-center gap-3 text-caption text-muted-foreground">
-          <Legend color="var(--chart-1)" label={t("income")} />
-          <Legend color="var(--chart-2)" label={t("expenses")} />
+        <span className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-caption text-muted-foreground">
+          <Legend color="var(--flow-income)" label={t("income")} />
+          <Legend color="var(--flow-expense)" label={t("expenses")} />
+          <span><span className="font-semibold text-[var(--flow-income)]" aria-hidden>+</span> {t("netUp")}</span>
+          <span><span className="font-semibold text-status-over" aria-hidden>−</span> {t("netDown")}</span>
         </span>
       }
     >
@@ -268,12 +248,17 @@ function FlowChart({ monthly }: { monthly: OverviewPayload["monthly"] }) {
         {monthly.map((m) => (
           <li key={m.month} className="flex h-full min-w-0 flex-1 flex-col items-center gap-1.5">
             <span className="sr-only">
-              {monthLabel(m.month)}: {t("income")} {shekels(m.income, locale)}, {t("expenses")} {shekels(m.expenses, locale)}
+              {monthLabel(m.month)}: {t("income")} {shekels(m.income, locale)}, {t("expenses")} {shekels(m.expenses, locale)}, {t(m.income - m.expenses >= 0 ? "netUp" : "netDown")} {shekels(Math.abs(m.income - m.expenses), locale)}
             </span>
             <div className="flex w-full flex-1 items-end justify-center gap-0.5 sm:gap-1" aria-hidden>
-              <span className="w-full max-w-4 rounded-t-sm bg-chart-1" style={{ height: `${(m.income / max) * 100}%` }} />
-              <span className="w-full max-w-4 rounded-t-sm bg-chart-2" style={{ height: `${(m.expenses / max) * 100}%` }} />
+              <span className="w-full max-w-4 rounded-t-sm bg-[var(--flow-income)]" style={{ height: `${(m.income / max) * 100}%` }} />
+              <span className="w-full max-w-4 rounded-t-sm bg-[var(--flow-expense)]" style={{ height: `${(m.expenses / max) * 100}%` }} />
             </div>
+            {(m.income > 0 || m.expenses > 0) && (
+              <span className={`text-caption font-semibold leading-none ${m.income >= m.expenses ? "text-[var(--flow-income)]" : "text-status-over"}`} aria-hidden>
+                {m.income >= m.expenses ? "+" : "−"}
+              </span>
+            )}
             <span className="truncate text-caption text-muted-foreground" aria-hidden>{monthLabel(m.month)}</span>
           </li>
         ))}
@@ -292,10 +277,9 @@ function Legend({ color, label }: { color: string; label: string }) {
 }
 
 function SplitCard({
-  title, hint, parts, uncategorized,
+  title, parts, uncategorized,
 }: {
   title: string;
-  hint?: string;
   parts: { key: string; label: string; value: number; color: string }[];
   uncategorized: number;
 }) {
@@ -323,7 +307,6 @@ function SplitCard({
       {uncategorized > 0 && (
         <p className="mt-3 text-caption text-muted-foreground">{t("uncategorized", { amount: fmt(uncategorized, locale) })}</p>
       )}
-      {hint && <p className="mt-3 text-caption text-pretty text-muted-foreground">{hint}</p>}
     </CardShell>
   );
 }

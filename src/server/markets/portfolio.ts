@@ -1,6 +1,6 @@
 import "server-only";
 
-import { listAccountBalances, listAssets, netWorthHistory, saveDailyNetWorth, saveSnapshots } from "../db/queries/assets";
+import { assetSnapshots, listAccountBalances, listAssets, netWorthHistory, saveDailyNetWorth, saveSnapshots } from "../db/queries/assets";
 import { BANK_PROVIDERS } from "@/lib/types";
 import { fxRate, getQuotes } from "./quotes";
 import { BENCHMARKS } from "@/lib/markets";
@@ -10,6 +10,7 @@ import { loadFunds } from "./funds";
 import { compareFund } from "@/lib/funds";
 import { indexRevaluation } from "@/lib/property";
 import { loadDwellingIndex } from "./property";
+import { lastChange } from "@/lib/holdings";
 
 /** Israeli capital gains tax on realised profit. */
 const CAPITAL_GAINS_TAX = 0.25;
@@ -41,6 +42,7 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
     return e ? { method: "index" as const, ...e } : null;
   };
 
+  const snaps = assetSnapshots(workspaceId);
   const assets: Asset[] = rows.map((r) => {
     const quote = r.symbol ? quotes.get(r.symbol.trim().toUpperCase()) ?? null : null;
     // A live price wins; the quote's own currency (e.g. USD for AAPL) overrides the row's.
@@ -51,7 +53,7 @@ export async function getAssetsPayload(workspaceId: number): Promise<AssetsPaylo
     const costRate = fxRate(r.currency, quotes);
     const gainIls =
       valueIls != null && r.costBasis != null && costRate != null ? valueIls - r.costBasis * costRate : null;
-    return { ...r, currency, value, valueIls, gainIls, quote, fund: fundOf(r), estimate: estimateOf(r) };
+    return { ...r, currency, value, valueIls, gainIls, quote, fund: fundOf(r), estimate: estimateOf(r), change: lastChange(snaps.get(r.id) ?? [], valueIls) };
   });
 
   // Synced bank balances, as cash (an overdrawn account counts as a short-term debt).

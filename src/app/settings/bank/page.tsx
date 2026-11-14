@@ -195,7 +195,7 @@ export default function BankSettingsPage() {
                       return (
                         <li key={b.id} className="flex items-center gap-3 px-4 py-3">
                           <ProviderBadge color={b.color} name={name} domain={b.domain} size={36} radius={9} />
-                          <span className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
+                          <span title={name} className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
                           <Button variant="outline" size="sm" onClick={() => setSheet({ open: true, mode: "add", providerId: b.id, credentialId: null })}>{t("connect")}</Button>
                         </li>
                       );

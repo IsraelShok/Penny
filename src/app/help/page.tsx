@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { AppShell, PageHeader } from "@/components/layout/app-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { CONCEPTS } from "@/lib/orientation";
+import { ImportGuide } from "@/components/settings/import-guide";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,12 @@ export default async function HelpPage() {
               </div>
             ))}
           </dl>
+        </section>
+
+        <section className={section} aria-labelledby="help-import">
+          <h2 id="help-import" className="text-title3 font-semibold">{t("importTitle")}</h2>
+          <div className="mt-4"><ImportGuide /></div>
+          <Link href="/settings/data" className={`${buttonVariants({ variant: "ghost" })} mt-4`}>{t("importCta")}</Link>
         </section>
 
         <section className={section} aria-labelledby="help-keys">

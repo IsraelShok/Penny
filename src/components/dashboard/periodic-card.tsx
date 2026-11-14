@@ -9,6 +9,7 @@ import { CardShell, CardError, CardSkeleton } from "@/components/home/card-shell
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
+import { InfoTip } from "@/components/ui/info-tip";
 import { deletePeriodic, dismissPeriodicSuggestion, getPeriodic, savePeriodic } from "@/lib/api";
 import { shekels } from "@/lib/money";
 import { monthlySetAside, totalSetAside, type PeriodicExpense } from "@/lib/periodic";
@@ -157,11 +158,11 @@ export function PeriodicCard() {
 
       {suggestions.length > 0 && (
         <div className="mt-4 border-t border-border/60 pt-4">
-          <h3 className="mb-2 text-xs font-semibold text-muted-foreground">{t("suggestionsTitle")}</h3><p className="mb-3 text-xs text-muted-foreground">{t("estimatesFromPastTransactions")}</p>
+          <h3 className="mb-1 flex items-center gap-1 text-xs font-semibold text-muted-foreground">{t("suggestionsTitle")}<InfoTip text={t("estimatesFromPastTransactions")} className="-my-3" /></h3>
           <ul className="space-y-2">
             {suggestions.map((s) => (
-              <li key={s.autoKey} className="flex items-center gap-2">
-                <span className="min-w-0 flex-1 text-sm">
+              <li key={s.autoKey} className="flex flex-wrap items-center gap-2">
+                <span className="min-w-[10rem] flex-1 text-sm">
                   {t("suggestion", { name: s.name, amount: shekels(s.amount, locale), month: monthWords(s.nextDue) })}
                 </span>
                 <Button size="sm" variant="secondary" onClick={() => setDraft({ ...s, amount: String(s.amount), everyMonths: String(s.everyMonths), savedSoFar: "0" })}>

@@ -1,37 +1,20 @@
 "use client";
 
 import { Forward } from "@/components/ui/dir-chevron";
-import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Children, useId, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations, useMessages } from "next-intl";
 import { shekels } from "@/lib/money";
 import { Segmented } from "@/components/ui/segmented";
 import { translateCategoryName } from "@/lib/i18n-data";
-import { Plus, Search, X } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronDown, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { IconButton } from "@/components/ui/icon-button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { SectionShell } from "@/components/settings/section-shell";
 import { CategoryDetailSheet } from "@/components/settings/category-detail-sheet";
+import { NewCategoryDialog } from "@/components/settings/new-category-dialog";
 import { getMonthRange } from "@/lib/formatters";
 import {
-  createCategory,
   getCategories,
   getSummary,
 } from "@/lib/api";
@@ -54,6 +37,7 @@ export default function CategoriesSettingsPage() {
   const [search, setSearch] = useState("");
   const [activeKind, setActiveKind] = useState<CategoryKind>("expense");
   const [openId, setOpenId] = useState<number | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const dataByCategoryId = useMemo(() => {
     const m = new Map<number, CategoryWithData>();
@@ -121,7 +105,10 @@ export default function CategoriesSettingsPage() {
               className="ps-8"
             />
           </div>
-          <NewGroupDialog kind={activeKind} />
+          <IconButton label={t("newCategoryButton")} variant="outline" onClick={() => setCreating(true)}>
+            <Plus aria-hidden className="size-4" />
+          </IconButton>
+          <NewCategoryDialog open={creating} onOpenChange={setCreating} kind={activeKind} />
         </div>
 
         {!categories ? (
@@ -198,16 +185,24 @@ function GroupBlock({
   onSelect: (id: number) => void;
 }) {
   const t = useTranslations("settings.categories");
+  const tp = useTranslations("categoryPicker");
+  const [open, setOpen] = useState(true);
+  const listId = useId();
   return (
     <section>
       <div className="mb-2 flex items-center gap-2 px-1">
-        <span
-          className="h-2 w-2 rounded-full"
-          style={{ background: color }}
-        />
-        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          {title}
-        </span>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={listId}
+          onClick={() => setOpen((o) => !o)}
+          className="flex min-h-11 min-w-0 items-center gap-2 rounded-md text-start focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          <ChevronDown aria-hidden className={`size-4 shrink-0 text-muted-foreground transition-transform ${open ? "" : "-rotate-90 rtl:rotate-90"}`} />
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
+          <span title={title} className="truncate text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</span>
+          <span className="shrink-0 text-xs tabular-nums text-muted-foreground/80">{tp("subcount", { count: Children.count(children) })}</span>
+        </button>
         {parent ? (
           <button
             type="button"
@@ -218,7 +213,7 @@ function GroupBlock({
           </button>
         ) : null}
       </div>
-      <div className="overflow-hidden rounded-2xl bg-card">
+      <div id={listId} hidden={!open} className="overflow-hidden rounded-2xl bg-card">
         <ul className="divide-y divide-border/60">{children}</ul>
       </div>
     </section>
@@ -242,10 +237,10 @@ function CategoryRow({
   const stored = category.description?.trim();
   // Seeded descriptions are English (the categorizer reads them); show the translation unless the user wrote their own.
   const translated = descriptions[category.name] ?? "";
-  // Mostly-Latin text is the seeded English (some mention a Hebrew word); a user's own Hebrew text stays.
+  // Seeded descriptions start in English (some mention Hebrew brand names); a user's own Hebrew text stays.
   const latin = (stored?.match(/[A-Za-z]/g) ?? []).length;
   const hebrew = (stored?.match(/[֐-׿]/g) ?? []).length;
-  const description = stored && latin > hebrew && translated ? translated : stored;
+  const description = stored && (latin > hebrew || /^[A-Za-z]/.test(stored)) && translated ? translated : stored;
   return (
     <li>
       <button
@@ -259,10 +254,10 @@ function CategoryRow({
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 text-sm font-medium">
-            <span className="truncate">{translateCategoryName(category.name, tCat)}</span>
+            <span className="truncate" title={translateCategoryName(category.name, tCat)}>{translateCategoryName(category.name, tCat)}</span>
           </div>
           {description ? (
-            <div dir="auto" className="mt-0.5 truncate text-start text-xs text-muted-foreground">
+            <div dir="auto" title={description} className="mt-0.5 truncate text-start text-xs text-muted-foreground">
               {description}
             </div>
           ) : null}
@@ -308,101 +303,5 @@ function BudgetChip({
     <span className="shrink-0 rounded-full bg-foreground/8 px-2 py-0.5 text-xs font-medium tabular-nums">
       {shekels(Math.round(data.budget), locale)}
     </span>
-  );
-}
-
-function NewGroupDialog({ kind }: { kind: CategoryKind }) {
-  const t = useTranslations("settings.categories");
-  const tc = useTranslations("common");
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [k, setK] = useState<CategoryKind>(kind);
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      createCategory({
-        name: name.trim(),
-        kind: k,
-        isParent: true,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
-      toast.success(t("createdToast", { name: name.trim() }));
-      setName("");
-      setOpen(false);
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || t("createGroupFailed"));
-    },
-  });
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o);
-        if (o) setK(kind);
-      }}
-    >
-      <DialogTrigger
-        render={
-          <IconButton label={t("newGroupButton")} variant="outline">
-            <Plus aria-hidden className="size-4" />
-          </IconButton>
-        }
-      />
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t("newGroupDialogTitle")}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="new-group-name">{t("newGroupName")}</Label>
-            <Input
-              id="new-group-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("newGroupNamePlaceholder")}
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && name.trim().length > 0) {
-                  mutation.mutate();
-                }
-              }}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label id="new-group-kind">{t("newGroupKind")}</Label>
-            <Select
-              value={k}
-              onValueChange={(v) => v && setK(v as CategoryKind)}
-            >
-              <SelectTrigger aria-labelledby="new-group-kind">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="expense">{t("tabExpense")}</SelectItem>
-                <SelectItem value="income">{t("tabIncome")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <DialogFooter>
-          <IconButton label={tc("cancel")} onClick={() => setOpen(false)}>
-            <X aria-hidden className="size-4" />
-          </IconButton>
-          <IconButton
-            label={mutation.isPending ? tc("creating") : t("createButton")}
-            variant="default"
-            onClick={() => mutation.mutate()}
-            disabled={name.trim().length === 0 || mutation.isPending}
-          >
-            <Plus aria-hidden className="size-4" />
-          </IconButton>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

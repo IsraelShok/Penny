@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import type { TransactionWithCategory } from "@/lib/types";
 import type { Locale } from "@/i18n/routing";
 
-/** Copilot-style inbox: one row at a time, keyboard first, undo instead of confirm. */
+/** Review inbox: one row at a time, keyboard first, undo instead of confirm. */
 export function ReviewInbox() {
   const t = useTranslations("review");
   const tCat = useTranslations("categoriesSeeded");

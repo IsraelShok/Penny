@@ -5,8 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getPlan, savePlanItem } from "@/lib/api";
-import { useActiveWorkspaceId } from "@/lib/workspace-store";
-import { isoWeek } from "@/lib/plan";
+import { useActiveProfileId } from "@/lib/workspace-store";
 import { shekels } from "@/lib/money";
 import { CardShell, CardError, CardSkeleton } from "./card-shell";
 import { Button } from "@/components/ui/button";
@@ -16,8 +15,8 @@ import type { Goal } from "@/lib/types";
 export function GoalFocus() {
   const locale = useLocale(); const t = useTranslations("goalFocus"); const he = locale === "he"; const title = t("smallStepsMeaningfulGoals");
   const q = useQuery({ queryKey: ["plan"], queryFn: getPlan }); const qc = useQueryClient();
-  const workspaceId = useActiveWorkspaceId();
-  const focusKey = `penny.goal-focus.${workspaceId ?? "default"}`;
+  const profileId = useActiveProfileId(); // per profile
+  const focusKey = `penny.goal-focus.p${profileId ?? "default"}`;
   const [selected, setSelected] = useState<number | null>(null);
   const [draft, setDraft] = useState<Partial<Goal> | null>(null); const [busy, setBusy] = useState(false);
   useEffect(() => { try { setSelected(Number(localStorage.getItem(focusKey)) || null); } catch { setSelected(null); } setDraft(null); }, [focusKey]);
@@ -25,7 +24,6 @@ export function GoalFocus() {
   if (q.isError) return <CardError label={title} />;
   const goal = q.data.goals.find(g => g.id === selected) ?? q.data.goals[0];
   const pct = goal ? Math.min(100, Math.max(0, goal.savedAmount / goal.targetAmount * 100)) : 0;
-  const reviewed = q.data.plan.checkin.lastWeek === isoWeek(new Date());
   async function save() {
     if (!draft) return;
     setBusy(true);
@@ -43,7 +41,6 @@ export function GoalFocus() {
     </form> : <>
       {goal ? <><label className="block text-sm">{t("myFocus")}<select className="mt-2 min-h-11 w-full rounded-xl border bg-background px-3" value={goal.id} onChange={e => { setSelected(Number(e.target.value)); try { localStorage.setItem(focusKey, e.target.value); } catch { toast.error(t("couldNotSaveYour")); } }}>{q.data.goals.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label><p className="mt-4 text-3xl font-semibold"><bdi>{shekels(goal.savedAmount, locale)}</bdi><span className="ms-2 text-sm font-normal text-muted-foreground">{t("of")} {shekels(goal.targetAmount, locale)}</span></p><progress aria-label={goal.name} value={pct} max={100} className="mt-4 h-3 w-full accent-primary" /><div className="mt-2 flex justify-between text-xs">{[25, 50, 75, 100].map(n => <span key={n} className={pct >= n ? "font-semibold text-primary" : "text-muted-foreground"}>{pct >= n ? "✓ " : ""}{n}%</span>)}</div><p className="mt-3 text-sm text-muted-foreground">{pct >= 100 ? t("youReachedYourGoal") : t("everyStepCountsYou")}</p><Button className="mt-3" variant="outline" onClick={() => setDraft({ ...goal, savedAmount: goal.openingSavedAmount ?? goal.savedAmount })}>{t("updateProgress")}</Button></> : <p className="text-muted-foreground">{t("chooseSomethingMeaningfulAn")}</p>}
       <Button className="mt-3 ms-2" variant="ghost" onClick={() => setDraft({ name: "", savedAmount: 0, targetDate: new Date().toISOString().slice(0, 7) })}>{t("newGoal")}</Button>
-      <Link href="/checkin" className="mt-5 block rounded-2xl bg-muted p-4 text-sm"><strong>{reviewed ? t("weeklyReviewComplete") : t("thisWeekAQuick")}</strong><span className="mt-1 block text-muted-foreground">{t("aFewMinutesTo")}</span></Link>
     </>}
   </CardShell>;
 }

@@ -339,7 +339,7 @@ function ClaudeConfig({
           type={showKey ? "text" : "password"}
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
-          placeholder="sk-ant-api03-..."
+          placeholder="sk-ant-api03-…" dir="ltr"
           className="font-mono pe-14"
         />
         <button

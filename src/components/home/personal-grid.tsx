@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {loadPreference,storePreference} from "@/lib/preference-sync";
-import {useActiveWorkspaceId} from "@/lib/workspace-store";
+import {useActiveProfileId} from "@/lib/workspace-store";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { parseLayout, presetLayout, type Tile, type WidgetId, type LayoutPreset } from "@/lib/personal-layout";
@@ -16,7 +16,7 @@ export function PersonalGrid({ render }: { render: (id: WidgetId) => ReactNode }
   const he = useLocale() === "he";
   const t = useTranslations("homeGrid");
   const mobile = useIsMobile();
-  const workspaceId=useActiveWorkspaceId();
+  const profileId=useActiveProfileId(); // per profile: each person keeps their own look
   const key = `penny.home-layout.v1.${mobile ? "mobile" : "desktop"}`;
   const remoteKey=mobile?"home-mobile":"home-desktop";
   const [tiles, setTiles] = useState<Tile[]>(() => presetLayout("daily"));
@@ -34,7 +34,7 @@ export function PersonalGrid({ render }: { render: (id: WidgetId) => ReactNode }
     void loadPreference(remoteKey).then(value=>{if(!active||!value||typeof value!=="object")return;const data=value as {tiles:unknown;saved:Saved[]};setTiles(parseLayout(data.tiles));setSaved(Array.isArray(data.saved)?data.saved.filter(s=>typeof s?.name==="string").slice(0,8).map(s=>({name:s.name.slice(0,40),tiles:parseLayout(s.tiles)})):[]);}).catch(()=>{});
     setEditing(false);
     return ()=>{active=false;};
-  }, [key,remoteKey,workspaceId]);
+  }, [key,remoteKey,profileId]);
   function persist(next: Tile[], layouts = saved) {
     setTiles(next); setSaved(layouts);
     void storePreference(remoteKey,{tiles:next,saved:layouts}).catch(()=>toast.error(he?"נשמר מקומית; הסנכרון לשרת נכשל. רעננו לפני ניסיון נוסף.":"Saved locally; server sync failed. Reload before retrying."));

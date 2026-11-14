@@ -1,9 +1,10 @@
+import { motionReduced } from "./a11y-prefs";
 /**
  * A short confetti burst on a full-screen canvas, no dependency. Skipped entirely under
  * prefers-reduced-motion. The canvas ignores pointer events and removes itself when done.
  */
 export function confetti({ count = 160, durationMs = 2600 } = {}) {
-  if (typeof window === "undefined" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (typeof window === "undefined" || motionReduced()) return;
   const canvas = document.createElement("canvas");
   canvas.setAttribute("aria-hidden", "true");
   Object.assign(canvas.style, { position: "fixed", inset: "0", width: "100%", height: "100%", pointerEvents: "none", zIndex: "9999" });

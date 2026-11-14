@@ -1,3 +1,6 @@
+import { parseKids, type KidPlan } from "./kids";
+import { parsePet, type PetSettings } from "./pet";
+
 /** Advisor checks on top of net worth: fees, debts, goals, allocation. Pure functions so they can be tested. */
 
 /**
@@ -15,7 +18,9 @@ export const BENCHMARK_FEES: Record<string, { deposit: number; balance: number }
 export function projectBalance(balance: number, monthlyDeposit: number, years: number, grossReturn: number, feeDepositPct: number, feeBalancePct: number): number {
   const monthly = Math.pow(1 + grossReturn - feeBalancePct / 100, 1 / 12) - 1;
   let b = balance;
-  for (let m = 0; m < Math.round(years * 12); m++) b = b * (1 + monthly) + monthlyDeposit * (1 - feeDepositPct / 100);
+  // Capped at 100 years: a typed 1e9 years would otherwise loop billions of times and freeze the page.
+  const months = Math.min(1200, Math.round(years * 12));
+  for (let m = 0; m < months; m++) b = b * (1 + monthly) + monthlyDeposit * (1 - feeDepositPct / 100);
   return b;
 }
 
@@ -64,6 +69,17 @@ export function goalMonthly(target: number, saved: number, targetDate: string, t
   return months > 0 ? gap / months : gap;
 }
 
+/** A custom goal's look, from a fixed palette so the server can validate it. */
+export const GOAL_COLORS = ["indigo", "green", "amber", "orange", "red"] as const;
+export type GoalColor = (typeof GOAL_COLORS)[number];
+
+/** Month (YYYY-MM) a goal is reached when saving `monthly` every month from now; null without a positive monthly amount. */
+export function goalReachMonth(target: number, saved: number, monthly: number | null | undefined, today: Date): string | null {
+  if (!monthly || monthly <= 0) return null;
+  const d = new Date(today.getFullYear(), today.getMonth() + Math.max(0, Math.ceil((target - saved) / monthly)), 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export const ALLOCATION_CLASSES = ["equity", "bonds", "cash"] as const;
 export type AllocationClass = (typeof ALLOCATION_CLASSES)[number];
 
@@ -87,7 +103,7 @@ export interface FinancialPlan {
   simpleMode: boolean;
   /** Scrolling past a page's end opens the next page. Off by default: nothing should move by surprise. */
   wheelPaging: boolean;
-  /** Weekly check-in: ISO week key of the last one done, and how many weeks in a row. */
+  /** Legacy weekly check-in (feature removed): still parsed and kept so saved plans don't lose it; nothing reads it. */
   checkin: { lastWeek: string | null; streak: number };
   /** Life events for the FI projection (up to 12). */
   events: LifeEvent[];
@@ -95,6 +111,10 @@ export interface FinancialPlan {
   profile: UserProfile;
   /** Which Home to show: the new companion, or today's classic one. */
   homeStyle: HomeStyle;
+  /** Savings and investments per child (household members with role "child"). */
+  kids: KidPlan[];
+  /** Pocket Pal: a household pet on Home (shared by every profile). */
+  pet: PetSettings;
 }
 
 export const HOME_STYLES = ["companion", "classic"] as const;
@@ -164,6 +184,8 @@ export const DEFAULT_PLAN: FinancialPlan = {
   events: [],
   profile: EMPTY_PROFILE,
   homeStyle: "companion",
+  kids: [],
+  pet: parsePet(undefined),
 };
 
 const finite = (v: unknown, limit: number) => {
@@ -215,23 +237,7 @@ export function parsePlan(raw: unknown): FinancialPlan {
       onboarded: p.onboarded === true,
     },
     homeStyle: pick(HOME_STYLES, r.homeStyle) ?? DEFAULT_PLAN.homeStyle,
+    kids: parseKids(r.kids),
+    pet: parsePet(r.pet),
   };
-}
-
-/** ISO week key, e.g. "2026-W45". */
-export function isoWeek(d: Date): string {
-  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const day = t.getUTCDay() || 7;
-  t.setUTCDate(t.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
-  const week = Math.ceil(((t.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
-  return `${t.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
-}
-
-/** Record a finished check-in: the streak grows if last week was done too, else starts over. */
-export function completeCheckin(c: FinancialPlan["checkin"], today: Date): FinancialPlan["checkin"] {
-  const now = isoWeek(today);
-  if (c.lastWeek === now) return c;
-  const lastWeek = isoWeek(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7));
-  return { lastWeek: now, streak: c.lastWeek === lastWeek ? c.streak + 1 : 1 };
 }

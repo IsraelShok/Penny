@@ -17,9 +17,28 @@ describe("ledger", () => {
     expect(ledger(rows, acc, "me", "p", DEFAULT_RULE, [], "2026-12-31").balance).toBe(50);
   });
 
-  it("uses a custom share and ignores refunds and future rows", () => {
+  it("uses a custom share, nets refunds and ignores future rows", () => {
     const rows = [row("2026-01-02", -100, "shared", "A"), row("2026-01-03", 20, "shared", "A"), row("2027-01-01", -100, "shared", "A")];
-    expect(ledger(rows, acc, "me", "p", { myShare: 70, support: null }, [], "2026-12-31").balance).toBe(30);
+    expect(ledger(rows, acc, "me", "p", { myShare: 70, support: null }, [], "2026-12-31").balance).toBe(24);
+    // Refund into the partner's account on their shared purchase: they owe me less.
+    expect(ledger([row("2026-01-02", -40, "shared", "B"), row("2026-01-04", 40, "shared", "B")], acc, "me", "p", DEFAULT_RULE, [], "2026-12-31").balance).toBe(0);
+  });
+
+  it("carries an unpaid remainder past a partial settle-up, and flips on overpay", () => {
+    const rows = [row("2026-01-02", -100, "shared", "A"), row("2026-02-02", -10, "shared", "A")];
+    const partial = ledger(rows, acc, "me", "p", DEFAULT_RULE, [{ id: 1, counterpart: "p", date: "2026-01-31", amount: 30 }], "2026-12-31");
+    expect(partial.balance).toBe(25); // 50 - 30 paid + 5
+    expect(partial.lines.map((l) => l.kind)).toEqual(["shared", "carry"]);
+    const over = ledger(rows, acc, "me", "p", DEFAULT_RULE, [{ id: 1, counterpart: "p", date: "2026-01-31", amount: 60 }], "2026-12-31");
+    expect(over.balance).toBe(-5); // they overpaid by 10, then owe 5
+  });
+
+  it("rounds to agorot", () => {
+    const rows = [row("2026-01-02", -0.03, "shared", "A"), row("2026-01-02", -33.33, "shared", "A"), row("2026-01-02", -0.01, "shared", "A")];
+    const l = ledger(rows, acc, "me", "p", { myShare: 33, support: null }, [], "2026-12-31");
+    expect(l.balance).toBe(Math.round(l.lines.reduce((s, x) => s + x.amount, 0) * 100) / 100);
+    expect(Number.isInteger(Math.round(l.balance * 100))).toBe(true);
+    expect(l.balance).toBeCloseTo(22.36, 2); // 0.02 + 22.33 + 0.01
   });
 
   it("zeroes from the last settle-up date", () => {

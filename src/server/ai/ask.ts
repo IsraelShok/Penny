@@ -4,6 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getSetting } from "../db/queries/settings";
 import { decrypt, isKeyLocked } from "../lib/encryption";
 import { normalizeOllamaUrl } from "@/lib/url-guard";
+import { isCliAgent, runCliAgent } from "./cli-agent";
 
 const SYSTEM = `You answer questions about a person's own household money, using ONLY the aggregated JSON data given.
 Answer in the same language as the question (Hebrew or English), in at most two short, calm sentences, numbers in ₪.
@@ -46,6 +47,13 @@ export async function askAI(question: string, context: unknown): Promise<string 
     });
     const block = res.content[0];
     return block?.type === "text" ? block.text.trim() || null : null;
+  }
+
+  if (isCliAgent(provider)) {
+    return (await runCliAgent(provider, `${SYSTEM}
+Do not use any tools or read files.
+
+${user}`, 90_000)) || null;
   }
 
   return null;

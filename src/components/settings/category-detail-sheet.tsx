@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useMessages, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { AlertTriangle, Trash2, X } from "lucide-react";
 import {
@@ -40,6 +40,7 @@ import {
   updateCategoryBudgetMode,
   updateCategoryDescription,
 } from "@/lib/api";
+import { translateCategoryName } from "@/lib/i18n-data";
 import type { Category, CategoryWithData, CostType, NeedType } from "@/lib/types";
 
 const NONE_VALUE = "__none__";
@@ -555,10 +556,16 @@ function GroupSection({
 function DescriptionSection({ category }: { category: Category }) {
   const td = useTranslations("settings.categoryDetail");
   const queryClient = useQueryClient();
-  const [value, setValue] = useState(category.description ?? "");
+  const tCat = useTranslations("categoriesSeeded");
+  const locale = useLocale();
+  // Seeded descriptions are English (the categorizer reads them); in Hebrew show the translation until the user edits it.
+  const seededHe = (useMessages() as { categoryDescriptions?: Record<string, string> }).categoryDescriptions?.[category.name];
+  const stored = category.description ?? "";
+  const initial = locale === "he" && seededHe && /^[A-Za-z]/.test(stored.trim()) ? seededHe : stored;
+  const [value, setValue] = useState(initial);
   useEffect(() => {
-    setValue(category.description ?? "");
-  }, [category.description]);
+    setValue(initial);
+  }, [initial]);
 
   const mutation = useMutation({
     mutationFn: (next: string | null) =>
@@ -574,7 +581,7 @@ function DescriptionSection({ category }: { category: Category }) {
 
   const handleBlur = () => {
     const trimmed = value.trim();
-    const current = (category.description ?? "").trim();
+    const current = initial.trim();
     if (trimmed === current) return;
     if (trimmed.length > DESCRIPTION_MAX) {
       toast.error(td("descriptionTooLong", { max: DESCRIPTION_MAX }));
@@ -597,7 +604,7 @@ function DescriptionSection({ category }: { category: Category }) {
           onBlur={handleBlur}
           rows={4}
           maxLength={DESCRIPTION_MAX}
-          placeholder={td("descriptionPlaceholder", { name: category.name })}
+          placeholder={td("descriptionPlaceholder", { name: translateCategoryName(category.name, tCat) })}
           className="block w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           disabled={mutation.isPending}
         />

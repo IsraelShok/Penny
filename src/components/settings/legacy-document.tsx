@@ -1,16 +1,21 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Download, FileJson, Lock, Printer } from "lucide-react";
+import { Download, FileJson, FolderOpen, Lock, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Segmented } from "@/components/ui/segmented";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
-import { getAssets, getInsights, listIntegrations, getLegacyNotes, getOwners, getPlan, getSettings, saveLegacyNotes } from "@/lib/api";
+import { getAssets, getInsights, listIntegrations, getLegacyNotes, getOwners, getPlan, getSettings, saveLegacyNotes, getLegacyExport, updateLegacyExport, postLegacyExport, type LegacyExportConfig } from "@/lib/api";
 import { buildLegacySections, LEGACY_TEXT_MAX, type LegacyNotes, type LegacyRow } from "@/lib/legacy";
 import { shekels } from "@/lib/money";
+import { BANK_PROVIDERS } from "@/lib/types";
+import { translateProviderName } from "@/lib/i18n-data";
 
 /** Owned by this page only: paper look on screen, and print rules (white, page break per section). */
 const LEGACY_CSS = `
@@ -42,6 +47,7 @@ const yearAgo = () => new Date(Date.now() - 365 * 86_400_000).toISOString().slic
 
 export function LegacyDocument() {
   const t = useTranslations("legacy");
+  const tBanks = useTranslations("banks");
   const locale = useLocale();
   const qc = useQueryClient();
   const docRef = useRef<HTMLDivElement>(null);
@@ -69,6 +75,7 @@ export function LegacyDocument() {
     integrations: integrations.data ?? [],
     accounts: owners.data?.accounts ?? [],
     recurring: insights.data?.series ?? [],
+    providerName: (id) => translateProviderName(id, BANK_PROVIDERS.find((b) => b.id === id)?.name ?? id, tBanks),
   });
   const me = settings.data?.household?.members.find((m) => m.role === "me")?.name || settings.data?.displayName || "";
   const dateText = new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(new Date());
@@ -81,18 +88,29 @@ export function LegacyDocument() {
     a.click();
     URL.revokeObjectURL(url);
   };
-  const exportHtml = () => {
-    const dir = locale === "he" ? "rtl" : "ltr";
-    download(
-      `family-document-${today()}.html`,
-      "text/html",
-      `<!doctype html><html lang="${locale}" dir="${dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t("docTitle")}</title><style>body{margin:0;padding:24px;background:#f2f2f7}${LEGACY_CSS}</style></head><body>${docRef.current?.outerHTML ?? ""}</body></html>`
-    );
-  };
+  const docHtml = () =>
+    `<!doctype html><html lang="${locale}" dir="${locale === "he" ? "rtl" : "ltr"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t("docTitle")}</title><style>body{margin:0;padding:24px;background:#f2f2f7}${LEGACY_CSS}</style></head><body>${docRef.current?.outerHTML ?? ""}</body></html>`;
+  const exportHtml = () => download(`family-document-${today()}.html`, "text/html", docHtml());
   const exportJson = () =>
     download(`family-document-${today()}.json`, "application/json", JSON.stringify({ generatedAt: new Date().toISOString(), owner: me, notes, sections }, null, 2));
 
   const loading = [assets, plan, settings].some((q) => q.isLoading);
+
+  const autoQ = useQuery({ queryKey: ["legacy-export"], queryFn: getLegacyExport });
+  const auto = autoQ.data;
+  const sentRef = useRef("");
+  // While auto-export is on, every change to the rendered document (or folder) is sent and written, debounced.
+  useEffect(() => {
+    if (!auto?.enabled || loading || !docRef.current) return;
+    const html = docHtml();
+    const key = auto.dir + html;
+    if (key === sentRef.current) return;
+    const id = setTimeout(() => {
+      sentRef.current = key;
+      postLegacyExport({ html }).then((d) => qc.setQueryData(["legacy-export"], d)).catch(() => {});
+    }, 2000);
+    return () => clearTimeout(id);
+  });
 
   return (
     <SectionShell title={t("title")} description={t("description")}>
@@ -123,6 +141,7 @@ export function LegacyDocument() {
             </div>
           </SettingCard>
         )}
+        {auto && <AutoExportCard config={auto} onChange={(d) => qc.setQueryData(["legacy-export"], d)} />}
       </div>
 
       {loading ? (
@@ -199,5 +218,44 @@ function NoteField({ id, label, placeholder, initial, onSave }: { id: string; la
         className="w-full resize-y rounded-xl border border-input bg-background px-3 py-2 text-sm leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
     </div>
+  );
+}
+
+function AutoExportCard({ config, onChange }: { config: LegacyExportConfig; onChange: (c: LegacyExportConfig) => void }) {
+  const t = useTranslations("legacy.auto");
+  const locale = useLocale();
+  const [dir, setDir] = useState(config.dir);
+  const update = useMutation({ mutationFn: updateLegacyExport, onSuccess: onChange, onError: () => toast.error(t("badPath")) });
+  const open = useMutation({ mutationFn: () => postLegacyExport({ action: "open" }), onError: () => toast.error(t("openError")) });
+  const last = config.lastAt ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(config.lastAt)) : null;
+  return (
+    <SettingCard title={t("title")} description={t("description")}>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="legacy-auto">{t("enable")}</Label>
+          <Switch id="legacy-auto" checked={config.enabled} onCheckedChange={(v) => update.mutate({ enabled: v })} />
+        </div>
+        <Segmented
+          label={t("frequency")}
+          value={config.frequency}
+          onChange={(v) => update.mutate({ frequency: v })}
+          options={[{ value: "weekly", label: t("weekly") }, { value: "monthly", label: t("monthly") }]}
+        />
+        <div className="space-y-1.5">
+          <Label htmlFor="legacy-dir">{t("folder")}</Label>
+          <Input id="legacy-dir" dir="ltr" value={dir} onChange={(e) => setDir(e.target.value)} onBlur={() => dir.trim() !== config.dir && update.mutate({ dir })} />
+          <p className="text-xs text-muted-foreground">{t("secureHint")}</p>
+        </div>
+        <p className="text-sm text-muted-foreground" role="status">
+          {last ? t("last", { date: last }) : t("never")}
+          {" · "}
+          <button type="button" className="text-primary underline-offset-2 hover:underline" onClick={() => open.mutate()}>
+            <FolderOpen className="me-1 inline h-3.5 w-3.5" aria-hidden />{t("openFolder")}
+          </button>
+        </p>
+        {config.status === "locked" && <p className="text-sm text-muted-foreground">{t("locked")}</p>}
+        {config.status === "error" && <p role="alert" className="text-sm text-destructive">{t("error")}</p>}
+      </div>
+    </SettingCard>
   );
 }

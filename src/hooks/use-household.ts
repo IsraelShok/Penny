@@ -18,6 +18,6 @@ export function useHousehold() {
     onError: (err) => toast.error(err instanceof Error ? err.message : tCommon("tryAgain")),
   });
 
-  const save = (patch: Partial<Household>) => mutation.mutate({ ...household, ...patch });
+  const save = (patch: Partial<Household>, opts?: { onSuccess?: () => void }) => mutation.mutate({ ...household, ...patch }, opts);
   return { household, loading: query.isLoading, failed: query.isError, save, saving: mutation.isPending };
 }

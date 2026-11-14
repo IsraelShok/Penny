@@ -60,3 +60,34 @@ export function useActiveWorkspaceId(): number | null {
     () => null
   );
 }
+
+// The active profile (who is using the app). Profiles share the household's data; switching one
+// changes only name, look and preferences, sent as X-Profile-ID.
+const PROFILE_KEY = "penny.activeProfileId";
+let profileValue: number | null = (() => {
+  if (typeof window === "undefined") return null;
+  try {
+    const n = Number(window.localStorage.getItem(PROFILE_KEY));
+    return Number.isInteger(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+})();
+
+export function getActiveProfileIdSync(): number | null {
+  return profileValue;
+}
+
+/** Selects a profile and the household it belongs to. */
+export function setActiveProfile(profile: { id: number; workspaceId: number }): void {
+  if (profileValue !== profile.id) {
+    profileValue = profile.id;
+    try { window.localStorage.setItem(PROFILE_KEY, String(profile.id)); } catch { /* memory still works */ }
+    for (const fn of listeners) fn();
+  }
+  setActiveWorkspaceId(profile.workspaceId);
+}
+
+export function useActiveProfileId(): number | null {
+  return useSyncExternalStore(subscribe, () => profileValue, () => null);
+}

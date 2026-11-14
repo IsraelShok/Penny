@@ -37,7 +37,8 @@ export async function GET(request: Request) {
   const overdraft = db
     .prepare(`SELECT 1 FROM transactions WHERE ${BASE} AND kind = 'expense' AND (description LIKE '%ריבית%' OR description LIKE '%overdraft%') LIMIT 1`)
     .get(ws, daysAgo(today, 365));
-  const costlyDebt = assets.assets.some((a) => a.isLiability && a.type !== "mortgage" && (a.interestRate ?? 0) > 8);
+  const debts = assets.assets.filter((a) => a.isLiability && a.type !== "mortgage");
+  const costlyDebt = debts.some((a) => (a.interestRate ?? 0) > 8);
 
   const flows = db
     .prepare(`SELECT date, charged_amount as amount FROM transactions WHERE ${BASE} AND kind IN ('income', 'expense')`)
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
       cash: assets.assets.filter((a) => a.type === "cash" || a.type === "deposit").reduce((s, a) => s + (a.valueIls ?? 0), 0),
       monthlyIncome,
       monthlyExpenses,
-      highInterestDebt: costlyDebt || Boolean(overdraft),
+      highInterestDebt: costlyDebt || overdraft ? true : debts.length ? false : null,
       goodMonths: months.filter((m) => m.income >= m.expenses).length,
       monthsCounted: months.length,
       freeToSpend: ahead.safeToSpend,

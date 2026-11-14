@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useLocale } from "next-intl";
-import { ArrowUpLeft, CircleCheck, CircleAlert, Info, Wallet } from "lucide-react";
+import { ArrowUpLeft, CircleCheck, CircleAlert, Wallet } from "lucide-react";
+import { InfoTip } from "@/components/ui/info-tip";
 import { shekels } from "@/lib/money";
 import { budgetMetrics, type StudioPreferences } from "@/lib/budget-studio";
 import type { DashboardSummary } from "@/lib/types";
 import { studioCopy } from "./studio-copy";
+import { MonthNav, MonthStrip, monthKey } from "@/components/ui/month-nav";
 
-export function StudioOverview({ data, selectedDate, monthLabel, preferences }: { data: DashboardSummary; selectedDate: Date; monthLabel: string; preferences: StudioPreferences }) {
+export function StudioOverview({ data, selectedDate, preferences, onMonthChange }: { data: DashboardSummary; selectedDate: Date; preferences: StudioPreferences; onMonthChange: (month: string) => void }) {
   const locale = useLocale();
   const c = studioCopy(locale);
   const hasBudget = data.totalBudget > 0;
@@ -20,8 +22,9 @@ export function StudioOverview({ data, selectedDate, monthLabel, preferences }: 
   const label = showRemaining ? m.remaining < 0 ? c.over : c.remaining : hasBudget ? c.spent : c.allSpent;
   const forecastOver = !m.isPast && m.forecast != null && m.forecast > data.totalBudget;
   const used = Math.max(0, Math.min(100, m.used));
+  const month = monthKey(selectedDate);
   return <section className="studio-overview" aria-label={c.overview}>
-    <div className="studio-overview-top"><span className="studio-eyebrow"><Wallet size={15} aria-hidden="true" />{c.overview}</span><span className="studio-month">{monthLabel}</span></div>
+    <div className="studio-overview-top"><span className="studio-eyebrow"><Wallet size={15} aria-hidden="true" />{c.overview}</span><MonthNav value={month} onChange={onMonthChange} /></div>
     <div className="studio-overview-body">
       <div className="studio-balance"><p>{label}</p><div className="studio-amount figure"><bdi>{money(main)}</bdi></div>
         <p className="studio-budget-context">{hasBudget ? <>{c.monthlyBudget} <bdi data-money>{money(data.totalBudget)}</bdi></> : c.noBudget}</p>
@@ -38,6 +41,7 @@ export function StudioOverview({ data, selectedDate, monthLabel, preferences }: 
       <div><dt>{c.daily}</dt><dd data-money>{m.daily == null ? "—" : money(Math.floor(m.daily))}</dd></div>
       <div><dt>{m.isPast ? c.actual : c.forecast}</dt><dd data-money>{m.isPast ? money(spent) : m.forecast == null ? "—" : money(m.forecast)}</dd></div>
     </dl>
-    <details className="studio-explanation"><summary><Info size={13} aria-hidden="true" />{c.calculation}</summary><p>{c.explanation}</p>{m.isCurrent && m.forecast == null && <p>{c.noForecast}</p>}</details>
+    <p className="studio-explanation">{c.calculation}<InfoTip text={m.isCurrent && m.forecast == null ? `${c.explanation} ${c.noForecast}` : c.explanation} className="text-inherit hover:bg-white/10 hover:text-white" /></p>
+    <MonthStrip value={month} onChange={onMonthChange} />
   </section>;
 }

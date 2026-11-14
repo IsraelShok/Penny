@@ -12,6 +12,8 @@ import { fxMarkup, type FxCharge } from "@/lib/fx-markup";
 import { dailyRates } from "@/server/insights/fx-rates";
 import { getAssetsPayload } from "@/server/markets/portfolio";
 import { liquidCash } from "@/lib/allocation";
+import { getAppSettings } from "@/server/db/queries/settings";
+import { detectStageChanges } from "@/lib/stage-detect";
 
 export const dynamic = "force-dynamic";
 
@@ -83,7 +85,10 @@ export async function GET(request: Request) {
 
   const suggestions: Suggestion[] = buildSuggestions(txns, { today, known, monthStartDay: getPlan(ws).monthStartDay, priceChanges, ruleCandidates, fxMarkup: fx, taxYears, liquid, checking })
     .filter((s) => !dismissed.has(s.key));
-  return NextResponse.json({ suggestions, dismissed: [...dismissed] });
+  // getAppSettings falls back to an empty household on a missing or corrupt setting.
+  const knownEvents = getAppSettings(ws).household.events.map((e) => e.type);
+  const stageHints = detectStageChanges(txns, knownEvents, today).filter((h) => !dismissed.has(h.key));
+  return NextResponse.json({ suggestions, dismissed: [...dismissed], stageHints });
 }
 
 /** Body: { key } — hides a suggestion for good. */

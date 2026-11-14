@@ -18,6 +18,7 @@ import { translateCategoryName } from "@/lib/i18n-data";
 import { CardShell } from "@/components/home/card-shell";
 import { RotateCw } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
+import { FiHero } from "@/components/ui/page-hero";
 import { Segmented } from "@/components/ui/segmented";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -212,19 +213,18 @@ function Body({ data }: { data: FiPayload }) {
       <LifeEvents events={events} plainYears={plainYears} years={years} onSave={(e) => update({ events: e })} />
       <FiExtras data={data} tab="fi" />
       {!simple && (
-        <details className="group lg:col-span-3">
-          <summary className="min-h-11 w-fit cursor-pointer content-center text-footnote font-medium text-muted-foreground">{t("more")}</summary>
-          <div className="mt-2 grid gap-4 lg:grid-cols-2">
-            <AggressiveSaving spend={spend} income={income} savings={savings} annualReturn={annualReturn} rate={plan.rate} />
-            <Inflation data={data.inflation} />
-          </div>
-        </details>
+        <div className="grid gap-4 lg:col-span-3 lg:grid-cols-2">
+          <AggressiveSaving spend={spend} income={income} savings={savings} annualReturn={annualReturn} rate={plan.rate} />
+          <Inflation data={data.inflation} />
+        </div>
       )}
     </>
   );
 
   return (
     <div className="space-y-4">
+      {/* The FI tab opens with its own purple card; the others get the progress summary. */}
+      {tab !== "fi" && <FiHero savings={savings} target={target} />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Segmented<Tab> label={t("tabsLabel")} value={tab} onChange={setTab} options={TABS.map((k) => ({ value: k, label: t(`tab_${k}`) }))} />
         <PlanSettingsButton />
@@ -461,7 +461,7 @@ function Calculators({ returnPct }: { returnPct: number }) {
     fee: "0.5", lump: "50000", loanRate: "5", price: "1500000", equity: "500000", rent: "5000", costs: "600", mRate: "5", mYears: "25",
     amount: "50000", mmYield: "4.2", mmFee: "0.25",
   });
-  const n = (k: string) => Number(v[k]) || 0;
+  const n = (k: string) => { const x = Number(v[k]); return Number.isFinite(x) ? x : 0; }; // "1e400" → 0, never Infinity in the text
   const field = (k: string, suffix?: string) => <Field key={k} id={`tool-${k}`} label={tt(`f_${k}`)} value={v[k] ?? ""} onChange={(x) => setV({ ...v, [k]: x })} suffix={suffix} />;
   const r = returnPct;
 

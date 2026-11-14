@@ -30,8 +30,8 @@ export function OwnerSummary({ members, from, to }: { members: HouseholdMember[]
   };
 
   return (
-    <section aria-label={t("ownersTitle")} className="rounded-2xl border border-border/60 bg-card p-4">
-      <p className="text-sm text-muted-foreground">{t("ownersTitle")}</p>
+    <section aria-label={t("ownersTitle")} className="card-surface">
+      <h2 className="card-title">{t("ownersTitle")}</h2>
       <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
         {[...members.map((m) => m.id), SHARED].map((id) => (
           <div key={id}>

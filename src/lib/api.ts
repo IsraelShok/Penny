@@ -13,6 +13,7 @@ import type {
   BudgetMode,
   Integration,
   Workspace,
+  Profile,
   HomePayload,
   ActivitySnapshot,
   NeedType,
@@ -24,7 +25,7 @@ import type {
   FiPayload,
   PlanPayload,
 } from "./types";
-import { getActiveWorkspaceIdSync } from "./workspace-store";
+import { getActiveProfileIdSync, getActiveWorkspaceIdSync } from "./workspace-store";
 
 const BASE = "";
 
@@ -34,6 +35,8 @@ function withWorkspaceHeader(init?: RequestInit): RequestInit {
   if (wsId != null && !headers.has("x-workspace-id")) {
     headers.set("x-workspace-id", String(wsId));
   }
+  const profileId = getActiveProfileIdSync();
+  if (profileId != null && !headers.has("x-profile-id")) headers.set("x-profile-id", String(profileId));
   return { ...init, headers };
 }
 
@@ -87,6 +90,22 @@ async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
     throw new Error(friendlyError(res.status, text));
   }
   return res.json() as Promise<T>;
+}
+
+export function listProfiles() {
+  return fetchJSON<Profile[]>("/api/profiles");
+}
+
+export function saveProfile(id: number | null, name: string, avatar: { avatarEmoji?: string | null; avatarColor?: string | null } = {}) {
+  return fetchJSON<Profile>(id == null ? "/api/profiles" : `/api/profiles/${id}`, {
+    method: id == null ? "POST" : "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, ...avatar }),
+  });
+}
+
+export function deleteProfile(id: number) {
+  return fetchJSON<{ success: boolean }>(`/api/profiles/${id}`, { method: "DELETE" });
 }
 
 export function listWorkspaces() {
@@ -195,7 +214,7 @@ export function testBankConnection(
 }
 
 export function saveAIConfig(config: {
-  provider: "claude" | "ollama" | "none";
+  provider: AppSettings["aiProvider"];
   apiKey?: string;
   ollamaUrl?: string;
   ollamaModel?: string;
@@ -205,6 +224,10 @@ export function saveAIConfig(config: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(config),
   });
+}
+
+export function getAIKeyStatus() {
+  return fetchJSON<{ hasClaudeKey: boolean }>("/api/setup/ai");
 }
 
 export function getSettings() {
@@ -357,7 +380,7 @@ export function getCashAhead() {
 }
 
 export function getSuggestions() {
-  return fetchJSON<{ suggestions: import("./suggestions").Suggestion[]; dismissed: string[] }>(`/api/suggestions`);
+  return fetchJSON<{ suggestions: import("./suggestions").Suggestion[]; dismissed: string[]; stageHints: import("./stage-detect").StageHint[] }>(`/api/suggestions`);
 }
 
 export function dismissSuggestion(key: string) {
@@ -559,6 +582,8 @@ export function createCategory(input: {
   kind: CategoryKindFilter;
   isParent?: boolean;
   icon?: string;
+  color?: string;
+  parentId?: number | null;
   description?: string | null;
 }) {
   return fetchJSON<Category>("/api/categories", {
@@ -588,6 +613,8 @@ export interface DeleteTransactionsResult {
 export function deleteAllTransactions() {
   return fetchJSON<DeleteTransactionsResult>("/api/data/transactions", {
     method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ confirm: "delete-all-transactions" }), // server refuses without it
   });
 }
 
@@ -1025,6 +1052,43 @@ export function saveLegacyNotes(notes: import("./legacy").LegacyNotes) {
   });
 }
 
+export type FolderImportConfig = import("@/server/lib/folder-import").FolderImportConfig;
+
+export function getFolderImport() {
+  return fetchJSON<FolderImportConfig>(`/api/import/folder`);
+}
+
+export function updateFolderImport(patch: { enabled?: boolean; dir?: string; account?: string; minutes?: number } | { action: "scan" | "open" }) {
+  return fetchJSON<FolderImportConfig>(`/api/import/folder`, {
+    method: "action" in patch ? "POST" : "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+}
+
+export type LegacyExportConfig = import("@/server/lib/legacy-export").LegacyExportConfig;
+
+export function getLegacyExport() {
+  return fetchJSON<LegacyExportConfig>(`/api/legacy/export`);
+}
+
+export function updateLegacyExport(patch: { enabled?: boolean; frequency?: "weekly" | "monthly"; dir?: string }) {
+  return fetchJSON<LegacyExportConfig>(`/api/legacy/export`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+}
+
+/** body: { html } to store + export the document, or { action: "open" } to open the folder. */
+export function postLegacyExport(body: { html: string } | { action: "open" }) {
+  return fetchJSON<LegacyExportConfig>(`/api/legacy/export`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 export function askQuestion(question: string) {
   return fetchJSON<import("./ask").AskAnswer>(`/api/ask`, {
     method: "POST",
@@ -1128,3 +1192,24 @@ export function putPreference(key:string,value:unknown,revision:number,workspace
 export type AccessPayload={enabled:boolean;user:{id:number;name:string;username:string;isAdmin:boolean}|null;users:{id:number;name:string;username:string;isAdmin:number;disabled:number}[];members:{userId:number;workspaceId:number;role:"viewer"|"editor"}[];audit:{id:number;name:string;action:string;workspaceId:number|null;createdAt:string}[]};
 export function getAccess(){return fetchJSON<AccessPayload>("/api/access");}
 export function accessAction(body:Record<string,unknown>){return fetchJSON<{success?:boolean;id?:number}>("/api/access",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});}
+
+export function getInstalledAgents() {
+  return fetchJSON<Record<"codex" | "gemini" | "opencode" | "kilo", boolean>>("/api/ai/agents");
+}
+
+// ---- Manual transactions (add / edit / delete) ----
+
+export type ManualTransactionInput = {
+  kind?: "expense" | "income"; amount?: number; date?: string; description?: string; categoryId?: number | null;
+  account?: string; memo?: string | null; tags?: string[]; owner?: string | null; excluded?: boolean;
+};
+const jsonInit = (method: string, body?: unknown): RequestInit => ({ method, headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+export function createManualTransaction(input: ManualTransactionInput) {
+  return fetchJSON<{ id: number }>("/api/transactions/manual", jsonInit("POST", input));
+}
+export function updateTransactionFields(id: number, input: ManualTransactionInput) {
+  return fetchJSON<{ success: boolean }>(`/api/transactions/manual?id=${id}`, jsonInit("PATCH", input));
+}
+export function deleteManualTransaction(id: number) {
+  return fetchJSON<{ deleted: ManualTransactionInput }>(`/api/transactions/manual?id=${id}`, jsonInit("DELETE"));
+}

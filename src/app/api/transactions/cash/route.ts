@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 /** Logs cash spending: { amount > 0, description?, owner? }. */
 export async function POST(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json().catch(() => ({}))) as { amount?: unknown; description?: unknown; owner?: unknown };
+  const body = ((await request.json().catch(() => null)) ?? {}) as { amount?: unknown; description?: unknown; owner?: unknown };
   const amount = body.amount;
   if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0 || amount > 1e7) {
     return NextResponse.json({ error: "amount must be a positive number" }, { status: 400 });

@@ -44,13 +44,13 @@ export function CashWalletCard() {
   if (Math.round(balance) === 0 && !withdrawn) return null;
 
   return (
-    <section aria-label={t("cashTitle")} className="rounded-2xl border border-border/60 bg-card p-4">
+    <section aria-label={t("cashTitle")} className="card-surface">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="flex size-9 items-center justify-center rounded-full bg-muted" aria-hidden><Banknote className="size-4" /></span>
           <div>
-            <p className="text-sm text-muted-foreground">{t("cashTitle")}</p>
-            <p className="text-xl font-semibold tabular-nums">{shekels(Math.round(balance), locale)}</p>
+            <h2 className="card-title">{t("cashTitle")}</h2>
+            <p className="card-figure">{shekels(Math.round(balance), locale)}</p>
           </div>
         </div>
         {!open && <Button onClick={() => setOpen(true)}>{t("cashLog")}</Button>}

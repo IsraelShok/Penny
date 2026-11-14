@@ -931,7 +931,7 @@ export function getAccountNumbers(workspaceId: number): { accountNumber: string;
     .prepare(
       `SELECT t.account_number AS accountNumber, MAX(bc.label) AS label, MAX(t.provider) AS provider
        FROM transactions t LEFT JOIN bank_credentials bc ON bc.id = t.credential_id
-       WHERE t.workspace_id = ? AND t.provider != 'cash'
+       WHERE t.workspace_id = ? AND t.provider NOT IN ('cash', 'manual')
        GROUP BY t.account_number ORDER BY t.account_number`
     )
     .all(workspaceId) as { accountNumber: string; label: string | null; provider: string }[];
@@ -1041,7 +1041,7 @@ export function getSettleRows(workspaceId: number, from: string): import("@/lib/
     .prepare(
       `SELECT id, date, charged_amount AS amount, owner, account_number AS accountNumber, description
        FROM transactions
-       WHERE workspace_id = ? AND date > ? AND kind = 'expense' AND is_excluded = 0 AND charged_amount < 0
+       WHERE workspace_id = ? AND date > ? AND kind = 'expense' AND is_excluded = 0 AND charged_amount != 0
        ORDER BY date DESC`
     )
     .all(workspaceId, from) as import("@/lib/settle").SettleRow[];

@@ -8,7 +8,7 @@ export const DEFAULT_RULE: SplitRule = { myShare: 50, support: null };
 
 export interface SettleRow { id: number; date: string; amount: number; owner: string | null; accountNumber: string; description: string }
 export interface SettleEntry { id: number; counterpart: string; date: string; amount: number }
-export interface LedgerLine { date: string; description: string; kind: "shared" | "theirs" | "mine" | "support"; amount: number } // amount > 0: toward me
+export interface LedgerLine { date: string; description: string; kind: "shared" | "theirs" | "mine" | "support" | "carry"; amount: number } // amount > 0: toward me
 export interface Ledger { lines: LedgerLine[]; balance: number; since: string | null }
 
 const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -47,20 +47,24 @@ function nextMonth(m: string): string {
 }
 
 /**
- * Balance with `counterpart` since the last settle-up (exclusive). Payer = the account's default owner.
+ * Balance with `counterpart`. Payer = the account's default owner; refunds (amount > 0) reverse a charge.
  * Shared costs split by rule; a cost owned by one side but paid by the other counts in full.
  * Child support counts once per month on the 1st, from its start month up to `today`.
+ * Each settle-up pays its amount toward whoever was owed on its date; an unpaid remainder carries over.
+ * `lines` are the ones after the last settle-up, plus a "carry" line for that remainder.
  */
 export function ledger(
   rows: SettleRow[], accountOwners: AccountOwners, me: string, counterpart: string,
   rule: SplitRule, entries: SettleEntry[], today: string,
 ): Ledger {
-  const since = entries.filter((e) => e.counterpart === counterpart).reduce<string | null>((m, e) => (m && m > e.date ? m : e.date), null);
+  const settles = entries.filter((e) => e.counterpart === counterpart)
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id));
+  const since = settles.at(-1)?.date ?? null;
   // Stored dates may carry a time; compare by day.
-  const open = (date: string) => (since == null || date.slice(0, 10) > since) && date.slice(0, 10) <= today;
+  const open = (date: string) => date.slice(0, 10) <= today;
   const lines: LedgerLine[] = [];
   for (const r of rows) {
-    if (!open(r.date) || r.amount >= 0) continue;
+    if (!open(r.date) || r.amount === 0) continue;
     const spent = -r.amount;
     const owner = effectiveOwner(r.owner, r.accountNumber, accountOwners);
     const payer = accountOwners[r.accountNumber];
@@ -78,5 +82,13 @@ export function ledger(
     }
   }
   lines.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
-  return { lines, balance: round(lines.reduce((sum, l) => sum + l.amount, 0)), since };
+  let carry = 0;
+  let i = lines.length - 1; // lines are newest first; walk oldest first
+  for (const e of settles) {
+    for (; i >= 0 && lines[i].date.slice(0, 10) <= e.date; i--) carry += lines[i].amount;
+    carry = round(carry - Math.sign(carry) * e.amount);
+  }
+  const after = lines.slice(0, i + 1);
+  if (since && carry !== 0) after.push({ date: since, description: "", kind: "carry", amount: carry });
+  return { lines: after, balance: round(after.reduce((sum, l) => sum + l.amount, 0)), since };
 }

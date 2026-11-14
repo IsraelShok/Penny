@@ -6,7 +6,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory={{repoRoot}}
-ExecStart={{nodePath}} {{repoRoot}}/node_modules/next/dist/bin/next start -H 127.0.0.1 -p {{port}}
+ExecStart={{nodePath}} {{repoRoot}}/scripts/serve.mjs {{port}}
 Environment=NODE_ENV=production
 Environment=PATH={{pathEnv}}
 Restart=on-failure

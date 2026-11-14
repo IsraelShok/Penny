@@ -6,10 +6,9 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { FileUp } from "lucide-react";
 import { importStatement, undoStatementImport } from "@/lib/api";
-import { parseCsv } from "@/lib/csv";
-import { readXlsx } from "@/lib/xlsx";
-import { buildImportRows, findHeaderRow, guessColumns, IMPORT_FIELDS, MAX_IMPORT_ROWS, parseHtmlTable, type ImportMap } from "@/lib/file-import";
+import { buildImportRows, findHeaderRow, guessColumns, IMPORT_EXTS, IMPORT_FIELDS, MAX_IMPORT_ROWS, readStatementTable, type ImportMap } from "@/lib/file-import";
 import { SettingCard } from "@/components/settings/section-shell";
+import { ImportGuide } from "@/components/settings/import-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,17 +73,11 @@ export function StatementImportCard() {
     const name = file.name.toLowerCase();
     try {
       let parsed: string[][];
-      const bytes = await file.arrayBuffer();
-      // Some .xls downloads are really .xlsx; check the zip signature, not the name.
-      const head = new Uint8Array(bytes.slice(0, 4));
-      if (head[0] === 0x50 && head[1] === 0x4b) parsed = await readXlsx(bytes);
-      else {
-        // Israeli bank CSVs are often Windows-1255, not UTF-8.
-        let text = new TextDecoder("utf-8").decode(bytes);
-        if (text.includes("�")) text = new TextDecoder("windows-1255").decode(bytes);
-        if (/<table/i.test(text)) parsed = parseHtmlTable(text);
-        else if (name.endsWith(".xls")) { setError(t("xlsNotSupported")); return; }
-        else parsed = parseCsv(text);
+      try {
+        parsed = await readStatementTable(new Uint8Array(await file.arrayBuffer()), name);
+      } catch (e) {
+        if (e instanceof Error && e.message === "xlsNotSupported") { setError(t("xlsNotSupported")); return; }
+        throw e;
       }
       const h = findHeaderRow(parsed);
       if (h < 0) { setError(t("noHeader")); return; }
@@ -102,13 +95,17 @@ export function StatementImportCard() {
   return (
     <SettingCard title={t("title")} description={t("description")}>
       <div className="space-y-4">
+        <details className="rounded-xl bg-muted/40 px-3 py-2">
+          <summary className="cursor-pointer text-footnote font-medium">{t("guide.title")}</summary>
+          <div className="pt-3"><ImportGuide /></div>
+        </details>
         <div className="space-y-1.5">
           <Label htmlFor="statement-file">{t("file")}</Label>
           <input
             key={inputKey}
             id="statement-file"
             type="file"
-            accept=".csv,.xlsx,.xls,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            accept={`${IMPORT_EXTS.join(",")},text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`}
             onChange={(e) => void onFile(e.target.files?.[0])}
             className="block w-full text-footnote file:me-3 file:rounded-lg file:border-0 file:bg-secondary file:px-3 file:py-2 file:text-footnote file:font-medium file:text-secondary-foreground"
           />

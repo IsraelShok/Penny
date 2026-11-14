@@ -4,6 +4,7 @@ import { getDb } from "../index";
 import { getWorkspaceSetting, setWorkspaceSetting } from "./settings";
 import { defaultHomeStyle, HOME_STYLES, parsePlan, type FinancialPlan } from "@/lib/plan";
 import type { Goal, InsurancePolicy } from "@/lib/types";
+import { parseTrip } from "@/lib/trip";
 
 const PLAN_KEY = "financial_plan";
 
@@ -31,23 +32,44 @@ export function savePlan(workspaceId: number, plan: FinancialPlan) {
 }
 
 export function listGoals(workspaceId: number): Goal[] {
-  return getDb()
+  const rows = getDb()
     .prepare(
-      `SELECT id, name, target_amount as targetAmount, target_date as targetDate, saved_amount as openingSavedAmount, saved_amount + COALESCE((SELECT SUM(l.contribution) FROM goal_links l JOIN transactions t ON t.id=l.transaction_id WHERE l.goal_id=goals.id AND t.is_excluded=0 AND t.kind='transfer' AND t.status='completed'),0) as savedAmount
+      `SELECT id, name, kind, details, target_amount as targetAmount, target_date as targetDate, saved_amount as openingSavedAmount, saved_amount + COALESCE((SELECT SUM(l.contribution) FROM goal_links l JOIN transactions t ON t.id=l.transaction_id WHERE l.goal_id=goals.id AND t.is_excluded=0 AND t.kind='transfer' AND t.status='completed'),0) as savedAmount
        FROM goals WHERE workspace_id = ? ORDER BY target_date`
     )
-    .all(workspaceId) as Goal[];
+    .all(workspaceId) as (Goal & { details: string | null })[];
+  return rows.map(({ details, ...g }) => {
+    if (g.kind !== "vacation") {
+      let extra = {};
+      try { extra = JSON.parse(details ?? "{}") ?? {}; } catch { /* bad JSON: no extras */ }
+      return { ...extra, ...g };
+    }
+    let trip = null;
+    try { trip = parseTrip(JSON.parse(details ?? "null")); } catch { /* bad JSON: plain goal */ }
+    return { ...g, trip, actual: trip ? tripActual(workspaceId, trip.start, trip.end) : 0 };
+  });
 }
 
-export function upsertGoal(workspaceId: number, g: Omit<Goal, "id"> & { id?: number }) {
+/** Spending between two dates in the Travel category and its subcategories (refunds reduce it). */
+export function tripActual(workspaceId: number, start: string, end: string): number {
+  const row = getDb().prepare(
+    `SELECT COALESCE(-SUM(t.charged_amount), 0) AS total FROM transactions t JOIN categories c ON c.id = t.category_id
+     WHERE t.workspace_id = ? AND t.is_excluded = 0 AND t.kind = 'expense' AND substr(t.date, 1, 10) BETWEEN ? AND ?
+       AND (c.name = 'Travel' OR c.parent_id IN (SELECT id FROM categories WHERE workspace_id = ? AND name = 'Travel'))`
+  ).get(workspaceId, start, end, workspaceId) as { total: number };
+  return Math.max(0, row.total);
+}
+
+export function upsertGoal(workspaceId: number, g: Omit<Goal, "id"> & { id?: number; extra?: Pick<Goal, "icon" | "color" | "monthly" | "dated"> | null }) {
   const db = getDb();
+  const kind = g.trip ? "vacation" : "general", details = g.trip ? JSON.stringify(g.trip) : g.extra ? JSON.stringify(g.extra) : null;
   if (g.id) {
     return db
-      .prepare("UPDATE goals SET name = ?, target_amount = ?, target_date = ?, saved_amount = ? WHERE workspace_id = ? AND id = ?")
-      .run(g.name, g.targetAmount, g.targetDate, g.savedAmount, workspaceId, g.id).changes > 0;
+      .prepare("UPDATE goals SET name = ?, target_amount = ?, target_date = ?, saved_amount = ?, kind = ?, details = ? WHERE workspace_id = ? AND id = ?")
+      .run(g.name, g.targetAmount, g.targetDate, g.savedAmount, kind, details, workspaceId, g.id).changes > 0;
   }
-  db.prepare("INSERT INTO goals (workspace_id, name, target_amount, target_date, saved_amount) VALUES (?, ?, ?, ?, ?)")
-    .run(workspaceId, g.name, g.targetAmount, g.targetDate, g.savedAmount);
+  db.prepare("INSERT INTO goals (workspace_id, name, target_amount, target_date, saved_amount, kind, details) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .run(workspaceId, g.name, g.targetAmount, g.targetDate, g.savedAmount, kind, details);
   return true;
 }
 

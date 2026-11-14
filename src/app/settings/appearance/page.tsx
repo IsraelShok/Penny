@@ -8,10 +8,12 @@ import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 import { StudioEditor } from "@/components/dashboard/studio-editor";
+import { PetCustomizer } from "@/components/home/pet-card";
 import { studioCopy } from "@/components/dashboard/studio-copy";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { InfoTip } from "@/components/ui/info-tip";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
 import { getSettings, updateSettings } from "@/lib/api";
 import type { AppSettings } from "@/lib/types";
@@ -53,12 +55,10 @@ export default function AppearanceSettingsPage() {
 
   return (
     <SectionShell title={t("title")} description={t("description")}>
-      <SettingCard title={c.globalSettings} description={c.studioHint}><StudioEditor inline /></SettingCard>
-
       <SettingCard title={t("languageCardTitle")} description={t("languageCardDescription")}>
         <div className="grid gap-2 sm:grid-cols-2">
           {langOptions.map((o) => {
-            const isActive = storedLang === o.value;
+            const isActive = (mutation.isPending ? mutation.variables : storedLang) === o.value; // optimistic; reverts on error
             const isPending = mutation.isPending && mutation.variables === o.value;
             return (
               <button
@@ -90,6 +90,15 @@ export default function AppearanceSettingsPage() {
       </SettingCard>
 
       <ComfortCard />
+
+      <PetSettingsCard />
+
+      <section>
+        <div className="mb-2 flex items-center gap-1 px-4"><h3 className="text-sm font-semibold text-muted-foreground">{c.globalSettings}</h3><InfoTip text={c.studioHint} /></div>
+        <StudioEditor inline />
+      </section>
+
+      <AboutCard />
     </SectionShell>
   );
 }
@@ -101,7 +110,8 @@ function ComfortCard() {
   // Show the picked style at once; it follows plan.homeStyle again once saved (or if saving fails).
   const [picked, setPicked] = useState<HomeStyle | null>(null);
   if (picked && picked === plan.homeStyle) setPicked(null);
-  const homeStyle = picked ?? plan.homeStyle;
+  // Never saved: Home renders classic (it only checks for "companion"), so show that.
+  const homeStyle: HomeStyle = picked ?? plan.homeStyle ?? "classic";
   const rows = [
     { key: "simpleMode", label: t("simpleMode"), hint: t("simpleModeHint") },
     { key: "wheelPaging", label: t("wheelPaging"), hint: t("wheelPagingHint") },
@@ -124,6 +134,37 @@ function ComfortCard() {
             <Switch checked={plan[r.key]} disabled={!loaded} onCheckedChange={(v) => update({ [r.key]: v })} />
           </label>
         ))}
+      </div>
+    </SettingCard>
+  );
+}
+
+/** Pocket Pal: its own section, apart from the app's look, with the customization right under the switch. */
+function PetSettingsCard() {
+  const t = useTranslations("settings.appearance");
+  const { plan, update, loaded } = usePlan();
+  return (
+    <SettingCard title={t("petMode")} description={t("petModeHint")}>
+      <div className="divide-y divide-border">
+        <label className="flex cursor-pointer items-center justify-between gap-4 pb-3 last:pb-0">
+          <span className="font-medium">{t("petMode")}</span>
+          <Switch checked={plan.pet.enabled} disabled={!loaded} onCheckedChange={(v) => update({ pet: { ...plan.pet, enabled: v } })} />
+        </label>
+        {plan.pet.enabled && <div className="pt-4 pb-2"><PetCustomizer /></div>}
+      </div>
+    </SettingCard>
+  );
+}
+
+/** Credits for open-source pieces shown in the app. */
+function AboutCard() {
+  const t = useTranslations("settings.appearance");
+  return (
+    <SettingCard title={t("aboutTitle")}>
+      <div className="space-y-2 text-sm">
+        <p>{t("boopCredit")}</p>
+        <p className="text-xs text-muted-foreground">{t("boopLicense")}</p>
+        <a href="https://github.com/CX-ArtLab/boopface" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{t("boopRepo")}</a>
       </div>
     </SettingCard>
   );

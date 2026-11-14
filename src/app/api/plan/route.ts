@@ -1,9 +1,28 @@
 import { NextResponse } from "next/server";
-import { keepHomeStyle, parsePlan } from "@/lib/plan";
+import { GOAL_COLORS, goalReachMonth, keepHomeStyle, parsePlan, type FinancialPlan } from "@/lib/plan";
 import { deleteRow, getPlan, listGoals, listPolicies, savePlan, upsertGoal, upsertPolicy } from "@/server/db/queries/plan";
 import { deleteManualNetWorth, saveManualNetWorth } from "@/server/db/queries/assets";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { POLICY_KINDS, type PlanPayload } from "@/lib/types";
+import { profileFromRequest } from "@/server/db/queries/profiles";
+import { getDb } from "@/server/db";
+import { parseTrip, tripTotal } from "@/lib/trip";
+
+// Pure view prefs: each profile keeps its own; the household plan's values are the default until it picks.
+const VIEW = ["simpleMode", "wheelPaging", "homeStyle"] as const;
+type View = Pick<FinancialPlan, (typeof VIEW)[number]>;
+const viewOf = (p: FinancialPlan): View => ({ simpleMode: p.simpleMode, wheelPaging: p.wheelPaging, homeStyle: p.homeStyle });
+function profileView(request: Request, ws: number): { key: string; view: Partial<View> } | null {
+  const p = profileFromRequest(request, ws);
+  if (!p) return null;
+  const row = getDb().prepare("SELECT value FROM synced_preferences WHERE workspace_id = ? AND profile = ? AND key = 'plan-view'").get(ws, `p${p.id}`) as { value: string } | undefined;
+  return { key: `p${p.id}`, view: row ? JSON.parse(row.value) : {} };
+}
+/** The household plan as this profile sees it. */
+function planFor(request: Request, ws: number): FinancialPlan {
+  const plan = getPlan(ws), own = profileView(request, ws);
+  return own ? { ...plan, ...viewOf(parsePlan({ ...plan, ...own.view })) } : plan;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +35,7 @@ const amount = (v: unknown) => {
 
 export async function GET(request: Request) {
   const ws = getWorkspaceIdFromRequest(request);
-  const payload: PlanPayload = { plan: getPlan(ws), goals: listGoals(ws), policies: listPolicies(ws) };
+  const payload: PlanPayload = { plan: planFor(request, ws), goals: listGoals(ws), policies: listPolicies(ws) };
   return NextResponse.json(payload);
 }
 
@@ -26,8 +45,12 @@ export async function PUT(request: Request) {
   const body = await request.json().catch(() => null);
   if (!body?.plan) return bad("plan is required");
   const plan = parsePlan(body.plan);
-  plan.homeStyle = keepHomeStyle(body.plan, getPlan(ws).homeStyle);
-  savePlan(ws, plan);
+  const stored = getPlan(ws), own = profileView(request, ws);
+  plan.homeStyle = keepHomeStyle(body.plan, planFor(request, ws).homeStyle);
+  if (!own) { savePlan(ws, plan); return NextResponse.json(plan); }
+  // A profile's view prefs go to its own row; the household's stay as they were.
+  getDb().prepare("INSERT INTO synced_preferences (workspace_id, profile, key, value) VALUES (?, ?, 'plan-view', ?) ON CONFLICT(workspace_id, profile, key) DO UPDATE SET value = excluded.value, revision = revision + 1, updated_at = datetime('now')").run(ws, own.key, JSON.stringify(viewOf(plan)));
+  savePlan(ws, { ...plan, ...viewOf(stored) });
   return NextResponse.json(plan);
 }
 
@@ -41,10 +64,23 @@ export async function POST(request: Request) {
 
   if (body?.kind === "goal") {
     const name = text(item.name, 60);
-    const targetAmount = amount(item.targetAmount);
-    const targetDate = typeof item.targetDate === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(item.targetDate) ? item.targetDate : null;
-    if (!name || !targetAmount || !targetDate) return bad("goal needs a name, an amount and a month (YYYY-MM)");
-    const ok = upsertGoal(ws, { id, name, targetAmount, targetDate, savedAmount: amount(item.savedAmount) ?? 0 });
+    // A vacation plan: its lines' total is the target and its start month the date.
+    const trip = item.trip == null ? null : parseTrip(item.trip);
+    if (item.trip != null && !trip) return bad("trip needs a start and an end date (YYYY-MM-DD)");
+    const targetAmount = trip ? tripTotal(trip) || null : amount(item.targetAmount);
+    const savedAmount = amount(item.savedAmount) ?? 0;
+    // Custom goals: a date is optional when there is a monthly contribution; then the date is when that reaches the target.
+    const monthly = item.monthly == null || item.monthly === "" ? null : amount(item.monthly);
+    if (monthly == null && item.monthly != null && item.monthly !== "") return bad("monthly must be a non-negative amount");
+    const icon = typeof item.icon === "string" && item.icon.trim() ? [...item.icon.trim()].slice(0, 4).join("") : null;
+    const color = GOAL_COLORS.find((c) => c === item.color) ?? null;
+    if (item.color != null && !color) return bad("unknown goal color");
+    const given = item.dated !== false && typeof item.targetDate === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(item.targetDate) ? item.targetDate : null;
+    // shortcut: an undated goal's month is fixed when saved; it moves only on the next edit.
+    const targetDate = trip ? trip.start.slice(0, 7) : given ?? (targetAmount ? goalReachMonth(targetAmount, savedAmount, monthly, new Date()) : null);
+    if (!name || !targetAmount || !targetDate) return bad("goal needs a name, an amount, and a month (YYYY-MM) or a monthly amount");
+    const extra = trip || (!icon && !color && !monthly && given) ? null : { icon, color, monthly, dated: !!given };
+    const ok = upsertGoal(ws, { id, name, targetAmount, targetDate, savedAmount, trip, extra });
     return ok ? NextResponse.json({ success: true }) : NextResponse.json({ error: "not found" }, { status: 404 });
   }
   if (body?.kind === "policy") {

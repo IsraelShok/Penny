@@ -16,7 +16,7 @@ export function StudioDistribution({ categories, chart, onChartChange }: { categ
   const total = rows.reduce((sum, row) => sum + row.spent, 0);
   let offset = 0;
   const segments = rows.map((row) => { const start = offset; offset += row.spent / total * 100; return `${row.categoryColor} ${start}% ${offset}%`; });
-  return <section className="studio-panel studio-distribution" aria-labelledby="studio-distribution-title">
+  return <section className="studio-overview studio-distribution" aria-labelledby="studio-distribution-title">
     <div className="studio-panel-heading"><div><h2 id="studio-distribution-title">{c.distribution}</h2><p>{c.distributionHint}</p></div><div className="studio-chart-switch" role="group" aria-label={c.chart}>
       {([['bars', ChartNoAxesColumnIncreasing], ['donut', ChartPie], ['table', Table2]] as const).map(([value, Icon]) => <button key={value} onClick={() => onChartChange(value)} aria-label={c[value]} title={c[value]} aria-pressed={chart === value}><Icon size={16} aria-hidden="true" /></button>)}
     </div></div>

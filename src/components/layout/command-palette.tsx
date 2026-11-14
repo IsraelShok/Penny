@@ -4,9 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useStudio } from "@/components/studio-provider";
-import { CalendarCheck, HandHeart, HeartHandshake, LifeBuoy, Milestone, MessageCircleQuestion, Moon, RefreshCw, Search, Settings2, Sparkles, Sun, Zap } from "lucide-react";
+import { EyeOff, HandHeart, HeartHandshake, LifeBuoy, Milestone, MessageCircleQuestion, Moon, RefreshCw, Search, Settings2, Sparkles, Sun, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { usePlan } from "@/hooks/use-plan";
+import { usePrivacyMode } from "@/hooks/use-privacy-mode";
+import { PRIVACY_SHORTCUT } from "@/components/settings/privacy-mode-switch";
 import { cn } from "@/lib/utils";
 import { FOOTER_NAV, NAV, SEARCH_PAGES } from "./app-sidebar";
 import { askQuestion } from "@/lib/api";
@@ -38,6 +40,8 @@ export function CommandPalette({ placeholder, onClose }: { placeholder: string; 
   const { preferences, save, resolvedStudioTheme } = useStudio();
   const resolvedTheme = resolvedStudioTheme === "midnight" ? "dark" : "light";
   const { plan, update } = usePlan();
+  const tPrivacy = useTranslations("settings.privacy");
+  const [privacyOn, togglePrivacy] = usePrivacyMode();
   const [open, setOpen] = useState(true);
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
@@ -67,7 +71,6 @@ export function CommandPalette({ placeholder, onClose }: { placeholder: string; 
     const go = (href: string) => () => router.push(href);
     return [
       ...[...NAV.filter((p) => p.href !== "/investments"), ...SEARCH_PAGES, { ...NAV[3], labelKey: "investments" }, ...FOOTER_NAV].map((p) => ({ id: p.href, label: tNav(p.labelKey), hint: t("page"), Icon: p.Icon, run: go(p.href) })),
-      { id: "checkin", label: t("checkin"), hint: t("action"), Icon: CalendarCheck, run: go("/checkin") },
       { id: "recap", label: tRecap("palette"), hint: t("page"), Icon: Sparkles, run: go("/recap") },
       { id: "ask-page", label: tAsk("title"), hint: t("page"), Icon: MessageCircleQuestion, run: go("/ask") },
       { id: "life", label: tLife("title"), hint: t("page"), Icon: Milestone, run: go("/life") },
@@ -84,8 +87,9 @@ export function CommandPalette({ placeholder, onClose }: { placeholder: string; 
         run: () => save({ ...preferences, theme: resolvedTheme === "dark" ? "pearl" : "midnight" }),
       },
       { id: "simple", label: plan.simpleMode ? t("simpleOff") : t("simpleOn"), hint: t("action"), Icon: Zap, run: () => { void update({ simpleMode: !plan.simpleMode }).catch(() => toast.error(t("saveFailed"))); } },
+      { id: "privacy", label: privacyOn ? tPrivacy("modeOffAction") : tPrivacy("modeOnAction"), hint: PRIVACY_SHORTCUT, Icon: EyeOff, run: () => { togglePrivacy(); toast(privacyOn ? tPrivacy("modeOffToast") : tPrivacy("modeOnToast"), { id: "privacy-mode" }); } },
     ];
-  }, [router, t, tNav, tSettings, tRecap, tAsk, tLife, tWell, resolvedTheme, preferences, save, plan.simpleMode, update]);
+  }, [router, t, tNav, tSettings, tRecap, tAsk, tLife, tWell, resolvedTheme, preferences, save, plan.simpleMode, update, tPrivacy, privacyOn, togglePrivacy]);
 
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const askCommand: Command[] = looksLikeQuestion(q)

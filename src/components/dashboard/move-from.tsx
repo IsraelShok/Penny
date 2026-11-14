@@ -11,7 +11,7 @@ import { translateCategoryName } from "@/lib/i18n-data";
 import { shekels } from "@/lib/money";
 import type { CategoryWithData } from "@/lib/types";
 
-/** YNAB-style: an over category takes budget, for this month only, from one that still has room. */
+/** An over category takes budget, for this month only, from one that still has room. */
 export function MoveFrom({ target, card, rows, month, moves }: { target: CategoryWithData; card: CategoryWithData; rows: CategoryWithData[]; month: string; moves: BudgetMove[] }) {
   const t = useTranslations("moveBudget");
   const tCat = useTranslations("categoriesSeeded");

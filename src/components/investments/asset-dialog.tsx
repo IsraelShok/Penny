@@ -307,7 +307,7 @@ function FundPicker({
       {selectedId ? (
         <div className="flex items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2 text-footnote">
           <span>{t("fundLinked", { id: selectedId })}</span>
-          <button type="button" className="text-primary hover:underline" onClick={onClear}>{t("fundUnlink")}</button>
+          <button type="button" className="text-primary underline underline-offset-4" onClick={onClear}>{t("fundUnlink")}</button>
         </div>
       ) : (
         <>

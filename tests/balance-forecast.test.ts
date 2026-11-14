@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chargesBetween, forecastBalance } from "@/lib/balance-forecast";
+import { chargesBetween, forecastBalance, sizeTier } from "@/lib/balance-forecast";
 
 describe("forecastBalance", () => {
   const base = { today: "2026-11-05", payday: 10, monthlyIncome: 10_000, days: 90 };
@@ -33,5 +33,15 @@ describe("forecastBalance", () => {
   it("clamps monthly dates to short months", () => {
     expect(chargesBetween("monthly", "2026-01-31", "2026-02-01", "2026-04-30")).toEqual(["2026-02-28", "2026-03-31", "2026-04-30"]);
     expect(chargesBetween("weekly", "2026-11-01", "2026-11-02", "2026-11-15")).toEqual(["2026-11-08", "2026-11-15"]);
+  });
+});
+
+describe("sizeTier", () => {
+  it("splits the month's charges into thirds", () => {
+    const tier = sizeTier([10, 20, 30, 100, 200, 300]);
+    expect([10, 20, 30, 100, 200, 300].map(tier)).toEqual([0, 0, 1, 1, 2, 2]);
+  });
+  it("keeps equal charges in one tier", () => {
+    expect([50, 50, 50].map(sizeTier([50, 50, 50]))).toEqual([0, 0, 0]);
   });
 });

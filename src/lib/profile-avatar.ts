@@ -7,6 +7,22 @@ export const AVATAR_EMOJIS = [
   "🙂", "😎", "🦊", "🐼", "🐱", "🐶", "🦁", "🐸", "🌻", "🌙", "⭐", "🚀", "🎧", "🏠", "💼", "🎨",
 ] as const;
 
+/** Illustrated avatars, stored in avatarEmoji as "@<id>" so no schema change is needed. */
+export const AVATAR_ART = [
+  "fox", "bear", "cat", "owl", "frog", "panda", "robot", "sun", "ghost", "bunny", "alien", "penguin",
+] as const;
+export type AvatarArtId = (typeof AVATAR_ART)[number];
+
+export function avatarArtId(avatarEmoji: string | null | undefined): AvatarArtId | null {
+  const id = avatarEmoji?.startsWith("@") ? avatarEmoji.slice(1) : null;
+  return (AVATAR_ART as readonly string[]).includes(id ?? "") ? (id as AvatarArtId) : null;
+}
+
+/** The seeded "Default" profile reads better as the viewer's own ("Me"). */
+export function profileName(name: string, me: string) {
+  return name === "Default" ? me : name;
+}
+
 export interface AvatarInput {
   avatarEmoji?: string | null;
   avatarColor?: string | null;

@@ -67,7 +67,7 @@ export async function POST(request: Request) {
   const { counterparts } = context(workspaceId);
   if (!counterparts.some((m) => m.id === body.counterpart)) return NextResponse.json({ error: "unknown counterpart" }, { status: 400 });
   if (typeof body.date !== "string" || !DATE_RE.test(body.date)) return NextResponse.json({ error: "invalid date" }, { status: 400 });
-  if (typeof body.amount !== "number" || !Number.isFinite(body.amount) || Math.abs(body.amount) > 1e9) return NextResponse.json({ error: "invalid amount" }, { status: 400 });
+  if (typeof body.amount !== "number" || !Number.isFinite(body.amount) || body.amount < 0 || body.amount > 1e9) return NextResponse.json({ error: "invalid amount" }, { status: 400 });
   const id = addSettleEntry(workspaceId, body.counterpart as string, body.date, body.amount);
   return NextResponse.json({ id });
 }

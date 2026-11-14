@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-/** Pill tabs (text only, the chosen one tinted): one choice from a few. Arrow keys move between options, as in a radio group. */
+/** Pill tabs (text only, the chosen one filled with the accent): one choice from a few. Arrow keys move between options, as in a radio group. */
 export function Segmented<T extends string | number>({
   options,
   value,
@@ -45,8 +45,8 @@ export function Segmented<T extends string | number>({
             data-value={o.value}
             onClick={() => onChange(o.value)}
             className={cn(
-              "min-h-11 rounded-full px-3.5 text-sm font-medium tabular-nums transition-[background-color,color] duration-150 focus-visible:outline-2 focus-visible:outline-ring",
-              selected ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+              "min-h-11 rounded-full px-3.5 text-sm font-medium tabular-nums transition-[background-color,color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+              selected ? "bg-primary font-semibold text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
             )}
           >
             {o.label}

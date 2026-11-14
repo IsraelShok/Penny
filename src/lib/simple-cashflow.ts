@@ -9,6 +9,17 @@ export function cashflowMonth(startDay: number, offset: number, today = new Date
   return { from, to };
 }
 
+/**
+ * Tracked categories as rows: every one the user picked (₪0 ones too, never dropped), biggest spend first,
+ * then biggest expectation. The first `top` get their own row; the rest go under one "more" row.
+ */
+export function trackedRows<T extends { spent: number; expected: number }>(tracked: T[], top = 6) {
+  const sorted = [...tracked].sort((a, b) => b.spent - a.spent || b.expected - a.expected);
+  // Never fold a single leftover: "1 more category" is no shorter than the row itself.
+  const cut = sorted.length > top + 1 ? top : sorted.length;
+  return { shown: sorted.slice(0, cut), rest: sorted.slice(cut) };
+}
+
 export interface Item { id: number; date: string; description: string; amount: number }
 interface Line { spent: number; expected: number; items: Item[] }
 

@@ -139,3 +139,16 @@ export function listAccountBalances(workspaceId: number) {
     )
     .all(workspaceId) as { id: number; provider: string; accountNumber: string; balance: number; updatedAt: string }[];
 }
+
+/** Per-asset daily values, oldest first. */
+export function assetSnapshots(workspaceId: number): Map<number, { date: string; valueIls: number }[]> {
+  const rows = getDb()
+    .prepare(
+      `SELECT s.asset_id as assetId, s.date, s.value_ils as valueIls FROM asset_snapshots s JOIN assets a ON a.id = s.asset_id
+       WHERE a.workspace_id = ? ORDER BY s.date`
+    )
+    .all(workspaceId) as { assetId: number; date: string; valueIls: number }[];
+  const out = new Map<number, { date: string; valueIls: number }[]>();
+  for (const r of rows) out.set(r.assetId, [...(out.get(r.assetId) ?? []), { date: r.date, valueIls: r.valueIls }]);
+  return out;
+}

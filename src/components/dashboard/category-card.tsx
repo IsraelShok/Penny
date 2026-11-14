@@ -29,6 +29,25 @@ import {
   Briefcase,
   TrendingUp,
   RotateCcw,
+  Landmark,
+  Building,
+  Zap,
+  Droplet,
+  Flame,
+  Wifi,
+  Smartphone,
+  Hammer,
+  Sofa,
+  Pill,
+  Stethoscope,
+  Fuel,
+  Car,
+  Bike,
+  Shirt,
+  BookOpen,
+  Percent,
+  PiggyBank,
+  Dumbbell,
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -60,6 +79,25 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   briefcase: Briefcase,
   "trending-up": TrendingUp,
   "rotate-ccw": RotateCcw,
+  landmark: Landmark,
+  building: Building,
+  zap: Zap,
+  droplet: Droplet,
+  flame: Flame,
+  wifi: Wifi,
+  smartphone: Smartphone,
+  hammer: Hammer,
+  sofa: Sofa,
+  pill: Pill,
+  stethoscope: Stethoscope,
+  fuel: Fuel,
+  car: Car,
+  bike: Bike,
+  shirt: Shirt,
+  "book-open": BookOpen,
+  percent: Percent,
+  "piggy-bank": PiggyBank,
+  dumbbell: Dumbbell,
 };
 
 interface CategoryCardProps {
@@ -101,7 +139,7 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
                 {parentName}
               </div>
             )}
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <span className="font-medium leading-tight">{categoryName}</span>
               {data.isParent && data.childCount != null && (
                 <span
@@ -140,7 +178,7 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
                 </span>
               )}
             </div>
-            <div className="mt-0.5 truncate text-xs text-muted-foreground">
+            <div className="mt-0.5 truncate text-xs text-muted-foreground" title={`${data.transactionCount} ${t(data.transactionCount === 1 ? "transactionsOne" : "transactionsOther")}${data.topMerchant ? ` · ${t("mostlyMerchant", { merchant: data.topMerchant })}` : ""}`}>
               {data.transactionCount}{" "}
               {data.transactionCount === 1
                 ? t("transactionsOne")

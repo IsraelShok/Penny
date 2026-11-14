@@ -76,7 +76,7 @@ function FeesCard({ assets, years }: { assets: Asset[]; years: number | null }) 
               return (
                 <li key={a.id} className="flex items-baseline justify-between gap-3 py-2.5 text-footnote">
                   <span className="min-w-0">
-                    <span className="block truncate font-medium">{a.name}</span>
+                    <span title={a.name} className="block truncate font-medium">{a.name}</span>
                     <span className="text-caption text-muted-foreground">
                       {missing
                         ? t("feesMissing")
@@ -143,7 +143,7 @@ function DebtsCard({ assets }: { assets: Asset[] }) {
                   <div className="flex items-baseline justify-between gap-3">
                   <span className="min-w-0">
                     <span className="flex items-center gap-2 font-medium">
-                      <span className="truncate">{d.name}</span>
+                      <span className="truncate" title={d.name}>{d.name}</span>
                       {i === 0 && d.interestRate != null && <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-caption">{t("payFirst")}</span>}
                     </span>
                     <span className="text-caption text-muted-foreground">

@@ -1,8 +1,10 @@
 "use client";
 
+import { PetMini } from "@/components/home/pet-card";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { SETTINGS_GROUPS } from "@/components/settings/settings-sidebar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Lock, PanelLeftIcon, Search } from "lucide-react";
 import { getActivity, getHome } from "@/lib/api";
@@ -19,6 +21,7 @@ import {
   ArrowLeftRight,
   LayoutGrid,
   Settings as SettingsIcon,
+  ChevronRight,
 } from "lucide-react";
 import {
   Sidebar,
@@ -26,6 +29,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -33,6 +37,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { IconButton } from "@/components/ui/icon-button";
+import { A11yButton } from "@/components/a11y/a11y-menu";
 import { usePlan } from "@/hooks/use-plan";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 
@@ -64,12 +69,9 @@ export const NAV: NavDef[] = [
     labelKey: "more",
     Icon: LayoutGrid,
     // Calculators and the occasional tools; the hub stays lit while you use one.
-    match: (p: string) => ["/more", "/calculators", "/recap", "/ask", "/wellbeing", "/checkin", "/help", "/control", "/markets"].some((r) => p.startsWith(r)),
+    match: (p: string) => ["/more", "/calculators", "/recap", "/ask", "/wellbeing", "/help", "/control", "/markets"].some((r) => p.startsWith(r)),
   },
 ];
-
-/** Simple mode is one scrolling page, like RiseUp: Home only. */
-export const SIMPLE_NAV = new Set(["/"]);
 
 /** Pages that are not in the menu but still found by search. */
 export const SEARCH_PAGES: NavDef[] = [
@@ -110,9 +112,23 @@ export function AppSidebar() {
   }, [queryClient]);
   const { plan } = usePlan();
   // Settings lives as an icon by the workspace, but the wheel still reaches it last.
-  const nav = plan.simpleMode ? NAV.filter((n) => SIMPLE_NAV.has(n.href)) : NAV;
-  const pages = [...nav, ...FOOTER_NAV];
+  const pages = [...NAV, ...FOOTER_NAV];
   const lastWheel = useRef(0);
+  const tc = useTranslations("common");
+  const tSet = useTranslations("settings.sidebar");
+  const tRoot = useTranslations();
+  // The gear swaps the menu to the settings sections; settings routes always show them.
+  const onSettings = pathname.startsWith("/settings");
+  const [settingsMenu, setSettingsMenu] = useState(onSettings);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const focusAfterSwap = useRef(false);
+  useEffect(() => { if (onSettings) setSettingsMenu(true); }, [onSettings]);
+  useEffect(() => {
+    if (!focusAfterSwap.current) return;
+    focusAfterSwap.current = false;
+    menuRef.current?.querySelector<HTMLElement>("a, button")?.focus();
+  }, [settingsMenu]);
+  const swapMenu = (to: boolean) => { focusAfterSwap.current = true; setSettingsMenu(to); };
 
   // Wheel over the menu steps through the pages, top to bottom.
   function onWheel(e: React.WheelEvent) {
@@ -120,8 +136,10 @@ export function AppSidebar() {
     const now = e.timeStamp;
     if (now - lastWheel.current < WHEEL_COOLDOWN_MS) return;
     lastWheel.current = now;
-    const i = pages.findIndex((p) => p.match(pathname));
-    const next = pages[Math.min(pages.length - 1, Math.max(0, (i < 0 ? 0 : i) + (e.deltaY > 0 ? 1 : -1)))];
+    // On the settings menu the wheel steps through its sections instead.
+    const list = settingsMenu ? SETTINGS_GROUPS.flatMap((g) => g.items) : pages;
+    const i = list.findIndex((p) => p.match(pathname));
+    const next = list[Math.min(list.length - 1, Math.max(0, (i < 0 ? 0 : i) + (e.deltaY > 0 ? 1 : -1)))];
     if (next && !next.match(pathname)) router.push(next.href);
   }
 
@@ -149,7 +167,42 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        {[{ label: null, items: plan.simpleMode ? [] : nav }].map((group) => (
+        <div ref={menuRef} className="contents">
+        {settingsMenu ? <>
+          <SidebarGroup className="pb-0">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => swapMenu(false)} tooltip={tc("back")}>
+                  <ChevronRight className="ltr:rotate-180" aria-hidden />
+                  <span>{tc("back")}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+          <h2 className="sr-only">{t("settings")}</h2>
+          {SETTINGS_GROUPS.map((group) => (
+            <SidebarGroup key={group.titleKey} className="py-0">
+              <SidebarGroupLabel>{tSet(group.titleKey)}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => {
+                    const label = item.labelKey.includes(".") ? tRoot(item.labelKey) : tSet(item.labelKey);
+                    const active = onSettings && item.match(pathname);
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          render={<Link href={item.href} onClick={() => setOpenMobile(false)} aria-current={active ? "page" : undefined}><item.Icon /><span>{label}</span></Link>}
+                          isActive={active}
+                          tooltip={label}
+                        />
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
+        </> : [{ label: null, items: NAV }].map((group) => (
         <SidebarGroup key="main">
           <SidebarGroupContent>
             <SidebarMenu>
@@ -174,9 +227,11 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         ))}
+        </div>
       </SidebarContent>
 
       <SidebarFooter>
+        <PetMini inSidebar />
         <WorkspaceSwitcher />
         {/* Quick tools: lock, collapse and settings. One row open, one column collapsed. Privacy mode lives in Settings. */}
         <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
@@ -193,6 +248,7 @@ export function AppSidebar() {
               <Lock className="size-4" aria-hidden />
             </IconButton>
           )}
+          <A11yButton />
           <IconButton label={t("toggleSidebar")} size="icon-sm" variant="ghost" onClick={toggleSidebar}>
             <PanelLeftIcon className="size-4 rtl:rotate-180" aria-hidden />
           </IconButton>
@@ -201,8 +257,8 @@ export function AppSidebar() {
             variant={pathname.startsWith("/settings") ? "secondary" : "ghost"}
             size="icon-sm"
             className="ms-auto group-data-[collapsible=icon]:ms-0"
-            nativeButton={false}
-            render={<Link href="/settings" />}
+            aria-expanded={settingsMenu}
+            onClick={() => swapMenu(!settingsMenu)}
           >
             <SettingsIcon className="size-4" aria-hidden />
           </IconButton>

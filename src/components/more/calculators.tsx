@@ -1,0 +1,183 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Banknote, Calculator, Car, CreditCard, Flame, House, Landmark, LifeBuoy, PieChart, Percent, PiggyBank, Plane, Scale, Target, TrendingUp, type LucideIcon } from "lucide-react";
+import { CardShell } from "@/components/home/card-shell";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { shekels } from "@/lib/money";
+import { IL } from "@/lib/il-defaults";
+import { inflation, leaseVsBuy, loan, mortgage, savingsGoal, split503020, type CalcSlug } from "@/lib/calculators";
+import { projectBalance, debtPayoff } from "@/lib/plan";
+import { fiNumber, yearsToTarget } from "@/lib/fi";
+import { netSalary } from "@/lib/net-salary";
+
+type N = (k: string) => number;
+/** head: [message key, values]; rows: [label key, already-formatted value]. */
+type Out = { head: [string, Record<string, string | number>]; rows: [string, string][] };
+type Calc = { group: Group; Icon: LucideIcon; fields: [string, string, ("%" | undefined)?][]; run: (n: N, money: (x: number) => string) => Out };
+
+export const GROUPS = ["savings", "loans", "income", "planning"] as const;
+type Group = (typeof GROUPS)[number];
+
+const CALCS: Record<CalcSlug, Calc> = {
+  compound: { group: "savings", Icon: TrendingUp, fields: [["initial", "50000"], ["monthly", "1000"], ["years", "20"], ["ret", "5", "%"]], run: (n, m) => {
+    const end = projectBalance(n("initial"), n("monthly"), n("years"), n("ret") / 100, 0, 0);
+    const dep = n("initial") + n("monthly") * Math.round(n("years") * 12);
+    return { head: ["compoundHead", { amount: m(end), years: n("years") }], rows: [["deposited", m(dep)], ["growth", m(end - dep)]] };
+  } },
+  fees: { group: "savings", Icon: Percent, fields: [["balance", "300000"], ["monthly", "2500"], ["years", "25"], ["ret", "5", "%"], ["feeDeposit", "1.5", "%"], ["feeBalance", "0.3", "%"]], run: (n, m) => {
+    const free = projectBalance(n("balance"), n("monthly"), n("years"), n("ret") / 100, 0, 0);
+    const paid = projectBalance(n("balance"), n("monthly"), n("years"), n("ret") / 100, n("feeDeposit"), n("feeBalance"));
+    return { head: ["feesHead", { amount: m(free - paid), years: n("years") }], rows: [["withFees", m(paid)], ["noFees", m(free)]] };
+  } },
+  inflation: { group: "savings", Icon: Banknote, fields: [["amount", "100000"], ["infl", "2.5", "%"], ["years", "10"]], run: (n, m) => {
+    const r = inflation(n("amount"), n("infl"), n("years"));
+    return { head: ["inflationHead", { amount: m(n("amount")), real: m(r.realValue), years: n("years") }], rows: [["needed", m(r.needed)]] };
+  } },
+  goal: { group: "savings", Icon: Target, fields: [["target", "100000"], ["saved", "10000"], ["months", "36"], ["ret", "3", "%"]], run: (n, m) => {
+    const pm = savingsGoal(n("target"), n("saved"), n("months"), n("ret"));
+    return { head: ["goalHead", { amount: m(pm), months: n("months") }], rows: [["deposited", m(pm * Math.max(1, Math.round(n("months"))))]] };
+  } },
+  mortgage: { group: "loans", Icon: House, fields: [["primeAmount", "500000"], ["primeRate", String(IL.typicalMortgageRate), "%"], ["fixedAmount", "500000"], ["fixedRate", "4.8", "%"], ["otherAmount", "0"], ["otherRate", "3", "%"], ["years", "25"]], run: (n, m) => {
+    const r = mortgage(["prime", "fixed", "other"].map((t) => ({ amount: n(`${t}Amount`), ratePct: n(`${t}Rate`), years: n("years") })));
+    return { head: ["paymentHead", { amount: m(r.monthly) }], rows: [["totalPaid", m(r.total)], ["interest", m(r.interest)]] };
+  } },
+  loan: { group: "loans", Icon: Landmark, fields: [["amount", "50000"], ["rate", "6", "%"], ["years", "5"]], run: (n, m) => {
+    const r = loan({ amount: n("amount"), ratePct: n("rate"), years: n("years") });
+    return { head: ["paymentHead", { amount: m(r.monthly) }], rows: [["totalPaid", m(r.total)], ["interest", m(r.interest)]] };
+  } },
+  credit: { group: "loans", Icon: CreditCard, fields: [["balance", "15000"], ["rate", "12", "%"], ["payment", "1000"]], run: (n, m) => {
+    const r = debtPayoff(n("balance"), n("rate"), n("payment"));
+    return r ? { head: ["creditHead", { months: r.months }], rows: [["interest", m(r.interest)]] } : { head: ["creditNever", {}], rows: [] };
+  } },
+  leaseBuy: { group: "loans", Icon: Car, fields: [["price", "150000"], ["residual", "55", "%"], ["years", "3"], ["rate", "5", "%"], ["leaseMonthly", "2400"], ["leaseUpfront", "10000"]], run: (n, m) => {
+    const r = leaseVsBuy({ price: n("price"), residualPct: n("residual"), years: n("years"), ratePct: n("rate"), leaseMonthly: n("leaseMonthly"), leaseUpfront: n("leaseUpfront") });
+    return { head: [r.diff > 0 ? "buyCheaper" : "leaseCheaper", { amount: m(Math.abs(r.diff)), years: n("years") }], rows: [["buyTotal", m(r.buy)], ["leaseTotal", m(r.lease)], ["buyMonthly", m(r.buyMonthly)]] };
+  } },
+  net: { group: "income", Icon: Calculator, fields: [["gross", "15000"], ["points", "2.25"], ["pension", "6", "%"], ["studyFund", "2.5", "%"]], run: (n, m) => {
+    const r = netSalary({ gross: n("gross"), sex: "man", extraPoints: n("points") - IL.creditPoints.man, pensionRate: n("pension") / 100, studyFundRate: n("studyFund") / 100 });
+    return { head: ["netHead", { amount: m(r.net) }], rows: [["incomeTax", m(r.incomeTax)], ["bituach", m(r.bituach)], ["pensionDed", m(r.pension)], ["studyFundDed", m(r.studyFund)]] };
+  } },
+  budget: { group: "income", Icon: PieChart, fields: [["net", "15000"]], run: (n, m) => {
+    const s = split503020(n("net"));
+    return { head: ["budgetHead", { amount: m(s.savings) }], rows: [["needs", m(s.needs)], ["wants", m(s.wants)], ["savings", m(s.savings)]] };
+  } },
+  emergency: { group: "planning", Icon: LifeBuoy, fields: [["expenses", "12000"], ["months", "6"], ["saved", "20000"]], run: (n, m) => {
+    const target = n("expenses") * n("months");
+    return { head: ["emergencyHead", { amount: m(target) }], rows: [["gap", m(Math.max(0, target - n("saved")))], ["covered", n("expenses") > 0 ? (n("saved") / n("expenses")).toFixed(1) : "0"]] };
+  } },
+  fire: { group: "planning", Icon: Flame, fields: [["spend", "12000"], ["saved", "200000"], ["monthly", "4000"], ["ret", "5", "%"], ["withdraw", "4", "%"]], run: (n, m) => {
+    const target = fiNumber(n("spend") * 12, n("withdraw") / 100);
+    const y = yearsToTarget(n("saved"), n("monthly"), n("ret") / 100, target);
+    return { head: [y == null ? "fireNever" : "fireHead", { amount: m(target), years: y == null ? 0 : Math.ceil(y) }], rows: [["fireTarget", m(target)]] };
+  } },
+};
+
+/** Calculators that already live on the investments page. */
+const ELSEWHERE = [
+  { key: "rentBuy", Icon: Scale, group: "planning" },
+  { key: "investTools", Icon: PiggyBank, group: "savings" },
+  { key: "vacation", Icon: Plane, group: "savings", href: "/journey#vacation" },
+] as const;
+
+/** The order a household meets money decisions in: month → safety → debt → goals → invest → big moves → freedom. */
+const STAGES = [
+  ["month", ["budget", "net"]],
+  ["safety", ["emergency"]],
+  ["debt", ["credit", "loan"]],
+  ["goals", ["goal", "inflation", "vacation"]],
+  ["invest", ["compound", "fees", "investTools"]],
+  ["decisions", ["mortgage", "rentBuy", "leaseBuy"]],
+  ["freedom", ["fire"]],
+] as const;
+
+function tool(key: string): { Icon: LucideIcon; href: string } {
+  const e = ELSEWHERE.find((x) => x.key === key);
+  return e ? { Icon: e.Icon, href: "href" in e ? e.href : "/investments?tab=tools" } : { Icon: CALCS[key as CalcSlug].Icon, href: `/calculators/${key}` };
+}
+
+export function CalculatorTiles() {
+  const t = useTranslations("calculators");
+  return (
+    <section aria-labelledby="calc-title" className="space-y-4">
+      <div className="px-1">
+        <h2 id="calc-title" className="text-title-3 font-semibold">{t("title")}</h2>
+        <p className="mt-0.5 text-footnote text-pretty text-muted-foreground">{t("stagesIntro")}</p>
+      </div>
+      <ol className="space-y-6">
+        {STAGES.map(([stage, keys], i) => (
+          <li key={stage} aria-labelledby={`stage-${stage}`}>
+            <div className="mb-3 flex items-start gap-3 px-1">
+              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-footnote font-semibold text-primary-foreground tabular-nums" aria-hidden>{i + 1}</span>
+              <div className="min-w-0">
+                <h3 id={`stage-${stage}`} className="text-headline font-semibold">
+                  <span className="sr-only">{t("stageN", { n: i + 1 })} </span>{t(`stage_${stage}`)}
+                </h3>
+                <p className="text-footnote text-pretty text-muted-foreground">{t(`stage_${stage}_why`)}</p>
+              </div>
+            </div>
+            <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {keys.map((key) => {
+                const { Icon, href } = tool(key);
+                return (
+                  <li key={key}>
+                    <Link href={href} className="flex h-full min-h-14 items-center gap-3 rounded-2xl bg-card p-4 transition-[background-color] duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary" aria-hidden><Icon className="size-5" /></span>
+                      <span className="min-w-0">
+                        <span className="block font-semibold">{t(`${key}_title`)}</span>
+                        <span className="mt-0.5 block text-footnote text-pretty text-muted-foreground">{t(`${key}_q`)}</span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+export function CalculatorView({ slug }: { slug: CalcSlug }) {
+  const t = useTranslations("calculators");
+  const locale = useLocale();
+  const c = CALCS[slug];
+  const [v, setV] = useState<Record<string, string>>(() => Object.fromEntries(c.fields.map(([k, d]) => [k, d])));
+  // Every field is min="0": empty, non-numeric, negative and overflow (1e400) all count as 0, so no NaN/Infinity reaches the text.
+  const n: N = (k) => { const x = Number(v[k]); return Number.isFinite(x) ? Math.max(0, x) : 0; };
+  const out = c.run(n, (x) => shekels(Number.isFinite(x) ? x : 0, locale));
+  return (
+    <CardShell label={t(`${slug}_title`)}>
+      <p className="text-caption text-pretty text-muted-foreground">{t(`${slug}_explain`, { year: IL.year, prime: IL.primeRate })}</p>
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+        {c.fields.map(([k, , suffix]) => (
+          <div key={k} className="space-y-1.5">
+            <Label htmlFor={`calc-${k}`}>{t(`f_${k}`)}</Label>
+            <div className="relative">
+              <Input id={`calc-${k}`} type="number" inputMode="decimal" step="any" min="0" dir="ltr" value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} className={suffix ? "pr-8" : undefined} />
+              {suffix && <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-footnote text-muted-foreground">{suffix}</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-6" aria-live="polite">
+        <p className="figure text-[1.5rem] leading-tight text-pretty">{t(out.head[0], out.head[1])}</p>
+        {out.rows.length > 0 && (
+          <dl className="mt-3 space-y-2 text-footnote tabular-nums">
+            {out.rows.map(([k, val]) => (
+              <div key={k} className="flex items-baseline justify-between gap-3">
+                <dt className="text-muted-foreground">{t(`r_${k}`)}</dt>
+                <dd className="font-semibold" dir="ltr">{val}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+      <p className="mt-5 text-caption text-muted-foreground">{t("notAdvice")}</p>
+    </CardShell>
+  );
+}

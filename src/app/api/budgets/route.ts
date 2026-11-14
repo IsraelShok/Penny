@@ -13,12 +13,12 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json()) as {
+  const body = ((await request.json().catch(() => null)) ?? {}) as {
     categoryId: number;
     amount?: number | null;
   };
 
-  if (!body.categoryId) {
+  if (!Number.isSafeInteger(body.categoryId) || body.categoryId <= 0) {
     return NextResponse.json(
       { error: "categoryId is required" },
       { status: 400 }
@@ -30,7 +30,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true });
   }
 
-  if (body.amount < 0) {
+  if (typeof body.amount !== "number" || !Number.isFinite(body.amount) || body.amount < 0) {
     return NextResponse.json(
       { error: "amount must be non-negative" },
       { status: 400 }

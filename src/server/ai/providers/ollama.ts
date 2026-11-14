@@ -67,7 +67,7 @@ export class OllamaProvider implements AIProvider {
   }
 }
 
-function parseResponse(
+export function parseResponse(
   text: string,
   validCategories: string[],
   allowProposals: boolean

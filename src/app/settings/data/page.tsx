@@ -23,8 +23,9 @@ import {
 } from "@/lib/api";
 import { toast } from "sonner";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
-import { WorkspaceDangerCard } from "@/components/settings/workspace-controls";
 import { StatementImportCard } from "@/components/settings/statement-import-card";
+import { FolderImportCard } from "@/components/settings/folder-import-card";
+import { WipeCard } from "@/components/settings/wipe-card";
 import { BANK_PROVIDERS } from "@/lib/types";
 import { translateProviderName } from "@/lib/i18n-data";
 
@@ -54,9 +55,13 @@ export default function DataSettingsPage() {
         </div>
       </SettingCard>
       <StatementImportCard />
+      <FolderImportCard />
       <ExcludedMerchantsCard />
-      <DangerZone />
-      <WorkspaceDangerCard />
+      {/* The one place to delete data; Privacy links here. */}
+      <section id="danger" className="scroll-mt-20 space-y-7">
+        <DangerZone />
+        <WipeCard />
+      </section>
     </SectionShell>
   );
 }
@@ -86,7 +91,7 @@ function DangerZone() {
     },
   });
 
-  const canConfirm = confirmText.trim().toLowerCase() === "delete";
+  const canConfirm = confirmText.trim().toLowerCase() === t("confirmInputPlaceholder").toLowerCase();
 
   return (
     <>
@@ -176,7 +181,7 @@ function DangerZone() {
                 className="text-xs text-muted-foreground"
               >
                 {t("confirmTypePrefix")}{" "}
-                <code className="font-mono">delete</code> {t("confirmTypeSuffix")}
+                <code className="font-mono">{t("confirmInputPlaceholder")}</code> {t("confirmTypeSuffix")}
               </Label>
               <Input
                 id="confirm-input"

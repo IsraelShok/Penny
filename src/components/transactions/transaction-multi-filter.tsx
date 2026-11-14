@@ -20,6 +20,10 @@ interface TransactionMultiFilterProps {
   onSelectAll: () => void;
   onClear: () => void;
   showBulkActions?: boolean;
+  /** Rendered above the bulk actions (e.g. a view switch and search). */
+  header?: React.ReactNode;
+  onOpenChange?: (open: boolean) => void;
+  onListKeyDown?: React.KeyboardEventHandler<HTMLDivElement>;
   children: React.ReactNode;
 }
 
@@ -33,12 +37,15 @@ export function TransactionMultiFilter({
   onSelectAll,
   onClear,
   showBulkActions = true,
+  header,
+  onOpenChange,
+  onListKeyDown,
   children,
 }: TransactionMultiFilterProps) {
   const triggerTitle = `${label}: ${displayValue}`;
 
   return (
-    <Popover>
+    <Popover onOpenChange={onOpenChange}>
       <PopoverTrigger
         className={cn(
           "flex h-8 min-w-[160px] max-w-[220px] items-center justify-between gap-1 rounded-lg border border-input bg-transparent py-2 pe-2 ps-2.5 text-sm transition-colors outline-none select-none hover:bg-accent/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring dark:bg-input/30",
@@ -56,9 +63,10 @@ export function TransactionMultiFilter({
         </div>
         <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-60" />
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 p-0">
+      <PopoverContent align="end" className="flex w-[360px] flex-col overflow-hidden p-0" onKeyDown={onListKeyDown}>
+        {header ? <div className="flex shrink-0 flex-col gap-2 border-b border-border p-2">{header}</div> : null}
         {showBulkActions ? (
-          <div className="flex items-center justify-between border-b border-border px-2 py-1.5">
+          <div className="flex shrink-0 items-center justify-between border-b border-border px-2 py-1.5">
             <IconButton label={selectAllLabel} type="button" size="icon-xs" onClick={onSelectAll}>
               <CheckCheck className="size-3.5" aria-hidden />
             </IconButton>
@@ -67,7 +75,7 @@ export function TransactionMultiFilter({
             </IconButton>
           </div>
         ) : null}
-        <div className="max-h-64 overflow-y-auto p-1">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1">{children}</div>
       </PopoverContent>
     </Popover>
   );
@@ -90,6 +98,7 @@ export function MultiFilterOption({
     <button
       type="button"
       role="checkbox"
+      data-cat-option
       aria-checked={selected}
       onClick={onToggle}
       className={cn(

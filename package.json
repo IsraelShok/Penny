@@ -34,6 +34,7 @@
     "@sergienko4/israeli-bank-scrapers": "9.0.0",
     "@tanstack/react-query": "^5.105.3",
     "better-sqlite3": "13.0.3",
+    "boopface": "0.8.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^14.9.1",

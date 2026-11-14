@@ -56,9 +56,9 @@ export function effectiveOwner(owner: string | null, accountNumber: string, acco
  * Spending per owner, plus who owes whom for shared expenses: split evenly between members,
  * the payer is the account's default owner (a shared or unknown account settles nothing).
  */
-export function ownerSummary(rows: OwnerRow[], accountOwners: AccountOwners, memberIds: string[]): OwnerSummary {
+export function ownerSummary(rows: OwnerRow[], accountOwners: AccountOwners, memberIds: string[], payingIds = memberIds): OwnerSummary {
   const byOwner: Record<string, number> = {};
-  const net: Record<string, number> = Object.fromEntries(memberIds.map((m) => [m, 0]));
+  const net: Record<string, number> = Object.fromEntries(payingIds.map((m) => [m, 0])); // kids don't split shared costs
   let unset = 0;
   for (const r of rows) {
     const spent = -r.amount;
@@ -66,9 +66,9 @@ export function ownerSummary(rows: OwnerRow[], accountOwners: AccountOwners, mem
     if (owner == null || (owner !== SHARED && !memberIds.includes(owner))) { unset += spent; continue; }
     byOwner[owner] = (byOwner[owner] ?? 0) + spent;
     const payer = accountOwners[r.accountNumber];
-    if (owner === SHARED && payer && memberIds.includes(payer) && memberIds.length > 1) {
+    if (owner === SHARED && payer && payingIds.includes(payer) && payingIds.length > 1) {
       net[payer] += spent;
-      for (const m of memberIds) net[m] -= spent / memberIds.length;
+      for (const m of payingIds) net[m] -= spent / payingIds.length;
     }
   }
   // Greedy settle: biggest debtor pays biggest creditor until everyone is even.

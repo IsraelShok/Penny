@@ -3,7 +3,7 @@ import { todayState } from "@/lib/today-state";
 
 const ready = {
   pending: false, failed: false, hasCash: true, balance: 100,
-  connected: true, checkedThisWeek: true, needsReview: false, hasSuggestions: false,
+  connected: true, needsReview: false, hasSuggestions: false,
 };
 
 describe("today: trustworthy next action", () => {
@@ -22,14 +22,13 @@ describe("today: trustworthy next action", () => {
     expect(todayState({ ...ready, hasCash: false })).toBe("loading");
   });
   it("offers one action in priority order", () => {
-    expect(todayState({ ...ready, checkedThisWeek: false, needsReview: true, hasSuggestions: true })).toBe("checkin");
     expect(todayState({ ...ready, needsReview: true, hasSuggestions: true })).toBe("review");
     expect(todayState({ ...ready, hasSuggestions: true })).toBe("suggestions");
     expect(todayState(ready)).toBe("done");
   });
-  it("prioritizes a projected shortfall over a routine check-in or all done", () => {
+  it("prioritizes a projected shortfall over review or all done", () => {
     expect(todayState({ ...ready, balance: -100 })).toBe("cash");
-    expect(todayState({ ...ready, balance: -100, checkedThisWeek: false })).toBe("cash");
+    expect(todayState({ ...ready, balance: -100, needsReview: true })).toBe("cash");
   });
   it("accepts a zero balance as data, not a missing account", () => {
     expect(todayState({ ...ready, balance: 0 })).toBe("done");

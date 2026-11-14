@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import { useA11y } from "@/components/a11y/a11y-menu";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { BankStep } from "@/components/setup/bank-step";
@@ -69,7 +70,7 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
   }
 
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion={useA11y().prefs.stopMotion ? "always" : "user"}>
     <div className="relative min-h-screen bg-background">
       <header className="relative z-10 mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-6 md:px-8">
         <BrandMark />

@@ -2,7 +2,7 @@ const DAY = 86_400_000;
 const days = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / DAY);
 
 /**
- * YNAB-style Age of Money: income fills buckets in date order, each expense spends from the oldest bucket first.
+ * Age of Money: income fills buckets in date order, each expense spends from the oldest bucket first.
  * Returns the amount-weighted average age (days) of the last 10 expenses, or null when none could be aged.
  * shortcut: money held before the first transaction is unknown, so ages are a floor; pass ~90 days of data.
  */

@@ -20,9 +20,9 @@ export async function PUT(
 ) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const { id } = await params;
-  const body = (await request.json()) as { categoryId: number };
+  const body = ((await request.json().catch(() => null)) ?? {}) as { categoryId: number };
 
-  if (!body.categoryId) {
+  if (!Number.isSafeInteger(body.categoryId) || body.categoryId <= 0) {
     return NextResponse.json(
       { error: "categoryId is required" },
       { status: 400 }
@@ -75,7 +75,7 @@ export async function PATCH(
 ) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const { id } = await params;
-  const body = (await request.json().catch(() => ({}))) as {
+  const body = ((await request.json().catch(() => null)) ?? {}) as {
     kind?: unknown;
     approve?: unknown;
     tags?: unknown;

@@ -23,8 +23,9 @@ import {
   testBankConnection,
   updateIntegrationSettings,
 } from "@/lib/api";
+import { useSyncErrorText } from "@/hooks/use-sync-error-text";
 import { TwoFactorSection } from "@/components/setup/two-factor-section";
-import { translateProviderBlurb, translateProviderName } from "@/lib/i18n-data";
+import { translateCredentialField, translateProviderBlurb, translateProviderName } from "@/lib/i18n-data";
 import { AlertTriangle, Loader2, Check, PlugZap, Unplug, X } from "lucide-react";
 
 export interface BankDetailSheetProps {
@@ -156,6 +157,7 @@ function CredentialsForm({
 }) {
   const t = useTranslations("settings.bankDetail");
   const tSetup = useTranslations("setup");
+  const errorText = useSyncErrorText();
   const tCommon = useTranslations("common");
   const tBanks = useTranslations("banks");
   const name = translateProviderName(info.id, info.name, tBanks);
@@ -244,7 +246,7 @@ function CredentialsForm({
       const res = await testBankConnection(info.id, {
         ...(testId != null ? { credentialId: testId } : { credentials }),
       });
-      setResult(res);
+      setResult(res.success ? { ...res, message: tSetup("bankConnectionWorks") } : { ...res, message: errorText(res.message).message });
     } catch (err) {
       setResult({
         success: false,
@@ -322,13 +324,14 @@ function CredentialsForm({
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {t("credentialsHeading")}
       </div>
-      {info.credentialFields.map((field) => {
+      {info.credentialFields.map((rawField) => {
+        const field = { ...rawField, ...translateCredentialField(info.id, rawField, tBanks) };
         const value = credentials[field.key] ?? "";
         const tooShort =
           field.exactLength != null &&
           value.length > 0 &&
           value.length !== field.exactLength;
-        const placeholder = field.placeholder ?? field.label;
+        const placeholder = field.placeholder;
         const hint = field.hint;
         return (
           <div key={field.key} className="space-y-1.5">
@@ -348,6 +351,7 @@ function CredentialsForm({
                 setCredentials((prev) => ({ ...prev, [field.key]: next }));
               }}
               placeholder={placeholder}
+              dir={field.numeric || ["email", "tel"].includes(field.type) ? "ltr" : undefined}
               aria-invalid={tooShort || undefined}
             />
             {hint && <p className="text-xs text-muted-foreground">{hint}</p>}

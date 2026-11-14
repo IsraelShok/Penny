@@ -1,5 +1,5 @@
 /**
- * Cash-flow warning signs (moneyplan.co.il): three or more mean a real cash-flow problem,
+ * Cash-flow warning signs: three or more mean a real cash-flow problem,
  * even on a good salary. Pure: the server feeds it facts from transactions and assets.
  */
 export type CashflowSign = "overdraft" | "installments" | "loans" | "lateFees" | "noBuffer" | "deficit";

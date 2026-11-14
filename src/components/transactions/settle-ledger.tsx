@@ -19,7 +19,7 @@ export function SettleLedger() {
   if (q.isError) return <DataState error onRetry={() => void q.refetch()} />;
   if (q.isPending) return <DataState loading />;
   if (!q.data.me || q.data.counterparts.length === 0) {
-    return <p className="rounded-2xl border border-border/60 bg-card p-4 text-sm text-muted-foreground">{q.data.me ? t("noCounterparts") : t("noMe")}</p>;
+    return <p className="card-surface text-sm text-muted-foreground">{q.data.me ? t("noCounterparts") : t("noMe")}</p>;
   }
   return (
     <div className="grid gap-4">
@@ -58,8 +58,8 @@ function CounterpartCard({ c }: { c: SettleCounterpart }) {
   const last = c.entries[0];
 
   return (
-    <section aria-label={name} className="rounded-2xl border border-border/60 bg-card p-4">
-      <h3 className="text-base font-semibold">{name}</h3>
+    <section aria-label={name} className="card-surface">
+      <h3 className="card-title">{name}</h3>
       <p className="mt-1 text-lg tabular-nums" aria-live="polite">{balanceText}</p>
       <p className="text-xs text-muted-foreground">{c.since ? t("since", { date: c.since }) : t("sinceStart")}</p>
 
@@ -92,7 +92,7 @@ function CounterpartCard({ c }: { c: SettleCounterpart }) {
         <ul className="mt-3 grid gap-1 text-sm">
           {c.lines.slice(0, 10).map((l, i) => (
             <li key={i} className="flex justify-between gap-3">
-              <span className="truncate"><span className="tabular-nums text-xs text-muted-foreground" dir="ltr">{l.date}</span> {l.kind === "support" ? t("supportLine") : l.description}</span>
+              <span className="truncate"><span className="tabular-nums text-xs text-muted-foreground" dir="ltr">{l.date}</span> {l.kind === "support" ? t("supportLine") : l.kind === "carry" ? t("carryLine") : l.description}</span>
               <span className="tabular-nums text-muted-foreground">{l.amount > 0 ? t("lineToYou", { amount: money(l.amount) }) : t("lineFromYou", { amount: money(l.amount) })}</span>
             </li>
           ))}

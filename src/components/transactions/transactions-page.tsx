@@ -1,4 +1,5 @@
 "use client";
+import { TransactionsHero } from "@/components/ui/page-hero";
 
 import { DataState } from "@/components/ui/data-state";
 import { Segmented } from "@/components/ui/segmented";
@@ -9,9 +10,8 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { PageHeader } from "@/components/layout/app-shell";
 import { TransactionsTable } from "@/components/dashboard/transactions-table";
-import { PeriodSelector } from "@/components/dashboard/period-selector";
+import { monthKey } from "@/components/ui/month-nav";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
-import { KpiCards } from "./kpi-cards";
 import { WidgetsRow } from "./widgets-row";
 import { ReviewInbox } from "./review-inbox";
 import { CashWalletCard } from "./cash-wallet-card";
@@ -19,7 +19,11 @@ import { OwnerSummary } from "./owner-summary";
 import { SettleLedger } from "./settle-ledger";
 import { KidSummary } from "./kid-summary";
 import { useHousehold } from "@/hooks/use-household";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@/components/ui/button";
+import { TransactionSheet } from "./transaction-sheet";
+import type { TransactionWithCategory } from "@/lib/types";
 import { getOwners, getTagReport } from "@/lib/api";
 import {
   getCategories,
@@ -35,7 +39,6 @@ import {
   type TransactionSortField,
 } from "@/lib/transaction-sort";
 import {
-  addMonths,
   formatMonthLabel,
   getMonthRange,
 } from "@/lib/formatters";
@@ -62,6 +65,9 @@ export function TransactionsPage() {
   const tTags = useTranslations("tags");
   const { household } = useHousehold();
   const members = household.members;
+  const tManual = useTranslations("manualTxn");
+  // null = closed, "new" = add sheet, a row = edit sheet. ?add=1 (home quick-add) opens the add sheet.
+  const [sheet, setSheet] = useState<TransactionWithCategory | "new" | null>(() => (params.get("add") === "1" ? "new" : null));
 
   const filterOptions: { value: TransactionKindFilter; label: string }[] = [
     { value: "all", label: t("filterAll") },
@@ -137,6 +143,9 @@ export function TransactionsPage() {
   });
 
   const monthLabel = formatMonthLabel(selectedDate, locale);
+  const noData = transactionsQuery.data?.total === 0 && !search && !categoryFilter.length && !accountFilter.length && !tagFilter && kind === "all";
+  // The table carries the desktop "+" button; keep one in the header when it is not shown.
+  const headerAdd = view !== "all" || !!kidFilter || noData;
 
   const summaryInitialLoading =
     summaryQuery.isPending && summaryQuery.data === undefined;
@@ -147,17 +156,27 @@ export function TransactionsPage() {
     <>
       <PageHeader
         title={t("pageTitle")}
-        meta={monthLabel}
+        largeTitle={false}
         actions={
-          <PeriodSelector
-            label={monthLabel}
-            onPrev={() => setSelectedDate((d) => addMonths(d, -1))}
-            onNext={() => setSelectedDate((d) => addMonths(d, 1))}
-          />
+          <div className="flex items-center gap-2">
+            {headerAdd && (
+              <IconButton label={tManual("addTitle")} variant="outline" className="hidden md:inline-flex" onClick={() => setSheet("new")}>
+                <Plus className="size-4" aria-hidden />
+              </IconButton>
+            )}
+          </div>
         }
       />
 
-      <div className="space-y-6 px-4 pb-8 pt-3 md:px-6 lg:px-8">
+      <TransactionSheet open={sheet !== null} onOpenChange={(o) => !o && setSheet(null)} txn={sheet === "new" ? null : sheet} members={members} />
+      {/* Mobile add button floats above the dock (dock is ~76px + safe area). */}
+      <Button aria-label={tManual("addTitle")} onClick={() => setSheet("new")}
+        className="fixed bottom-[calc(88px+env(safe-area-inset-bottom))] end-4 z-40 h-14 rounded-full px-5 shadow-lg md:hidden">
+        <Plus className="size-5" aria-hidden />{tManual("add")}
+      </Button>
+      <div className="space-y-6 px-4 pb-24 pt-3 md:px-6 md:pb-8 lg:px-8">
+        <TransactionsHero summary={summaryQuery.data} loading={summaryInitialLoading} error={summaryQuery.isError} onRetry={() => void summaryQuery.refetch()} meta={monthLabel}
+          month={{ value: monthKey(selectedDate), onChange: (m) => setSelectedDate(new Date(`${m}-01T12:00:00`)) }} />
         <CashWalletCard />
         <Segmented
           label={tReview("viewLabel")}
@@ -172,7 +191,7 @@ export function TransactionsPage() {
         {view === "review" ? <ReviewInbox /> : view === "settle" ? <SettleLedger /> :
         summaryQuery.isError || transactionsQuery.isError || integrationsQuery.isError ? <DataState error onRetry={() => { void summaryQuery.refetch(); void transactionsQuery.refetch(); void integrationsQuery.refetch(); }} />
         : summaryInitialLoading || tableInitialLoading || integrationsQuery.isPending ? <DataState loading />
-        : transactionsQuery.data?.total === 0 && !search && !categoryFilter.length && !accountFilter.length && !tagFilter && kind === "all" ? <DataState period={integrationsQuery.data?.some((bank) => bank.lastSyncAt)} />
+        : noData ? <DataState period={integrationsQuery.data?.some((bank) => bank.lastSyncAt)} />
         : <>
         {members.length >= 2 && <OwnerSummary members={members} from={from} to={to} />}
         {members.some((m) => m.role === "child") && (
@@ -184,10 +203,6 @@ export function TransactionsPage() {
           </label>
         )}
         {kidFilter ? <KidSummary member={kidFilter} month={from.slice(0, 7)} /> : <>
-        <KpiCards summary={summaryQuery.data} loading={summaryInitialLoading} />
-
-
-
         <div className="w-fit">
           <Segmented
             label={t("filterLabel")}
@@ -216,6 +231,8 @@ export function TransactionsPage() {
           allTags={(tagsQuery.data?.tags ?? []).map((x) => x.tag)}
           onTagClick={(tag) => { setTagFilter(tag); setPage(0); }}
           members={members}
+          onEdit={setSheet}
+          onAdd={() => setSheet("new")}
           accountOwners={ownersQuery.data?.accountOwners}
           transactions={transactionsQuery.data?.transactions ?? []}
           total={transactionsQuery.data?.total ?? 0}
@@ -247,7 +264,7 @@ export function TransactionsPage() {
           onPageChange={setPage}
         />
         </>}
-        <details className="rounded-xl border border-border/60 p-4"><summary className="cursor-pointer py-2 font-medium">{t("moreDetails")}</summary><div className="pt-4"><WidgetsRow summary={summaryQuery.data} loading={summaryInitialLoading} /></div></details>
+        <WidgetsRow summary={summaryQuery.data} loading={summaryInitialLoading} />
         <AINotConnectedBanner />
         </>}
       </div>

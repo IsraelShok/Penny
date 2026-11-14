@@ -70,7 +70,7 @@ export function WorkspaceNameStep({
             autoFocus
             disabled={submitting}
             placeholder={t("workspaceExample")}
-            className="mt-2 w-full border-0 bg-transparent p-0 font-semibold text-2xl leading-tight tracking-tight text-foreground outline-none placeholder:text-muted-foreground/40"
+            className="mt-2 w-full border-0 bg-transparent p-0 font-semibold text-2xl leading-tight tracking-tight text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring placeholder:text-muted-foreground/70"
           />
         </div>
 

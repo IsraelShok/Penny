@@ -32,7 +32,7 @@ export interface GemelVsBrokerInputs {
  * Gemel as a monthly annuity after 60: tax-free, so the full balance.
  */
 export function gemelVsBroker(i: GemelVsBrokerInputs) {
-  const months = Math.round(i.years * 12);
+  const months = Math.min(1200, Math.round(i.years * 12)); // 100-year cap: huge typed years would freeze the page
   const mGemel = Math.pow(1 + i.grossReturn - i.gemelFeePct / 100, 1 / 12) - 1;
   const mEtf = Math.pow(1 + i.grossReturn - i.etfFeePct / 100, 1 / 12) - 1;
   const mInf = Math.pow(1 + i.inflation, 1 / 12) - 1;
@@ -62,7 +62,7 @@ export function brokerOutcome(b: Broker, monthly: number, tradesPerMonth: number
   const r = Math.pow(1 + grossReturn, 1 / 12) - 1;
   let value = 0;
   let fees = 0;
-  for (let m = 0; m < Math.round(years * 12); m++) {
+  for (let m = 0; m < Math.min(1200, Math.round(years * 12)); m++) { // 100-year cap, as above
     const fee = tradesPerMonth * b.perTrade + (monthly * b.pct) / 100 + b.custodyMonthly;
     fees += fee;
     value = Math.max(0, value * (1 + r) + monthly - fee);

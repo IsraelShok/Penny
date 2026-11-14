@@ -1,6 +1,8 @@
 import "server-only";
 
 import { getDb } from "../index";
+import { getWorkspace, updateWorkspace } from "./workspaces";
+import { updateProfile } from "./profiles";
 import { normalizeOllamaUrl, OLLAMA_URL_ERROR } from "@/lib/url-guard";
 import type { AppSettings } from "@/lib/types";
 import { EMPTY_HOUSEHOLD, parseHousehold, type Household } from "@/lib/household";
@@ -65,7 +67,8 @@ export const setSetting = setGlobalSetting;
 
 const AUTO_SYNC_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-export function getAppSettings(workspaceId: number): AppSettings {
+/** profileName: the active profile (X-Profile-ID); its name is the greeting. */
+export function getAppSettings(workspaceId: number, profileName?: string): AppSettings {
   const targetRaw = getWorkspaceSetting(workspaceId, "monthly_target");
   const target = targetRaw != null ? Number(targetRaw) : NaN;
   const storedTime = getGlobalSetting("auto_sync_time");
@@ -82,9 +85,25 @@ export function getAppSettings(workspaceId: number): AppSettings {
     autoSyncTime:
       storedTime && AUTO_SYNC_TIME_RE.test(storedTime) ? storedTime : "06:00",
     language: storedLang === "en" ? "en" : "he",
-    displayName: getGlobalSetting("display_name") ?? "",
+    displayName: profileName && profileName !== "Default" ? profileName : profileDisplayName(workspaceId),
     household: readHousehold(workspaceId),
   };
+}
+
+/** The active profile's name is the display name. The seeded "Default" profile has none. */
+function profileDisplayName(workspaceId: number): string {
+  const ws = getWorkspace(workspaceId);
+  const legacy = getGlobalSetting("display_name")?.trim() ?? "";
+  if (!ws) return legacy;
+  // One-time migration: the old separate display name becomes the seeded profile's name (no-op once renamed).
+  if (ws.name === "Default" && legacy) {
+    try {
+      return updateWorkspace(ws.id, legacy).name;
+    } catch {
+      return legacy;
+    }
+  }
+  return ws.name === "Default" ? "" : ws.name;
 }
 
 function readHousehold(workspaceId: number): Household {
@@ -99,7 +118,8 @@ function readHousehold(workspaceId: number): Household {
 
 export function updateAppSettings(
   workspaceId: number,
-  settings: Partial<AppSettings>
+  settings: Partial<AppSettings>,
+  profile?: { id: number; name: string } | null
 ): AppSettings {
   const db = getDb();
   const update = db.transaction(() => {
@@ -159,7 +179,9 @@ export function updateAppSettings(
       setGlobalSetting("language", settings.language);
     }
     if (settings.displayName !== undefined) {
-      setGlobalSetting("display_name", String(settings.displayName).trim().slice(0, 40));
+      const name = String(settings.displayName).trim().slice(0, 40);
+      if (name && profile) profile = updateProfile(profile.id, name); // the display name is the profile name
+      else if (name) updateWorkspace(workspaceId, name);
     }
     if (settings.household !== undefined) {
       setWorkspaceSetting(
@@ -170,5 +192,5 @@ export function updateAppSettings(
     }
   });
   update();
-  return getAppSettings(workspaceId);
+  return getAppSettings(workspaceId, profile?.name);
 }

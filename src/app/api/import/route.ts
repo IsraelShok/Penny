@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { countStoredForImport, deleteFileImport, insertFileImport } from "@/server/db/queries/transactions";
-import { applyMerchantRulesToSyncRun } from "@/server/db/queries/excluded-merchants";
-import { applyRulesToSyncRun } from "@/server/db/queries/rules";
+import { deleteFileImport } from "@/server/db/queries/transactions";
+import { saveStatementImport } from "@/server/lib/folder-import";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
-import { markDuplicates, MAX_IMPORT_ROWS, parseImportDate, type ImportRow } from "@/lib/file-import";
+import { MAX_IMPORT_ROWS, parseImportDate, type ImportRow } from "@/lib/file-import";
 
 const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
 
@@ -13,7 +12,7 @@ const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
  */
 export async function POST(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json().catch(() => ({}))) as { account?: unknown; rows?: unknown; dryRun?: unknown };
+  const body = ((await request.json().catch(() => null)) ?? {}) as { account?: unknown; rows?: unknown; dryRun?: unknown };
   const account = typeof body.account === "string" ? body.account.trim().slice(0, 40) : "";
   if (!account) return bad("account is required");
   if (!Array.isArray(body.rows) || body.rows.length === 0) return bad("rows are required");
@@ -28,17 +27,7 @@ export async function POST(request: Request) {
     if (!description) return bad("invalid description");
     rows.push({ date, description, amount: Math.round(amount * 100) / 100 });
   }
-  const dates = rows.map((r) => r.date).sort();
-  const marked = markDuplicates(rows, countStoredForImport(workspaceId, account, dates[0], dates[dates.length - 1]));
-  const fresh = marked.filter((r) => !r.duplicate);
-  const duplicates = marked.length - fresh.length;
-  if (body.dryRun === true || fresh.length === 0) return NextResponse.json({ ready: fresh.length, duplicates, added: 0, batchId: null });
-
-  const { batchId, added } = insertFileImport(workspaceId, account, fresh);
-  // Same merchant memory and rules a bank sync gets, so categories are remembered.
-  applyMerchantRulesToSyncRun(workspaceId, batchId);
-  applyRulesToSyncRun(workspaceId, batchId);
-  return NextResponse.json({ ready: fresh.length, duplicates: duplicates + fresh.length - added, added, batchId });
+  return NextResponse.json(saveStatementImport(workspaceId, account, rows, body.dryRun === true));
 }
 
 /** Undo one import: ?batch=. */

@@ -24,7 +24,7 @@ export async function PATCH(
 
   let body: unknown;
   try {
-    body = await request.json();
+    body = (await request.json()) ?? {};
   } catch {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
