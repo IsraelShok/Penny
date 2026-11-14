@@ -582,6 +582,7 @@ export async function runAllWorkspaces(
 ): Promise<WorkspaceSummary[]> {
   const send = onEvent ?? NOOP_SEND;
   markSyncStart(kind);
+  const since = new Date().toISOString().slice(0, 19).replace("T", " ");
   try {
     const workspaceIds = listAllWorkspaceIds();
     const summaries: WorkspaceSummary[] = [];
@@ -589,6 +590,10 @@ export async function runAllWorkspaces(
       const summary = await syncWorkspace(workspaceId, filterCredentialId, send);
       summaries.push(summary);
     }
+    // Telegram feedback must never fail or slow the sync itself.
+    void import("../bot/index")
+      .then((m) => m.sendSpendFeedback(since))
+      .catch((err) => console.error("[bot] spend feedback", err instanceof Error ? err.message : err));
     return summaries;
   } finally {
     markSyncEnd();

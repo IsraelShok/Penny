@@ -1,11 +1,12 @@
 import "server-only";
 
 import { Bot } from "grammy";
-import { handleCommand, splitMessage, SHORT_LABEL, FULL_LABEL, type BotConfig } from "./commands";
+import { handleCommand, splitMessage, menuMarkup, MENU_LABEL, MENU_PREFIX, BOT_COMMANDS, type BotConfig } from "./commands";
+import { categorizeAction, categorizeCard, CAT_PREFIX } from "./categorize";
 import { getBotConfig, getHideAmounts, linkChat } from "./config";
 import { APP_LOCKED_MESSAGE, isKeyLocked } from "../lib/encryption";
 
-const HELP_INTRO = "בחרו תמונת מצב בכפתורים למטה.";
+const HELP_INTRO = "לחצו ☰ תפריט למטה בכל רגע.";
 import { listAllWorkspaceIds } from "../lib/workspace-context";
 import { israelToday } from "../lib/date-utils";
 import { getActivitySnapshot } from "../sync/activity";
@@ -17,42 +18,90 @@ declare global {
   var __spentUpdateCheck: boolean | undefined;
 }
 
-const KEYBOARD = { keyboard: [[{ text: SHORT_LABEL }, { text: FULL_LABEL }]], resize_keyboard: true, is_persistent: true };
+// One persistent "menu" key; everything else lives in inline tabs on the card.
+const KEYBOARD = { keyboard: [[{ text: MENU_LABEL }]], resize_keyboard: true, is_persistent: true };
+
+const cmdOf = (text: string) => text.trim().split(/\s+/)[0].toLowerCase().replace(/@.*$/, "");
+
+// Tapping the open tab again changes nothing; Telegram reports that as an error.
+const ignoreUnchanged = (err: unknown) => {
+  if (!String(err).includes("message is not modified")) throw err;
+};
+
+/** Runs one command for the linked chat; null when the chat is not the owner. */
+function reply(text: string, fromChatId: number, chatId: number): Promise<string | null> {
+  const cfg: BotConfig = { chatId, billingDay: Number(process.env.CARD_BILLING_DAY) || 10, hideAmounts: getHideAmounts() };
+  return handleCommand(text, fromChatId, cfg, {
+    workspaceId: listAllWorkspaceIds()[0],
+    today: israelToday(),
+    isSyncRunning: () => getActivitySnapshot().sync.active,
+    runSync: async () => {
+      const { runAllWorkspaces } = await import("../sync/orchestrator");
+      const summaries = await runAllWorkspaces(undefined, undefined, "manual");
+      const added = summaries.reduce((s, w) => s + w.added, 0);
+      const failed = summaries.flatMap((w) => w.providers).filter((p) => !p.ok);
+      return failed.length
+        ? `⚠️ הסנכרון הסתיים עם שגיאות: ${failed.map((f) => f.label).join(", ")}`
+        : `✓ הסנכרון הסתיים, ${added} עסקאות חדשות`;
+    },
+  });
+}
 
 /** Starts long polling when a bot is saved in settings (or in env); the first chat to send the link code becomes the owner. */
 export function startBot(): void {
   const { token } = getBotConfig();
   if (!token || globalThis.__spentBot) return;
   const bot = new Bot(token);
+  void bot.api.setMyCommands(BOT_COMMANDS).catch(() => undefined);
 
   bot.on("message:text", async (ctx) => {
     const { chatId } = getBotConfig();
     const text = ctx.message.text.trim();
     if (!chatId) {
       const code = text.match(/^\/start\s+(\S+)$/)?.[1];
-      if (code && linkChat(code, ctx.chat.id)) await ctx.reply(`מחובר. ${HELP_INTRO}`, { reply_markup: KEYBOARD });
+      if (code && linkChat(code, ctx.chat.id)) await ctx.reply(`מחובר ✓ ${HELP_INTRO}`, { reply_markup: KEYBOARD });
       return;
     }
     if (ctx.chat.id === chatId && isKeyLocked()) {
       await ctx.reply(APP_LOCKED_MESSAGE);
       return;
     }
-    const cfg: BotConfig = { chatId, billingDay: Number(process.env.CARD_BILLING_DAY) || 10, hideAmounts: getHideAmounts() };
-    const reply = await handleCommand(text, ctx.chat.id, cfg, {
-      workspaceId: listAllWorkspaceIds()[0],
-      today: israelToday(),
-      isSyncRunning: () => getActivitySnapshot().sync.active,
-      runSync: async () => {
-        const { runAllWorkspaces } = await import("../sync/orchestrator");
-        const summaries = await runAllWorkspaces(undefined, undefined, "manual");
-        const added = summaries.reduce((s, w) => s + w.added, 0);
-        const failed = summaries.flatMap((w) => w.providers).filter((p) => !p.ok);
-        return failed.length
-          ? `Sync finished with errors: ${failed.map((f) => f.label).join(", ")}`
-          : `Sync done, ${added} new transactions`;
-      },
-    });
-    if (reply) for (const part of splitMessage(reply)) await ctx.reply(part, { reply_markup: KEYBOARD });
+    if (ctx.chat.id === chatId && cmdOf(text) === "/categorize") {
+      const ws = listAllWorkspaceIds()[0];
+      if (ws === undefined) return;
+      const card = categorizeCard(ws, 0, getHideAmounts());
+      await ctx.reply(card.text, { parse_mode: "HTML", reply_markup: card.markup });
+      return;
+    }
+    const out = await reply(text, ctx.chat.id, chatId);
+    if (!out) return;
+    const parts = splitMessage(out);
+    // The reply keyboard stays put; inline tabs ride on the last part so they sit under the whole card.
+    for (const [i, part] of parts.entries())
+      await ctx.reply(part, { reply_markup: i === parts.length - 1 ? menuMarkup(cmdOf(text)) : KEYBOARD });
+  });
+
+  bot.on("callback_query:data", async (ctx) => {
+    const { chatId } = getBotConfig();
+    const data = ctx.callbackQuery.data;
+    // Same owner check as messages: a forwarded card must not work in another chat.
+    if (!chatId || ctx.chat?.id !== chatId) return ctx.answerCallbackQuery();
+    if (isKeyLocked()) return ctx.answerCallbackQuery({ text: APP_LOCKED_MESSAGE, show_alert: true });
+    if (data.startsWith(CAT_PREFIX)) {
+      const ws = listAllWorkspaceIds()[0];
+      const card = ws === undefined ? null : categorizeAction(ws, data, getHideAmounts());
+      await ctx.answerCallbackQuery();
+      if (card) await ctx.editMessageText(card.text, { parse_mode: "HTML", reply_markup: card.markup }).catch(ignoreUnchanged);
+      return;
+    }
+    if (!data.startsWith(MENU_PREFIX)) return ctx.answerCallbackQuery();
+    const cmd = data.slice(MENU_PREFIX.length);
+    await ctx.answerCallbackQuery(cmd === "/sync" ? { text: "מסנכרן…" } : undefined);
+    const edit = (text: string) =>
+      ctx.editMessageText(text, { reply_markup: menuMarkup(cmd) }).catch(ignoreUnchanged);
+    if (cmd === "/sync") await edit("⟳ מסנכרן…");
+    const out = await reply(cmd, chatId, chatId);
+    if (out) await edit(splitMessage(out)[0]);
   });
 
   bot.catch((err) => console.error("[bot]", redactError(err)));
@@ -66,6 +115,20 @@ export function startBot(): void {
       return chatId && current ? current.api.sendMessage(chatId, text).then(() => undefined) : Promise.resolve();
     });
   }
+}
+
+/** Right after a sync: tells the linked chat about new expenses, in context. Silent when locked or nothing new. */
+export async function sendSpendFeedback(since: string): Promise<void> {
+  const { chatId } = getBotConfig();
+  const bot = globalThis.__spentBot;
+  const ws = listAllWorkspaceIds()[0];
+  if (!bot || !chatId || ws === undefined || isKeyLocked()) return;
+  const { spendFeedback } = await import("./feedback");
+  const text = spendFeedback(ws, since, israelToday(), getHideAmounts());
+  if (!text) return;
+  const parts = splitMessage(text);
+  for (const [i, part] of parts.entries())
+    await bot.api.sendMessage(chatId, part, i === parts.length - 1 ? { reply_markup: menuMarkup() } : undefined);
 }
 
 /** Called after the bot is saved or removed in settings. */

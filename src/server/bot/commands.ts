@@ -26,7 +26,33 @@ export const HIDDEN_AMOUNT = "•••";
 /** Reply-keyboard labels; tapping one sends its text, mapped back to a command. */
 export const SHORT_LABEL = "תמונת מצב מצומצמת";
 export const FULL_LABEL = "תמונת מצב מלאה";
-const ALIASES: Record<string, string> = { [SHORT_LABEL]: "/short", [FULL_LABEL]: "/full", "קצר": "/short", "מלא": "/full" };
+export const MENU_LABEL = "☰ תפריט";
+const ALIASES: Record<string, string> = { [MENU_LABEL]: "/short", [SHORT_LABEL]: "/short", [FULL_LABEL]: "/full", "קצר": "/short", "מלא": "/full" };
+
+/** Inline tabs under every card; tapping one edits the same message instead of sending a new one. */
+export const MENU_TABS: [label: string, cmd: string][] = [
+  ["💰 מצב", "/short"], ["📊 החודש", "/month"], ["📅 חיובים", "/forecast"], ["🔁 מנויים", "/subs"],
+  ["🏷 סיווג", "/categorize"], ["📋 הכל", "/full"], ["⟳ סנכרון", "/sync"],
+];
+export const MENU_PREFIX = "m:";
+
+/** Four tabs over three; the open tab is marked so the card reads like a tab bar. */
+export function menuMarkup(active?: string) {
+  // Categorize opens its own card flow (bot/categorize.ts), not a text reply.
+  const data = (cmd: string) => (cmd === "/categorize" ? "c:s:0" : MENU_PREFIX + cmd);
+  const btn = ([label, cmd]: [string, string]) => ({ text: cmd === active ? `· ${label} ·` : label, callback_data: data(cmd) });
+  return { inline_keyboard: [MENU_TABS.slice(0, 4).map(btn), MENU_TABS.slice(4).map(btn)] };
+}
+
+/** Telegram's "/" menu, in Hebrew. */
+export const BOT_COMMANDS = [
+  { command: "menu", description: "תפריט ותמונת מצב" },
+  { command: "month", description: "הוצאות החודש" },
+  { command: "forecast", description: "חיובי אשראי צפויים" },
+  { command: "subs", description: "מנויים" },
+  { command: "categorize", description: "סיווג עסקאות" },
+  { command: "sync", description: "סנכרון עכשיו" },
+];
 
 const HELP = [
   "בחרו תמונת מצב בכפתורים למטה, או:",
@@ -81,6 +107,8 @@ export async function handleCommand(
   if (workspaceId === undefined) return "Spent is not set up yet. Finish setup in the app first.";
 
   switch (cmd) {
+    case "/start":
+    case "/menu":
     case "/short":
       return formatShort(buildSnapshot(workspaceId, deps.today), hide);
     case "/full":

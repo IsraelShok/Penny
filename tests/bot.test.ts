@@ -142,3 +142,57 @@ describe("hide amounts in Telegram", () => {
     expect(await cmd.handleCommand("/month", 42, hidden, deps())).toContain("•••");
   });
 });
+
+describe("spend feedback after sync", () => {
+  it("shows new expenses with budget left, and nothing when no new rows", async () => {
+    const { spendFeedback } = await import("@/server/bot/feedback");
+    const db = (await import("@/server/db/index")).getDb();
+    const tx = db.prepare("SELECT id, category_id FROM transactions WHERE description = 'שופרסל'").get() as { id: number; category_id: number | null };
+    const catId = tx.category_id ?? (db.prepare("SELECT id FROM categories LIMIT 1").get() as { id: number }).id;
+    db.prepare("UPDATE transactions SET category_id = ? WHERE id = ?").run(catId, tx.id);
+    db.prepare("INSERT OR REPLACE INTO budgets (workspace_id, category_id, monthly_amount, is_auto) VALUES (?, ?, 1000, 0)").run(ws, catId);
+
+    const out = spendFeedback(ws, "2000-01-01 00:00:00", "2026-11-04")!;
+    expect(out).toContain("שופרסל");
+    expect(out).toContain("נשארו ₪700");
+    expect(spendFeedback(ws, "2999-01-01 00:00:00", "2026-11-04")).toBeNull();
+    expect(spendFeedback(ws, "2000-01-01 00:00:00", "2026-11-04", true)).not.toMatch(/₪\d/);
+  });
+});
+
+describe("inline menu", () => {
+  it("has every tab mapped to a command the bot answers, under Telegram's 64-byte limit", async () => {
+    const rows = cmd.menuMarkup("/month").inline_keyboard.flat();
+    expect(rows).toHaveLength(cmd.MENU_TABS.length);
+    expect(rows.find((b) => b.callback_data === "m:/month")!.text).toContain("·");
+    for (const b of rows) expect(Buffer.byteLength(b.callback_data)).toBeLessThanOrEqual(64);
+    for (const c of ["/menu", "/start", cmd.MENU_LABEL])
+      expect(await cmd.handleCommand(c, 42, cfg, deps())).toBe(await cmd.handleCommand("/short", 42, cfg, deps()));
+  });
+});
+
+describe("categorize in chat", () => {
+  it("walks the queue, assigns, and turns a tap into a rule", async () => {
+    const { categorizeCard, categorizeAction } = await import("@/server/bot/categorize");
+    const db = (await import("@/server/db/index")).getDb();
+    db.prepare("UPDATE transactions SET category_id = NULL, category_source = NULL WHERE description = 'IKEA'").run();
+    const first = categorizeCard(ws);
+    expect(first.text).toContain("🏷 סיווג");
+    const all = first.markup.inline_keyboard.flat().find((b) => b.callback_data.startsWith("c:m:"))!;
+    const picker = categorizeAction(ws, all.callback_data)!;
+    const pick = picker.markup.inline_keyboard.flat().find((b) => b.callback_data.startsWith("c:a:"))!;
+    for (const b of picker.markup.inline_keyboard.flat()) expect(Buffer.byteLength(b.callback_data)).toBeLessThanOrEqual(64);
+
+    const before = db.prepare("SELECT COUNT(*) n FROM transactions WHERE category_id IS NULL AND kind = 'expense'").get() as { n: number };
+    const after = categorizeAction(ws, pick.callback_data)!;
+    expect(after.text).toContain("✓");
+    const n = (db.prepare("SELECT COUNT(*) n FROM transactions WHERE category_id IS NULL AND kind = 'expense'").get() as { n: number }).n;
+    expect(n).toBe(before.n - 1);
+
+    const ruleBtn = after.markup.inline_keyboard[0][0];
+    expect(ruleBtn.callback_data).toMatch(/^c:r:/);
+    expect(categorizeAction(ws, ruleBtn.callback_data)!.text).toContain("📌 נוצר כלל");
+    expect(categorizeAction(ws, "c:a:999999:1:0")!.text).toContain("כבר לא קיימת");
+    expect(categorizeAction(ws, "c:a:x:y:z")).not.toBeNull();
+  });
+});

@@ -31,14 +31,14 @@ export function buildSnapshot(ws: number, today: string): Snapshot {
 const showMoney = (n: number) => `₪${Math.round(Math.abs(n)).toLocaleString("he-IL")}`;
 const day = (iso: string) => new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso.slice(0, 10)}T12:00:00Z`));
 
-function freeLine(c: CashAhead, money: (n: number) => string): string {
+export function freeLine(c: CashAhead, money: (n: number) => string): string {
   if (c.safeToSpend == null) return "עוד אין יתרת בנק מסונכרנת, אז אין סכום פנוי.";
   if (c.safeToSpend < 0) return `🔴 חסרים ${money(c.safeToSpend)} עד ${day(c.until)}.`;
   return `🟢 ${money(c.safeToSpend)} פנויים עד ${day(c.until)}, בערך ${money(c.safeToSpend / Math.max(1, c.daysLeft))} ליום.`;
 }
 
 /** Three lines: free money, month spend, next card bill. */
-const moneyFor = (hide: boolean) => (hide ? () => "•••" : showMoney);
+export const moneyFor = (hide: boolean) => (hide ? () => "•••" : showMoney);
 
 export function formatShort(s: Snapshot, hide = false): string {
   const money = moneyFor(hide);
