@@ -119,7 +119,7 @@ export function CommandPalette({ placeholder, onClose }: { placeholder: string; 
   }
 
   return (
-    <div ref={rootRef} className="flex min-w-0 flex-1 items-center gap-2 rounded-full px-3 focus-within:bg-muted focus-within:ring-2 focus-within:ring-ring">
+    <div ref={rootRef} className="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-muted px-3 ring-1 ring-border transition-shadow focus-within:bg-card focus-within:ring-2 focus-within:ring-ring">
       <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
         ref={inputRef}
@@ -157,7 +157,7 @@ export function CommandPalette({ placeholder, onClose }: { placeholder: string; 
       <kbd dir="ltr" className="hidden rounded border border-border px-1.5 text-[0.6875rem] text-muted-foreground md:inline">/</kbd>
       {open && (
         // Opens upward from the bar and spans its full width (the bar is the positioned parent).
-        <div className="absolute inset-x-0 bottom-full z-50 mb-2 flex max-h-[60dvh] flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-lg">
+        <div className="absolute inset-x-0 bottom-full z-50 mb-2 flex max-h-[60dvh] flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl">
         {asked ? (
           <div className="min-h-0 max-h-[min(28rem,60dvh)] overflow-y-auto overscroll-contain p-5">
             {asked.answer ? <AskAnswerView answer={asked.answer} onExample={(e) => { setQ(e); ask(e); }} onNavigate={close} />

@@ -54,11 +54,15 @@ export function BottomBar() {
 
   if (!shown) return null;
   return (
+    <>
+    {/* Spotlight-style: the page dims and blurs behind the bar, so the search stands apart from busy content. */}
+    <div aria-hidden onClick={hide} className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] dark:bg-black/50" />
     <div className="pointer-events-none fixed inset-x-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-50 flex justify-center px-4 md:bottom-6">
       {/* Solid in every theme (glass included): the bar floats over busy content and must stay readable. */}
-      <div data-search-root className="pointer-events-auto relative flex w-full max-w-2xl items-center gap-1 rounded-full border border-border bg-popover p-1.5 text-popover-foreground shadow-2xl">
+      <div data-search-root className="pointer-events-auto relative flex w-full max-w-2xl items-center gap-1 rounded-full border border-border bg-popover p-1.5 text-popover-foreground shadow-2xl ring-1 ring-black/5">
         <CommandPalette placeholder={t("askBar")} onClose={hide} />
       </div>
     </div>
+    </>
   );
 }
