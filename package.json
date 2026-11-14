@@ -78,5 +78,8 @@
   },
   "main": "desktop/main.cjs",
   "description": "Penny: private, local-first personal finance for Israel",
-  "author": "Penny"
+  "author": "Penny",
+  "allowScripts": {
+    "better-sqlite3": false
+  }
 }

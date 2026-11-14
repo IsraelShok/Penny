@@ -1,10 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
-
-// The sidebar is a drawer on phones; open it before using the menu.
-async function openMenu(page: Page) {
-  const trigger = page.getByRole("button", { name: /תפריט|menu|sidebar/i }).first();
-  if (await trigger.isVisible().catch(() => false)) await trigger.click();
-}
+import { expect, test } from "@playwright/test";
 
 test.describe("core screens", () => {
   test("home shows the money tree seed on an empty account", async ({ page }) => {
@@ -25,11 +19,11 @@ test.describe("core screens", () => {
 });
 
 test.describe("navigation", () => {
-  test("the sidebar reaches the calculators hub", async ({ page, isMobile }) => {
+  test("the sidebar reaches the calculators hub through Tools", async ({ page, isMobile }) => {
     test.skip(isMobile, "the phone layout uses the bottom dock");
     await page.goto("/");
-    await openMenu(page);
-    await page.getByRole("link", { name: "מחשבונים" }).first().click();
+    await page.getByRole("link", { name: "כלים" }).first().click();
+    await page.getByRole("link", { name: /^מחשבונים/ }).first().click();
     await expect(page).toHaveURL(/\/calculators$/);
     await expect(page.getByRole("link", { name: /משכנתא/ })).toBeVisible();
   });

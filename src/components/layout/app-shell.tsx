@@ -94,7 +94,7 @@ export function PageHeader({
   return (
     <header ref={headerRef} className={`sticky top-0 z-20 transition-[box-shadow,background-color] duration-150 ${scrolled ? "header-bar shadow-[0_0.5px_0_var(--border)]" : "bg-transparent"}`}>
       {/* Nothing to show on desktop (hidden title, no actions): the row folds away there; phones keep it for the menu button. */}
-      <div className={`${!largeTitle && !actions ? "md:hidden " : ""}mx-auto grid min-h-14 max-w-[76rem] grid-cols-[minmax(auto,1fr)_minmax(0,auto)_minmax(auto,1fr)] items-center gap-x-4 px-4 py-2 md:px-6 lg:px-8`}>
+      <div className={`${!largeTitle && !actions ? "md:sr-only " : ""}mx-auto grid min-h-14 max-w-[76rem] grid-cols-[minmax(auto,1fr)_minmax(0,auto)_minmax(auto,1fr)] items-center gap-x-4 px-4 py-2 md:px-6 lg:px-8`}>
         {/* Phones: the mini pet docks beside the menu button (desktop has it in the sidebar footer). */}
         <div className="col-start-1 row-start-1 -ms-1 flex items-center gap-1 self-center justify-self-start md:hidden">
           <SidebarTrigger />
