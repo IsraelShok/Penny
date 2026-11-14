@@ -31,8 +31,8 @@ mac:
   target:
     - target: dmg
       arch: [arm64, x64]
-  # No Apple Developer ID yet: ad-hoc signed ("-"), so Apple Silicon runs it and the first open needs Open Anyway.
-  identity: "-"
+  # No Apple Developer ID yet: desktop/after-pack.cjs ad-hoc signs the app, so the first open needs Open Anyway.
+  identity: null
   category: public.app-category.finance
 dmg:
   artifactName: Penny-${version}-${arch}.${ext}
