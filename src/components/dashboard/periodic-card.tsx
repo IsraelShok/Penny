@@ -157,7 +157,7 @@ export function PeriodicCard() {
 
       {suggestions.length > 0 && (
         <div className="mt-4 border-t border-border/60 pt-4">
-          <h4 className="mb-2 text-xs font-semibold text-muted-foreground">{t("suggestionsTitle")}</h4><p className="mb-3 text-xs text-muted-foreground">{locale === "he" ? "הצעות משוערות מהיסטוריית התנועות. בדקו סכום, תדירות ותאריך לפני השמירה." : "Estimates from past transactions. Check amount, frequency and date before saving."}</p>
+          <h3 className="mb-2 text-xs font-semibold text-muted-foreground">{t("suggestionsTitle")}</h3><p className="mb-3 text-xs text-muted-foreground">{t("estimatesFromPastTransactions")}</p>
           <ul className="space-y-2">
             {suggestions.map((s) => (
               <li key={s.autoKey} className="flex items-center gap-2">
@@ -166,7 +166,7 @@ export function PeriodicCard() {
                 </span>
                 <Button size="sm" variant="secondary" onClick={() => setDraft({ ...s, amount: String(s.amount), everyMonths: String(s.everyMonths), savedSoFar: "0" })}>
                   <Plus aria-hidden />
-                  {locale === "he" ? "בדיקה ועריכה" : "Review & edit"}
+                  {t("reviewEdit")}
                 </Button>
                 <IconButton label={t("dismiss")} onClick={() => void dismissPeriodicSuggestion(s.autoKey).then(refresh)}>
                   <X aria-hidden />

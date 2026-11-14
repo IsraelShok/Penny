@@ -1,4 +1,4 @@
-# Spent in a container: the app, its scrapers and Chromium are isolated from the host,
+# Penny in a container: the app, its scrapers and Chromium are isolated from the host,
 # and the database and encryption key live in the /data volume.
 
 FROM node:24-bookworm-slim AS base
@@ -23,10 +23,10 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends chromium fonts-noto-core ca-certificates \
  && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /data && chown node:node /data
-ARG SPENT_COMMIT=unknown
+ARG PENNY_COMMIT=unknown
 ENV NODE_ENV=production \
-    SPENT_DATA_DIR=/data \
-    SPENT_COMMIT=${SPENT_COMMIT} \
+    PENNY_DATA_DIR=/data \
+    PENNY_COMMIT=${PENNY_COMMIT} \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 COPY --from=build --chown=node:node /app /app
 USER node

@@ -7,7 +7,7 @@ let id: number;
 let GET: typeof import("@/app/api/integrations/[id]/route").GET;
 
 beforeAll(async () => {
-  process.env.SPENT_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "spent-integ-"));
+  process.env.PENNY_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "penny-integ-"));
   const db = (await import("@/server/db/index")).getDb();
   const { saveBankCredentials } = await import("@/server/db/queries/bank-credentials");
   ({ GET } = await import("@/app/api/integrations/[id]/route"));

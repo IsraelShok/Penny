@@ -10,7 +10,8 @@ export function usePlan() {
   const query = useQuery({ queryKey: ["plan"], queryFn: getPlan });
   const plan = query.data?.plan ?? DEFAULT_PLAN;
   const mutation = useMutation({
-    mutationFn: (patch: Partial<FinancialPlan>) => savePlan({ ...plan, ...patch }),
+    // Before the plan loads, merge onto the stored plan, not DEFAULT_PLAN, so nothing (e.g. homeStyle) is reset.
+    mutationFn: async (patch: Partial<FinancialPlan>) => savePlan({ ...(query.data?.plan ?? (await getPlan()).plan), ...patch }),
     onSuccess: () => {
       ["plan", "overview"].forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
     },

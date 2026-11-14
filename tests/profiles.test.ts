@@ -8,7 +8,7 @@ type Q = typeof import("@/server/db/queries/workspaces");
 let q: Q;
 
 beforeAll(async () => {
-  process.env.SPENT_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "spent-profiles-"));
+  process.env.PENNY_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "penny-profiles-"));
   (await import("@/server/db/index")).getDb();
   q = await import("@/server/db/queries/workspaces");
 });

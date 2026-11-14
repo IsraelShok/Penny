@@ -114,7 +114,7 @@ function DisplayNameCard({ initialName }: { initialName: string }) {
             onChange={(e) => setValue(e.target.value)}
           />
         </div>
-        <IconButton
+        <IconButton showLabel
           label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
           variant="default"
           type="submit"
@@ -190,7 +190,7 @@ function MonthlyTargetCard({
           )}
         </div>
         <div className="mt-5 flex justify-end">
-          <IconButton
+          <IconButton showLabel
             label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
             variant="default"
             onClick={() =>
@@ -277,7 +277,7 @@ function GeneralForm({
         </div>
       </div>
       <div className="mt-5 flex justify-end">
-        <IconButton
+        <IconButton showLabel
           label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
           variant="default"
           onClick={() =>
@@ -361,7 +361,7 @@ function AutoSyncCard({
         </p>
       </div>
       <div className="mt-5 flex justify-end">
-        <IconButton
+        <IconButton showLabel
           label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
           variant="default"
           onClick={() =>

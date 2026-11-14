@@ -41,7 +41,7 @@ const SCREENS = [
 
 function seedDb(dbDir) {
   fs.mkdirSync(dbDir, { recursive: true });
-  const dbPath = path.join(dbDir, 'spent.db');
+  const dbPath = path.join(dbDir, 'penny.db');
   const db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   // Apply every migration the same way src/server/db/migrate.ts does, so the app sees an up-to-date DB.
@@ -80,7 +80,7 @@ function seedDb(dbDir) {
 }
 
 function startServer(dataDir) {
-  const env = { ...process.env, SPENT_DATA_DIR: dataDir, PORT: String(PORT) };
+  const env = { ...process.env, PENNY_DATA_DIR: dataDir, PORT: String(PORT) };
   const child = spawn('npx', ['next', 'dev', '-H', '127.0.0.1', '-p', String(PORT)], { shell: process.platform === 'win32',
     cwd: REPO_ROOT, env, stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -112,7 +112,7 @@ async function setTheme(page, theme) {
 (async () => {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'spent-docs-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'penny-docs-'));
   console.log(`Tmp data dir: ${tmpDir}`);
 
   console.log('Seeding fake data...');

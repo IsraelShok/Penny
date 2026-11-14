@@ -75,7 +75,7 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
         <BrandMark />
         <DotStepper step={step} steps={steps} />
         <a
-          href="https://github.com/Shaya16/Spent"
+          href="https://github.com/Sergey-Bar/Penny"
           target="_blank"
           rel="noreferrer"
           className="hidden text-xs text-muted-foreground hover:text-foreground md:inline"
@@ -136,25 +136,11 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
 }
 
 function BrandMark() {
-  const t = useTranslations("setup");
   return (
     <div className="flex items-center gap-2.5">
-      <img
-        src="/logo_lightmode.svg"
-        alt="Spent"
-        className="h-8 w-auto dark:hidden"
-      />
-      <img
-        src="/logo_darkmode.svg"
-        alt="Spent"
-        className="hidden h-8 w-auto dark:block"
-      />
       <div>
         <div className="font-semibold text-lg leading-none tracking-tight">
-          Spent
-        </div>
-        <div className="mt-1 text-[8px] font-bold tracking-[0.18em] text-muted-foreground">
-          {t("brandTagline")}
+          Penny
         </div>
       </div>
     </div>

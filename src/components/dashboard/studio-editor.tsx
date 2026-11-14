@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Check, Palette, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
@@ -12,7 +12,7 @@ import { studioCopy } from "./studio-copy";
 /** The design editor. `inline` shows it fully in place (Settings › Appearance); otherwise a button opens it in a sheet. */
 export function StudioEditor({ compact = false, inline = false }: { compact?: boolean; inline?: boolean }) {
   const { preferences: value, preview: onChange, save: persist, resolvedStudioTheme } = useStudio();
-  const locale = useLocale();
+  const locale = useLocale(); const t = useTranslations("studio");
   const c = studioCopy(locale);
   const [open, setOpen] = useState(false);
   const [original, setOriginal] = useState(value);
@@ -35,7 +35,7 @@ export function StudioEditor({ compact = false, inline = false }: { compact?: bo
       <div className="studio-editor-scroll">
       {options("theme", ["pearl", "midnight", "glass", "system"])}
       {options("accent", ["violet", "ocean", "jade", "rose"])}
-      <label className="studio-toggle"><span>{locale === "he" ? "צבע אישי" : "Custom color"}<small className="block text-xs text-muted-foreground">{locale === "he" ? "הגוון מותאם לניגודיות קריאה" : "Adjusted for readable contrast"}</small></span><input type="color" aria-label={locale === "he" ? "צבע אישי" : "Custom color"} value={value.customColor ?? "#5541cc"} onChange={e => change("customColor", e.target.value)} /></label>
+      <label className="studio-toggle"><span>{t("customColor")}<small className="block text-xs text-muted-foreground">{t("adjustedForReadableContrast")}</small></span><input type="color" aria-label={t("customColor")} value={value.customColor ?? "#5541cc"} onChange={e => change("customColor", e.target.value)} /></label>
       {options("density", ["comfortable", "compact"])}
       <label className="studio-toggle studio-motion-setting"><span>{c.motion}</span><input type="checkbox" role="switch" checked={value.motion} onChange={(e) => change("motion", e.target.checked)} /></label>
       <h3 className="studio-section-label">{c.budgetSettings}</h3>

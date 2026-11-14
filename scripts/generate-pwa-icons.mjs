@@ -1,10 +1,10 @@
-// Renders the PWA icons in public/icons from public/logo_darkmode.svg.
+// Renders the PWA icons in public/icons from the Penny wordmark in public/logo.svg.
 // Run: node scripts/generate-pwa-icons.mjs
 import sharp from "sharp";
 import { mkdir } from "node:fs/promises";
 
 const BG = "#2f22b0"; // --primary (light)
-const logo = "public/logo_darkmode.svg";
+const logo = "public/logo.svg";
 await mkdir("public/icons", { recursive: true });
 
 // padding is the share of the canvas left around the logo; maskable needs ≥ 20% safe zone.

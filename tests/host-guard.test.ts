@@ -5,7 +5,7 @@ import { proxy as middleware } from "@/proxy";
 
 describe("isAllowedHost", () => {
   it("allows loopback names on any port", () => {
-    for (const h of ["127.0.0.1:41234", "localhost:3000", "127.0.0.1", "[::1]:3000", "spent.localhost:41234"]) {
+    for (const h of ["127.0.0.1:41234", "localhost:3000", "127.0.0.1", "[::1]:3000", "penny.localhost:41234"]) {
       expect(isAllowedHost(h)).toBe(true);
     }
   });
@@ -19,7 +19,7 @@ describe("isAllowedHost", () => {
 const req = (host: string, method = "GET", path = "/api/insights") =>
   new NextRequest(`http://${host}${path}`, { method, headers: { host } });
 
-describe("isAllowedHost with SPENT_ALLOWED_HOSTS", () => {
+describe("isAllowedHost with PENNY_ALLOWED_HOSTS", () => {
   it("accepts extra host names the user listed, on any port", () => {
     expect(isAllowedHost("homeserver:41234", ["homeserver"])).toBe(true);
     expect(isAllowedHost("HomeServer", ["homeserver"])).toBe(true);

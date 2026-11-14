@@ -52,9 +52,9 @@ export function createUpdateNotifier(send: (text: string) => Promise<void>) {
     if (info.latest === notified) return;
     notified = info.latest;
     await send(
-      `A new version of Spent is available (${info.current} -> ${info.latest}).\n` +
+      `A new version of Penny is available (${info.current} -> ${info.latest}).\n` +
         `Changes: ${info.url}\n` +
-        `To update, run Spent-update.bat. It backs up your data first and keeps the current version if the new one fails its tests.`
+        `To update, run Penny-update.bat. It backs up your data first and keeps the current version if the new one fails its tests.`
     );
   };
 }

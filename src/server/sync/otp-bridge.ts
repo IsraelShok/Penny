@@ -6,7 +6,7 @@ import "server-only";
  * client->server channel by parking a promise on the server keyed by syncRunId
  * and resolving it when the user POSTs the code to /api/sync/otp.
  *
- * Safe for a single-process Next.js server (which Spent is by design - it's a
+ * Safe for a single-process Next.js server (which Penny is by design - it's a
  * local-only app). Don't lift this to a cluster without an external store.
  */
 

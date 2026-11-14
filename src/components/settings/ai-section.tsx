@@ -208,7 +208,7 @@ function AIForm({ settings }: { settings: AppSettings }) {
       )}
 
       <div className="flex justify-end">
-        <IconButton
+        <IconButton showLabel
           label={mutation.isPending ? tCommon("saving") : t("saveAiSettings")}
           variant="default"
           onClick={() => mutation.mutate()}

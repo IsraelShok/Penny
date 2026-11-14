@@ -1,13 +1,13 @@
 /**
  * Walk the redesigned landing page section by section and snapshot each.
- * Requires the Astro dev server at http://localhost:4321/Spent to be running.
+ * Requires the Astro dev server at http://localhost:4321/Penny to be running.
  */
 
 import puppeteer from 'puppeteer';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 
-const LANDING_URL = 'http://localhost:4321/Spent/';
+const LANDING_URL = 'http://localhost:4321/Penny/';
 const OUT_DIR = path.resolve(
 	new URL('.', import.meta.url).pathname,
 	'../tmp-landing-shots'
@@ -77,7 +77,7 @@ const waitForImages = async (page) => {
 
 		// Reveal all fade-up sections + hide Astro dev toolbar
 		await page.evaluate(() => {
-			document.querySelectorAll('.spent-fade-up').forEach((el) =>
+			document.querySelectorAll('.penny-fade-up').forEach((el) =>
 				el.classList.add('is-visible')
 			);
 			const css = document.createElement('style');

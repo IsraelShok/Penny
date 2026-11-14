@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
-import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@/components/ui/button";
 import { setTransactionTags } from "@/lib/api";
 import { normalizeTag } from "@/lib/tags";
 
@@ -71,9 +71,10 @@ export function TagChips({ id, tags, allTags, onFilter }: { id: number; tags: st
           </datalist>
         </>
       ) : (
-        <IconButton label={t("add")} size="icon-xs" className="size-6 text-muted-foreground" onClick={() => setAdding(true)}>
+        <Button variant="ghost" size="sm" className="h-6 gap-1 px-2 text-xs text-muted-foreground" onClick={() => setAdding(true)}>
           <Plus className="size-3" aria-hidden />
-        </IconButton>
+          {t("add")}
+        </Button>
       )}
     </div>
   );

@@ -17,8 +17,8 @@ async function fresh() {
 }
 
 beforeEach(() => {
-  dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "spent-lock-"));
-  process.env.SPENT_DATA_DIR = dataDir;
+  dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "penny-lock-"));
+  process.env.PENNY_DATA_DIR = dataDir;
 });
 
 describe("app lock and key wrapping", () => {

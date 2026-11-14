@@ -93,6 +93,21 @@ export interface FinancialPlan {
   events: LifeEvent[];
   /** Optional "get to know you" answers; any field may stay null (skipped). */
   profile: UserProfile;
+  /** Which Home to show: the new companion, or today's classic one. */
+  homeStyle: HomeStyle;
+}
+
+export const HOME_STYLES = ["companion", "classic"] as const;
+export type HomeStyle = (typeof HOME_STYLES)[number];
+
+/** Existing users (onboarded or with data) keep today's Home; only brand-new ones get the companion. */
+export function defaultHomeStyle(onboarded: boolean, hasTransactions: boolean): HomeStyle {
+  return onboarded || hasTransactions ? "classic" : "companion";
+}
+
+/** A client plan without a valid homeStyle keeps the stored one instead of resetting to the default. */
+export function keepHomeStyle(raw: unknown, stored: HomeStyle): HomeStyle {
+  return pick(HOME_STYLES, (raw as { homeStyle?: unknown } | null)?.homeStyle) ?? stored;
 }
 
 export const SITUATIONS = ["student", "employee", "selfEmployed", "family", "retired"] as const;
@@ -148,6 +163,7 @@ export const DEFAULT_PLAN: FinancialPlan = {
   checkin: { lastWeek: null, streak: 0 },
   events: [],
   profile: EMPTY_PROFILE,
+  homeStyle: "companion",
 };
 
 const finite = (v: unknown, limit: number) => {
@@ -198,6 +214,7 @@ export function parsePlan(raw: unknown): FinancialPlan {
       detail: pick(DETAIL, p.detail),
       onboarded: p.onboarded === true,
     },
+    homeStyle: pick(HOME_STYLES, r.homeStyle) ?? DEFAULT_PLAN.homeStyle,
   };
 }
 

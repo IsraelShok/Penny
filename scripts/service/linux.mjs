@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { PORT, REPO_ROOT, renderTemplate } from "./paths.mjs";
 import { addManagedBlock, removeManagedBlock } from "./hosts.mjs";
 
-const UNIT_NAME = "spent.service";
+const UNIT_NAME = "penny.service";
 const UNIT_DIR = path.join(
   process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), ".config"),
   "systemd",
@@ -14,9 +14,18 @@ const UNIT_DIR = path.join(
 const UNIT_PATH = path.join(UNIT_DIR, UNIT_NAME);
 const LOG_DIR = path.join(
   process.env.XDG_STATE_HOME ?? path.join(os.homedir(), ".local", "state"),
-  "spent",
+  "penny",
   "log",
 );
+
+// legacy: spent.service from installs before the Penny rename
+function removeLegacyUnit() {
+  const legacyPath = path.join(UNIT_DIR, "spent.service");
+  if (!fs.existsSync(legacyPath)) return;
+  systemctl(["disable", "--now", "spent.service"]);
+  fs.unlinkSync(legacyPath);
+  systemctl(["daemon-reload"]);
+}
 
 function whichNode() {
   const r = spawnSync("which", ["node"], { encoding: "utf-8" });
@@ -36,7 +45,7 @@ function ensureLogDir() {
 function writeUnit() {
   const nodePath = whichNode();
   const pathEnv = `${path.dirname(nodePath)}:/usr/local/bin:/usr/bin:/bin`;
-  const content = renderTemplate("spent.service", {
+  const content = renderTemplate("penny.service", {
     nodePath,
     repoRoot: REPO_ROOT,
     port: PORT,
@@ -99,6 +108,7 @@ export async function run(cmd, { friendlyUrl }) {
     case "install": {
       preflight();
       ensureSystemdAvailable();
+      removeLegacyUnit();
       ensureLogDir();
       writeUnit();
       systemctl(["daemon-reload"]);
@@ -118,20 +128,21 @@ export async function run(cmd, { friendlyUrl }) {
           );
           process.exit(1);
         }
-        console.log(`Spent is running. Open ${friendlyUrl}.`);
+        console.log(`Penny is running. Open ${friendlyUrl}.`);
       }, 1500);
       return;
     }
     case "uninstall": {
       systemctl(["disable", "--now", UNIT_NAME]);
       if (fs.existsSync(UNIT_PATH)) fs.unlinkSync(UNIT_PATH);
+      removeLegacyUnit();
       systemctl(["daemon-reload"]);
       try {
         removeManagedBlock();
       } catch (err) {
         console.error(`Hosts file cleanup failed: ${err.message}`);
       }
-      console.log("Spent service removed. The repo and data/ directory are untouched.");
+      console.log("Penny service removed. The repo and data/ directory are untouched.");
       return;
     }
     case "start": {

@@ -1,13 +1,14 @@
 // Life stages: plain checklists plus links out to official / כל-זכות pages.
 // We never show benefit amounts or eligibility rules ourselves — the linked pages own that.
 
-import type { Household, LifeEventType } from "./household";
+import { isGentle, type Household, type LifeEventType } from "./household";
+import type { FinancialPlan } from "./plan";
 
 export interface L { he: string; en: string }
 export type LinkSource = "gov" | "kolzchut";
 export interface LifeLink { title: L; url: string; source: LinkSource; lastChecked: string }
 export interface LifeItem { id: string; text: L }
-export interface LifeStage { id: string; title: L; intro: L; items: LifeItem[]; links: LifeLink[]; gentle?: boolean }
+export interface LifeStage { id: string; title: L; intro: L; items: LifeItem[]; links: LifeLink[]; gentle?: boolean; keyItem: string }
 
 const CHECKED = "2026-11";
 const btl = (title: L, path: string): LifeLink => ({ title, url: `https://www.btl.gov.il/benefits/${path}`, source: "gov", lastChecked: CHECKED });
@@ -20,6 +21,7 @@ const TAX_REFUND = kz({ he: "החזר מס הכנסה", en: "Income tax refund" 
 export const LIFE_STAGES: LifeStage[] = [
   {
     id: "birth",
+    keyItem: "birth-3",
     title: { he: "לידה ותינוק", en: "Birth and baby" },
     intro: { he: "תקופה מרגשת. כמה צעדים קטנים עכשיו יחסכו דאגות בהמשך.", en: "An exciting time. A few small steps now save worry later." },
     items: items("birth", [
@@ -39,6 +41,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "kids",
+    keyItem: "kids-2",
     title: { he: "ילדים ובני נוער", en: "Kids and teens" },
     intro: { he: "ילדים גדלים, וגם ההוצאות. מעט סדר עוזר לכולם.", en: "Kids grow, and so do costs. A little order helps everyone." },
     items: items("kids", [
@@ -54,6 +57,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "young",
+    keyItem: "young-5",
     title: { he: "צבא, שחרור ולימודים", en: "Army, discharge and studies" },
     intro: { he: "ההתחלה של עצמאות כלכלית. אפשר ללמוד את זה צעד אחר צעד.", en: "The start of financial independence. You can learn it step by step." },
     items: items("young", [
@@ -72,6 +76,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "firstJob",
+    keyItem: "firstJob-2",
     title: { he: "עבודה ראשונה", en: "First job" },
     intro: { he: "משכורת ראשונה! זה הזמן להניח יסודות טובים.", en: "A first salary! A good time to lay solid foundations." },
     items: items("firstJob", [
@@ -84,6 +89,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "movingIn",
+    keyItem: "movingIn-1",
     title: { he: "דירה ראשונה ושותפים", en: "Moving in and roommates" },
     intro: { he: "בית חדש מביא חשבונות חדשים. הסכמה מראש חוסכת אי-נעימות.", en: "A new home brings new bills. Agreeing early avoids friction." },
     items: items("movingIn", [
@@ -96,6 +102,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "couple",
+    keyItem: "couple-5",
     title: { he: "זוגיות וחתונה", en: "Couple and wedding" },
     intro: { he: "שני אנשים, תמונה כלכלית אחת — בקצב שנוח לכם.", en: "Two people, one money picture — at your own pace." },
     items: items("couple", [
@@ -109,6 +116,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "home",
+    keyItem: "home-3",
     title: { he: "בית ומשכנתא", en: "Home and mortgage" },
     intro: { he: "החלטה גדולה, שאפשר לפרק לצעדים קטנים.", en: "A big decision you can break into small steps." },
     items: items("home", [
@@ -122,6 +130,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "growingFamily",
+    keyItem: "growingFamily-3",
     title: { he: "המשפחה גדלה", en: "The family grows" },
     intro: { he: "עוד ילד, עוד אהבה — ועוד כמה שורות בתקציב.", en: "Another child, more love — and a few more budget lines." },
     items: items("growingFamily", [
@@ -137,6 +146,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "career",
+    keyItem: "career-4",
     title: { he: "שינוי בעבודה או פיטורים", en: "Career change or layoff" },
     intro: { he: "זה קשה, וזה זמני. נעשה את זה צעד אחד בכל פעם.", en: "This is hard, and it is temporary. One step at a time." },
     gentle: true,
@@ -155,6 +165,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "freelance",
+    keyItem: "freelance-2",
     title: { he: "עצמאות ועסק", en: "Freelance and business" },
     intro: { he: "הכנסה משתנה דורשת כרית — וקצת סדר בכל חודש.", en: "Changing income needs a cushion — and a little order each month." },
     items: items("freelance", [
@@ -168,6 +179,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "divorce",
+    keyItem: "divorce-2",
     title: { he: "פרידה וגירושין", en: "Separation and divorce" },
     intro: { he: "תקופה רגישה. אין צורך לסדר הכול היום — רק את הצעד הבא.", en: "A tender time. No need to sort everything today — just the next step." },
     gentle: true,
@@ -186,6 +198,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "illness",
+    keyItem: "illness-1",
     title: { he: "מחלה או נכות", en: "Illness or disability" },
     intro: { he: "הבריאות קודמת. הכסף יכול לחכות — הנה רק מה שחשוב עכשיו.", en: "Health comes first. Money can wait — here is only what matters now." },
     gentle: true,
@@ -204,6 +217,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "parents",
+    keyItem: "parents-3",
     title: { he: "דאגה להורים", en: "Caring for parents" },
     intro: { he: "לדאוג למי שדאג לנו. כדאי לחלק את העומס.", en: "Caring for those who cared for us. Share the load." },
     items: items("parents", [
@@ -219,6 +233,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "preRetirement",
+    keyItem: "preRetirement-1",
     title: { he: "לקראת פרישה", en: "Getting ready to retire" },
     intro: { he: "עוד יש זמן לכוונן. כמה בדיקות פשוטות נותנות שקט.", en: "There is still time to fine-tune. A few checks bring peace of mind." },
     items: items("preRetirement", [
@@ -232,6 +247,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "retirement",
+    keyItem: "retirement-3",
     title: { he: "פרישה", en: "Retirement" },
     intro: { he: "פרק חדש. המטרה: ״משכורת״ חודשית רגועה מהחסכונות.", en: "A new chapter. The aim: a calm monthly \"salary\" from savings." },
     items: items("retirement", [
@@ -247,6 +263,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "loss",
+    keyItem: "loss-2",
     title: { he: "אובדן", en: "Loss" },
     intro: { he: "אנחנו משתתפים בצערכם. אין כאן לחץ — רק מה שאפשר, כשאפשר.", en: "We are sorry for your loss. No pressure here — only what you can, when you can." },
     gentle: true,
@@ -265,6 +282,7 @@ export const LIFE_STAGES: LifeStage[] = [
   },
   {
     id: "estate",
+    keyItem: "estate-2",
     title: { he: "סדר לבני המשפחה", en: "Order for the family" },
     intro: { he: "מתנה של שקט למי שאוהבים אותנו. אפשר להתחיל במשהו קטן.", en: "A gift of calm to those who love us. Start with something small." },
     gentle: true,
@@ -308,6 +326,20 @@ export function relevantStages(h: Household, today = new Date()): string[] {
   if (h.incomeShape === "freelancer" || h.incomeShape === "mixed") ids.add("freelance");
   if (h.incomeShape === "pension") ids.add("retirement");
   return PRIORITY.filter((id) => ids.has(id));
+}
+
+// "employee" deliberately has no stage: "career" is the layoff stage.
+const SITUATION_STAGE = { student: "young", selfEmployed: "freelance", family: "growingFamily", retired: "retirement" } as const;
+
+/** The single stage that fits now: the most pressing relevant one, else a guess from the profile. */
+export function currentStage(h: Household, plan: Pick<FinancialPlan, "birthYear" | "profile">, today = new Date()): { stageId: string; gentle: boolean } | null {
+  const hh = plan.birthYear != null && !h.members.some((m) => m.role === "me" && m.birthYear != null)
+    ? { ...h, members: [...h.members, { id: "plan-me", name: "", role: "me" as const, birthYear: plan.birthYear }] }
+    : h;
+  const sit = plan.profile.situation;
+  const stageId = relevantStages(hh, today)[0] ?? (sit ? SITUATION_STAGE[sit as keyof typeof SITUATION_STAGE] : undefined);
+  if (!stageId) return null;
+  return { stageId, gentle: isGentle(h, today) || LIFE_STAGES.find((s) => s.id === stageId)?.gentle === true };
 }
 
 /** Validates stored checklist progress: { stageId: itemId[] }, known ids only. */

@@ -1,7 +1,9 @@
+import { pennyEnv } from "./legacy-names";
+
 const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 export const OLLAMA_URL_ERROR =
-  "The Ollama address must point to this computer (localhost). To use Ollama on another machine, set SPENT_ALLOW_REMOTE_OLLAMA=1.";
+  "The Ollama address must point to this computer (localhost). To use Ollama on another machine, set PENNY_ALLOW_REMOTE_OLLAMA=1.";
 
 /**
  * The Ollama URL reduced to its origin, or null. Only loopback is accepted unless remote Ollama is explicitly
@@ -9,7 +11,7 @@ export const OLLAMA_URL_ERROR =
  */
 export function normalizeOllamaUrl(
   value: string,
-  allowRemote = process.env.SPENT_ALLOW_REMOTE_OLLAMA === "1"
+  allowRemote = pennyEnv("ALLOW_REMOTE_OLLAMA") === "1"
 ): string | null {
   let url: URL;
   try {

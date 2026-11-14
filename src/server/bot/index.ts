@@ -1,4 +1,5 @@
 import "server-only";
+import { pennyEnv } from "@/lib/legacy-names";
 
 import { Bot } from "grammy";
 import { handleCommand, splitMessage, menuMarkup, MENU_LABEL, MENU_PREFIX, BOT_COMMANDS, type BotConfig } from "./commands";
@@ -14,8 +15,8 @@ import { checkForUpdate, createUpdateNotifier } from "../update/check";
 import { redactError } from "../lib/redact";
 
 declare global {
-  var __spentBot: Bot | undefined;
-  var __spentUpdateCheck: boolean | undefined;
+  var __pennyBot: Bot | undefined;
+  var __pennyUpdateCheck: boolean | undefined;
 }
 
 // One persistent "menu" key; everything else lives in inline tabs on the card.
@@ -50,7 +51,7 @@ function reply(text: string, fromChatId: number, chatId: number): Promise<string
 /** Starts long polling when a bot is saved in settings (or in env); the first chat to send the link code becomes the owner. */
 export function startBot(): void {
   const { token } = getBotConfig();
-  if (!token || globalThis.__spentBot) return;
+  if (!token || globalThis.__pennyBot) return;
   const bot = new Bot(token);
   void bot.api.setMyCommands(BOT_COMMANDS).catch(() => undefined);
 
@@ -105,13 +106,13 @@ export function startBot(): void {
   });
 
   bot.catch((err) => console.error("[bot]", redactError(err)));
-  globalThis.__spentBot = bot;
+  globalThis.__pennyBot = bot;
   void bot.start();
-  if (!globalThis.__spentUpdateCheck) {
-    globalThis.__spentUpdateCheck = true;
+  if (!globalThis.__pennyUpdateCheck) {
+    globalThis.__pennyUpdateCheck = true;
     scheduleUpdateCheck((text) => {
       const { chatId } = getBotConfig();
-      const current = globalThis.__spentBot;
+      const current = globalThis.__pennyBot;
       return chatId && current ? current.api.sendMessage(chatId, text).then(() => undefined) : Promise.resolve();
     });
   }
@@ -120,7 +121,7 @@ export function startBot(): void {
 /** Right after a sync: tells the linked chat about new expenses, in context. Silent when locked or nothing new. */
 export async function sendSpendFeedback(since: string): Promise<void> {
   const { chatId } = getBotConfig();
-  const bot = globalThis.__spentBot;
+  const bot = globalThis.__pennyBot;
   const ws = listAllWorkspaceIds()[0];
   if (!bot || !chatId || ws === undefined || isKeyLocked()) return;
   const { spendFeedback } = await import("./feedback");
@@ -133,24 +134,24 @@ export async function sendSpendFeedback(since: string): Promise<void> {
 
 /** Called after the bot is saved or removed in settings. */
 export async function restartBot(): Promise<void> {
-  const old = globalThis.__spentBot;
-  globalThis.__spentBot = undefined;
+  const old = globalThis.__pennyBot;
+  globalThis.__pennyBot = undefined;
   if (old) await old.stop().catch(() => undefined);
   startBot();
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** With SPENT_UPDATE_CHECK=1, tells the user in Telegram when the tracked branch has a newer commit. Never installs anything. */
+/** With PENNY_UPDATE_CHECK=1, tells the user in Telegram when the tracked branch has a newer commit. Never installs anything. */
 function scheduleUpdateCheck(send: (text: string) => Promise<void>): void {
-  const current = process.env.SPENT_COMMIT ?? "";
-  if (process.env.SPENT_UPDATE_CHECK !== "1" || !current || current === "unknown") return;
+  const current = pennyEnv("COMMIT") ?? "";
+  if (pennyEnv("UPDATE_CHECK") !== "1" || !current || current === "unknown") return;
 
   const notify = createUpdateNotifier(send);
   const run = async () => {
     const info = await checkForUpdate({
-      repo: process.env.SPENT_UPDATE_REPO || "Shaya16/Spent",
-      branch: process.env.SPENT_UPDATE_BRANCH || "main",
+      repo: pennyEnv("UPDATE_REPO") || "Sergey-Bar/Penny",
+      branch: pennyEnv("UPDATE_BRANCH") || "main",
       current,
     });
     if (info) await notify(info).catch((err) => console.error("[update]", redactError(err)));

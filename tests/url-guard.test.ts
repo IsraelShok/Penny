@@ -28,7 +28,7 @@ describe("normalizeOllamaUrl with remote Ollama allowed", () => {
     expect(normalizeOllamaUrl("file:///etc/passwd", true)).toBeNull();
   });
   it("tells the user how to allow a remote Ollama", () => {
-    expect(OLLAMA_URL_ERROR).toContain("SPENT_ALLOW_REMOTE_OLLAMA=1");
+    expect(OLLAMA_URL_ERROR).toContain("PENNY_ALLOW_REMOTE_OLLAMA=1");
   });
 });
 
@@ -52,7 +52,7 @@ describe("OllamaProvider with a disallowed stored URL", () => {
     const spy = vi.spyOn(globalThis, "fetch");
     const { OllamaProvider } = await import("@/server/ai/providers/ollama");
     const p = new OllamaProvider("http://192.168.1.20:11434", "llama3.1");
-    await expect(p.categorize([{ description: "x", amount: -1, currency: "ILS" }], [{ name: "Food", description: null }])).rejects.toThrow(/SPENT_ALLOW_REMOTE_OLLAMA/);
+    await expect(p.categorize([{ description: "x", amount: -1, currency: "ILS" }], [{ name: "Food", description: null }])).rejects.toThrow(/PENNY_ALLOW_REMOTE_OLLAMA/);
     expect(spy).not.toHaveBeenCalled();
   });
 });

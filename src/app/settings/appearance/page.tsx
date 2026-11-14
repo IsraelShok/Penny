@@ -2,6 +2,9 @@
 
 import { Switch } from "@/components/ui/switch";
 import { usePlan } from "@/hooks/use-plan";
+import { Segmented } from "@/components/ui/segmented";
+import { HOME_STYLES, type HomeStyle } from "@/lib/plan";
+import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 import { StudioEditor } from "@/components/dashboard/studio-editor";
@@ -95,6 +98,10 @@ export default function AppearanceSettingsPage() {
 function ComfortCard() {
   const t = useTranslations("settings.appearance");
   const { plan, update, loaded } = usePlan();
+  // Show the picked style at once; it follows plan.homeStyle again once saved (or if saving fails).
+  const [picked, setPicked] = useState<HomeStyle | null>(null);
+  if (picked && picked === plan.homeStyle) setPicked(null);
+  const homeStyle = picked ?? plan.homeStyle;
   const rows = [
     { key: "simpleMode", label: t("simpleMode"), hint: t("simpleModeHint") },
     { key: "wheelPaging", label: t("wheelPaging"), hint: t("wheelPagingHint") },
@@ -102,6 +109,12 @@ function ComfortCard() {
   return (
     <SettingCard title={t("comfortTitle")} description={t("comfortDescription")}>
       <div className="divide-y divide-border">
+        <div className="space-y-2 pb-3">
+          <span className="block font-medium">{t("homeStyle")}</span>
+          <Segmented label={t("homeStyle")} value={homeStyle} onChange={(next) => { if (!loaded || next === homeStyle) return; setPicked(next); update({ homeStyle: next }).catch(() => setPicked(null)); }}
+            options={HOME_STYLES.map((s) => ({ value: s, label: t(`homeStyle_${s}`) }))} />
+          <span className="block text-xs text-muted-foreground">{t(`homeStyleHint_${homeStyle}`)}</span>
+        </div>
         {rows.map((r) => (
           <label key={r.key} className="flex cursor-pointer items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
             <span>

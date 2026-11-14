@@ -41,7 +41,7 @@ async function main() {
     default:
       throw new Error(
         `Unsupported platform: ${process.platform}. ` +
-          `Spent's service installer supports macOS, Linux, and Windows.`,
+          `Penny's service installer supports macOS, Linux, and Windows.`,
       );
   }
 

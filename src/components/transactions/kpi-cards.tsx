@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { formatCurrency } from "@/lib/formatters";
+import { shekels } from "@/lib/money";
 import type { TransactionsSummary } from "@/lib/api";
 import type { Locale } from "@/i18n/routing";
 
@@ -90,7 +90,8 @@ function KpiCard({
         {loading ? (
           <span className="text-muted-foreground">—</span>
         ) : (
-          formatCurrency(amount, "ILS", locale)
+          // Whole shekels in the summary, like every other headline figure; the table rows keep agorot.
+          shekels(Math.abs(amount), locale)
         )}
       </div>
       <div className="mt-1 text-sm text-muted-foreground">{!loading && meta}</div>

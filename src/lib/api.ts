@@ -357,7 +357,7 @@ export function getCashAhead() {
 }
 
 export function getSuggestions() {
-  return fetchJSON<{ suggestions: import("./suggestions").Suggestion[] }>(`/api/suggestions`);
+  return fetchJSON<{ suggestions: import("./suggestions").Suggestion[]; dismissed: string[] }>(`/api/suggestions`);
 }
 
 export function dismissSuggestion(key: string) {
@@ -933,7 +933,7 @@ export function deletePension(id: number) {
 }
 
 export function getCashflowHealth() {
-  return fetchJSON<{ hasData: boolean; signs: import("./cashflow-health").CashflowSign[]; level: import("./cashflow-health").CashflowLevel }>(`/api/cashflow-health`);
+  return fetchJSON<{ hasData: boolean; signs: import("./cashflow-health").CashflowSign[]; level: import("./cashflow-health").CashflowLevel; avgIncome: number; avgExpenses: number }>(`/api/cashflow-health`);
 }
 
 export function getResilience() {

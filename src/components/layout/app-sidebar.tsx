@@ -4,10 +4,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff, Lock, PanelLeftIcon, Search } from "lucide-react";
+import { Lock, PanelLeftIcon, Search } from "lucide-react";
 import { getActivity, getHome } from "@/lib/api";
 import { getLockStatus } from "@/components/settings/app-lock-card";
-import { usePrivacyMode } from "@/hooks/use-privacy-mode";
 import { SyncStatusPill } from "@/components/home/sync-status-pill";
 import { OPEN_COMMAND_PALETTE } from "./command-palette";
 import { useTranslations } from "next-intl";
@@ -30,6 +29,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { IconButton } from "@/components/ui/icon-button";
@@ -57,16 +57,19 @@ export const NAV: NavDef[] = [
     href: "/investments",
     labelKey: "future",
     Icon: Flag,
-    match: (p: string) => ["/investments", "/fi", "/journey"].some((r) => p.startsWith(r)),
+    match: (p: string) => ["/investments", "/fi", "/journey", "/life"].some((r) => p.startsWith(r)),
   },
   {
     href: "/more",
     labelKey: "more",
     Icon: LayoutGrid,
     // Calculators and the occasional tools; the hub stays lit while you use one.
-    match: (p: string) => ["/more", "/calculators", "/recap", "/ask", "/life", "/wellbeing", "/checkin", "/help", "/control", "/markets"].some((r) => p.startsWith(r)),
+    match: (p: string) => ["/more", "/calculators", "/recap", "/ask", "/wellbeing", "/checkin", "/help", "/control", "/markets"].some((r) => p.startsWith(r)),
   },
 ];
+
+/** Simple mode is one scrolling page, like RiseUp: Home only. */
+export const SIMPLE_NAV = new Set(["/"]);
 
 /** Pages that are not in the menu but still found by search. */
 export const SEARCH_PAGES: NavDef[] = [
@@ -91,7 +94,6 @@ export function AppSidebar() {
   const router = useRouter();
   const t = useTranslations("nav");
   const { setOpenMobile, toggleSidebar } = useSidebar();
-  const [privacy, togglePrivacy] = usePrivacyMode();
   const lock = useQuery({ queryKey: ["lock"], queryFn: getLockStatus });
   const home = useQuery({ queryKey: ["home"], queryFn: getHome });
   const queryClient = useQueryClient();
@@ -108,7 +110,8 @@ export function AppSidebar() {
   }, [queryClient]);
   const { plan } = usePlan();
   // Settings lives as an icon by the workspace, but the wheel still reaches it last.
-  const pages = [...NAV, ...FOOTER_NAV];
+  const nav = plan.simpleMode ? NAV.filter((n) => SIMPLE_NAV.has(n.href)) : NAV;
+  const pages = [...nav, ...FOOTER_NAV];
   const lastWheel = useRef(0);
 
   // Wheel over the menu steps through the pages, top to bottom.
@@ -125,6 +128,11 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent className="pt-3" onWheel={onWheel}>
+        {/* Sync status first, in words, so it's the first thing read; collapsed it shrinks to its dot. */}
+        <SidebarGroup className="pb-0">
+          <SyncStatusPill labelled items={home.data?.bankHealth ?? null} nextScheduledSync={home.data?.nextScheduledSync ?? null} activity={activity ?? null} onOpenChange={onStatusOpen} />
+        </SidebarGroup>
+        <SidebarSeparator className="mx-3 w-auto" />
         <SidebarGroup className="pb-0">
           <SidebarMenu>
             <SidebarMenuItem>
@@ -141,7 +149,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        {[{ label: null, items: NAV }].map((group) => (
+        {[{ label: null, items: plan.simpleMode ? [] : nav }].map((group) => (
         <SidebarGroup key="main">
           <SidebarGroupContent>
             <SidebarMenu>
@@ -170,12 +178,8 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <WorkspaceSwitcher />
-        {/* Quick tools: sync status, privacy, lock and settings. One row open, one column collapsed. */}
+        {/* Quick tools: lock, collapse and settings. One row open, one column collapsed. Privacy mode lives in Settings. */}
         <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
-          <SyncStatusPill items={home.data?.bankHealth ?? null} nextScheduledSync={home.data?.nextScheduledSync ?? null} activity={activity ?? null} onOpenChange={onStatusOpen} />
-          <IconButton label={t("privacyMode")} size="icon-sm" variant="ghost" aria-pressed={privacy} onClick={togglePrivacy}>
-            {privacy ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
-          </IconButton>
           {lock.data?.enabled && (
             <IconButton
               label={t("lockNow")}

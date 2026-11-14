@@ -16,12 +16,12 @@ export const SYNC_ERRORS = {
   accountBlocked: "The account is blocked by the bank. Resolve this on the bank's website.",
   timeout: "The scrape timed out. The bank's site may be slow or down. Try again.",
   twoFactor:
-    "This account is asking for 2FA. For most banks, turn on 'This account requires 2FA' in the bank's settings so Spent shows the browser and you can solve it manually. For One Zero, make sure the phone number is set on the account.",
+    "This account is asking for 2FA. For most banks, turn on 'This account requires 2FA' in the bank's settings so Penny shows the browser and you can solve it manually. For One Zero, make sure the phone number is set on the account.",
   unexpected:
     "The scraper failed unexpectedly. Run with 'Show browser during sync' enabled to see what's happening.",
   // Docker and other headless hosts have no screen, so showing the browser is not an option there.
   unexpectedHeadless:
-    "The scraper failed unexpectedly. The bank may have changed its login page. Try again later; if it keeps failing, update Spent.",
+    "The scraper failed unexpectedly. The bank may have changed its login page. Try again later; if it keeps failing, update Penny.",
 } as const;
 
 export type SyncErrorKey = keyof typeof SYNC_ERRORS;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { readStored } from "@/lib/legacy-names";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { DataState } from "@/components/ui/data-state";
@@ -23,12 +24,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CategoryViewMode } from "@/lib/types";
 import type { Locale } from "@/i18n/routing";
 
-const VIEW_MODE_KEY = "spent.dashboard.viewMode";
+const VIEW_MODE_KEY = "penny.dashboard.viewMode";
+const LEGACY_VIEW_MODE_KEY = "spent.dashboard.viewMode"; // legacy: spent.dashboard.viewMode from installs before the Penny rename
 
 function readViewMode(): CategoryViewMode {
   if (typeof window === "undefined") return "collapsed";
   try {
-    const raw = window.localStorage.getItem(VIEW_MODE_KEY);
+    const raw = readStored(VIEW_MODE_KEY, LEGACY_VIEW_MODE_KEY);
     return raw === "expanded" ? "expanded" : "collapsed";
   } catch {
     return "collapsed";

@@ -1,6 +1,6 @@
 [Unit]
-Description=Spent — local personal finance tracker
-Documentation=https://github.com/spent/spent
+Description=Penny — local personal finance tracker
+Documentation=https://github.com/Sergey-Bar/Penny
 After=network.target
 
 [Service]

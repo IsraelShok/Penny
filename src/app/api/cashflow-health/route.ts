@@ -49,5 +49,6 @@ export async function GET(request: Request) {
   const signs = cashflowSigns(facts);
   // No transactions yet means nothing to judge.
   const hasData = months.length > 0 || (inst.total ?? 0) > 0;
-  return NextResponse.json({ hasData, facts, signs, level: cashflowLevel(signs) });
+  const avg = (key: "income" | "expenses") => (months.length ? months.reduce((s, m) => s + m[key], 0) / months.length : 0);
+  return NextResponse.json({ hasData, facts, signs, level: cashflowLevel(signs), avgIncome: avg("income"), avgExpenses: avg("expenses") });
 }

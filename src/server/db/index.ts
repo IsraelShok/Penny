@@ -1,13 +1,12 @@
 import "server-only";
 
 import Database from "better-sqlite3";
-import path from "path";
 import fs from "fs";
 import { runMigrations } from "./migrate";
-import { dataDir } from "../lib/data-dir";
+import { dataDir, dbPath } from "../lib/data-dir";
 
 const DB_DIR = dataDir();
-const DB_PATH = path.join(DB_DIR, "spent.db");
+const DB_PATH = dbPath(DB_DIR);
 
 function createDatabase(): Database.Database {
   if (!fs.existsSync(DB_DIR)) {

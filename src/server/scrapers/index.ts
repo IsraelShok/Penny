@@ -1,4 +1,5 @@
 import "server-only";
+import { pennyEnv } from "@/lib/legacy-names";
 
 import { CompanyTypes, createScraper } from "israeli-bank-scrapers";
 import {
@@ -131,7 +132,7 @@ async function runScrape(
   // Chromium's renderer sandbox is on by default on macOS, Windows, and
   // most Linux installs. Self-hosters running as root or in unprivileged
   // Docker need to opt out (the sandbox fails to start there).
-  if (process.env.SPENT_DISABLE_CHROMIUM_SANDBOX === "1") {
+  if (pennyEnv("DISABLE_CHROMIUM_SANDBOX") === "1") {
     chromiumArgs.push("--no-sandbox");
   }
 

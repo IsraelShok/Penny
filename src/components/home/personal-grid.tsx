@@ -39,7 +39,7 @@ export function PersonalGrid({ render }: { render: (id: WidgetId) => ReactNode }
     setTiles(next); setSaved(layouts);
     void storePreference(remoteKey,{tiles:next,saved:layouts}).catch(()=>toast.error(he?"נשמר מקומית; הסנכרון לשרת נכשל. רעננו לפני ניסיון נוסף.":"Saved locally; server sync failed. Reload before retrying."));
     try { localStorage.setItem(key, JSON.stringify({ tiles: next, saved: layouts })); }
-    catch { toast.error(he ? "לא ניתן לשמור בדפדפן הזה" : "Browser storage unavailable"); }
+    catch { toast.error(t("browserStorageUnavailable")); }
   }
   function move(id: WidgetId, target: number) {
     const next = [...tiles]; const from = next.findIndex(t => t.id === id);
@@ -53,17 +53,17 @@ export function PersonalGrid({ render }: { render: (id: WidgetId) => ReactNode }
     {editing && <div className="mb-4 space-y-4 rounded-2xl border bg-card p-4">
       <p className="text-sm text-muted-foreground">{he ? `הסידור נשמר בשרת ובדפדפן, בנפרד ל${mobile ? "מובייל" : "מחשב"}. גררו כרטיס או השתמשו בכפתורי הסידור.` : `Saved on this server and browser for ${mobile ? "mobile" : "desktop"}. Drag a card or use the move buttons.`}</p>
       <div className="flex flex-wrap gap-2">{(["daily", "planning", "minimal"] as LayoutPreset[]).map((p, i) => <Button key={p} variant="secondary" onClick={() => persist(presetLayout(p))}>{(he ? ["יומיום", "תכנון", "מינימלי"] : ["Daily", "Planning", "Minimal"])[i]}</Button>)}</div>
-      <form className="flex flex-wrap gap-2" onSubmit={e => { e.preventDefault(); if (name.trim()) { persist(tiles, [...saved.filter(s => s.name !== name.trim()), { name: name.trim(), tiles }].slice(-8)); setName(""); } }}><input aria-label={he ? "שם הסידור" : "Layout name"} className="min-h-11 rounded-lg border bg-background px-3" maxLength={40} value={name} onChange={e => setName(e.target.value)} placeholder={he ? "שם לסידור שלי" : "Name this layout"} required /><Button type="submit">{he ? "שמירת סידור" : "Save layout"}</Button></form>
-      {saved.length > 0 && <div className="flex flex-wrap gap-2">{saved.map(s => <div key={s.name} className="flex gap-1"><Button variant="outline" onClick={() => persist(s.tiles)}>{s.name}</Button><Button variant="ghost" aria-label={`${he ? "מחיקת" : "Delete"} ${s.name}`} onClick={() => persist(tiles, saved.filter(x => x.name !== s.name))}>×</Button></div>)}</div>}
+      <form className="flex flex-wrap gap-2" onSubmit={e => { e.preventDefault(); if (name.trim()) { persist(tiles, [...saved.filter(s => s.name !== name.trim()), { name: name.trim(), tiles }].slice(-8)); setName(""); } }}><input aria-label={t("layoutName")} className="min-h-11 rounded-lg border bg-background px-3" maxLength={40} value={name} onChange={e => setName(e.target.value)} placeholder={t("nameThisLayout")} required /><Button type="submit">{t("saveLayout")}</Button></form>
+      {saved.length > 0 && <div className="flex flex-wrap gap-2">{saved.map(s => <div key={s.name} className="flex gap-1"><Button variant="outline" onClick={() => persist(s.tiles)}>{s.name}</Button><Button variant="ghost" aria-label={t("deleteLayout", { name: s.name })} onClick={() => persist(tiles, saved.filter(x => x.name !== s.name))}>×</Button></div>)}</div>}
     </div>}
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {tiles.filter(t => editing || t.visible).map(tile => <div key={tile.id} className={`${tile.wide ? "md:col-span-2" : ""} min-w-0 ${editing ? "rounded-2xl border border-dashed p-3" : ""}`} onDragOver={e => { if (editing) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (drag) move(drag, tiles.findIndex(t => t.id === tile.id)); setDrag(null); }}>
         {editing && <div className="mb-3 flex flex-wrap items-center gap-2">
-          <button draggable onDragStart={() => setDrag(tile.id)} onDragEnd={() => setDrag(null)} className="min-h-11 cursor-grab rounded-lg border px-3" aria-label={`${he ? "גרירת" : "Drag"} ${labels[tile.id][he ? 0 : 1]}`}>⠿ {labels[tile.id][he ? 0 : 1]}</button>
-          <Button variant="ghost" disabled={tiles[0].id === tile.id} onClick={() => move(tile.id, tiles.findIndex(t => t.id === tile.id) - 1)} aria-label={he ? "הזזה למעלה" : "Move up"}>↑</Button><Button variant="ghost" disabled={tiles.at(-1)?.id === tile.id} onClick={() => move(tile.id, tiles.findIndex(t => t.id === tile.id) + 1)} aria-label={he ? "הזזה למטה" : "Move down"}>↓</Button>
-          <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={tile.visible} onChange={e => patch(tile.id, { visible: e.target.checked })} />{he ? "הצגה" : "Show"}</label>
-          {!mobile && <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={tile.wide} onChange={e => patch(tile.id, { wide: e.target.checked })} />{he ? "רוחב מלא" : "Full width"}</label>}
-          <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={tile.tall} onChange={e => patch(tile.id, { tall: e.target.checked })} />{he ? "גובה מורחב" : "Expanded height"}</label>
+          <button draggable onDragStart={() => setDrag(tile.id)} onDragEnd={() => setDrag(null)} className="min-h-11 cursor-grab rounded-lg border px-3" aria-label={t("dragTile", { name: labels[tile.id][he ? 0 : 1] })}>⠿ {labels[tile.id][he ? 0 : 1]}</button>
+          <Button variant="ghost" disabled={tiles[0].id === tile.id} onClick={() => move(tile.id, tiles.findIndex(t => t.id === tile.id) - 1)} aria-label={t("moveUp")}>↑</Button><Button variant="ghost" disabled={tiles.at(-1)?.id === tile.id} onClick={() => move(tile.id, tiles.findIndex(t => t.id === tile.id) + 1)} aria-label={t("moveDown")}>↓</Button>
+          <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={tile.visible} onChange={e => patch(tile.id, { visible: e.target.checked })} />{t("show")}</label>
+          {!mobile && <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={tile.wide} onChange={e => patch(tile.id, { wide: e.target.checked })} />{t("fullWidth")}</label>}
+          <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={tile.tall} onChange={e => patch(tile.id, { tall: e.target.checked })} />{t("expandedHeight")}</label>
         </div>}
         {tile.visible && <div className={tile.tall ? "min-h-96 [&>*]:min-h-96" : ""}>{render(tile.id)}</div>}
       </div>)}

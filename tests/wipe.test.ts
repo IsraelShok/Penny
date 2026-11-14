@@ -10,8 +10,8 @@ const post = (body: unknown) =>
 
 describe("full wipe", () => {
   it("needs the word, then removes the database, key and logs and starts fresh", async () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "spent-wipe-"));
-    process.env.SPENT_DATA_DIR = dir;
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "penny-wipe-"));
+    process.env.PENNY_DATA_DIR = dir;
     globalThis.__pennyDataKey = undefined;
     const { getDb } = await import("@/server/db/index");
     const { setGlobalSetting, getGlobalSetting } = await import("@/server/db/queries/settings");

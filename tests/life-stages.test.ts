@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_HOUSEHOLD, type Household } from "@/lib/household";
-import { LIFE_STAGES, parseProgress, relevantStages } from "@/lib/life-stages";
+import { EMPTY_PROFILE } from "@/lib/plan";
+import { LIFE_STAGES, currentStage, parseProgress, relevantStages } from "@/lib/life-stages";
 
 const today = new Date("2026-11-06");
 const h = (patch: Partial<Household>): Household => ({ ...EMPTY_HOUSEHOLD, ...patch });
@@ -37,5 +38,36 @@ describe("parseProgress", () => {
   it("keeps only known stage and item ids", () => {
     expect(parseProgress({ birth: ["birth-1", "nope"], fake: ["x"], kids: "bad" })).toEqual({ birth: ["birth-1"] });
     expect(parseProgress(null)).toEqual({});
+  });
+});
+
+describe("keyItem", () => {
+  it("is an item of its own stage", () => {
+    for (const s of LIFE_STAGES) expect(s.items.map((i) => i.id)).toContain(s.keyItem);
+  });
+});
+
+describe("currentStage", () => {
+  const plan = (birthYear: number | null, situation: (typeof EMPTY_PROFILE)["situation"] = null) => ({ birthYear, profile: { ...EMPTY_PROFILE, situation } });
+  it("is null with nothing known", () => {
+    expect(currentStage(EMPTY_HOUSEHOLD, plan(null), today)).toBeNull();
+  });
+  it("takes the most pressing stage and flags it gentle", () => {
+    const hh = h({ incomeShape: "freelancer", events: [{ id: "1", type: "divorce", date: "2026-05-01" }] });
+    expect(currentStage(hh, plan(null), today)).toEqual({ stageId: "divorce", gentle: true });
+  });
+  it("uses the plan birth year when no member has one", () => {
+    expect(currentStage(EMPTY_HOUSEHOLD, plan(1960), today)).toEqual({ stageId: "preRetirement", gentle: false });
+  });
+  it("falls back to the profile situation", () => {
+    const want = { student: "young", selfEmployed: "freelance", family: "growingFamily", retired: "retirement" } as const;
+    for (const [sit, id] of Object.entries(want)) expect(currentStage(EMPTY_HOUSEHOLD, plan(null, sit as keyof typeof want), today)?.stageId).toBe(id);
+  });
+  it("gives an employee with nothing else no stage", () => {
+    expect(currentStage(EMPTY_HOUSEHOLD, plan(null, "employee"), today)).toBeNull();
+  });
+  it("is gentle for a gentle stage even when the event is over a year old", () => {
+    const hh = h({ events: [{ id: "1", type: "loss", date: "2025-06-01" }] });
+    expect(currentStage(hh, plan(null), today)).toEqual({ stageId: "loss", gentle: true });
   });
 });

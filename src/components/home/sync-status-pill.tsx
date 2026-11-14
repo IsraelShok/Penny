@@ -18,6 +18,8 @@ interface Props {
   nextScheduledSync: string | null;
   activity: ActivitySnapshot | null;
   onOpenChange?: (open: boolean) => void;
+  /** Show the status in words next to the dot (open sidebar); the dot alone when the sidebar is collapsed. */
+  labelled?: boolean;
 }
 
 type PillTone = "ok" | "warn" | "error" | "muted" | "active";
@@ -90,6 +92,7 @@ export function SyncStatusPill({
   nextScheduledSync,
   activity,
   onOpenChange,
+  labelled,
 }: Props) {
   const tPill = useTranslations("syncPill");
   const tBanks = useTranslations("banks");
@@ -183,7 +186,9 @@ export function SyncStatusPill({
                   type="button"
                   aria-label={tooltipText}
                   className={cn(
-                    "inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    labelled
+                      ? "flex min-h-9 w-full items-center gap-2 rounded-lg px-2 text-start text-sm transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+                      : "inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     styles.text
                   )}
                 />
@@ -195,7 +200,9 @@ export function SyncStatusPill({
             aria-hidden
             className={cn("size-2 shrink-0 rounded-full", styles.dot, styles.pulse && "animate-pulse")}
           />
-          <span className="sr-only">{tooltipText}</span>
+          {labelled
+            ? <span className="min-w-0 flex-1 truncate text-sidebar-foreground group-data-[collapsible=icon]:sr-only">{state.label}</span>
+            : <span className="sr-only">{tooltipText}</span>}
         </TooltipTrigger>
         <TooltipContent>{tooltipText}</TooltipContent>
       </Tooltip>

@@ -1,4 +1,5 @@
 import "server-only";
+import { pennyEnv } from "@/lib/legacy-names";
 
 const FORK_PROVIDERS = new Set(["isracard", "max"]);
 
@@ -11,5 +12,5 @@ export function usesScraperFork(
   provider: string,
   env: Record<string, string | undefined> = process.env
 ): boolean {
-  return env.SPENT_SCRAPER_FORK === "1" && FORK_PROVIDERS.has(provider);
+  return pennyEnv("SCRAPER_FORK", env) === "1" && FORK_PROVIDERS.has(provider);
 }

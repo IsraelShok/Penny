@@ -14,13 +14,13 @@ describe("encryption key location", () => {
 
   beforeEach(() => {
     globalThis.__pennyDataKey = undefined;
-    cwd = fs.mkdtempSync(path.join(os.tmpdir(), "spent-cwd-"));
-    dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "spent-data-"));
+    cwd = fs.mkdtempSync(path.join(os.tmpdir(), "penny-cwd-"));
+    dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "penny-data-"));
     vi.spyOn(process, "cwd").mockReturnValue(cwd);
-    process.env.SPENT_DATA_DIR = dataDir;
+    process.env.PENNY_DATA_DIR = dataDir;
   });
 
-  it("keeps the key next to the database in SPENT_DATA_DIR", async () => {
+  it("keeps the key next to the database in PENNY_DATA_DIR", async () => {
     const { encrypt, decrypt } = await freshEncryption();
     const sealed = encrypt("secret");
     expect(fs.existsSync(path.join(dataDir, ".encryption-key"))).toBe(true);

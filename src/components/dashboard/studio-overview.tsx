@@ -18,13 +18,14 @@ export function StudioOverview({ data, selectedDate, monthLabel, preferences }: 
   const showRemaining = hasBudget && preferences.metric === "remaining";
   const main = showRemaining ? Math.abs(m.remaining) : spent;
   const label = showRemaining ? m.remaining < 0 ? c.over : c.remaining : hasBudget ? c.spent : c.allSpent;
+  const forecastOver = !m.isPast && m.forecast != null && m.forecast > data.totalBudget;
   const used = Math.max(0, Math.min(100, m.used));
   return <section className="studio-overview" aria-label={c.overview}>
     <div className="studio-overview-top"><span className="studio-eyebrow"><Wallet size={15} aria-hidden="true" />{c.overview}</span><span className="studio-month">{monthLabel}</span></div>
     <div className="studio-overview-body">
       <div className="studio-balance"><p>{label}</p><div className="studio-amount figure"><bdi>{money(main)}</bdi></div>
         <p className="studio-budget-context">{hasBudget ? <>{c.monthlyBudget} <bdi data-money>{money(data.totalBudget)}</bdi></> : c.noBudget}</p>
-        {hasBudget ? <span className={`studio-status ${m.remaining < 0 ? "is-over" : ""}`}>{m.remaining < 0 ? <CircleAlert size={14} aria-hidden="true" /> : <CircleCheck size={14} aria-hidden="true" />}{m.remaining < 0 ? c.overTrack : c.onTrack}</span> : <Link className="studio-inline-link" href="/settings/general#section-monthly-target">{c.setBudget}<ArrowUpLeft size={15} /></Link>}
+        {hasBudget ? <span className={`studio-status ${m.remaining < 0 || forecastOver ? "is-over" : ""}`}>{m.remaining < 0 || forecastOver ? <CircleAlert size={14} aria-hidden="true" /> : <CircleCheck size={14} aria-hidden="true" />}{m.remaining < 0 ? c.overTrack : forecastOver ? c.overPace : c.onTrack}</span> : <Link className="studio-inline-link" href="/settings/general#section-monthly-target">{c.setBudget}<ArrowUpLeft size={15} /></Link>}
       </div>
       {hasBudget && <div className="studio-orbit" role="img" aria-label={`${Math.round(m.used)}% ${c.used}`}>
         <svg viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="studio-ring" x1="0" y1="0" x2="1" y2="1"><stop stopColor="var(--studio-ring-start)" /><stop offset="1" stopColor="var(--studio-ring-end)" /></linearGradient></defs><circle className="studio-ring-track" cx="100" cy="100" r="83" /><circle className="studio-ring-value" cx="100" cy="100" r="83" strokeDasharray={`${used * 5.215} 521.5`} transform="rotate(-90 100 100)" /></svg>

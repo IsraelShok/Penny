@@ -1,7 +1,7 @@
 # Penny security and privacy review (2026-11)
 
 Scope: a single-user, local-first app. Next.js 16 server on 127.0.0.1, better-sqlite3 database
-and encryption key in `SPENT_DATA_DIR`, bank scraping through Puppeteer, optional Telegram bot and AI.
+and encryption key in `PENNY_DATA_DIR`, bank scraping through Puppeteer, optional Telegram bot and AI.
 Attackers considered: a hostile website open in the same browser, another device on the LAN,
 malware or a person with read access to the disk or a backup, a cloud provider seeing prompts,
 someone looking at the screen. Out of scope: an attacker running code as the same OS user (game over
@@ -14,7 +14,7 @@ Legend: **Fixed** = changed in this commit. **OK** = already in place. **Open** 
 | Item | Status |
 |---|---|
 | Bind address: `next dev/start -H 127.0.0.1`; Docker publishes to `127.0.0.1` | OK |
-| DNS rebinding: `src/proxy.ts` rejects any `Host` not in the localhost list (`src/lib/host-guard.ts`, `SPENT_ALLOWED_HOSTS` to extend) | OK |
+| DNS rebinding: `src/proxy.ts` rejects any `Host` not in the localhost list (`src/lib/host-guard.ts`, `PENNY_ALLOWED_HOSTS` to extend) | OK |
 | CSRF: every POST/PUT/PATCH/DELETE under `/api` needs an `Origin` (or `Referer`) equal to the host; `Origin: null` is rejected | OK, now tested (`tests/proxy.test.ts`) |
 | Cross-site reads and side-effect GETs (`<img src=/api/...>`): any `/api` request with `Sec-Fetch-Site: cross-site` or `same-site` is rejected | **Fixed** |
 | Host + Origin checks are the boundary when the app lock is off | OK |
@@ -30,7 +30,7 @@ Failed unlocks back off exponentially (1s, 2s, 4s ... up to 15 min, in memory). 
 the lock needs the current passphrase. "נעילה עכשיו" in the sidebar footer ends the session at once.
 Trade-offs: a forgotten passphrase cannot be recovered (only a full wipe); the lock is per server, not
 per browser; an in-page fetch after idle expiry gets 401 until the next navigation shows the lock screen.
-A LAN self-hoster who adds a host to `SPENT_ALLOWED_HOSTS` should turn the lock on.
+A LAN self-hoster who adds a host to `PENNY_ALLOWED_HOSTS` should turn the lock on.
 
 ## 2. XSS and browser hardening (`next.config.ts`)
 
@@ -122,7 +122,7 @@ on export. The privacy page already warns that a folder backup contains the key.
 Settings, Data has "delete everything" for transactions, sync history and category memory; bank
 connections are removed per bank. The new Privacy & security page links to it.
 **Full wipe: Built.** "מחיקת כל הנתונים" on Privacy & security (type "מחיקה", plus the passphrase when
-locked) stops the bot, closes and deletes the database files (`spent.db`, `-wal`, `-shm`: every table,
+locked) stops the bot, closes and deletes the database files (`penny.db`, `-wal`, `-shm`: every table,
 including credentials, settings, AI keys and Telegram), the key file or wrapped key, and `*.log` /
 `logs/` in the data folder, then returns to first run (migrations recreate an empty database).
 Files are overwritten before unlink, best effort as above.

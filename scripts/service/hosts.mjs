@@ -4,9 +4,13 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { HOST, FRIENDLY_HOST } from "./paths.mjs";
 
-const MARKER_START = "# >>> spent (managed) >>>";
-const MARKER_END = "# <<< spent <<<";
-const MANAGED_LINE = `${HOST}\t${FRIENDLY_HOST}`;
+const MARKER_START = "# >>> penny (managed) >>>";
+const MARKER_END = "# <<< penny <<<";
+// legacy: "spent" hosts block and spent.localhost from installs before the Penny rename
+const LEGACY_START = "# >>> spent (managed) >>>";
+const LEGACY_END = "# <<< spent <<<";
+const LEGACY_HOST = "spent.localhost";
+const MANAGED_LINE = `${HOST}\t${FRIENDLY_HOST} ${LEGACY_HOST}`;
 
 export function hostsFilePath() {
   if (process.platform === "win32") {
@@ -19,20 +23,28 @@ export function hostsFilePath() {
 function buildManagedBlock() {
   return [
     MARKER_START,
-    `# Added by Spent (scripts/service). Resolves ${FRIENDLY_HOST} to loopback.`,
+    `# Added by Penny (scripts/service). Resolves ${FRIENDLY_HOST} to loopback.`,
     "# Do not edit between markers; `npm run service:uninstall` removes them.",
     MANAGED_LINE,
     MARKER_END,
   ].join(os.EOL);
 }
 
-function stripManagedBlock(content) {
-  const start = content.indexOf(MARKER_START);
+function hasAnyBlock(content) {
+  return content.includes(MARKER_START) || content.includes(LEGACY_START);
+}
+
+function stripBlock(content, startMarker, endMarker) {
+  const start = content.indexOf(startMarker);
   if (start === -1) return content;
-  const end = content.indexOf(MARKER_END);
+  const end = content.indexOf(endMarker);
   if (end === -1) return content;
-  const after = end + MARKER_END.length;
-  let trimmed = content.slice(0, start) + content.slice(after);
+  return content.slice(0, start) + content.slice(end + endMarker.length);
+}
+
+function stripManagedBlock(content) {
+  if (!hasAnyBlock(content)) return content;
+  let trimmed = stripBlock(stripBlock(content, MARKER_START, MARKER_END), LEGACY_START, LEGACY_END);
   trimmed = trimmed.replace(/\n{3,}/g, "\n\n");
   if (!trimmed.endsWith(os.EOL)) trimmed += os.EOL;
   return trimmed;
@@ -46,7 +58,7 @@ function readCurrent() {
 
 export function hasManagedBlock() {
   const { content } = readCurrent();
-  return content.includes(MARKER_START) && content.includes(MARKER_END);
+  return hasAnyBlock(content);
 }
 
 function writeWithPrivilege(targetPath, newContent) {
@@ -57,7 +69,7 @@ function writeWithPrivilege(targetPath, newContent) {
 }
 
 function writeUnix(targetPath, newContent) {
-  const tmp = path.join(os.tmpdir(), `spent-hosts-${process.pid}.tmp`);
+  const tmp = path.join(os.tmpdir(), `penny-hosts-${process.pid}.tmp`);
   fs.writeFileSync(tmp, newContent, { mode: 0o644 });
   try {
     console.log(`Updating ${targetPath} (requires sudo for this step only).`);
@@ -91,16 +103,9 @@ function writeWindows(targetPath, newContent) {
   }
 }
 
-// Look for a managed block that points to the *previous* hostname
-// (spent.local), regardless of the current FRIENDLY_HOST value. Used to
-// detect legacy installs that need migration.
+// A block written before the rename (any hostname under the old markers) needs migration.
 function hasLegacyLocalBlock(content) {
-  if (!content.includes(MARKER_START)) return false;
-  const start = content.indexOf(MARKER_START);
-  const end = content.indexOf(MARKER_END);
-  if (end === -1) return false;
-  const block = content.slice(start, end + MARKER_END.length);
-  return /\bspent\.local\b/.test(block) && !/\bspent\.localhost\b/.test(block);
+  return content.includes(LEGACY_START);
 }
 
 function hasCurrentBlock(content) {
@@ -120,15 +125,15 @@ export function addManagedBlock() {
   if (!isWindows) {
     // macOS and Linux resolve *.localhost natively (macOS via the system
     // resolver, Linux via nsswitch `myhostname`). No hosts entry needed.
-    // If a legacy `spent.local` block is still present, strip it so the old
+    // If an old managed block is still present, strip it so the old
     // hostname stops resolving (avoids stale bookmarks hitting a slow mDNS
     // detour or the now-wrong loopback line).
-    if (!legacy && !content.includes(MARKER_START)) {
+    if (!hasAnyBlock(content)) {
       return false;
     }
     if (legacy) {
       console.log(
-        "Removing legacy spent.local hosts entry (no longer needed on this OS; *.localhost resolves natively).",
+        "Removing the old hosts entry (no longer needed on this OS; *.localhost resolves natively).",
       );
     }
     const newContent = stripManagedBlock(content);
@@ -138,7 +143,7 @@ export function addManagedBlock() {
 
   // Windows: write/refresh the managed block.
   if (hasCurrentBlock(content)) {
-    console.log(`Hosts file already has the spent block. No changes.`);
+    console.log(`Hosts file already has the penny block. No changes.`);
     return false;
   }
 
@@ -148,7 +153,7 @@ export function addManagedBlock() {
   const newContent = base + block + os.EOL;
 
   if (legacy) {
-    console.log(`Migrating hosts entry from spent.local to ${FRIENDLY_HOST}.`);
+    console.log(`Migrating the old hosts entry to ${FRIENDLY_HOST}.`);
   } else {
     console.log(`Will append these lines to ${p}:`);
     console.log("---");
@@ -162,8 +167,8 @@ export function addManagedBlock() {
 
 export function removeManagedBlock() {
   const { path: p, content } = readCurrent();
-  if (!content.includes(MARKER_START)) {
-    console.log(`No spent block found in ${p}. Nothing to remove.`);
+  if (!hasAnyBlock(content)) {
+    console.log(`No penny block found in ${p}. Nothing to remove.`);
     return false;
   }
 

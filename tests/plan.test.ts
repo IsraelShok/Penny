@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { completeCheckin, debtPayoff, feeCost, goalMonthly, isoWeek, parsePlan, projectBalance } from "@/lib/plan";
+import { completeCheckin, debtPayoff, defaultHomeStyle, feeCost, goalMonthly, isoWeek, keepHomeStyle, parsePlan, projectBalance } from "@/lib/plan";
 
 describe("fees", () => {
   it("grows a balance without fees at the gross return", () => {
@@ -57,5 +57,26 @@ describe("weekly check-in", () => {
 
   it("defaults wheel paging and simple mode off", () => {
     expect(parsePlan({})).toMatchObject({ simpleMode: false, wheelPaging: false, checkin: { lastWeek: null, streak: 0 } });
+  });
+});
+
+describe("homeStyle", () => {
+  it("parses a valid style and falls back to companion", () => {
+    expect(parsePlan({ homeStyle: "classic" }).homeStyle).toBe("classic");
+    expect(parsePlan({ homeStyle: "x" }).homeStyle).toBe("companion");
+  });
+  it("defaults existing users to classic, new ones to companion", () => {
+    expect(defaultHomeStyle(true, false)).toBe("classic");
+    expect(defaultHomeStyle(false, true)).toBe("classic");
+    expect(defaultHomeStyle(false, false)).toBe("companion");
+  });
+});
+
+describe("keepHomeStyle", () => {
+  it("keeps the stored style unless the client sends a valid one", () => {
+    expect(keepHomeStyle({}, "classic")).toBe("classic");
+    expect(keepHomeStyle({ homeStyle: "x" }, "classic")).toBe("classic");
+    expect(keepHomeStyle(null, "classic")).toBe("classic");
+    expect(keepHomeStyle({ homeStyle: "companion" }, "classic")).toBe("companion");
   });
 });

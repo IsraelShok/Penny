@@ -81,6 +81,12 @@ export function shouldSuggestGentle(h: Household): boolean {
   return !h.gentleMode && !h.gentleSuggestionDismissed && h.events.some((e) => HARD_EVENTS.includes(e.type));
 }
 
+/** Gentle mode is on, or a hard event happened in the last 12 months (undated counts). */
+export function isGentle(h: Household, today = new Date()): boolean {
+  const cutoff = new Date(today); cutoff.setMonth(cutoff.getMonth() - 12);
+  return h.gentleMode || h.events.some((e) => HARD_EVENTS.includes(e.type) && (!e.date || new Date(e.date) >= cutoff));
+}
+
 export function shouldShowWelcome(h: Household): boolean {
   return !h.welcomeDismissed && h.members.length === 0 && h.incomeShape == null && h.moneyStyle == null;
 }

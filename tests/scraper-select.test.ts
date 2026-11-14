@@ -6,8 +6,8 @@ describe("usesScraperFork", () => {
     expect(usesScraperFork("isracard", {})).toBe(false);
     expect(usesScraperFork("max", {})).toBe(false);
   });
-  it("routes only Isracard and Max to the fork when SPENT_SCRAPER_FORK=1", () => {
-    const env = { SPENT_SCRAPER_FORK: "1" };
+  it("routes only Isracard and Max to the fork when PENNY_SCRAPER_FORK=1", () => {
+    const env = { PENNY_SCRAPER_FORK: "1" };
     expect(usesScraperFork("isracard", env)).toBe(true);
     expect(usesScraperFork("max", env)).toBe(true);
     expect(usesScraperFork("leumi", env)).toBe(false);

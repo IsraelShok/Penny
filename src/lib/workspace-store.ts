@@ -1,12 +1,14 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { readStored } from "./legacy-names";
 
 // Tiny custom store. Persists the active workspace id to localStorage and
 // exposes a non-React getter so non-component code (e.g. fetchJSON) can
 // inject the X-Workspace-ID header.
 
-const STORAGE_KEY = "spent.activeWorkspaceId";
+const STORAGE_KEY = "penny.activeWorkspaceId";
+const LEGACY_STORAGE_KEY = "spent.activeWorkspaceId"; // legacy: spent.activeWorkspaceId from installs before the Penny rename
 
 let memValue: number | null = readFromStorage();
 const listeners = new Set<() => void>();
@@ -14,7 +16,7 @@ const listeners = new Set<() => void>();
 function readFromStorage(): number | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = readStored(STORAGE_KEY, LEGACY_STORAGE_KEY);
     if (!raw) return null;
     const n = Number(raw);
     return Number.isInteger(n) && n > 0 ? n : null;

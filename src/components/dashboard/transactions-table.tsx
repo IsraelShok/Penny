@@ -162,8 +162,8 @@ export function TransactionsTable({
       setUndoToken(result.undoToken);
       setSelected([]);
       await queryClient.invalidateQueries();
-      toast.success(he ? "השינוי נשמר" : "Changes saved");
-    } catch (error) { toast.error(he ? "לא ניתן לשמור. בדקו שהקטגוריות תואמות ושהתנועות לא השתנו, ונסו שוב." : error instanceof Error ? error.message : "Could not save"); throw error; }
+      toast.success(t("changesSaved"));
+    } catch (error) { toast.error(he ? t("saveFailedHe") : error instanceof Error ? error.message : "Could not save"); throw error; }
     finally { setEditing(false); }
   }
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -496,15 +496,16 @@ export function TransactionsTable({
           <>
             {/* Bulk tools appear only once something is selected (or there is an edit to undo). */}
             {(selected.length > 0 || undoToken) && <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-muted/50 p-3">
-              <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />{he ? "לזכור סיווג לבית העסק להבא" : "Remember category for future transactions"}</label>
-              {undoToken && <Button variant="outline" disabled={editing} onClick={() => void edit({ undo: undoToken }).catch(() => {})}>{he ? "ביטול העריכה האחרונה" : "Undo last edit"}</Button>}
-              {selected.length > 0 && <><span className="text-sm">{selected.length} {he ? "נבחרו" : "selected"}</span><select aria-label={he ? "קטגוריה לתנועות שנבחרו" : "Category for selected transactions"} className="min-h-11 rounded-lg border bg-background px-2" value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}><option value="">{he ? "בחירת קטגוריה" : "Choose category"}</option>{bulkCategories.map(c => <option key={c.id} value={c.id}>{translateCategoryName(c.name, tCat)}</option>)}</select><Button disabled={editing || isFetching || !bulkCategories.some(c => c.id === Number(bulkCategory))} onClick={() => void edit({ ids: selected, categoryId: Number(bulkCategory), remember }).catch(() => {})}>{he ? "סיווג הנבחרות" : "Categorize selected"}</Button><Button variant="ghost" onClick={() => setSelected([])}>{he ? "ניקוי בחירה" : "Clear selection"}</Button>{!bulkCategories.length && <p className="text-xs">{he ? "בחרו רק הוצאות או רק הכנסות כדי לסווג יחד." : "Select only expenses or only income to categorize together."}</p>}</>}
+              <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />{t("rememberCategoryForFuture")}</label>
+              {undoToken && <Button variant="outline" disabled={editing} onClick={() => void edit({ undo: undoToken }).catch(() => {})}>{t("undoLastEdit")}</Button>}
+              {selected.length > 0 && <><span className="text-sm">{selected.length} {t("selected")}</span><select aria-label={t("categoryForSelectedTransactions")} className="min-h-11 rounded-lg border bg-background px-2" value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}><option value="">{t("chooseCategory")}</option>{bulkCategories.map(c => <option key={c.id} value={c.id}>{translateCategoryName(c.name, tCat)}</option>)}</select><Button disabled={editing || isFetching || !bulkCategories.some(c => c.id === Number(bulkCategory))} onClick={() => void edit({ ids: selected, categoryId: Number(bulkCategory), remember }).catch(() => {})}>{t("categorizeSelected")}</Button><Button variant="ghost" onClick={() => setSelected([])}>{t("filterClearSelection")}</Button>{!bulkCategories.length && <p className="text-xs">{t("selectOnlyExpensesOr")}</p>}</>}
             </div>}
             {split && <SplitEditor key={split.id} transaction={split} categories={categories} close={() => setSplit(null)} save={parts => edit({ ids: [split.id], splits: parts })} />}
-            <Table>
+            {/* First and last columns keep a card-edge gutter, so text never sits on the card's edge while the table scrolls. */}
+            <Table className="[&_td:first-child]:ps-4 [&_th:first-child]:ps-4 [&_td:last-child]:pe-4 [&_th:last-child]:pe-4">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[44px]"><input className="size-4" type="checkbox" aria-label={he ? "בחירת כל התנועות בעמוד" : "Select this page"} disabled={editing || isFetching} checked={transactions.length > 0 && selected.length === transactions.length} onChange={e => setSelected(e.target.checked ? transactions.map(t => t.id) : [])} /></TableHead>
+                  <TableHead className="w-[44px]"><input className="size-4" type="checkbox" aria-label={t("selectThisPage")} disabled={editing || isFetching} checked={transactions.length > 0 && selected.length === transactions.length} onChange={e => setSelected(e.target.checked ? transactions.map(t => t.id) : [])} /></TableHead>
                   <SortableTableHead
                     label={t("headerDate")}
                     field="date"
@@ -577,7 +578,7 @@ export function TransactionsTable({
                       )}
                     >
                       <TableCell>
-                        <div style={{ color: directionColor }} className="flex items-center gap-2"><input className="size-4" type="checkbox" aria-label={`${he ? "בחירת" : "Select"} ${txn.description}`} disabled={editing || isFetching} checked={selected.includes(txn.id)} onChange={e => setSelected(e.target.checked ? [...selected, txn.id] : selected.filter(id => id !== txn.id))} />
+                        <div style={{ color: directionColor }} className="flex items-center gap-2"><input className="size-4" type="checkbox" aria-label={t("selectRow", { name: txn.description })} disabled={editing || isFetching} checked={selected.includes(txn.id)} onChange={e => setSelected(e.target.checked ? [...selected, txn.id] : selected.filter(id => id !== txn.id))} />
                           {isIncome ? (
                             <ArrowUpRight className="h-4 w-4" aria-label={t("rowIncome")} />
                           ) : (
@@ -667,7 +668,7 @@ export function TransactionsTable({
                                     : undefined
                                 }
                               >
-                                {txn.allocations?.length ? `${he ? "מפוצל" : "Split"} · ${txn.allocations.length}` : categoryName}
+                                {txn.allocations?.length ? t("splitCount", { count: txn.allocations.length }) : categoryName}
                               </Badge>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
@@ -727,7 +728,7 @@ export function TransactionsTable({
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {txn.kind === "expense" && txn.status === "completed" && txn.chargedAmount < 0 && <DropdownMenuItem onClick={() => setSplit(txn)}>{he ? "פיצול לקטגוריות" : "Split categories"}</DropdownMenuItem>}
+                            {txn.kind === "expense" && txn.status === "completed" && txn.chargedAmount < 0 && <DropdownMenuItem onClick={() => setSplit(txn)}>{t("splitCategories")}</DropdownMenuItem>}
                             {otherKinds[txn.kind].map((opt) => (
                               <DropdownMenuItem
                                 key={opt.value}

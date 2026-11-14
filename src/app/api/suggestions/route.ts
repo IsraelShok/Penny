@@ -83,7 +83,7 @@ export async function GET(request: Request) {
 
   const suggestions: Suggestion[] = buildSuggestions(txns, { today, known, monthStartDay: getPlan(ws).monthStartDay, priceChanges, ruleCandidates, fxMarkup: fx, taxYears, liquid, checking })
     .filter((s) => !dismissed.has(s.key));
-  return NextResponse.json({ suggestions });
+  return NextResponse.json({ suggestions, dismissed: [...dismissed] });
 }
 
 /** Body: { key } — hides a suggestion for good. */

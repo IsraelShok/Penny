@@ -3,7 +3,10 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CategoryCard } from "./category-card";
-import { BudgetDetailSheet } from "./budget-detail-sheet";
+import dynamic from "next/dynamic";
+
+// recharts lives in the sheet; it is an overlay, so no placeholder is needed.
+const BudgetDetailSheet = dynamic(() => import("./budget-detail-sheet").then((m) => m.BudgetDetailSheet), { ssr: false });
 import { MoveFrom, MovedIn } from "./move-from";
 import { moveTarget, type BudgetMove } from "@/lib/budget-moves";
 import { Skeleton } from "@/components/ui/skeleton";

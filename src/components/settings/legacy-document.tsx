@@ -14,23 +14,23 @@ import { shekels } from "@/lib/money";
 
 /** Owned by this page only: paper look on screen, and print rules (white, page break per section). */
 const LEGACY_CSS = `
-.legacy-doc{background:#fff;color:#1c1c1e;font:15px/1.6 -apple-system,"SF Pro Text","Segoe UI",Arial,sans-serif;border-radius:18px;padding:32px;max-width:52rem;margin:0 auto}
+.legacy-doc{background:var(--card,#fff);color:var(--foreground,#1c1c1e);font:15px/1.6 -apple-system,"SF Pro Text","Segoe UI",Arial,sans-serif;border-radius:18px;padding:32px;max-width:52rem;margin:0 auto}
 .legacy-doc h1{font-size:26px;margin:0 0 4px}
-.legacy-doc .meta{color:#6e6e73;font-size:14px;margin:0 0 16px}
-.legacy-doc .intro{background:#f2f2f7;border-radius:12px;padding:12px 16px;font-size:14px}
+.legacy-doc .meta{color:var(--muted-foreground,#6e6e73);font-size:14px;margin:0 0 16px}
+.legacy-doc .intro{background:var(--muted,#f2f2f7);border-radius:12px;padding:12px 16px;font-size:14px}
 .legacy-doc section{margin-top:28px}
-.legacy-doc h2{font-size:19px;margin:0 0 6px;border-bottom:1px solid #e5e5ea;padding-bottom:6px}
-.legacy-doc .hint{color:#6e6e73;font-size:13px;margin:0 0 8px}
+.legacy-doc h2{font-size:19px;margin:0 0 6px;border-bottom:1px solid var(--border,#e5e5ea);padding-bottom:6px}
+.legacy-doc .hint{color:var(--muted-foreground,#6e6e73);font-size:13px;margin:0 0 8px}
 .legacy-doc table{width:100%;border-collapse:collapse;font-size:14px}
-.legacy-doc td{padding:7px 4px;border-bottom:1px solid #f2f2f7;vertical-align:top}
+.legacy-doc td{padding:7px 4px;border-bottom:1px solid var(--border,#f2f2f7);vertical-align:top}
 .legacy-doc td.num{text-align:end;white-space:nowrap;font-variant-numeric:tabular-nums}
-.legacy-doc .sub{color:#6e6e73;font-size:13px}
-.legacy-doc .empty{color:#8e8e93;font-size:14px}
+.legacy-doc .sub{color:var(--muted-foreground,#6e6e73);font-size:13px}
+.legacy-doc .empty{color:var(--muted-foreground,#8e8e93);font-size:14px}
 .legacy-doc .text{white-space:pre-wrap}
 .legacy-doc ol{padding-inline-start:22px;margin:0}
 .legacy-doc ol li{margin:4px 0}
 @media print{
-  .legacy-doc{border-radius:0;padding:0;max-width:none;font-size:13pt}
+  .legacy-doc{--card:#fff;--foreground:#1c1c1e;--muted:#f2f2f7;--muted-foreground:#6e6e73;--border:#e5e5ea;border-radius:0;padding:0;max-width:none;font-size:13pt}
   .legacy-doc section{break-before:page}
   .legacy-doc tr{break-inside:avoid}
   .legacy-print-hidden,aside{display:none!important}

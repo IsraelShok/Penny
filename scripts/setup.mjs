@@ -3,8 +3,8 @@
 // the platform menubar, register login auto-start, open the dashboard.
 //
 // Platform paths:
-//   macOS   -> Spent.app installed to ~/Applications, registered as Login Item
-//   Windows -> Spent.exe installed to %LOCALAPPDATA%\Programs\Spent, .lnk in Startup
+//   macOS   -> Penny.app installed to ~/Applications, registered as Login Item
+//   Windows -> Penny.exe installed to %LOCALAPPDATA%\Programs\Penny, .lnk in Startup
 //   Linux   -> service only (no native tray)
 
 import { spawnSync } from "node:child_process";
@@ -13,11 +13,12 @@ import os from "node:os";
 import path from "node:path";
 import readline from "node:readline";
 import { fileURLToPath } from "node:url";
+import { macUninstall, windowsUninstall } from "./uninstall.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "..");
 const SERVICE_INSTALL = path.join(HERE, "service", "install.mjs");
-const FRIENDLY_URL = "http://spent.localhost:41234";
+const FRIENDLY_URL = "http://penny.localhost:41234";
 const NPM = process.platform === "win32" ? "npm.cmd" : "npm";
 
 function step(msg) {
@@ -193,15 +194,15 @@ function preflight() {
   if (process.platform === "win32") {
     // Hosts file edit needs Administrator on Windows, but setup itself does
     // not. If the shell is not elevated, warn (so the user knows why
-    // spent.localhost may not resolve on older Windows) and keep going. The
+    // penny.localhost may not resolve on older Windows) and keep going. The
     // web app at 127.0.0.1 works regardless.
     const r = spawnSync("net", ["session"], { encoding: "utf-8" });
     if (r.status !== 0) {
       console.log("");
       console.log("Note: this shell is not Administrator.");
-      console.log("Setup will continue, but the hosts entry for spent.localhost cannot be added.");
+      console.log("Setup will continue, but the hosts entry for penny.localhost cannot be added.");
       console.log("  - http://127.0.0.1:41234 will work normally.");
-      console.log("  - http://spent.localhost:41234 may not resolve on older Windows builds.");
+      console.log("  - http://penny.localhost:41234 may not resolve on older Windows builds.");
       console.log("To guarantee the friendly hostname, relaunch from an elevated");
       console.log("PowerShell (Win+X -> 'Terminal (Admin)') and run `npm run service:install`.");
       console.log("");
@@ -209,11 +210,11 @@ function preflight() {
   }
 }
 
-function windowsHostsHasSpentLocalhost() {
+function windowsHostsHasPennyLocalhost() {
   const hostsPath = `${process.env.SystemRoot ?? "C:\\Windows"}\\System32\\drivers\\etc\\hosts`;
   try {
     const content = fs.readFileSync(hostsPath, "utf-8");
-    return /^[^#\n]*\b127\.0\.0\.1\b[^\n]*\bspent\.localhost\b/m.test(content);
+    return /^[^#\n]*\b127\.0\.0\.1\b[^\n]*\bpenny\.localhost\b/m.test(content);
   } catch {
     return false;
   }
@@ -224,7 +225,7 @@ function dashboardUrl() {
   // On Windows, fall back to loopback if the hosts entry wasn't written
   // (e.g. user didn't run setup from an elevated shell).
   if (process.platform !== "win32") return FRIENDLY_URL;
-  return windowsHostsHasSpentLocalhost() ? FRIENDLY_URL : "http://127.0.0.1:41234";
+  return windowsHostsHasPennyLocalhost() ? FRIENDLY_URL : "http://127.0.0.1:41234";
 }
 
 function buildNextApp() {
@@ -271,17 +272,17 @@ async function macSetup() {
     return;
   }
 
-  step("Building Spent.app");
+  step("Building Penny.app");
   run("bash", [path.join(REPO_ROOT, "menubar", "mac", "build.sh")]);
 
-  step("Installing Spent.app to ~/Applications");
+  step("Installing Penny.app to ~/Applications");
   const appsDir = path.join(os.homedir(), "Applications");
   fs.mkdirSync(appsDir, { recursive: true });
-  const target = path.join(appsDir, "Spent.app");
+  const target = path.join(appsDir, "Penny.app");
   if (fs.existsSync(target)) {
     fs.rmSync(target, { recursive: true, force: true });
   }
-  run("cp", ["-R", path.join(REPO_ROOT, "menubar", "mac", "build", "Spent.app"), target]);
+  run("cp", ["-R", path.join(REPO_ROOT, "menubar", "mac", "build", "Penny.app"), target]);
   done(target);
 
   step("Registering Login Item");
@@ -300,7 +301,7 @@ function addLoginItemMac(appPath) {
     ["-e", 'tell application "System Events" to get the name of every login item'],
     { encoding: "utf-8" },
   );
-  if (check.status === 0 && /(^|, )Spent($|,)/.test(check.stdout.trim())) {
+  if (check.status === 0 && /(^|, )Penny($|,)/.test(check.stdout.trim())) {
     done("already registered");
     return;
   }
@@ -331,19 +332,19 @@ async function windowsSetup() {
     return;
   }
 
-  step("Building Spent.exe");
+  step("Building Penny.exe");
   run("powershell", [
     "-ExecutionPolicy", "Bypass",
     "-File", path.join(REPO_ROOT, "menubar", "windows", "build.ps1"),
   ]);
 
-  step("Installing Spent.exe to %LOCALAPPDATA%\\Programs\\Spent");
+  step("Installing Penny.exe to %LOCALAPPDATA%\\Programs\\Penny");
   const localAppData = process.env.LOCALAPPDATA;
   if (!localAppData) fail("LOCALAPPDATA env var is not set.");
-  const installDir = path.join(localAppData, "Programs", "Spent");
+  const installDir = path.join(localAppData, "Programs", "Penny");
   fs.mkdirSync(installDir, { recursive: true });
-  const targetExe = path.join(installDir, "Spent.exe");
-  const builtExe = path.join(REPO_ROOT, "menubar", "windows", "build", "Spent.exe");
+  const targetExe = path.join(installDir, "Penny.exe");
+  const builtExe = path.join(REPO_ROOT, "menubar", "windows", "build", "Penny.exe");
   fs.copyFileSync(builtExe, targetExe);
   done(targetExe);
 
@@ -367,7 +368,7 @@ function addStartupShortcutWindows(exePath) {
     appData, "Microsoft", "Windows", "Start Menu", "Programs", "Startup",
   );
   fs.mkdirSync(startupDir, { recursive: true });
-  const shortcutPath = path.join(startupDir, "Spent.lnk");
+  const shortcutPath = path.join(startupDir, "Penny.lnk");
   if (fs.existsSync(shortcutPath)) {
     done("already present");
     return;
@@ -388,7 +389,7 @@ function addStartupShortcutWindows(exePath) {
 
 function linuxSetup() {
   step("Linux: no native tray");
-  console.log("   Spent on Linux is web-only. The service is installed and");
+  console.log("   Penny on Linux is web-only. The service is installed and");
   console.log("   running. Control it with the npm scripts:");
   console.log("     npm run service:status / :start / :stop / :reload / :logs");
 
@@ -397,7 +398,7 @@ function linuxSetup() {
 }
 
 async function main() {
-  console.log("Spent setup");
+  console.log("Penny setup");
   console.log(`  platform: ${process.platform}`);
   console.log(`  repo:     ${REPO_ROOT}`);
 
@@ -416,9 +417,11 @@ async function main() {
 
   switch (process.platform) {
     case "darwin":
+      await macUninstall("Spent"); // legacy: Spent.app from installs before the Penny rename
       await macSetup();
       break;
     case "win32":
+      windowsUninstall("Spent"); // legacy: Spent.exe and Spent.lnk from installs before the Penny rename
       await windowsSetup();
       break;
     case "linux":
@@ -435,7 +438,7 @@ function printCheatSheet() {
   const url = dashboardUrl();
   console.log("");
   console.log("================================================================");
-  console.log(`  Done. Spent is at ${url}`);
+  console.log(`  Done. Penny is at ${url}`);
   if (url !== FRIENDLY_URL) {
     console.log(`  (${FRIENDLY_URL} would also work once the hosts entry is in place.)`);
   }

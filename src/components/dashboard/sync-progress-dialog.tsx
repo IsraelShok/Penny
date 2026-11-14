@@ -364,7 +364,7 @@ function StatusBadge({
   if (status === "done") {
     return (
       <div
-        className="flex h-6 w-6 items-center justify-center rounded-full motion-safe:animate-[checkPop_350ms_cubic-bezier(0.3,1.6,0.4,1)_forwards]"
+        className="flex h-6 w-6 items-center justify-center rounded-full motion-safe:animate-[checkPop_350ms_cubic-bezier(0.16,1,0.3,1)_forwards]"
         style={{ background: "var(--status-on-track)" }}
       >
         <Check className="h-3.5 w-3.5 text-background" strokeWidth={3} />
@@ -390,7 +390,7 @@ function HeroDots({ done, warning }: { done: boolean; warning?: boolean }) {
       <div
         className={cn(
           "relative h-16 w-16",
-          done && "motion-safe:animate-[pop_500ms_cubic-bezier(0.3,1.6,0.4,1)_forwards]"
+          done && "motion-safe:animate-[pop_500ms_cubic-bezier(0.16,1,0.3,1)_forwards]"
         )}
       >
         <Dot
@@ -495,7 +495,7 @@ function SummaryStat({
         className={cn(
           "font-semibold text-2xl tabular-nums",
           accent && "text-[var(--status-on-track)]",
-          "motion-safe:animate-[countIn_450ms_cubic-bezier(0.3,1.6,0.4,1)_forwards]"
+          "motion-safe:animate-[countIn_450ms_cubic-bezier(0.16,1,0.3,1)_forwards]"
         )}
       >
         {value}

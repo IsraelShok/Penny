@@ -2,18 +2,28 @@ import "server-only";
 
 import { getDb } from "../index";
 import { getWorkspaceSetting, setWorkspaceSetting } from "./settings";
-import { parsePlan, type FinancialPlan } from "@/lib/plan";
+import { defaultHomeStyle, HOME_STYLES, parsePlan, type FinancialPlan } from "@/lib/plan";
 import type { Goal, InsurancePolicy } from "@/lib/types";
 
 const PLAN_KEY = "financial_plan";
 
 export function getPlan(workspaceId: number): FinancialPlan {
   const raw = getWorkspaceSetting(workspaceId, PLAN_KEY);
+  let stored: unknown = {};
+  let corrupt = false;
   try {
-    return parsePlan(raw ? JSON.parse(raw) : {});
+    stored = raw ? JSON.parse(raw) : {};
   } catch {
-    return parsePlan({});
+    corrupt = true;
   }
+  const plan = parsePlan(stored);
+  const has = (HOME_STYLES as readonly unknown[]).includes((stored as { homeStyle?: unknown } | null)?.homeStyle);
+  if (has || corrupt) return plan; // never overwrite an unparseable blob
+  // Write-once: the first read decides, so a user who later onboards or adds data keeps the style they were given.
+  const hasTx = !!getDb().prepare("SELECT 1 FROM transactions WHERE workspace_id = ? LIMIT 1").get(workspaceId);
+  plan.homeStyle = defaultHomeStyle(plan.profile.onboarded, hasTx);
+  savePlan(workspaceId, plan);
+  return plan;
 }
 
 export function savePlan(workspaceId: number, plan: FinancialPlan) {

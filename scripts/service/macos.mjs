@@ -5,9 +5,9 @@ import { spawnSync } from "node:child_process";
 import { PORT, REPO_ROOT, renderTemplate } from "./paths.mjs";
 import { addManagedBlock, removeManagedBlock } from "./hosts.mjs";
 
-const LABEL = "com.spent.app";
+const LABEL = "com.penny.app";
 const PLIST_PATH = path.join(os.homedir(), "Library", "LaunchAgents", `${LABEL}.plist`);
-const LOG_DIR = path.join(os.homedir(), "Library", "Logs", "Spent");
+const LOG_DIR = path.join(os.homedir(), "Library", "Logs", "Penny");
 
 function whichNode() {
   const r = spawnSync("which", ["node"], { encoding: "utf-8" });
@@ -27,7 +27,7 @@ function ensureLogDir() {
 function writePlist() {
   const nodePath = whichNode();
   const pathEnv = `${path.dirname(nodePath)}:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin`;
-  const content = renderTemplate("com.spent.app.plist", {
+  const content = renderTemplate("com.penny.app.plist", {
     nodePath,
     repoRoot: REPO_ROOT,
     port: PORT,
@@ -53,6 +53,14 @@ function bootstrap() {
 function bootout() {
   const uid = process.getuid();
   return launchctl(["bootout", `gui/${uid}/${LABEL}`]);
+}
+
+// legacy: com.spent.app from installs before the Penny rename
+function removeLegacyAgent() {
+  const legacyPlist = path.join(os.homedir(), "Library", "LaunchAgents", "com.spent.app.plist");
+  if (!fs.existsSync(legacyPlist)) return;
+  launchctl(["bootout", `gui/${process.getuid()}/com.spent.app`]);
+  fs.unlinkSync(legacyPlist);
 }
 
 function kickstart() {
@@ -87,6 +95,7 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
   switch (cmd) {
     case "install": {
       preflight();
+      removeLegacyAgent();
       ensureLogDir();
       writePlist();
       try {
@@ -107,7 +116,7 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
           process.exit(1);
         }
         if (state.onLoopback) {
-          console.log(`Spent is running. Open ${friendlyUrl} or ${loopbackUrl}.`);
+          console.log(`Penny is running. Open ${friendlyUrl} or ${loopbackUrl}.`);
         } else {
           console.log(
             `Service installed. Check status: npm run service:status`,
@@ -119,12 +128,13 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
     case "uninstall": {
       bootout();
       if (fs.existsSync(PLIST_PATH)) fs.unlinkSync(PLIST_PATH);
+      removeLegacyAgent();
       try {
         removeManagedBlock();
       } catch (err) {
         console.error(`Hosts file cleanup failed: ${err.message}`);
       }
-      console.log("Spent service removed. The repo and data/ directory are untouched.");
+      console.log("Penny service removed. The repo and data/ directory are untouched.");
       return;
     }
     case "start": {
@@ -132,12 +142,12 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
       if (r.status !== 0 && r.stderr?.includes("already loaded")) {
         kickstart();
       }
-      console.log("Spent started.");
+      console.log("Penny started.");
       return;
     }
     case "stop": {
       bootout();
-      console.log("Spent stopped.");
+      console.log("Penny stopped.");
       return;
     }
     case "status": {

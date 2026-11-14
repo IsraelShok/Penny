@@ -35,9 +35,9 @@ interface PullState {
 }
 
 const TINTS = {
-  claude: { bg: "#fad6c0", mid: "#e89968", ink: "#7a4222" },
-  ollama: { bg: "#dbedd1", mid: "#a8d18d", ink: "#3e5a2e" },
-  none: { bg: "#e6dfd1", mid: "#a89978", ink: "#5b5240" },
+  claude: { bg: "var(--tint-claude-bg)", mid: "var(--tint-claude-mid)", ink: "var(--tint-claude-ink)" },
+  ollama: { bg: "var(--tint-ollama-bg)", mid: "var(--tint-ollama-mid)", ink: "var(--tint-ollama-ink)" },
+  none: { bg: "var(--tint-none-bg)", mid: "var(--tint-none-mid)", ink: "var(--tint-none-ink)" },
 } as const;
 
 interface ProviderMeta {
@@ -391,13 +391,13 @@ function OllamaConfig({
             reachable === false
               ? "rgba(232, 153, 104, 0.18)"
               : "rgba(168, 209, 141, 0.22)",
-          color: reachable === false ? "#9a4a26" : "#3e5a2e",
+          color: reachable === false ? "var(--tint-warn-ink)" : "var(--tint-ollama-ink)",
         }}
       >
         <span
           className="h-1.5 w-1.5 rounded-full"
           style={{
-            background: reachable === false ? "#c97b5c" : "#6b8c70",
+            background: reachable === false ? "var(--tint-warn-dot)" : "var(--tint-ollama-mid)",
           }}
         />
         {reachable === false ? (
@@ -549,7 +549,7 @@ function OllamaPullCTA({
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
           <motion.div
             className="h-full"
-            style={{ background: "#a8d18d" }}
+            style={{ background: "var(--tint-ollama-mid)" }}
             animate={{ width: `${percent}%` }}
             transition={{ duration: 0.3 }}
           />

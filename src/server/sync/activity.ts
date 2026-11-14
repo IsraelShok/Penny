@@ -11,21 +11,21 @@ interface ActivityState {
 }
 
 declare global {
-  var __spentActivity: ActivityState | undefined;
+  var __pennyActivity: ActivityState | undefined;
 }
 
 const STALE_MS = 5 * 60 * 1000;
 
 function getState(): ActivityState {
-  if (!globalThis.__spentActivity) {
-    globalThis.__spentActivity = {
+  if (!globalThis.__pennyActivity) {
+    globalThis.__pennyActivity = {
       syncStartedAt: null,
       syncKind: null,
       syncDepth: 0,
       lastHeartbeatAt: null,
     };
   }
-  return globalThis.__spentActivity;
+  return globalThis.__pennyActivity;
 }
 
 export function markSyncStart(kind: SyncKind): void {
@@ -81,7 +81,7 @@ export function getActivitySnapshot(): ActivitySnapshot {
     },
     ollama: {
       running: ollamaSpawned,
-      spawnedBySpent: ollamaSpawned,
+      spawnedByPenny: ollamaSpawned,
     },
   };
 }

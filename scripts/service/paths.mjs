@@ -6,7 +6,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 
 export const PORT = 41234;
 export const HOST = "127.0.0.1";
-export const FRIENDLY_HOST = "spent.localhost";
+export const FRIENDLY_HOST = "penny.localhost";
 export const URL_BASE = `http://${FRIENDLY_HOST}:${PORT}`;
 export const LOOPBACK_URL = `http://${HOST}:${PORT}`;
 
@@ -19,10 +19,10 @@ export function assertRepoRoot() {
     throw new Error(`Refusing to run: no package.json at ${pkgPath}`);
   }
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-  if (pkg.name !== "spent") {
+  if (pkg.name !== "penny") {
     throw new Error(
-      `Refusing to run: ${pkgPath} is for "${pkg.name}", not "spent". ` +
-        `This script must run from the spent repo.`,
+      `Refusing to run: ${pkgPath} is for "${pkg.name}", not "penny". ` +
+        `This script must run from the penny repo.`,
     );
   }
   return pkg;

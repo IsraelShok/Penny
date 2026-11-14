@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { getHome, getInsights, getSettings } from "@/lib/api";
 import { PageHeader } from "@/components/layout/app-shell";
 import { ThisMonthCard } from "./this-month-card";
@@ -11,7 +12,6 @@ import { CashFlowCard } from "./cash-flow-card";
 import { Greeting } from "./greeting";
 import { SuggestionsCard } from "./suggestions-card";
 import { NextBillCard, SubscriptionsCard } from "./bills-card";
-import { TodayCard } from "./today-card";
 import { HealthCard } from "./health-card";
 import { MonthCelebration } from "./month-celebration";
 import { PersonalGrid } from "./personal-grid";
@@ -25,11 +25,13 @@ import { TopMerchantsCard } from "./top-merchants-card";
 import { NeedsAttentionCard } from "./needs-attention-card";
 import { BankHealthCard } from "./bank-health-card";
 import { SyncFailureBanner } from "./sync-failure-banner";
+import { SimpleHome } from "./simple-home";
+import { NextStep } from "./today-card";
+import { usePlan } from "@/hooks/use-plan";
 import { CardError, CardSkeleton } from "./card-shell";
 import type { HomePayload, HomeSection } from "@/lib/types";
 
 export function HomePage() {
-  const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [autoStartSync] = useState(() => searchParams.get("sync") === "1");
@@ -62,13 +64,50 @@ export function HomePage() {
 
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const { data: insights } = useQuery({ queryKey: ["insights"], queryFn: getInsights });
+  const { plan, loaded, update } = usePlan();
+  const simple = plan.simpleMode;
+  const detail = searchParams.get("view") === "detail";
+  const companion = plan.homeStyle === "companion";
+  const nextStep = <NextStep home={data} homePending={isLoading} homeFailed={isError} />;
+  const linkClass = "mx-auto flex min-h-11 w-fit items-center rounded-full px-4 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring";
+
+  // Until the plan loads, show only what both styles share (greeting and this month's card), so neither style flashes.
+  if (!loaded || (companion && !detail)) {
+    return (
+      <>
+        <PageHeader title={t("pageTitle")} largeTitle={false} />
+        <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
+          <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
+          <Greeting name={settings?.displayName} />
+          <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} />
+          {loaded && <WelcomePrompt />}
+          {loaded && <Link href="/?view=detail" className={linkClass}>{t("detailLink")}</Link>}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <PageHeader
         title={t("pageTitle")}
         largeTitle={false}
+        actions={
+          <div role="group" aria-label={t("simple.modeLabel")} className="inline-flex rounded-full bg-muted p-0.5 text-sm">
+            {[true, false].map((v) => (
+              <button key={String(v)} type="button" aria-pressed={simple === v} onClick={() => { if (simple !== v) void update({ simpleMode: v }); }}
+                className={`relative rounded-full px-3 py-1 after:absolute after:-inset-y-2 after:inset-x-0 ${simple === v ? "bg-background font-medium shadow-sm" : "text-muted-foreground"}`}>
+                {t(v ? "simple.simple" : "simple.advanced")}
+              </button>
+            ))}
+          </div>
+        }
       />
+      {/* The detail view of the Companion style always offers the way back. */}
+      {companion && <div className="mx-auto w-full max-w-6xl px-4 pt-3 md:px-6 lg:px-8"><Link href="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-footnote font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{t("companionLink")}</Link></div>}
+      {simple ? (
+        <div className="px-4 pb-8 pt-3"><SimpleHome name={settings?.displayName} extra={nextStep} /></div>
+      ) : (
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
         <SyncFailureBanner
@@ -76,7 +115,8 @@ export function HomePage() {
           className="mb-4 md:mb-5 lg:mb-6"
         />
         <Greeting name={settings?.displayName} />
-        <TodayCard home={data} bills={insights?.forecast} homePending={isLoading} homeFailed={isError} onRetry={() => { void queryClient.invalidateQueries({ queryKey: ["home"] }); }} />
+        {/* The same forecast card as Simple mode: forecast, rings, legend and the month so far. */}
+        <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} />
         <SuggestionsCard limit={3} href="/more#suggestions" />
         <HealthCard />
         <MonthCelebration />
@@ -88,6 +128,7 @@ export function HomePage() {
           return renderSection(id, data, isLoading, isError, "", skeletonLabels);
         }} />
       </div>
+      )}
     </>
   );
 }

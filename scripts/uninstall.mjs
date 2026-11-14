@@ -38,15 +38,15 @@ function uninstallService() {
   }
 }
 
-async function macUninstall() {
-  step("Quitting Spent menubar (if running)");
-  tryRun("osascript", ["-e", 'tell application "Spent" to quit']);
+export async function macUninstall(name = "Penny") {
+  step(`Quitting ${name} menubar (if running)`);
+  tryRun("osascript", ["-e", `tell application "${name}" to quit`]);
   // Give the GUI app a moment to flush and exit before we remove its bundle.
   await new Promise((r) => setTimeout(r, 500));
   done("done");
 
-  step("Removing ~/Applications/Spent.app");
-  const appPath = path.join(os.homedir(), "Applications", "Spent.app");
+  step(`Removing ~/Applications/${name}.app`);
+  const appPath = path.join(os.homedir(), "Applications", `${name}.app`);
   if (fs.existsSync(appPath)) {
     fs.rmSync(appPath, { recursive: true, force: true });
     done("removed");
@@ -59,7 +59,7 @@ async function macUninstall() {
     "osascript",
     [
       "-e",
-      'tell application "System Events" to delete (every login item whose name is "Spent")',
+      `tell application "System Events" to delete (every login item whose name is "${name}")`,
     ],
     { encoding: "utf-8" },
   );
@@ -70,22 +70,22 @@ async function macUninstall() {
   }
 }
 
-function windowsUninstall() {
-  step("Stopping Spent menubar (if running)");
-  tryRun("taskkill", ["/IM", "Spent.exe", "/F"]);
+export function windowsUninstall(name = "Penny") {
+  step(`Stopping ${name} menubar (if running)`);
+  tryRun("taskkill", ["/IM", `${name}.exe`, "/F"]);
   done("done");
 
-  step("Removing %LOCALAPPDATA%\\Programs\\Spent");
+  step(`Removing %LOCALAPPDATA%\\Programs\\${name}`);
   const localAppData = process.env.LOCALAPPDATA;
   if (localAppData) {
-    const installDir = path.join(localAppData, "Programs", "Spent");
+    const installDir = path.join(localAppData, "Programs", name);
     if (fs.existsSync(installDir)) {
       try {
         fs.rmSync(installDir, { recursive: true, force: true });
         done("removed");
       } catch (err) {
         console.error(`   could not remove: ${err.message}`);
-        console.error("   close any open Spent windows and retry.");
+        console.error(`   close any open ${name} windows and retry.`);
       }
     } else {
       done("not present");
@@ -104,7 +104,7 @@ function windowsUninstall() {
       "Start Menu",
       "Programs",
       "Startup",
-      "Spent.lnk",
+      `${name}.lnk`,
     );
     if (fs.existsSync(shortcutPath)) {
       fs.unlinkSync(shortcutPath);
@@ -122,7 +122,7 @@ function linuxUninstall() {
 }
 
 async function main() {
-  console.log("Spent uninstall");
+  console.log("Penny uninstall");
   console.log(`  platform: ${process.platform}`);
   console.log(`  repo:     ${REPO_ROOT}`);
 
@@ -131,9 +131,11 @@ async function main() {
   switch (process.platform) {
     case "darwin":
       await macUninstall();
+      await macUninstall("Spent"); // legacy: Spent.app from installs before the Penny rename
       break;
     case "win32":
       windowsUninstall();
+      windowsUninstall("Spent"); // legacy: Spent.exe and Spent.lnk from installs before the Penny rename
       break;
     case "linux":
       linuxUninstall();
@@ -142,7 +144,7 @@ async function main() {
 
   const dataDir = path.join(REPO_ROOT, "data");
   console.log("");
-  console.log("Spent is uninstalled. Service and menubar are gone.");
+  console.log("Penny is uninstalled. Service and menubar are gone.");
   console.log("");
   console.log("Kept (intentionally):");
   console.log(`  ${dataDir}  (your transactions + encryption key)`);
@@ -151,7 +153,7 @@ async function main() {
   console.log("To wipe everything, delete those directories manually.");
 }
 
-main().catch((err) => {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((err) => {
   console.error(`\nuninstall: ${err instanceof Error ? err.message : String(err)}`);
   process.exit(1);
 });

@@ -6,7 +6,7 @@ const fs = require("node:fs");
 const net = require("node:net");
 const path = require("node:path");
 
-// The data folder is named after the product, not the package (which still says "spent").
+// The data folder is named after the product.
 app.setName("Penny");
 app.setPath("userData", path.join(app.getPath("appData"), "Penny"));
 
@@ -86,7 +86,7 @@ async function start() {
       NEXT_TELEMETRY_DISABLED: "1",
       PORT: String(port),
       HOSTNAME: "127.0.0.1",
-      SPENT_DATA_DIR: dataDir,
+      PENNY_DATA_DIR: dataDir,
       ...(browser ? { PUPPETEER_EXECUTABLE_PATH: browser } : {}),
     },
     stdio: ["ignore", "pipe", "pipe"],

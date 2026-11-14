@@ -57,16 +57,7 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
         }}
         className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/15"
       >
-        <img
-          src="/logo_lightmode.svg"
-          alt="Spent"
-          className="h-12 w-auto dark:hidden"
-        />
-        <img
-          src="/logo_darkmode.svg"
-          alt="Spent"
-          className="hidden h-12 w-auto dark:block"
-        />
+        <img src="/icons/icon-192.png" alt="Penny" width={48} height={48} className="h-12 w-12 rounded-xl" />
       </motion.div>
 
       <div>
@@ -142,7 +133,7 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
           </span>
           <span className="text-sm font-medium">
             {t.rich("completeStorageValue", {
-              dbPath: "data/spent.db",
+              dbPath: "data/penny.db",
               code: (chunks) => <code className="text-xs">{chunks}</code>,
             })}
           </span>

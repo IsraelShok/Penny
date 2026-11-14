@@ -97,6 +97,11 @@
 }
 
 :root {
+  /* Setup AI-provider tiles (warm brand-ish tints; dark values in .dark). */
+  --tint-claude-bg: #fad6c0; --tint-claude-mid: #e89968; --tint-claude-ink: #7a4222;
+  --tint-ollama-bg: #dbedd1; --tint-ollama-mid: #a8d18d; --tint-ollama-ink: #3e5a2e;
+  --tint-none-bg: #e6dfd1; --tint-none-mid: #a89978; --tint-none-ink: #5b5240;
+  --tint-warn-ink: #9a4a26; --tint-warn-dot: #c97b5c;
   /* Headings use the UI sans (Inter / Heebo), no display serif */
   --font-serif: var(--font-sans);
   /* Inspired by ESH bank: soft lavender ground, white cards, deep indigo action colour.
@@ -126,6 +131,10 @@
   --chart-3: #34c759;
   --chart-4: #d9d6f0;
   --chart-5: #ff9500;
+  /* Simple mode rings, drawn on the dark hero card in every theme. */
+  --ring-income: #a99bff;
+  --ring-spending: #f5b94a;
+  --ring-savings: #5aa9ff;
   --status-on-track: #105a24;
   --status-heads-up: #9a2800;
   --status-over: #a8000f;
@@ -145,6 +154,10 @@
 }
 
 .dark {
+  --tint-claude-bg: #4a2a18; --tint-claude-mid: #c9805a; --tint-claude-ink: #f6c9ad;
+  --tint-ollama-bg: #26381c; --tint-ollama-mid: #7fae63; --tint-ollama-ink: #cfe8be;
+  --tint-none-bg: #35302a; --tint-none-mid: #a89978; --tint-none-ink: #e0d7c4;
+  --tint-warn-ink: #f0a982; --tint-warn-dot: #d98b6c;
   --background: #0b0a1a;
   --foreground: #f4f3fb;
   --card: #16142b;
@@ -254,6 +267,9 @@ html[lang="he"] {
   * {
     @apply border-border outline-ring/50;
   }
+  p {
+    text-wrap: pretty;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "cv11";
@@ -315,12 +331,20 @@ html[lang="he"] {
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* Reduced motion: drop movement, keep fades. Every keyframe becomes an opacity-only fade
+   (loops become a gentle pulse), spinners keep spinning, transitions keep only color/opacity. */
+@keyframes reducedFade {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *:not(.animate-spin), *::before, *::after {
+    animation-name: reducedFade !important;
+    animation-direction: alternate !important;
+  }
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+    transition-property: opacity, color, background-color, border-color, fill, stroke !important;
   }
 }
 
@@ -360,6 +384,25 @@ html[lang="he"] .text-display {
 }
 
 /* One disclosure cue everywhere: a small chevron after the label instead of the browser's ◄/▼ triangle. */
+@layer base {
+  /* One look for every native <select> (callers' utilities still win for size/width). */
+  select:not([multiple]) {
+    appearance: none;
+    border-color: var(--input);
+    background-color: var(--background);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: 1rem;
+    background-position: right 0.6rem center;
+    padding-inline-end: 2.25rem !important;
+    min-width: 0;
+    text-overflow: ellipsis;
+  }
+  select:not([multiple]):dir(rtl) { background-position: left 0.6rem center; }
+  select:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  select:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
 @layer base {
   summary:not(.list-none) {
     list-style: none;

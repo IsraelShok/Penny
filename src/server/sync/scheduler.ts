@@ -14,12 +14,12 @@ interface SchedulerState {
 }
 
 declare global {
-  var __spentScheduler: SchedulerState | undefined;
+  var __pennyScheduler: SchedulerState | undefined;
 }
 
 function getState(): SchedulerState {
-  if (!globalThis.__spentScheduler) {
-    globalThis.__spentScheduler = {
+  if (!globalThis.__pennyScheduler) {
+    globalThis.__pennyScheduler = {
       timeoutId: null,
       nextRunAt: null,
       running: false,
@@ -27,7 +27,7 @@ function getState(): SchedulerState {
       exitHandlerRegistered: false,
     };
   }
-  return globalThis.__spentScheduler;
+  return globalThis.__pennyScheduler;
 }
 
 const TZ = "Asia/Jerusalem";

@@ -5,9 +5,9 @@ import { spawnSync } from "node:child_process";
 import { PORT, REPO_ROOT, renderTemplate } from "./paths.mjs";
 import { addManagedBlock, removeManagedBlock } from "./hosts.mjs";
 
-const TASK_NAME = "Spent";
-const LAUNCHER_DIR = path.join(os.homedir(), "AppData", "Local", "Spent");
-const LAUNCHER_VBS = path.join(LAUNCHER_DIR, "spent-launcher.vbs");
+const TASK_NAME = "Penny";
+const LAUNCHER_DIR = path.join(os.homedir(), "AppData", "Local", "Penny");
+const LAUNCHER_VBS = path.join(LAUNCHER_DIR, "penny-launcher.vbs");
 
 function whichNode() {
   const r = spawnSync("where", ["node"], { encoding: "utf-8", shell: false });
@@ -19,7 +19,7 @@ function whichNode() {
 // VBScript avoids the visible console window node.exe would otherwise get.
 function writeLauncherVbs() {
   fs.mkdirSync(LAUNCHER_DIR, { recursive: true });
-  const content = renderTemplate("spent-launcher.vbs", {
+  const content = renderTemplate("penny-launcher.vbs", {
     port: PORT,
     repoRoot: REPO_ROOT,
     nodePath: whichNode(),
@@ -40,6 +40,13 @@ function removeLauncherVbs() {
   }
 }
 
+// legacy: "Spent" task and %LOCALAPPDATA%\Spent launcher from installs before the Penny rename
+function removeLegacyTask() {
+  schtasks(["/End", "/TN", "Spent"]);
+  schtasks(["/Delete", "/TN", "Spent", "/F"]);
+  fs.rmSync(path.join(os.homedir(), "AppData", "Local", "Spent"), { recursive: true, force: true });
+}
+
 function userId() {
   return `${process.env.USERDOMAIN ?? os.hostname()}\\${process.env.USERNAME ?? os.userInfo().username}`;
 }
@@ -50,8 +57,8 @@ function isAdmin() {
 }
 
 function writeTaskXml() {
-  const xmlPath = path.join(os.tmpdir(), `spent-task-${process.pid}.xml`);
-  const content = renderTemplate("spent-task.xml", {
+  const xmlPath = path.join(os.tmpdir(), `penny-task-${process.pid}.xml`);
+  const content = renderTemplate("penny-task.xml", {
     port: PORT,
     repoRoot: REPO_ROOT,
     nodePath: whichNode(),
@@ -97,6 +104,7 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
   switch (cmd) {
     case "install": {
       preflight();
+      removeLegacyTask();
       writeLauncherVbs();
       const xmlPath = writeTaskXml();
       try {
@@ -116,7 +124,7 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
       }
       try {
         addManagedBlock();
-        // Windows caches negative DNS lookups, so even a fresh `spent.localhost`
+        // Windows caches negative DNS lookups, so even a fresh `penny.localhost`
         // entry can still resolve as NXDOMAIN until the cache is cleared.
         spawnSync("ipconfig", ["/flushdns"], { stdio: "ignore" });
       } catch (err) {
@@ -132,7 +140,7 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
           );
           process.exit(1);
         }
-        console.log(`Spent is running. Open ${friendlyUrl} or ${loopbackUrl}.`);
+        console.log(`Penny is running. Open ${friendlyUrl} or ${loopbackUrl}.`);
       }, 2000);
       return;
     }
@@ -143,12 +151,13 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
         console.error(r.stderr || r.stdout);
       }
       removeLauncherVbs();
+      removeLegacyTask();
       try {
         removeManagedBlock();
       } catch (err) {
         console.error(`Hosts file cleanup failed: ${err.message}`);
       }
-      console.log("Spent task removed. The repo and data/ directory are untouched.");
+      console.log("Penny task removed. The repo and data/ directory are untouched.");
       return;
     }
     case "start": {

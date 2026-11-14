@@ -1,5 +1,5 @@
 /**
- * Capture fresh screenshots of the Spent app for the landing page.
+ * Capture fresh screenshots of the Penny app for the landing page.
  *
  * Requires the dev server at http://127.0.0.1:3000 to be running.
  * Writes PNGs to website/src/assets/screenshots/.

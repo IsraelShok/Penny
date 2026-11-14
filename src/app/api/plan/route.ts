@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { parsePlan } from "@/lib/plan";
+import { keepHomeStyle, parsePlan } from "@/lib/plan";
 import { deleteRow, getPlan, listGoals, listPolicies, savePlan, upsertGoal, upsertPolicy } from "@/server/db/queries/plan";
 import { deleteManualNetWorth, saveManualNetWorth } from "@/server/db/queries/assets";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
@@ -26,6 +26,7 @@ export async function PUT(request: Request) {
   const body = await request.json().catch(() => null);
   if (!body?.plan) return bad("plan is required");
   const plan = parsePlan(body.plan);
+  plan.homeStyle = keepHomeStyle(body.plan, getPlan(ws).homeStyle);
   savePlan(ws, plan);
   return NextResponse.json(plan);
 }

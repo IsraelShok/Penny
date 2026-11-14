@@ -50,7 +50,7 @@ export default function DataSettingsPage() {
         description={t("storageCardDescription")}
       >
         <div className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-          <code>data/spent.db</code> · <code>data/.encryption-key</code>
+          <code>data/penny.db</code> · <code>data/.encryption-key</code>
         </div>
       </SettingCard>
       <StatementImportCard />

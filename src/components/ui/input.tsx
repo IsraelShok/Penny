@@ -7,11 +7,14 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <InputPrimitive
       type={type}
+      // digits read left-to-right even in Hebrew; aligned to the RTL start edge
+      dir={type === "number" ? "ltr" : undefined}
       data-slot="input"
       className={cn(
         "flex h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 py-1 text-base sm:text-sm shadow-none transition-colors outline-none",
         "file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
         "placeholder:text-muted-foreground",
+        "[&[type=number]]:[appearance:textfield] [&[type=number]::-webkit-inner-spin-button]:appearance-none [&[type=number]::-webkit-outer-spin-button]:appearance-none rtl:[&[type=number]]:text-right",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
         "aria-invalid:border-destructive aria-invalid:focus-visible:ring-destructive/30",

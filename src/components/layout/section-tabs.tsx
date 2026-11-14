@@ -17,6 +17,7 @@ const SECTIONS = [
     { href: "/investments", key: "investments" },
     { href: "/fi", key: "fi" },
     { href: "/journey", key: "goals" },
+    { href: "/life", key: "life" },
   ],
 ] as const;
 
@@ -35,7 +36,8 @@ export function SectionTabs() {
   if (!tabs) return null;
   return (
     <nav aria-label={t(tabs[0].key)} className="mx-auto flex w-full max-w-[76rem] justify-center px-4 pb-2 md:px-6 lg:px-8">
-      <div className="inline-flex max-w-full gap-1 overflow-x-auto rounded-full bg-muted/70 p-1">
+      {/* On a phone the tabs can be wider than the screen: they scroll, the active one is brought into view. */}
+      <div className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-full bg-muted/70 p-1 [scrollbar-width:none] sm:gap-1">
         {tabs.map((x) => {
           const active = isActive(x.href);
           return (
@@ -43,8 +45,9 @@ export function SectionTabs() {
               key={x.href}
               href={x.href}
               aria-current={active ? "page" : undefined}
+              ref={active ? (el) => { el?.scrollIntoView({ block: "nearest", inline: "nearest" }); } : undefined}
               className={cn(
-                "min-h-9 content-center whitespace-nowrap rounded-full px-4 text-footnote font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+                "min-h-9 content-center whitespace-nowrap rounded-full px-3 text-footnote sm:px-4 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring",
                 active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >

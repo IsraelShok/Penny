@@ -85,7 +85,7 @@ function WorkspaceNameCardInner({ workspace }: { workspace: Workspace }) {
             maxLength={60}
           />
         </div>
-        <IconButton
+        <IconButton showLabel
           label={rename.isPending ? tCommon("saving") : tCommon("save")}
           variant="default"
           onClick={() => rename.mutate(name.trim())}

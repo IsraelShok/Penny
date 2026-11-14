@@ -44,7 +44,7 @@ export function Checkin() {
   const finish = async () => {
     const checkin = completeCheckin(plan.checkin, new Date());
     try { await update({ checkin }); setDone(checkin.streak); }
-    catch { toast.error(locale === "he" ? "לא הצלחנו לשמור את הסקירה. אפשר לנסות שוב." : "Could not save your review. Please try again."); }
+    catch { toast.error(t("couldNotSaveYour")); }
   };
 
   return (

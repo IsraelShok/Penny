@@ -8,12 +8,12 @@ import { dataDir } from "./data-dir";
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 
-// The key lives next to the database, so a Docker volume or SPENT_DATA_DIR keeps both together.
+// The key lives next to the database, so a Docker volume or PENNY_DATA_DIR keeps both together.
 export function keyPath(): string {
   return path.join(dataDir(), ".encryption-key");
 }
 
-// Before SPENT_DATA_DIR applied to the key, it was always written to ./data.
+// Before PENNY_DATA_DIR applied to the key, it was always written to ./data.
 export function legacyKeyPath(): string {
   return path.join(process.cwd(), "data", ".encryption-key");
 }

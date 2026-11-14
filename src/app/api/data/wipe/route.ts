@@ -20,14 +20,15 @@ export async function POST(request: Request) {
   }
 
   // Stop background work that holds the bot token or would write to the database mid-wipe.
-  const bot = globalThis.__spentBot;
-  globalThis.__spentBot = undefined;
+  const bot = globalThis.__pennyBot;
+  globalThis.__pennyBot = undefined;
   await bot?.stop().catch(() => undefined);
   globalThis._db?.close();
   globalThis._db = undefined;
 
   const dir = dataDir();
-  const files = ["spent.db", "spent.db-wal", "spent.db-shm", ".app-lock.json.tmp"].map((f) => path.join(dir, f));
+  const dbFiles = ["penny.db", "spent.db"].flatMap((db) => [db, `${db}-wal`, `${db}-shm`]); // legacy: spent.db from installs before the Penny rename
+  const files = [...dbFiles, ".app-lock.json.tmp"].map((f) => path.join(dir, f));
   for (const f of [...files, keyPath(), legacyKeyPath(), lockFilePath()]) shred(f);
   if (fs.existsSync(dir)) {
     for (const f of fs.readdirSync(dir)) if (f.endsWith(".log")) fs.rmSync(path.join(dir, f), { force: true });

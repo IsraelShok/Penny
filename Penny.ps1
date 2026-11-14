@@ -30,5 +30,5 @@ Start-Job -ScriptBlock {
     }
 } -ArgumentList $url | Out-Null
 
-Write-Host "Spent running at $url  (close this window to stop)"
+Write-Host "Penny running at $url  (close this window to stop)"
 npm start

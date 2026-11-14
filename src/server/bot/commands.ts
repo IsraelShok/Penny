@@ -104,7 +104,7 @@ export async function handleCommand(
   const money = cfg.hideAmounts ? () => HIDDEN_AMOUNT : showMoney;
   const hide = !!cfg.hideAmounts;
   const workspaceId = deps.workspaceId;
-  if (workspaceId === undefined) return "Spent is not set up yet. Finish setup in the app first.";
+  if (workspaceId === undefined) return "Penny is not set up yet. Finish setup in the app first.";
 
   switch (cmd) {
     case "/start":

@@ -55,7 +55,8 @@ export function BottomBar() {
   if (!shown) return null;
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-50 flex justify-center px-4 md:bottom-6">
-      <div data-search-root className="glass pointer-events-auto relative flex w-full max-w-2xl items-center gap-1 rounded-full border border-border p-1.5 shadow-2xl">
+      {/* Solid in every theme (glass included): the bar floats over busy content and must stay readable. */}
+      <div data-search-root className="pointer-events-auto relative flex w-full max-w-2xl items-center gap-1 rounded-full border border-border bg-popover p-1.5 text-popover-foreground shadow-2xl">
         <CommandPalette placeholder={t("askBar")} onClose={hide} />
       </div>
     </div>

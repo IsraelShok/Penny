@@ -1,6 +1,6 @@
 # Security
 
-Spent is designed to run **only on your own machine**. The threat model
+Penny is designed to run **only on your own machine**. The threat model
 below assumes you are not deploying this as a hosted service. If you do
 deploy it, almost none of the assumptions hold.
 
@@ -8,10 +8,10 @@ deploy it, almost none of the assumptions hold.
 
 | Asset | Location | How it's protected |
 |-------|----------|--------------------|
-| Bank credentials | `data/spent.db` (`bank_credentials` table) | Encrypted with AES-256-GCM |
-| Claude API key | `data/spent.db` (`settings` table) | Encrypted with AES-256-GCM |
+| Bank credentials | `data/penny.db` (`bank_credentials` table) | Encrypted with AES-256-GCM |
+| Claude API key | `data/penny.db` (`settings` table) | Encrypted with AES-256-GCM |
 | Encryption key | `data/.encryption-key` | File permissions `0o600` (owner read-write only). **Not encrypted itself.** |
-| Transaction data | `data/spent.db` (`transactions` table) | Plaintext inside the SQLite file |
+| Transaction data | `data/penny.db` (`transactions` table) | Plaintext inside the SQLite file |
 
 ## What's protected at rest
 
@@ -23,7 +23,7 @@ file alone cannot decrypt them.
 ## What's NOT protected at rest
 
 - The encryption key file itself is plaintext (hex). Whoever can read
-  `data/.encryption-key` AND `data/spent.db` can decrypt your
+  `data/.encryption-key` AND `data/penny.db` can decrypt your
   credentials.
 - Transaction data (merchant, amount, date, category) is plaintext in
   the SQLite file. Someone with disk access can see all your spending.
@@ -49,7 +49,7 @@ Run with `mitmproxy` or Charles to verify this yourself.
 The scraper launches Chromium via Puppeteer. By default we leave Chromium's
 renderer sandbox **on** — if a compromised bank page or a chained Chromium
 CVE ever triggers RCE in the renderer, the sandbox contains it instead of
-giving an attacker the same OS-user privileges as the Spent process.
+giving an attacker the same OS-user privileges as the Penny process.
 
 The sandbox works out of the box on macOS, Windows, and most Linux installs.
 It fails to start in two scenarios:
@@ -58,7 +58,7 @@ It fails to start in two scenarios:
 - Running inside a Docker container without the kernel capabilities the
   Chromium sandbox needs (most off-the-shelf images)
 
-In those cases set `SPENT_DISABLE_CHROMIUM_SANDBOX=1` in your environment.
+In those cases set `PENNY_DISABLE_CHROMIUM_SANDBOX=1` in your environment.
 Prefer running as a non-root user instead when you can — that keeps the
 sandbox on.
 
@@ -115,7 +115,7 @@ In rough order of effort vs. benefit:
 5. **Audit `node_modules/israeli-bank-scrapers/lib/` once** to convince
    yourself it only touches bank domains. ~300 lines per scraper.
 6. **Use a separate, low-limit credit card** for daily spending and only
-   track that one in Spent
+   track that one in Penny
 7. **Run sync with `Show browser during sync` enabled** the first few
    times so you can watch Puppeteer drive the bank's actual login page
 8. **Monitor outbound network traffic** with `mitmproxy` or Little Snitch
@@ -142,7 +142,7 @@ defense.
 
 ## Always-on service
 
-If you install Spent as a background service (`npm run service:install`),
+If you install Penny as a background service (`npm run service:install`),
 the server runs from login to logout (or from boot to shutdown). This
 changes how some surfaces look. The guarantees:
 
@@ -157,11 +157,11 @@ as root. The LaunchAgent and systemd user unit run under your user.
 The Windows scheduled task uses `LeastPrivilege` and runs as the
 installing user, not as `SYSTEM`.
 
-**The hostname is loopback-only.** Spent uses `spent.localhost`, which
+**The hostname is loopback-only.** Penny uses `penny.localhost`, which
 RFC 6761 reserves as loopback. macOS and Linux resolve `*.localhost`
 to `127.0.0.1` natively through the system resolver, so no hosts file
 edit is needed there. On Windows, `npm run service:install` appends
-`127.0.0.1 spent.localhost` to the hosts file as a compatibility
+`127.0.0.1 penny.localhost` to the hosts file as a compatibility
 fallback (the only step that requires elevation, and it prompts
 interactively). The block is bracketed with markers and removed
 cleanly by `npm run service:uninstall`. No mDNS / Bonjour service is
@@ -174,14 +174,14 @@ no provider names, no setup status. Add to it only if you have thought
 carefully about what a local cross-app attacker could learn.
 
 **The macOS menu bar app has no network entitlements beyond loopback.**
-`Spent.app` ships with an `NSAppTransportSecurity > NSExceptionDomains`
+`Penny.app` ships with an `NSAppTransportSecurity > NSExceptionDomains`
 entry whitelisting `127.0.0.1` and nothing else. It cannot reach the
 internet even if its code were modified to try, without re-signing the
 bundle with a different Info.plist.
 
 **Logs do not leak credentials.** macOS LaunchAgent stdout/stderr go to
-`~/Library/Logs/Spent/{out,err}.log` (directory mode `0700`). Linux
-systemd writes to `~/.local/state/spent/log/`. The app itself already
+`~/Library/Logs/Penny/{out,err}.log` (directory mode `0700`). Linux
+systemd writes to `~/.local/state/penny/log/`. The app itself already
 avoids logging credentials (see "What's protected at rest" above);
 the always-on service does not change that.
 

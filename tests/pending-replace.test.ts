@@ -8,7 +8,7 @@ let q: typeof import("@/server/db/queries/transactions");
 let ws: number, cred: number, run: number;
 
 beforeAll(async () => {
-  process.env.SPENT_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "spent-pend-"));
+  process.env.PENNY_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "penny-pend-"));
   db = (await import("@/server/db/index")).getDb();
   q = await import("@/server/db/queries/transactions");
   const { createSyncRun } = await import("@/server/db/queries/sync-runs");

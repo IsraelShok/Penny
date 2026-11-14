@@ -391,7 +391,7 @@ function CredentialsForm({
         >
           <PlugZap className="size-4" aria-hidden />
         </IconButton>
-        <IconButton
+        <IconButton showLabel
           label={saving ? tCommon("saving") : tCommon("save")}
           variant="default"
           onClick={handleSave}

@@ -6,7 +6,7 @@ import { isLockEnabled, SESSION_COOKIE, touchSession } from "@/server/lib/app-lo
 /**
  * Same-origin enforcement for mutating API requests.
  *
- * Spent runs on 127.0.0.1 only, but any webpage you visit can fire a POST
+ * Penny runs on 127.0.0.1 only, but any webpage you visit can fire a POST
  * to http://127.0.0.1:3000/api/sync from inside your browser. This
  * middleware rejects state-changing requests whose Origin or Referer
  * isn't the app itself, so a malicious tab can't trick your localhost

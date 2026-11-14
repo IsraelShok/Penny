@@ -1,8 +1,8 @@
 // Offline shell for the installed app. Financial data (/api) is never cached:
 // it stays on the server and is always fetched fresh.
-const CACHE = "penny-v1";
+const CACHE = "penny-v2";
 const OFFLINE_URL = "/offline.html";
-const PRECACHE = [OFFLINE_URL, "/icons/icon-192.png", "/logo_lightmode.svg", "/logo_darkmode.svg"];
+const PRECACHE = [OFFLINE_URL, "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));

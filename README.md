@@ -1,10 +1,5 @@
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="public/logo_darkmode.svg">
-  <img src="public/logo_lightmode.svg" alt="Penny" width="84">
-</picture>
-
 # Penny
 
 **Local-only personal finance for Israeli bank accounts.**
@@ -151,9 +146,9 @@ Toggle between English (default) and עברית from **Settings → Appearance**
 flowchart LR
     Bank["🏦 Israeli bank<br/>(Isracard / Hapoalim / Max)"]
     Scraper["Puppeteer scraper<br/>(israeli-bank-scrapers)"]
-    DB[("📦 SQLite<br/>data/spent.db<br/>(WAL mode)")]
+    DB[("📦 SQLite<br/>data/penny.db<br/>(WAL mode)")]
     AI{"🤖 AI provider<br/>Claude · Ollama · None"}
-    UI["🖥 Dashboard<br/>http://spent.localhost:41234"]
+    UI["🖥 Dashboard<br/>http://penny.localhost:41234"]
 
     Bank -->|HTTPS<br/>credentials encrypted| Scraper
     Scraper -->|new transactions| DB
@@ -206,7 +201,23 @@ You can change providers any time from **Settings → AI provider**. Existing ca
 
 ## Install
 
-### Desktop app (easiest)
+### Docker (recommended)
+
+Runs Penny, its scrapers and Chromium in a container, isolated from your machine. Requires Docker Desktop (or Docker Engine).
+
+```bash
+docker compose up -d --build
+```
+
+On Windows, double-click `Penny-docker.bat` instead: it builds, starts and opens `http://127.0.0.1:41234`.
+
+- The app is published on `127.0.0.1` only. The database and encryption key live in the data volume and survive updates.
+- Settings go in `.env` (copied from `.env.example`); compose reads it automatically.
+- The image build runs the test suite. If the tests fail, no image is produced.
+- **Updates:** with Telegram configured, Penny tells you when a newer version exists (`PENNY_UPDATE_CHECK`, on by default in compose). Nothing installs itself. Run `Penny-update.bat` (or `Penny-update.ps1`): it pulls with `--ff-only`, backs up the database and key to `/data/backups` (newest five kept), builds (tests included), switches, and rolls back to the previous image if the new one is not healthy.
+- Ollama on the host: set `PENNY_ALLOW_REMOTE_OLLAMA=1` and use `http://host.docker.internal:11434`.
+
+### Desktop app
 
 Download **Penny Setup.exe** from the [Releases page](https://github.com/Sergey-Bar/Penny/releases), run it, and open Penny from the Start menu. No Node.js, no terminal. Your data stays in `%APPDATA%\Penny\data` on your computer, and bank sync uses the Chrome or Edge you already have.
 
@@ -221,29 +232,13 @@ npm install
 npm run setup
 ```
 
-`npm run setup` does everything: builds the Next.js app, installs the always-on service (LaunchAgent on macOS / systemd on Linux / Task Scheduler on Windows), builds the platform menubar from source, installs it to the standard location, registers it to auto-start at login, and opens the dashboard. On Windows it also writes a `127.0.0.1 spent.localhost` line to your hosts file (the only step that asks for Administrator). macOS and Linux resolve `*.localhost` natively, so setup runs sudo-free there.
+`npm run setup` does everything: builds the Next.js app, installs the always-on service (LaunchAgent on macOS / systemd on Linux / Task Scheduler on Windows), builds the platform menubar from source, installs it to the standard location, registers it to auto-start at login, and opens the dashboard. On Windows it also writes a `127.0.0.1 penny.localhost` line to your hosts file (the only step that asks for Administrator). macOS and Linux resolve `*.localhost` natively, so setup runs sudo-free there.
 
 On Linux there is no native menubar. `npm run setup` installs the service and opens the browser. Control the service with `npm run service:*` (see below).
 
 First launch of the menubar on macOS/Windows shows an unsigned-binary warning (Gatekeeper / SmartScreen). That's expected: you built it locally and didn't pay for a code-signing certificate. Right-click → Open (macOS) or "More info" → "Run anyway" (Windows). One-time.
 
-Open **`http://spent.localhost:41234`** and bookmark it.
-
-### Docker (optional)
-
-Runs Penny, its scrapers and Chromium in a container, isolated from your machine. Requires Docker Desktop (or Docker Engine).
-
-```bash
-docker compose up -d --build
-```
-
-On Windows, double-click `Spent-docker.bat` instead: it builds, starts and opens `http://127.0.0.1:41234`.
-
-- The app is published on `127.0.0.1` only. The database and encryption key live in the `spent-data` volume and survive updates.
-- Settings go in `.env` (copied from `.env.example`); compose reads it automatically.
-- The image build runs the test suite. If the tests fail, no image is produced.
-- **Updates:** with Telegram configured, Penny tells you when a newer version exists (`SPENT_UPDATE_CHECK`, on by default in compose). Nothing installs itself. Run `Spent-update.bat` (or `Spent-update.ps1`): it pulls with `--ff-only`, backs up the database and key to `/data/backups` (newest five kept), builds (tests included), switches, and rolls back to the previous image if the new one is not healthy.
-- Ollama on the host: set `SPENT_ALLOW_REMOTE_OLLAMA=1` and use `http://host.docker.internal:11434`.
+Open **`http://penny.localhost:41234`** and bookmark it.
 
 ## First-time setup
 
@@ -259,7 +254,7 @@ In the browser:
 
 | What you want | Run |
 |---|---|
-| Just use the app (no coding) | Open `http://spent.localhost:41234` |
+| Just use the app (no coding) | Open `http://penny.localhost:41234` |
 | Code and see changes instantly | `npm run dev` → `http://127.0.0.1:3000` |
 | Update the always-on app after editing | `npm run service:reload` |
 
@@ -288,7 +283,7 @@ npm run uninstall
 Reverses everything `npm run setup` installed:
 
 - Stops the background service and removes the LaunchAgent / Task Scheduler entry / systemd unit.
-- Windows: removes the `127.0.0.1 spent.localhost` line from your hosts file (asks for Administrator). macOS/Linux don't have a hosts entry to remove unless you're upgrading from an older install — in that case the legacy `spent.local` line is cleaned up automatically.
+- Windows: removes the `127.0.0.1 penny.localhost` line from your hosts file (asks for Administrator). macOS/Linux don't have a hosts entry to remove unless you're upgrading from an older install — in that case the old hosts line is cleaned up automatically.
 - Quits the menubar, removes the installed app, and removes it from Login Items / Startup.
 
 **Kept on purpose:**
@@ -298,8 +293,8 @@ Reverses everything `npm run setup` installed:
 
 If you only want to remove the menubar but keep the always-on web app:
 
-- **macOS**: `rm -rf ~/Applications/Spent.app` and remove "Penny" from System Settings → General → Login Items.
-- **Windows**: delete `%LOCALAPPDATA%\Programs\Spent\` and remove `Spent.lnk` from `shell:startup`.
+- **macOS**: `rm -rf ~/Applications/Penny.app` and remove "Penny" from System Settings → General → Login Items.
+- **Windows**: delete `%LOCALAPPDATA%\Programs\Penny\` and remove `Penny.lnk` from `shell:startup`.
 
 If you only want to remove the always-on service but keep the menubar (so it's there if you reinstall later): `npm run service:uninstall`.
 
@@ -310,7 +305,7 @@ If you only want to remove the always-on service but keep the menubar (so it's t
 | Credentials at rest | AES-256-GCM, encryption key file mode `0600` (server refuses to start otherwise) |
 | Network exposure | Bound to `127.0.0.1` only — not reachable from your LAN or the internet |
 | Browser CSRF | Origin / Referer validation on every mutation |
-| Bot detection | Chromium sandbox on by default (`SPENT_DISABLE_CHROMIUM_SANDBOX=1` to opt out) |
+| Bot detection | Chromium sandbox on by default (`PENNY_DISABLE_CHROMIUM_SANDBOX=1` to opt out) |
 | Bundle integrity | `israeli-bank-scrapers`, `better-sqlite3`, and `@anthropic-ai/sdk` pinned to exact versions |
 | Browser hardening | Strict CSP, `X-Frame-Options: DENY`, `Permissions-Policy` locks down camera/mic/geo/payment |
 
@@ -320,9 +315,9 @@ Full threat model and responsible-disclosure policy → [SECURITY.md](SECURITY.m
 
 ## Where your data lives
 
-- `data/spent.db` — transactions, categories, budgets, settings
+- `data/penny.db` — transactions, categories, budgets, settings
 - `data/.encryption-key` — 32-byte AES key, mode `0600`
-- `~/Library/Logs/Spent/` (macOS) / `~/.local/state/spent/log/` (Linux) — service logs
+- `~/Library/Logs/Penny/` (macOS) / `~/.local/state/penny/log/` (Linux) — service logs
 
 Back up `data/` like any other folder. To migrate to a new machine, copy `data/` over and run `npm run service:install`.
 
@@ -351,17 +346,16 @@ Penny/
 ├── scripts/service/          LaunchAgent / systemd / Task Scheduler installer
 ├── website/                  Astro + Starlight docs site (auto-deploys to GitHub Pages)
 ├── .github/workflows/        CI — docs site deploy
-├── Spent.sln                 Visual Studio solution for the Windows menubar project
 └── data/                     SQLite + encryption key (gitignored)
 ```
 
 ## Troubleshooting
 
 - **Port 41234 in use** → `lsof -nP -iTCP:41234 -sTCP:LISTEN` (Unix) or `netstat -ano | findstr :41234` (Windows). Kill the offender and re-run install.
-- **Gatekeeper blocks `Spent.app`** → right-click → Open → Open. One-time.
+- **Gatekeeper blocks `Penny.app`** → right-click → Open → Open. One-time.
 - **Linux: "systemd user instance not available"** → `loginctl enable-linger $USER`.
-- **Windows: hosts edit fails / `spent.localhost` doesn't resolve** → re-run install from an elevated PowerShell (Win+X → "Terminal (Admin)") so it can edit `C:\Windows\System32\drivers\etc\hosts`. After the edit, the installer flushes the DNS cache automatically; if you edited hosts manually, run `ipconfig /flushdns`. `http://127.0.0.1:41234` always works as a fallback.
-- **Bank scrape fails with "Cloudflare"** → temporarily run with `SPENT_DISABLE_CHROMIUM_SANDBOX=1` to let Puppeteer use a real Chrome profile.
+- **Windows: hosts edit fails / `penny.localhost` doesn't resolve** → re-run install from an elevated PowerShell (Win+X → "Terminal (Admin)") so it can edit `C:\Windows\System32\drivers\etc\hosts`. After the edit, the installer flushes the DNS cache automatically; if you edited hosts manually, run `ipconfig /flushdns`. `http://127.0.0.1:41234` always works as a fallback.
+- **Bank scrape fails with "Cloudflare"** → temporarily run with `PENNY_DISABLE_CHROMIUM_SANDBOX=1` to let Puppeteer use a real Chrome profile.
 
 ## Roadmap
 
@@ -390,7 +384,7 @@ Conventions:
 
 ## License
 
-MIT. Penny started from [Spent](https://github.com/Shaya16/Spent) (MIT); see `NOTICE.md`.
+MIT. See `LICENSE` and `NOTICE.md` for the upstream attribution.
 
 ## Acknowledgments
 

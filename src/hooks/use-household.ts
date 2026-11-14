@@ -19,5 +19,5 @@ export function useHousehold() {
   });
 
   const save = (patch: Partial<Household>) => mutation.mutate({ ...household, ...patch });
-  return { household, loading: query.isLoading, save, saving: mutation.isPending };
+  return { household, loading: query.isLoading, failed: query.isError, save, saving: mutation.isPending };
 }

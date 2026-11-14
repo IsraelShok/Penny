@@ -30,7 +30,7 @@ export function HealthCard() {
   const CashIcon = cash.data?.hasData ? CASH_ICON[cash.data.level] : null;
 
   return (
-    <CardShell label={th("title")} className="mb-6 h-auto md:mb-8" action={<Link href="/overview" className="text-footnote font-medium text-primary">{th("details")}</Link>}>
+    <CardShell label={th("title")} className="mb-6 h-auto md:mb-8" action={<Link href="/overview" className="-my-3.5 inline-block py-3.5 text-footnote font-medium text-primary">{th("details")}</Link>}>
       <div className="grid items-center gap-6 sm:grid-cols-[auto_1fr]">
         <div className="flex flex-col items-center gap-2">
           <svg viewBox="0 0 100 100" className="size-32 -rotate-90" role="img" aria-label={t("scoreLabel", { score: d.score })}>

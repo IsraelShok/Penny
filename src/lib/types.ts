@@ -274,7 +274,7 @@ export interface ActivitySnapshot {
   };
   ollama: {
     running: boolean;
-    spawnedBySpent: boolean;
+    spawnedByPenny: boolean;
   };
 }
 
