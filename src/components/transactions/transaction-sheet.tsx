@@ -46,7 +46,7 @@ export function TransactionSheet({ open, onOpenChange, txn, members = [] }: {
   if (open && txn !== shown) setShown(txn);
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side={isMobile ? "bottom" : "right"} className="max-h-[92dvh] w-full overflow-y-auto p-0 sm:max-w-md!">
+      <SheetContent side={isMobile ? "bottom" : "right"} className="w-full overflow-y-auto p-0 data-[side=bottom]:max-h-[92dvh] sm:max-w-md!">
         <Form key={shown?.id ?? "new"} txn={shown} members={members} close={() => onOpenChange(false)} />
       </SheetContent>
     </Sheet>
@@ -135,7 +135,7 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
             <span className="text-2xl font-semibold" aria-hidden>{kind === "income" ? "+" : "−"}₪</span>
             <input id="mt-amount" autoFocus={!txn} inputMode="decimal" autoComplete="off" required={manual} disabled={!manual} placeholder="0"
               aria-invalid={manual && amount !== "" && !amountOk} value={amount} onChange={(e) => setAmount(e.target.value)}
-              className="w-40 bg-transparent text-center text-4xl font-bold tabular-nums outline-none placeholder:text-current placeholder:opacity-30 focus-visible:underline focus-visible:decoration-2 focus-visible:underline-offset-8 disabled:opacity-70" />
+              className="w-40 bg-transparent text-center text-4xl font-bold rounded-lg tabular-nums outline-none placeholder:text-current placeholder:opacity-30 focus-visible:underline focus-visible:decoration-2 focus-visible:underline-offset-8 disabled:opacity-70" />
           </div>
           {manual && amount !== "" && !amountOk && <p className="mt-1 text-xs text-destructive" role="alert">{t("invalidAmount")}</p>}
         </div>
