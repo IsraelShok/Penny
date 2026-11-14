@@ -2,229 +2,170 @@
 
 # Penny
 
-**Local-only personal finance for Israeli bank accounts.**
-Encrypted. AI-categorized. Yours.
-
+**A calm, local-first money app for Israeli households.**
+Your banks, your budget and your future in one place, on your own computer.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs&logoColor=white&style=flat-square)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white&style=flat-square)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white&style=flat-square)](https://sqlite.org/)
+[![Hebrew first](https://img.shields.io/badge/UI-עברית%20%2F%20English-5541cc?style=flat-square)](#language-and-accessibility)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](#license)
-[![Status: Beta](https://img.shields.io/badge/Status-Beta-blueviolet?style=flat-square)](#features)
+
+[Features](#features) · [Install](#install) · [How it works](#how-it-works) · [Security](#security-at-a-glance) · [Contributing](#contributing)
+
+![Penny home](public/screenshots/home-light.png)
 
 </div>
 
 > [!WARNING]
-> Personal, local-only tool. Scraping financial institutions may violate their Terms of Service. Use only for your own accounts on your own machine. **Do not deploy as a hosted service.**
-
-<div align="center">
-
-![Penny dashboard](public/screenshots/home-light.png)
-
-</div>
+> Penny is a personal, local-only tool. Scraping financial institutions may violate their terms of service. Use it only for your own accounts, on your own machine. **Do not deploy it as a hosted service.**
 
 ## Why Penny?
 
-Israeli banks have terrible exports, YNAB doesn't speak ILS gracefully, and every "cloud finance" app wants you to hand over your bank password. Penny is the answer for people who'd rather just run something on their own laptop.
+Israeli banks have poor exports, global budgeting apps don't understand shekels, credit points or study funds, and most cloud finance apps want your bank password on their servers.
 
-Your transactions get pulled directly from your bank with [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), stored in a local SQLite file you can `cp` and back up like any other file, and categorized by an AI provider you choose: paid Claude, free local Ollama, or nothing at all.
+Penny runs on your laptop. It pulls transactions straight from your banks and credit cards, keeps them in one SQLite file you can copy and back up, and lets an AI of your choice sort them into categories, or none at all. Then it helps with the questions that actually matter in Israel: am I on track this month, do I have a safety net, am I paying too much in fees, and am I getting every tax benefit I'm owed.
 
-The trade-off is honest: you self-host, you trust the scraper, and you accept that banks may not love automation. In return you get a fast, beautiful, fully offline dashboard that never phones home.
+Nothing leaves your machine except the calls you choose: to your bank, and to an AI provider if you pick a cloud one.
 
 ## Features
 
-<table>
-<tr>
-<td width="33%" valign="top">
+### Everyday money
+- **Two modes.** *Simple* shows one clear number, this month by rows, and every category week by week (budget for the week, spent, left). *Advanced* adds the full dashboard, insights and a customizable home grid.
+- **Transactions** grouped by week, with category colours, search, filters, bulk edit, splits and tags. Add cash or manual transactions in a quick, amount-first sheet.
+- **Budgets** with pacing, 50/30/20 view, monthly hero card and per-category detail.
+- **Category families.** Groups and subcategories share a colour family; pick categories by colour, A-Z or group, and create your own.
+- **Financial health** score with one warnings button that lists everything that needs care.
+- **What's ahead.** Upcoming charges, recurring bills and a cash-flow forecast.
 
-### 🏦 Israeli bank integration
-Isracard, Bank Hapoalim, and Max work out of the box. Visa Cal and Bank Leumi are on the roadmap.
+### Israeli money tools
+More than 25 calculators and guided tools, ordered by life stage, each marked with the year its figures are valid for:
 
-</td>
-<td width="33%" valign="top">
+| Area | Tools |
+|---|---|
+| Tax | Credit points and tax-refund check (with a Form 135 checklist), tax-benefit deposits to pension and study fund, loss offset (Form 867), net from gross |
+| Pension and retirement | Your fees against the market (links to Gemel-Net, Pensia-Net, Bituach-Net), clearing-house report guide, investment track choice, annuity vs lump sum, severance when changing jobs, early-retirement bridge to 67 |
+| Safety net | Emergency fund, insurance list with double-insurance check, forgotten money (Har HaKesef) checklist, benefits check (work grant, reserve duty, child savings, arnona discounts) |
+| Big decisions | Mortgage with 5-year variable tracks and Bank of Israel rules, prepay vs invest, rent vs buy, discounted-home lottery, car cost, lease vs buy |
+| Everyday | Bank fee audit against the basic track, debt payoff, loan cost, savings goals, vacation budget, kids' investing |
 
-### 🤖 AI categorization
-Choose Claude (Anthropic) for best accuracy, Ollama for fully local LLMs, or skip and categorize manually.
+Plus a **knowledge center** of short original guides in Hebrew and English, and daily tips.
 
-</td>
-<td width="33%" valign="top">
+### Household
+- **Profiles that share one household,** in a "who's using?" screen. Each person keeps their own home layout and accessibility choices.
+- **Pip,** a small companion whose mood follows the household's finances. Every profile picks its own Pip as its avatar.
+- **Goals,** net worth, investments and pension balances (synced from Clal, Harel, Meitav, Menora and Migdal), and a "family document" for the day someone else needs to find everything.
 
-### 🔒 Local-only & encrypted
-Credentials encrypted with AES-256-GCM. Server binds to `127.0.0.1` only — never reachable from your LAN or the internet.
+### Getting data in
+- **Automatic:** 18 Israeli banks and card companies via [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), on a daily schedule.
+- **Manual:** drop a CSV, XLSX or XLS statement into the app or into a watched import folder. A transaction that comes from both is stored once.
+- **Onboarding** walks a new user through profile and Pip, connecting or importing, a monthly target, budgets, an optional AI provider and a short tour. It can be skipped, resumed and reopened.
 
-</td>
-</tr>
-<tr>
-<td valign="top">
+### Language and accessibility
+- **Hebrew first,** with a full right-to-left layout, and English. Bank names, categories, numbers and dates are localized.
+- **Accessibility menu** (Alt+A): text size, contrast, stop animations, readable font, link highlighting and more, saved per profile, with an accessibility statement in line with IS 5568 and WCAG 2.2 AA.
+- **Privacy mode** (Ctrl/⌘+Shift+P) hides amounts on screen.
+- **Themes:** light, dark (midnight) and glass, in four accent colours or your own.
 
-### 📊 Budgets with pacing
-Hierarchical categories, monthly targets, "ahead of pace" hero card, and per-category drilldown.
-
-</td>
-<td valign="top">
-
-### 🌓 Light & dark theme
-Polished buttercream-and-sage palette in light mode, warm charcoal in dark. System-aware by default.
-
-</td>
-<td valign="top">
-
-### 🍎 Menu bar / tray app
-Native companion in your menu bar (macOS) or notification area (Windows). Status indicator, one-click open dashboard, sync, and start/stop/restart the service.
-
-</td>
-</tr>
-<tr>
-<td valign="top">
-
-### 🎯 Auto-detected transfers
-Credit card payments and inter-account moves are recognized and excluded from spending totals.
-
-</td>
-<td valign="top">
-
-### 📅 Multi-month history
-Pull up to 3 months of transactions per sync (configurable). Most banks support 12 months total.
-
-</td>
-<td valign="top">
-
-### 🔍 Merchant memory
-Once you correct an AI categorization, Penny remembers — same merchant goes to the right category next time.
-
-</td>
-</tr>
-<tr>
-<td colspan="3" valign="top">
-
-### 🌐 English & Hebrew (RTL)
-Toggle between English (default) and עברית from **Settings → Appearance**. Hebrew flips the entire app to right-to-left with translated UI, bank names, predefined categories, currency, and date formatting. Powered by [`next-intl`](https://next-intl.dev/) — drop in a new `<locale>.json` under [`src/i18n/messages/`](src/i18n/messages/) to add another language.
-
-</td>
-</tr>
-</table>
+### Also
+- **Ask your money** in plain language, and a **Telegram bot** for instant spending feedback.
+- **Phone access on your Wi-Fi** (opt-in), installable as a web app.
+- **Menu bar / tray companion** on macOS and Windows.
 
 ## Screenshots
 
 <table>
 <tr>
-<td width="50%" align="center"><b>Dashboard — light</b></td>
-<td width="50%" align="center"><b>Dashboard — dark</b></td>
+<td width="50%"><img src="public/screenshots/dashboard-light.png" alt="Budget dashboard, light theme"></td>
+<td width="50%"><img src="public/screenshots/dashboard-dark.png" alt="Budget dashboard, dark theme"></td>
 </tr>
 <tr>
-<td><img src="public/screenshots/dashboard-light.png" alt="Dashboard light mode"></td>
-<td><img src="public/screenshots/dashboard-dark.png" alt="Dashboard dark mode"></td>
-</tr>
-<tr>
-<td align="center"><b>Transactions</b></td>
-<td align="center"><b>Setup wizard</b></td>
-</tr>
-<tr>
-<td><img src="public/screenshots/transactions-light.png" alt="Transactions page"></td>
-<td><img src="public/screenshots/setup-bank-light.png" alt="Setup wizard bank picker"></td>
-</tr>
-<tr>
-<td align="center"><b>Categories</b></td>
-<td align="center"><b>AI provider</b></td>
-</tr>
-<tr>
-<td><img src="public/screenshots/settings-categories-light.png" alt="Category management"></td>
-<td><img src="public/screenshots/settings-ai-light.png" alt="AI provider settings"></td>
-</tr>
-<tr>
-<td colspan="2" align="center"><b>Bank accounts</b></td>
-</tr>
-<tr>
-<td colspan="2"><img src="public/screenshots/settings-bank-light.png" alt="Bank accounts settings"></td>
+<td><img src="public/screenshots/transactions-light.png" alt="Transactions grouped by week"></td>
+<td><img src="public/screenshots/settings-bank-light.png" alt="Accounts and import settings"></td>
 </tr>
 </table>
+
+Regenerate them with `npm run docs:screenshots`.
+
+## Supported institutions
+
+| Type | Institutions |
+|---|---|
+| Banks | Hapoalim, Leumi, Discount, Mizrahi Tefahot, Mercantile, First International (FIBI), Otsar Hahayal, Pagi, Yahav, Massad, Union, One Zero, Beyahad Bishvilha, Behatsdaa |
+| Credit cards | Isracard, Visa Cal, Max, American Express |
+| Pension and savings | Clal, Harel, Meitav, Menora, Migdal (balances, via `israeli-pension-scrapers`) |
+
+Not listed? Import its statement files, or add a scraper (see [Contributing](#contributing)).
+
+## AI providers
+
+AI is optional. It categorizes new transactions and answers "ask your money" questions.
+
+| | Claude API | Ollama | Coding-agent CLI | None |
+|---|---|---|---|---|
+| Runs | Anthropic cloud | Your machine | Vendor cloud, via the CLI you already use | Nowhere |
+| Cost | A fraction of a shekel per sync | Free | Your existing plan | Free |
+| Setup | API key | Install Ollama and pull a model | Claude Code, Codex, Gemini CLI, OpenCode or Kilo, in read-only mode | Nothing |
+
+Change provider any time in **Settings → AI**. Categories you corrected are remembered per merchant either way.
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    Bank["🏦 Israeli bank<br/>(Isracard / Hapoalim / Max)"]
-    Scraper["Puppeteer scraper<br/>(israeli-bank-scrapers)"]
-    DB[("📦 SQLite<br/>data/penny.db<br/>(WAL mode)")]
-    AI{"🤖 AI provider<br/>Claude · Ollama · None"}
-    UI["🖥 Dashboard<br/>http://penny.localhost:41234"]
+    Banks["🏦 Banks and cards"]
+    Files["📄 Statement files"]
+    Scraper["Scrapers<br/>(Puppeteer)"]
+    DB[("📦 SQLite<br/>data/penny.db")]
+    AI{"🤖 AI<br/>optional"}
+    UI["🖥 Penny<br/>penny.localhost:41234"]
 
-    Bank -->|HTTPS<br/>credentials encrypted| Scraper
-    Scraper -->|new transactions| DB
-    DB -->|uncategorized batch| AI
-    AI -->|category proposals| DB
+    Banks -->|encrypted credentials| Scraper
+    Scraper --> DB
+    Files -->|import folder or upload| DB
+    DB -->|uncategorized| AI
+    AI -->|categories| DB
     DB --> UI
 
-    subgraph local["🔒 Your machine — 127.0.0.1 only"]
+    subgraph local["🔒 Your machine, 127.0.0.1 only"]
         Scraper
         DB
         UI
     end
 ```
 
-Everything inside the dashed box stays on your laptop. The only outbound traffic is to your bank (for scraping) and optionally `api.anthropic.com` (if you chose Claude) or `localhost:11434` (if you chose Ollama).
-
-## Supported banks
-
-| Bank | Type | Status |
-|---|---|---|
-| **Isracard** | Credit card | ✅ Supported |
-| **Bank Hapoalim** (incl. Poalim wallets) | Bank | ✅ Supported |
-| **Max** (formerly Leumi Card) | Credit card | ✅ Supported |
-| Visa Cal | Credit card | 🚧 Planned |
-| Bank Leumi | Bank | 🚧 Planned |
-
-Don't see your bank? Adding a scraper is a small wrapper around `israeli-bank-scrapers` — see [Contributing](#contributing).
-
-## AI providers
-
-| | **Claude** (Anthropic) | **Ollama** (local) | **None** |
-|---|---|---|---|
-| Cost | ~₪0.004 per sync | Free | Free |
-| Accuracy | Best | Good (depends on model) | Manual |
-| Network | `api.anthropic.com` | `localhost:11434` | Offline |
-| Setup | API key | Install Ollama + pull a model | Nothing |
-
-Default model when Claude is selected: `claude-haiku-4-5` (cheap, fast, accurate for categorization). For Ollama, `llama3.2:3b` is the recommended default.
-
-You can change providers any time from **Settings → AI provider**. Existing categorizations are kept.
-
 ## Requirements
 
-- **Node.js 22+**
-- **macOS 13+**, **Ubuntu 22+** (with systemd), or **Windows 11**
-- **Build tools for the menubar** (only if you want the tray; `npm run setup` will offer to install these for you if they're missing):
-  - macOS: Xcode Command Line Tools (`xcode-select --install`)
-  - Windows: .NET 8 SDK (`winget install Microsoft.DotNet.SDK.8`)
-- A bank account with **2FA disabled** (most Israeli banks require this for automation — OneZero is the exception)
+- **Node.js 22+** (not needed for Docker or the desktop installer)
+- **Windows 11, macOS 13+ or Ubuntu 22+** (with systemd)
+- For the tray companion, built locally: Xcode Command Line Tools on macOS, .NET 8 SDK on Windows. `npm run setup` offers to install them.
+- Bank accounts with **2FA disabled** for automatic sync (One Zero is the exception). Without that, use statement files.
 
 ## Install
 
 ### Docker (recommended)
 
-Runs Penny, its scrapers and Chromium in a container, isolated from your machine. Requires Docker Desktop (or Docker Engine).
+Runs Penny, its scrapers and Chromium in a container, isolated from your machine.
 
 ```bash
 docker compose up -d --build
 ```
 
-On Windows, double-click `Penny-docker.bat` instead: it builds, starts and opens `http://127.0.0.1:41234`.
+On Windows, double-click `Penny-docker.bat`: it builds, starts and opens `http://127.0.0.1:41234`.
 
-- The app is published on `127.0.0.1` only. The database and encryption key live in the data volume and survive updates.
-- Settings go in `.env` (copied from `.env.example`); compose reads it automatically.
-- The image build runs the test suite. If the tests fail, no image is produced.
-- **Updates:** Penny shows a banner (and a Telegram message, if set up) when a newer release exists. Nothing installs itself. Run `Penny-update.bat` (or `Penny-update.ps1`): it switches to the newest release tag, backs up the database and key to `/data/backups` (newest five kept), builds (tests included), switches, and rolls back to the previous image if the new one is not healthy.
-- **Statement files:** drop bank or investment-house exports into the `imports/` folder next to `docker-compose.yml` (see [Importing statement files](#importing-statement-files)).
-- Ollama on the host: set `PENNY_ALLOW_REMOTE_OLLAMA=1` and use `http://host.docker.internal:11434`.
+- Published on `127.0.0.1` only. The database and encryption key live in the data volume and survive updates.
+- Settings go in `.env` (copy `.env.example`).
+- The image build runs the test suite; if tests fail, no image is produced.
+- **Updates:** Penny shows a banner (and a Telegram message, if set up) when a newer release exists. Nothing installs itself. Run `Penny-update.bat` (or `Penny-update.ps1`): it backs up the database and key, builds the newest release (tests included), switches, and rolls back if the new one isn't healthy.
+- **Statement files:** drop exports into `imports/` next to `docker-compose.yml`.
+- **Ollama on the host:** set `PENNY_ALLOW_REMOTE_OLLAMA=1` and use `http://host.docker.internal:11434`.
 
-### Desktop app
+### Desktop app (Windows)
 
-Download **Penny Setup.exe** from the [Releases page](https://github.com/Sergey-Bar/Penny/releases), run it, and open Penny from the Start menu. No Node.js, no terminal. Your data stays in `%APPDATA%\Penny\data` on your computer, and bank sync uses the Chrome or Edge you already have.
+Download **Penny Setup.exe** from the [Releases page](https://github.com/Sergey-Bar/Penny/releases), run it, and open Penny from the Start menu. No Node.js, no terminal. Data stays in `%APPDATA%\Penny\data`, and bank sync uses the Chrome or Edge you already have. To update, run the new installer over the old one.
 
-When a new version is out, Penny shows a banner with a download link. Run the new installer over the old one: your data stays.
-
-To build the installer yourself: `npm run desktop:build` (output in `dist-desktop/`).
+Build it yourself with `npm run desktop:build` (output in `dist-desktop/`).
 
 ### From source
 
@@ -235,56 +176,41 @@ npm install
 npm run setup
 ```
 
-`npm run setup` does everything: builds the Next.js app, installs the always-on service (LaunchAgent on macOS / systemd on Linux / Task Scheduler on Windows), builds the platform menubar from source, installs it to the standard location, registers it to auto-start at login, and opens the dashboard. On Windows it also writes a `127.0.0.1 penny.localhost` line to your hosts file (the only step that asks for Administrator). macOS and Linux resolve `*.localhost` natively, so setup runs sudo-free there.
+`npm run setup` builds the app, installs the always-on service (LaunchAgent on macOS, systemd on Linux, Task Scheduler on Windows), builds and registers the tray companion, and opens the app. On Windows it also adds `127.0.0.1 penny.localhost` to your hosts file, the only step that asks for Administrator.
 
-On Linux there is no native menubar. `npm run setup` installs the service and opens the browser. Control the service with `npm run service:*` (see below).
+The first launch of the tray app shows an unsigned-binary warning, because you built it locally: right-click → Open (macOS) or "More info" → "Run anyway" (Windows). Once.
 
-First launch of the menubar on macOS/Windows shows an unsigned-binary warning (Gatekeeper / SmartScreen). That's expected: you built it locally and didn't pay for a code-signing certificate. Right-click → Open (macOS) or "More info" → "Run anyway" (Windows). One-time.
-
-Open **`http://penny.localhost:41234`** and bookmark it.
+Then open **`http://penny.localhost:41234`** and bookmark it.
 
 ## Importing statement files
 
-For accounts Penny cannot sync (or months the bank no longer shows), import the bank's or investment house's export (CSV, XLSX, XLS):
+For accounts Penny can't sync, or months the bank no longer shows:
 
-- **Drag and drop:** Settings → Data → import a file, and pick the account from the list.
-- **Import folder:** Penny watches a folder (Settings → Data shows where; in Docker it is `./imports`). It creates one subfolder per connected account, such as `max (1234)`. A file dropped there is imported into that account and moved to `imported/` (or to `failed/`, with a note saying why). For an account Penny does not sync, such as a pension fund, create a folder with its name.
+- **Upload:** Settings → Accounts & import → "Import a file", then pick the account.
+- **Import folder:** Penny watches a folder (shown on the same page; `./imports` in Docker) with one subfolder per account, such as `max (1234)`. A file dropped there is imported and moved to `imported/`, or to `failed/` with a note saying why. For an account Penny doesn't sync, create a folder with its name.
 
-Sync and files work together. A transaction that is in both is stored once: same account, same amount, at most a day apart. When the bank sync brings a transaction you already imported from a file, the synced version replaces it and keeps your category, notes and tags.
+A transaction that arrives from both sync and a file is stored once (same account and amount, at most a day apart). The synced copy wins and keeps your category, notes and tags.
 
-## First-time setup
-
-In the browser:
-
-1. **Connect your bank** — credentials are AES-256-GCM encrypted before they touch disk.
-2. **Choose an AI provider** — Claude (default), Ollama, or none.
-3. **Set your monthly ceiling** — total spend you want to stay under each month.
-4. **Set per-category budgets** — type an amount on any category to budget it; leave blank to track without a limit.
-5. **Done.** Sync starts automatically: 3 months of transactions, then AI categorization.
-
-## How you'll use it
+## Everyday commands
 
 | What you want | Run |
 |---|---|
-| Just use the app (no coding) | Open `http://penny.localhost:41234` |
-| Code and see changes instantly | `npm run dev` → `http://127.0.0.1:3000` |
-| Update the always-on app after editing | `npm run service:reload` |
+| Use the app | Open `http://penny.localhost:41234` |
+| Develop with hot reload | `npm run dev` → `http://127.0.0.1:3000` |
+| Apply your edits to the always-on app | `npm run service:reload` |
+| Run the tests | `npx vitest run` (unit) · `npx playwright test` (end to end) |
+| Type-check and lint | `npx tsc --noEmit` · `npm run lint` |
 
-Rare cases:
-
-- Changed the menu bar app source → `npm run menubar:install:mac` (or `:windows`) to rebuild and reinstall.
-- Changed install scripts or hostname → `npm run service:uninstall && npm run service:install`.
-
-## Service commands
+### Service commands
 
 | Command | What it does |
 |---|---|
 | `npm run service:status` | Running? Bound to loopback? |
-| `npm run service:start` / `:stop` | Start/stop now |
+| `npm run service:start` / `:stop` | Start or stop now |
 | `npm run service:reload` | Rebuild and restart |
 | `npm run service:logs` | Tail server logs |
 | `npm run service:open` | Open the app in your browser |
-| `npm run service:uninstall` | Remove auto-start and hosts entry. `data/` is untouched. |
+| `npm run service:uninstall` | Remove auto-start and the hosts entry. `data/` is untouched. |
 
 ## Uninstall
 
@@ -292,119 +218,107 @@ Rare cases:
 npm run uninstall
 ```
 
-Reverses everything `npm run setup` installed:
+Stops and removes the service, removes the hosts entry on Windows, and removes the tray app and its login item.
 
-- Stops the background service and removes the LaunchAgent / Task Scheduler entry / systemd unit.
-- Windows: removes the `127.0.0.1 penny.localhost` line from your hosts file (asks for Administrator). macOS/Linux don't have a hosts entry to remove unless you're upgrading from an older install — in that case the old hosts line is cleaned up automatically.
-- Quits the menubar, removes the installed app, and removes it from Login Items / Startup.
-
-**Kept on purpose:**
-
-- `data/`: your transactions, budgets, and encryption key. To wipe your data: `rm -rf data/`.
-- The repo itself. To remove Penny entirely: `rm -rf data/ && cd .. && rm -rf Penny/`.
-
-If you only want to remove the menubar but keep the always-on web app:
-
-- **macOS**: `rm -rf ~/Applications/Penny.app` and remove "Penny" from System Settings → General → Login Items.
-- **Windows**: delete `%LOCALAPPDATA%\Programs\Penny\` and remove `Penny.lnk` from `shell:startup`.
-
-If you only want to remove the always-on service but keep the menubar (so it's there if you reinstall later): `npm run service:uninstall`.
+**Kept on purpose:** `data/` (your transactions, budgets and encryption key) and the repository itself. To remove everything: `rm -rf data/ && cd .. && rm -rf Penny/`.
 
 ## Security at a glance
 
 | Concern | Defense |
 |---|---|
-| Credentials at rest | AES-256-GCM, encryption key file mode `0600` (server refuses to start otherwise) |
-| Network exposure | Bound to `127.0.0.1` only — not reachable from your LAN or the internet |
-| Browser CSRF | Origin / Referer validation on every mutation |
+| Credentials at rest | AES-256-GCM; the key file must be mode `0600` or the server refuses to start |
+| Network exposure | Bound to `127.0.0.1` only. Phone access on your Wi-Fi is opt-in and protected by an access code |
+| Browser CSRF | Origin / Referer checks on every request; destructive endpoints need an explicit confirmation |
+| App lock | Optional passcode lock with automatic timeout |
 | Bot detection | Chromium sandbox on by default (`PENNY_DISABLE_CHROMIUM_SANDBOX=1` to opt out) |
-| Bundle integrity | `israeli-bank-scrapers`, `better-sqlite3`, and `@anthropic-ai/sdk` pinned to exact versions |
-| Browser hardening | Strict CSP, `X-Frame-Options: DENY`, `Permissions-Policy` locks down camera/mic/geo/payment |
+| Supply chain | `israeli-bank-scrapers`, `better-sqlite3` and `@anthropic-ai/sdk` pinned to exact versions |
+| Browser hardening | Strict CSP, `X-Frame-Options: DENY`, a locked-down `Permissions-Policy` |
+| Schema changes | The database is backed up automatically before any migration that rewrites data |
 
-**Turn on full-disk encryption** (FileVault / BitLocker / LUKS). The encryption key file sits next to the database, so disk-level protection is your last line of defense if the laptop is lost.
+**Turn on full-disk encryption** (BitLocker, FileVault or LUKS). The key file sits next to the database, so disk encryption is your last line of defense if the laptop is lost.
 
-Full threat model and responsible-disclosure policy → [SECURITY.md](SECURITY.md).
+Full threat model and disclosure policy: [SECURITY.md](SECURITY.md).
 
 ## Where your data lives
 
-- `data/penny.db` — transactions, categories, budgets, settings
-- `data/.encryption-key` — 32-byte AES key, mode `0600`
-- `~/Library/Logs/Penny/` (macOS) / `~/.local/state/penny/log/` (Linux) — service logs
+- `data/penny.db`: transactions, categories, budgets, profiles, settings
+- `data/.encryption-key`: the 32-byte AES key, mode `0600`
+- `data/*.bak`: automatic backups taken before data migrations
+- Service logs: `~/Library/Logs/Penny/` (macOS), `~/.local/state/penny/log/` (Linux)
 
-Back up `data/` like any other folder. To migrate to a new machine, copy `data/` over and run `npm run service:install`.
+Back up `data/` like any folder. To move to a new machine, copy `data/` over and run `npm run service:install`.
 
-## Architecture & code map
+## Code map
 
 ```
 Penny/
 ├── src/
-│   ├── app/                  Next.js App Router (routes + API)
-│   │   ├── (dashboard)/      Dashboard, transactions, settings pages
-│   │   ├── api/              Sync (SSE), summary, transactions, setup
-│   │   └── setup/            First-run wizard
-│   ├── components/
-│   │   ├── dashboard/        Hero card, category grid, budget drawer
-│   │   ├── setup/            Bank, AI, target, budgets steps
-│   │   └── settings/         Per-tab settings panels
-│   ├── lib/                  Shared client-side types and helpers
+│   ├── app/              Next.js App Router: pages (home, transactions, budget, fi,
+│   │                     investments, calculators, learn, settings, setup, profiles…) and api/
+│   ├── components/       UI by area: home, dashboard, transactions, calculators, fi,
+│   │                     settings, setup, profiles, a11y, layout, ui (shared primitives)
+│   ├── content/          Knowledge-center guides
+│   ├── i18n/messages/    he.json and en.json
+│   ├── lib/              Pure, tested logic: budgets, pacing, tax, pension, mortgage,
+│   │                     Israeli defaults with sources (il-defaults.ts), Pip
 │   └── server/
-│       ├── ai/               Claude + Ollama provider implementations
-│       ├── db/               SQLite singleton, migrations, query helpers
-│       ├── lib/              Encryption, dedup, transfer detection, pace
-│       └── scrapers/         Wrapper around israeli-bank-scrapers
-├── menubar/                  Tray companions (built locally by `npm run setup`)
-│   ├── mac/                  Swift MenuBarExtra app
-│   └── windows/              C# WinForms NotifyIcon app
-├── scripts/service/          LaunchAgent / systemd / Task Scheduler installer
-├── website/                  Astro + Starlight docs site (auto-deploys to GitHub Pages)
-├── .github/workflows/        CI — docs site deploy
-└── data/                     SQLite + encryption key (gitignored)
+│       ├── ai/           Claude, Ollama and CLI-agent providers
+│       ├── bot/          Telegram bot
+│       ├── db/           SQLite, numbered migrations, queries
+│       ├── scrapers/     Bank and card sync
+│       ├── pension/      Pension and savings sync
+│       └── lib/          Encryption, dedupe, transfer detection, import folder
+├── tests/                Vitest unit tests (and tests/e2e scanners for overlap and contrast)
+├── e2e/                  Playwright end-to-end tests
+├── menubar/              Tray companions (Swift for macOS, C# for Windows)
+├── scripts/service/      Service installers
+└── data/                 Database and key (gitignored)
 ```
 
 ## Troubleshooting
 
-- **Port 41234 in use** → `lsof -nP -iTCP:41234 -sTCP:LISTEN` (Unix) or `netstat -ano | findstr :41234` (Windows). Kill the offender and re-run install.
-- **Gatekeeper blocks `Penny.app`** → right-click → Open → Open. One-time.
-- **Linux: "systemd user instance not available"** → `loginctl enable-linger $USER`.
-- **Windows: hosts edit fails / `penny.localhost` doesn't resolve** → re-run install from an elevated PowerShell (Win+X → "Terminal (Admin)") so it can edit `C:\Windows\System32\drivers\etc\hosts`. After the edit, the installer flushes the DNS cache automatically; if you edited hosts manually, run `ipconfig /flushdns`. `http://127.0.0.1:41234` always works as a fallback.
-- **Bank scrape fails with "Cloudflare"** → temporarily run with `PENNY_DISABLE_CHROMIUM_SANDBOX=1` to let Puppeteer use a real Chrome profile.
+- **Port 41234 in use:** `netstat -ano | findstr :41234` (Windows) or `lsof -nP -iTCP:41234 -sTCP:LISTEN`. Stop the other process and start again.
+- **`penny.localhost` doesn't resolve on Windows:** re-run setup from an elevated terminal, or use `http://127.0.0.1:41234`, which always works.
+- **Linux: "systemd user instance not available":** `loginctl enable-linger $USER`.
+- **A bank sync fails with a Cloudflare page:** try `PENNY_DISABLE_CHROMIUM_SANDBOX=1`, or import that month's statement file.
+- **Something looks stale after an update:** hard-refresh the page (Ctrl+F5).
 
 ## Roadmap
 
-- [x] Hebrew UI with full RTL layout
-- [ ] Visa Cal scraper
-- [ ] Bank Leumi scraper
+- [x] Hebrew-first UI with full right-to-left layout
+- [x] 18 banks and card companies, plus statement-file import
+- [x] Custom categories with colour families
+- [x] Household profiles, onboarding and accessibility menu
+- [x] Israeli tax, pension, insurance and mortgage tools
+- [ ] Parse the pension clearing-house report automatically
 - [ ] CSV / OFX export
-- [ ] Custom user-defined categories
-- [ ] Mobile companion (Phase 2)
-- [ ] Multiple workspaces in the menu bar / tray app
+- [ ] Native mobile companion
 
 ## Contributing
 
-Penny is built for personal use first, open-source second. PRs welcome for:
+Penny is built for personal use first and open source second. Pull requests are welcome for:
 
-- **New bank integrations** — add to `BANK_PROVIDERS` in [src/lib/types.ts](src/lib/types.ts), map to `CompanyTypes` in [src/server/scrapers/index.ts](src/server/scrapers/index.ts), flip `enabled: true`.
-- **New AI providers** — implement the `AIProvider` interface from [src/server/ai/types.ts](src/server/ai/types.ts), register in [src/server/ai/factory.ts](src/server/ai/factory.ts), and add an option to the setup wizard.
-- **New languages** — add `<locale>.json` under [src/i18n/messages/](src/i18n/messages/), mirroring the keys in `en.json`, and append the locale to [src/i18n/routing.ts](src/i18n/routing.ts). Toggle wires itself up automatically.
-- **UI polish, bug fixes, documentation.**
+- **Banks:** add to `BANK_PROVIDERS` in [src/lib/types.ts](src/lib/types.ts) and map it in [src/server/scrapers/index.ts](src/server/scrapers/index.ts).
+- **AI providers:** implement `AIProvider` from [src/server/ai/types.ts](src/server/ai/types.ts) and register it in [src/server/ai/factory.ts](src/server/ai/factory.ts).
+- **Israeli figures:** tax brackets, ceilings and rates live in [src/lib/il-defaults.ts](src/lib/il-defaults.ts), each with its year and source. Updates with an official source are especially welcome.
+- **Languages:** add `<locale>.json` under [src/i18n/messages/](src/i18n/messages/) mirroring `en.json`, and list it in [src/i18n/routing.ts](src/i18n/routing.ts).
 
 Conventions:
 
-- TypeScript strict mode. No `any` without a comment.
-- Conventional commits: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
-- Comments only where the "why" isn't obvious. No em dashes in code, commits, or docs.
+- TypeScript strict. No `any` without a comment explaining why.
+- Every new pure function gets a Vitest test. `npx tsc --noEmit` and `npx vitest run` must pass.
+- Conventional commits: `feat:`, `fix:`, `style:`, `chore:`, `docs:`, `refactor:`.
+- Comments explain *why*, not *what*. No em dashes in code, commits or docs.
+- UI copy never names competitors, and Hebrew copy doesn't use the product name.
 
 ## License
 
-MIT. See `LICENSE` and `NOTICE.md` for the upstream attribution.
+MIT. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for upstream attribution.
 
 ## Acknowledgments
 
-Built on the shoulders of:
-
-- [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers) — the heart of every bank integration
-- [Next.js 16](https://nextjs.org/) and [React 19](https://react.dev/)
-- [`shadcn/ui`](https://ui.shadcn.com/) on top of [`base-ui`](https://base-ui.com/)
-- [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3)
-- [`next-intl`](https://next-intl.dev/) for English / Hebrew i18n
-- [Anthropic Claude](https://www.anthropic.com/) and the local-LLM crew at [Ollama](https://ollama.com/)
+- [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), the heart of every bank integration
+- [Next.js](https://nextjs.org/), [React](https://react.dev/), [`shadcn/ui`](https://ui.shadcn.com/) on [`base-ui`](https://base-ui.com/)
+- [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3) and [`next-intl`](https://next-intl.dev/)
+- [BoopFace](https://github.com/CX-ArtLab/BoopFace) by CX ArtLab (MIT), the face behind Pip
+- [Anthropic Claude](https://www.anthropic.com/) and [Ollama](https://ollama.com/)
