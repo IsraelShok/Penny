@@ -17,7 +17,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const NEXT: Record<PetStat, string> = { health: "/overview", food: "/budget", tidy: "/transactions", energy: "/journey", joy: "/journey" };
-const pill = "inline-flex min-h-11 items-center rounded-full px-4 text-subheadline font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const pill = "inline-flex min-h-11 items-center rounded-full px-4 text-footnote font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 const iconBtn = "grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring";
 
 /** The pet's state from the finances (shared by Home's hero and the corner pet); null until loaded, or when it is off. */
@@ -71,32 +71,27 @@ export function PetHeroAside() {
   </span>;
 }
 
-/** A small live pet in the corner of every other page (its eyes follow the pointer), with the same badge and sheet. */
+/** A small live pet on every other page (its eyes follow the pointer), with the same badge and sheet: in the sidebar footer on desktop, next to the menu button in the page header on phones, so it never covers content. */
 export function PetMini({ inSidebar }: { inSidebar?: boolean }) {
   const path = usePathname();
   const p = usePet();
   const [open, setOpen] = useState(false);
   if (!p || path === "/") return null;
-  const pet = <><PetButton p={p} px={44} onOpen={() => setOpen(true)} mini /><PetSheet p={p} open={open} onOpenChange={setOpen} /></>;
-  // Desktop: lives in the sidebar footer so it never covers page content.
-  if (inSidebar) return <div className="hidden justify-center py-1 md:flex">{pet}</div>;
-  // Phones: bottom-start above the dock; the spacer lets the last row scroll out from under it.
-  return <div className="h-20 shrink-0 md:hidden">
-    <div className="fixed bottom-[calc(84px+env(safe-area-inset-bottom))] start-3 z-20">{pet}</div>
-  </div>;
+  const pet = <><PetButton p={p} px={inSidebar ? 44 : 34} onOpen={() => setOpen(true)} mini={inSidebar ? "lg" : "sm"} /><PetSheet p={p} open={open} onOpenChange={setOpen} /></>;
+  return <div className={inSidebar ? "hidden justify-center py-1 md:flex" : "flex md:hidden"}>{pet}</div>;
 }
 
-function PetButton({ p, px, onOpen, mini }: { p: PetState; px: number; onOpen: () => void; mini?: boolean }) {
+function PetButton({ p, px, onOpen, mini }: { p: PetState; px: number; onOpen: () => void; mini?: "lg" | "sm" }) {
   const t = useTranslations("pet");
   const name = p.pet.name || t("defaultName");
   const n = p.todo.length;
   const label = `${t("artLabel", { name, mood: t(`mood_${p.mood}`) })}${n ? `. ${t("badge", { n })}` : ""}`;
   return (
     <button type="button" onClick={onOpen} aria-haspopup="dialog" aria-label={label}
-      className={`relative grid place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${mini ? "size-14 bg-card/90 shadow-lg ring-1 ring-border backdrop-blur" : ""}`}>
+      className={`relative grid place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${mini === "lg" ? "size-14 bg-card/90 shadow-lg ring-1 ring-border backdrop-blur" : mini ? "size-11" : ""}`}>
       <PetFace mood={p.mood} pet={p.pet} px={px} />
       {n > 0 && (
-        <span aria-hidden dir="ltr" className={`absolute -end-1 -top-1 grid place-items-center rounded-full bg-destructive font-semibold text-white tabular-nums shadow ${mini ? "min-w-5 px-1 text-caption2" : "min-w-7 px-1.5 py-0.5 text-footnote"}`}>
+        <span aria-hidden dir="ltr" className={`absolute -end-1 -top-1 grid place-items-center rounded-full bg-destructive font-semibold text-destructive-foreground tabular-nums shadow ${mini ? "min-w-5 px-1 text-caption" : "min-w-7 px-1.5 py-0.5 text-footnote"}`}>
           +{n}
         </span>
       )}
@@ -201,7 +196,7 @@ export function PetCustomizer() {
             <span className="block font-medium">{t("skinLabel")}</span>
             <Segmented label={t("skinLabel")} value={draft.skin} onChange={(skin) => save({ ...draft, skin })}
               options={["", ...PET_SKINS].map((s) => ({ value: s, label: t(`skin_${s || "none"}`) }))} />
-            <p className="text-caption1 text-muted-foreground">{t("skinHint")}</p>
+            <p className="text-caption text-muted-foreground">{t("skinHint")}</p>
           </div>
         </div>
   );

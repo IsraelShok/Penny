@@ -56,10 +56,10 @@ export function InsightsView({ part }: { part: "ahead" | "recurring" }) {
           <ul className="grid gap-3">
             {data.forecast.map((f) => (
               <li key={`${f.account}|${f.date}`} className="flex flex-wrap items-baseline justify-between gap-x-4">
-                <span className="tabular-nums" dir="ltr">
-                  {f.date} · {t("card")} {f.account?.slice(-4)}
+                <span>
+                  {new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(new Date(`${f.date}T12:00:00`))} · {t("card")} <bdi className="tabular-nums">{f.account?.slice(-4)}</bdi>
                 </span>
-                <span className="text-lg font-semibold tabular-nums">{money(f.total)}</span>
+                <span className="text-lg font-semibold tabular-nums"><bdi>{money(f.total)}</bdi></span>
                 <span className="w-full text-sm text-muted-foreground">
                   {t("posted")} {money(f.parts.posted)} · {t("recurring")} {money(f.parts.recurring)} · {t("installments")} {money(f.parts.installments)} · {t("other")} {money(f.parts.discretionary)}
                 </span>
@@ -150,13 +150,12 @@ function Subscriptions({ data, money }: { data: InsightsPayload; money: (n: numb
   const rows = data.series
     .map((s) => ({ s, next: nthCharge(s.cadence, s.lastDate, 1) }))
     .sort((a, b) => a.next.localeCompare(b.next));
-  const monthly = data.series.filter((s) => s.status !== "candidate").reduce((sum, s) => sum + s.expectedAmount * PER_MONTH[s.cadence], 0);
   const chip = "rounded-full px-2 py-0.5 text-xs font-medium";
   return (
     <Card id="subscriptions" className="scroll-mt-20">
-      <CardHeader className="flex flex-row items-baseline justify-between gap-3">
+      {/* The monthly total is the hero figure right above, so the header only names the list. */}
+      <CardHeader>
         <CardTitle>{t("subscriptions")}</CardTitle>
-        {rows.length > 0 && <span className="text-sm text-muted-foreground tabular-nums"><bdi>{t("perMonth", { amount: money(monthly) })}</bdi></span>}
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (

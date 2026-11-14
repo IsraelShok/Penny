@@ -22,7 +22,8 @@ import {
   updateSettings,
 } from "@/lib/api";
 import { toast } from "sonner";
-import { SectionShell, SettingCard } from "@/components/settings/section-shell";
+import { SectionShell, SettingCard, SettingRow } from "@/components/settings/section-shell";
+import { Button } from "@/components/ui/button";
 import { StatementImportCard } from "@/components/settings/statement-import-card";
 import { FolderImportCard } from "@/components/settings/folder-import-card";
 import { WipeCard } from "@/components/settings/wipe-card";
@@ -39,6 +40,10 @@ export default function DataSettingsPage() {
 
   return (
     <SectionShell title={t("title")} description={t("description")}>
+      <StatementImportCard />
+      <FolderImportCard />
+      <ExcludedMerchantsCard />
+      {/* Encryption and the data folder are explained on Privacy; this page is for acting on data. */}
       {settings ? (
         <ShowBrowserCard initial={settings.showBrowser} />
       ) : (
@@ -46,17 +51,6 @@ export default function DataSettingsPage() {
           <div className="text-sm text-muted-foreground">{tCommon("loading")}</div>
         </SettingCard>
       )}
-      <SettingCard
-        title={t("storageCardTitle")}
-        description={t("storageCardDescription")}
-      >
-        <div className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-          <code>data/penny.db</code> · <code>data/.encryption-key</code>
-        </div>
-      </SettingCard>
-      <StatementImportCard />
-      <FolderImportCard />
-      <ExcludedMerchantsCard />
       {/* The one place to delete data; Privacy links here. */}
       <section id="danger" className="scroll-mt-20 space-y-7">
         <DangerZone />
@@ -95,41 +89,14 @@ function DangerZone() {
 
   return (
     <>
-      <div className="rounded-2xl border border-[color-mix(in_oklch,var(--status-over)_30%,transparent)] bg-[color-mix(in_oklch,var(--status-over)_6%,var(--card))] p-6">
-        <div className="flex items-start gap-3">
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-            style={{
-              background:
-                "color-mix(in oklch, var(--status-over) 14%, transparent)",
-            }}
-          >
-            <AlertTriangle
-              className="h-4 w-4"
-              style={{ color: "var(--status-over)" }}
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-medium">{t("dangerTitle")}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t("dangerDescription")}
-            </p>
-          </div>
-          <IconButton
-            label={t("dangerButton")}
-            variant="outline"
-            className="shrink-0"
-            style={{
-              borderColor:
-                "color-mix(in oklch, var(--status-over) 40%, transparent)",
-              color: "var(--status-over)",
-            }}
-            onClick={() => setConfirmOpen(true)}
-          >
+      <SettingCard title={t("dangerTitle")}>
+        <SettingRow label={t("dangerButton")} hint={t("dangerDescription")}>
+          <Button variant="destructive" onClick={() => setConfirmOpen(true)}>
             <Trash2 className="size-4" aria-hidden />
-          </IconButton>
-        </div>
-      </div>
+            {t("dangerButton")}
+          </Button>
+        </SettingRow>
+      </SettingCard>
 
       <Dialog
         open={confirmOpen}
@@ -309,6 +276,7 @@ function ExcludedMerchantsCard() {
 
 function ShowBrowserCard({ initial }: { initial: boolean }) {
   const t = useTranslations("settings.data");
+  const tCommon = useTranslations("common");
   const queryClient = useQueryClient();
   const [enabled, setEnabled] = useState(initial);
   const mutation = useMutation({
@@ -316,6 +284,10 @@ function ShowBrowserCard({ initial }: { initial: boolean }) {
     onSuccess: (_, value) => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
       toast.success(value ? t("browserVisibleSaved") : t("browserHiddenSaved"));
+    },
+    onError: (err, value) => {
+      setEnabled(!value);
+      toast.error(err instanceof Error ? err.message : tCommon("tryAgain"));
     },
   });
 
@@ -325,20 +297,14 @@ function ShowBrowserCard({ initial }: { initial: boolean }) {
   };
 
   return (
-    <SettingCard>
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <Label htmlFor="show-browser-toggle">{t("showBrowserLabel")}</Label>
-          <p className="text-xs text-muted-foreground">
-            {t("showBrowserHint")}
-          </p>
-        </div>
+    <SettingCard title={t("debugTitle")}>
+      <SettingRow label={t("showBrowserLabel")} htmlFor="show-browser-toggle" hint={t("showBrowserHint")}>
         <Switch
           id="show-browser-toggle"
           checked={enabled}
           onCheckedChange={handleToggle}
         />
-      </div>
+      </SettingRow>
     </SettingCard>
   );
 }

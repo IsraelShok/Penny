@@ -43,8 +43,10 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
   const lead = new Date(`${first}T12:00:00Z`).getUTCDay();
   const days = Number(last.slice(8));
   const weekday = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" });
+  const narrowDay = new Intl.DateTimeFormat(locale, { weekday: "narrow", timeZone: "UTC" });
   const longDay = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone: "UTC" });
   const money = (n: number) => shekels(Math.round(n), locale);
+  const compact = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 });
   const flagText = (f?: Item["flag"]) => (f === "late" ? t("late") : f === "up" ? t("pricierUp") : "");
 
   return (
@@ -65,7 +67,9 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
         {Array.from({ length: 7 }, (_, i) => (
           <div key={i} className="pb-1 text-center font-medium text-muted-foreground" aria-hidden>
             {/* 1 Nov 2026 is a Sunday. */}
-            {weekday.format(new Date(Date.UTC(2026, 10, 1 + i, 12)))}
+            {/* Phones: one letter per day, so seven columns fit. */}
+            <span className="sm:hidden">{narrowDay.format(new Date(Date.UTC(2026, 10, 1 + i, 12)))}</span>
+            <span className="max-sm:hidden">{weekday.format(new Date(Date.UTC(2026, 10, 1 + i, 12)))}</span>
           </div>
         ))}
         {Array.from({ length: lead }, (_, i) => <div key={`pad${i}`} aria-hidden />)}
@@ -89,7 +93,8 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
                 {items.map((it, k) => (
                   <li key={k} className="min-w-0 rounded-sm border-s-[3px] ps-0.5" style={{ borderColor: TIER_EDGE[tier(it.amount)], backgroundColor: TIER_BG[tier(it.amount)] }}>
                     <span className="flex min-w-0 items-center gap-0.5">{it.flag === "late" ? <AlertTriangle className="size-3.5 shrink-0" aria-hidden /> : it.flag === "up" ? <TrendingUp className="size-3.5 shrink-0" aria-hidden /> : null}<span className="truncate">{it.name}</span></span>
-                    <span className="block tabular-nums text-muted-foreground">{money(it.amount)}</span>
+                    {/* Phones: a compact figure (1.3K) fits the narrow day; the full amount is in the day's label. */}
+                    <span className="block tabular-nums text-muted-foreground"><bdi className="sm:hidden">{compact.format(Math.round(it.amount))}</bdi><bdi className="max-sm:hidden">{money(it.amount)}</bdi></span>
                     {it.flag && <span className="block text-[var(--status-heads-up)]">{flagText(it.flag)}</span>}
                   </li>
                 ))}

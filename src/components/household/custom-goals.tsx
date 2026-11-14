@@ -11,6 +11,8 @@ import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { NumberField, numberError } from "@/components/ui/number-field";
 import type { Goal } from "@/lib/types";
 
 const ICONS = ["🎯", "🏠", "🚗", "🎓", "💍", "👶", "💻", "🛟", "🐶", "🎸"];
@@ -22,6 +24,7 @@ const empty = (): Draft => ({ name: "", targetAmount: "", targetDate: "", savedA
 /** Custom goals: create, edit and delete; shows the monthly saving needed, or when a monthly contribution gets there. */
 export function CustomGoals() {
   const t = useTranslations("customGoals");
+  const tc = useTranslations("calculators");
   const locale = useLocale();
   const q = useQuery({ queryKey: ["plan"], queryFn: getPlan });
   const qc = useQueryClient();
@@ -61,20 +64,21 @@ export function CustomGoals() {
   const set = (patch: Partial<Draft>) => draft && setDraft({ ...draft, ...patch });
   const preview = draft && Number(draft.targetAmount) > 0 ? plan(Number(draft.targetAmount), Number(draft.savedAmount || 0), draft.targetDate || null, Number(draft.monthly) || null) : null;
   const missingWhen = !!draft && !draft.targetDate && !(Number(draft.monthly) > 0);
+  const badNumbers = !!draft && (!(Number(draft.targetAmount) > 0) || [draft.savedAmount, draft.monthly].some((x) => numberError(x, "x")));
 
   return (
-    <CardShell id="goals" label={t("title")} className="scroll-mt-20" action={!draft && <Button size="sm" onClick={() => setDraft(empty())}><Plus aria-hidden />{t("new")}</Button>}>
+    <CardShell id="goals" label={t("title")} className="scroll-mt-20" action={!draft && <Button size="sm" variant="outline" onClick={() => setDraft(empty())}><Plus aria-hidden />{t("new")}</Button>}>
       {draft ? (
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (!missingWhen) void save(); }}>
-          <label className="block space-y-1 text-sm">{t("name")}<Input required maxLength={60} placeholder={t("namePlaceholder")} value={draft.name} onChange={(e) => set({ name: e.target.value })} /></label>
+        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (!missingWhen && !badNumbers) void save(); }}>
+          <label className="block space-y-1.5 text-sm font-medium">{t("name")}<Input required maxLength={60} placeholder={t("namePlaceholder")} value={draft.name} onChange={(e) => set({ name: e.target.value })} /></label>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="space-y-1 text-sm">{t("target")}<Input required type="number" inputMode="decimal" min="1" step="any" dir="ltr" value={draft.targetAmount} onChange={(e) => set({ targetAmount: e.target.value })} /></label>
-            <label className="space-y-1 text-sm">{t("saved")}<Input type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={draft.savedAmount} onChange={(e) => set({ savedAmount: e.target.value })} /></label>
-            <label className="space-y-1 text-sm">{t("date")}<Input type="month" dir="ltr" value={draft.targetDate} onChange={(e) => set({ targetDate: e.target.value })} /></label>
-            <label className="space-y-1 text-sm">{t("monthly")}<Input type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={draft.monthly} onChange={(e) => set({ monthly: e.target.value })} /></label>
+            <NumberField id="cg-target" label={t("target")} unit="₪" min="1" value={draft.targetAmount} onChange={(v) => set({ targetAmount: v })} error={numberError(draft.targetAmount, tc("invalid"))} />
+            <NumberField id="cg-saved" label={t("saved")} unit="₪" value={draft.savedAmount} onChange={(v) => set({ savedAmount: v })} error={numberError(draft.savedAmount, tc("invalid"))} />
+            <div className="space-y-1.5"><Label htmlFor="cg-date" className="leading-5">{t("date")}</Label><Input id="cg-date" type="month" dir="ltr" value={draft.targetDate} onChange={(e) => set({ targetDate: e.target.value })} /></div>
+            <NumberField id="cg-monthly" label={t("monthly")} unit="₪" value={draft.monthly} onChange={(v) => set({ monthly: v })} error={numberError(draft.monthly, tc("invalid"))} />
           </div>
           <fieldset>
-            <legend className="mb-1 text-sm">{t("icon")}</legend>
+            <legend className="mb-1 text-sm font-medium">{t("icon")}</legend>
             <div className="flex flex-wrap gap-1">
               {ICONS.map((ic) => (
                 <label key={ic} className="grid size-11 cursor-pointer place-items-center rounded-full text-xl has-checked:bg-primary/15 has-checked:ring-2 has-checked:ring-primary has-focus-visible:outline-2 has-focus-visible:outline-ring">
@@ -85,7 +89,7 @@ export function CustomGoals() {
             </div>
           </fieldset>
           <fieldset>
-            <legend className="mb-1 text-sm">{t("color")}</legend>
+            <legend className="mb-1 text-sm font-medium">{t("color")}</legend>
             <div className="flex flex-wrap gap-1">
               {GOAL_COLORS.map((c) => (
                 <label key={c} className="grid size-11 cursor-pointer place-items-center rounded-full has-focus-visible:outline-2 has-focus-visible:outline-ring">
@@ -98,12 +102,12 @@ export function CustomGoals() {
           </fieldset>
           <p className={`text-sm ${missingWhen ? "text-status-heads-up" : "font-medium"}`} aria-live="polite">{missingWhen ? t("needWhen") : preview}</p>
           <div className="flex gap-2">
-            <Button disabled={busy || missingWhen} type="submit">{t("save")}</Button>
+            <Button disabled={busy || missingWhen || badNumbers} type="submit">{t("save")}</Button>
             <Button disabled={busy} variant="ghost" type="button" onClick={() => setDraft(null)}>{t("cancel")}</Button>
           </div>
         </form>
       ) : goals.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("empty")}</p>
+        <p className="text-footnote text-pretty text-muted-foreground">{t("empty")}</p>
       ) : (
         <ul className="space-y-3">
           {goals.map((g) => {

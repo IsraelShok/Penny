@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plane } from "lucide-react";
+import { Plane, Plus } from "lucide-react";
 import { deletePlanItem, getPlan, savePlanItem } from "@/lib/api";
 import { shekels } from "@/lib/money";
 import { perPersonNight, TRIP_LINES, tripMonthly, tripNights, tripTotal, type Trip, type TripLine } from "@/lib/trip";
@@ -61,7 +61,7 @@ export function VacationPlans({ compact = false }: { compact?: boolean }) {
   const total = draft ? tripTotal(draft.trip) : 0;
 
   return (
-    <CardShell id="vacation" label={t("title")} className="scroll-mt-20">
+    <CardShell id="vacation" label={t("title")} className="scroll-mt-20" action={!draft && <Button size="sm" variant="outline" onClick={() => setDraft(emptyDraft())}><Plus aria-hidden />{t("new")}</Button>}>
       {draft ? (
         <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void save(); }}>
           <label className="block space-y-1 text-sm">{t("name")}<Input required maxLength={60} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></label>
@@ -92,14 +92,14 @@ export function VacationPlans({ compact = false }: { compact?: boolean }) {
         </form>
       ) : (
         <>
-          {trips.length === 0 && <p className="text-sm text-muted-foreground">{t("empty")}</p>}
-          <ul className="space-y-4">
+          {trips.length === 0 && <p className="text-footnote text-pretty text-muted-foreground">{t("empty")}</p>}
+          <ul className="space-y-3">
             {trips.map((g) => {
               const after = g.trip.start <= now;
               const pct = Math.min(100, (g.savedAmount / g.targetAmount) * 100);
               return (
                 <li key={g.id} className="rounded-xl bg-muted/50 p-4">
-                  <p className="flex items-center gap-2 font-semibold"><Plane className="size-4" aria-hidden />{g.name}</p>
+                  <p className="flex items-center gap-2 font-semibold"><Plane className="size-4 text-primary" aria-hidden />{g.name}</p>
                   <p className="text-footnote text-muted-foreground"><bdi dir="ltr">{g.trip.start} – {g.trip.end}</bdi> · {t("travelersN", { n: g.trip.travelers })}</p>
                   <progress aria-label={g.name} value={pct} max={100} className="mt-3 h-2 w-full accent-primary" />
                   <p className="mt-1 text-sm">{t("savedOf", { saved: shekels(g.savedAmount, locale), total: shekels(g.targetAmount, locale) })}</p>
@@ -119,7 +119,6 @@ export function VacationPlans({ compact = false }: { compact?: boolean }) {
               );
             })}
           </ul>
-          <Button className="mt-3" variant="outline" onClick={() => setDraft(emptyDraft())}>{t("new")}</Button>
         </>
       )}
     </CardShell>

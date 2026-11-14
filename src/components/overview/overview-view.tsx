@@ -127,12 +127,10 @@ function Body({ data }: { data: OverviewPayload }) {
 
   return (
     <>
-      {!empty && data.categories.length > 0 && <CategoryList data={data} />}
-      <HealthCard details={false} />
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-3">
+      {/* Summary first (net is the hero figure, so it is not repeated here), then the trend, then where it went. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>:last-child]:col-span-2">
         <Stat label={t("income")} value={shekels(data.totals.income, locale)} cur={data.totals.income} prev={data.previous.income} ly={data.lastYear.income} goodWhenUp />
         <Stat label={t("expenses")} value={shekels(data.totals.expenses, locale)} cur={data.totals.expenses} prev={data.previous.expenses} ly={data.lastYear.expenses} />
-        <Stat label={t("net")} value={shekels(data.totals.net, locale)} cur={data.totals.net} prev={data.previous.net} ly={data.lastYear.net} goodWhenUp tone={data.totals.net < 0 ? "bad" : undefined} />
         <SavingsStat totals={data.totals} previous={data.previous} lastYear={data.lastYear} />
       </div>
 
@@ -141,8 +139,10 @@ function Body({ data }: { data: OverviewPayload }) {
       ) : (
         <>
           {data.monthly.length > 1 && <FlowChart monthly={data.monthly} />}
+          {data.categories.length > 0 && <CategoryList data={data} />}
 
           <AllocationCard income={data.totals.income / months} expenses={avgMonthly} byNeed={{ need: data.byNeed.need / months, want: data.byNeed.want / months, saving: data.byNeed.saving / months }} fixed={data.byCost.fixed / months} uncategorized={data.uncategorized / months} categories={data.categories} />
+          <HealthCard details={false} />
           {!simple && (
             <More id="period">
               <SplitCard
@@ -344,7 +344,8 @@ function CategoryList({ data }: { data: OverviewPayload }) {
                   <Delta cur={c.spent} base={c.lastYear} label={t("vsLyShort")} />
                 </div>
               </div>
-              <span className="text-footnote font-semibold tabular-nums">{shekels(c.spent, locale)}</span>
+              {/* Fixed minimum width so every row's bar ends at the same place. */}
+              <span className="min-w-20 text-end text-footnote font-semibold tabular-nums">{shekels(c.spent, locale)}</span>
             </li>
           );
         })}

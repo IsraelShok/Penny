@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Forward } from "@/components/ui/dir-chevron";
-import { SectionShell, SettingCard } from "@/components/settings/section-shell";
+import { SectionShell, SettingCard, SettingList, SettingRow } from "@/components/settings/section-shell";
 import { PrivacyModeCard } from "@/components/settings/privacy-mode-switch";
 import { AppLockCard } from "@/components/settings/app-lock-card";
 import { LanAccessCard } from "@/components/settings/lan-access-card";
@@ -31,21 +31,14 @@ export default async function PrivacySettingsPage() {
       <LanAccessCard />
 
       <SettingCard title={t("dataTitle")}>
-        <div className="divide-y divide-border">
+        <SettingList>
           {rows.map((r) => (
-            <div key={r.title} className="flex items-center gap-2 py-2 first:pt-0 last:pb-0">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">{r.title}</p>
-                <p className="text-sm text-muted-foreground">{r.line}</p>
-              </div>
+            <SettingRow key={r.title} label={r.title} hint={r.line}>
               <InfoTip text={r.info} />
-            </div>
+            </SettingRow>
           ))}
-          <div className="py-2 last:pb-0">
-            <p className="text-sm text-muted-foreground">{t("whereLabel")}</p>
-            <code dir="ltr" className="mt-1 block break-all rounded bg-muted px-2 py-1 font-mono text-xs">{dataDir()}</code>
-          </div>
-        </div>
+          <SettingRow label={t("whereLabel")} hint={<code dir="ltr" className="mt-1 block break-all font-mono text-xs">{dataDir()}</code>} />
+        </SettingList>
       </SettingCard>
 
       <SettingCard title={t("deleteTitle")}>

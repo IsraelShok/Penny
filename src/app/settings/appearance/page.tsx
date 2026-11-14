@@ -5,6 +5,7 @@ import { usePlan } from "@/hooks/use-plan";
 import { Segmented } from "@/components/ui/segmented";
 import { HOME_STYLES, type HomeStyle } from "@/lib/plan";
 import { useState } from "react";
+import { Check } from "lucide-react";
 
 import { useRouter } from "next/navigation";
 import { StudioEditor } from "@/components/dashboard/studio-editor";
@@ -14,7 +15,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { InfoTip } from "@/components/ui/info-tip";
-import { SectionShell, SettingCard } from "@/components/settings/section-shell";
+import { SectionShell, SettingCard, SettingList, SettingRow } from "@/components/settings/section-shell";
 import { getSettings, updateSettings } from "@/lib/api";
 import type { AppSettings } from "@/lib/types";
 
@@ -56,33 +57,28 @@ export default function AppearanceSettingsPage() {
   return (
     <SectionShell title={t("title")} description={t("description")}>
       <SettingCard title={t("languageCardTitle")} description={t("languageCardDescription")}>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div role="radiogroup" aria-label={t("languageCardTitle")} className="divide-y divide-border">
           {langOptions.map((o) => {
             const isActive = (mutation.isPending ? mutation.variables : storedLang) === o.value; // optimistic; reverts on error
             const isPending = mutation.isPending && mutation.variables === o.value;
             return (
               <button
                 key={o.value}
+                type="button"
+                role="radio"
+                aria-checked={isActive}
                 onClick={() => {
                   if (storedLang === o.value || mutation.isPending) return;
                   mutation.mutate(o.value);
                 }}
                 disabled={mutation.isPending}
-                className={`rounded-xl border p-4 text-start transition-colors ${
-                  isActive
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50"
-                } disabled:opacity-60`}
+                className="flex min-h-11 w-full items-center gap-3 py-2.5 text-start first:pt-0 last:pb-0 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
               >
-                <div
-                  className="font-medium"
-                  dir={o.value === "he" ? "rtl" : "ltr"}
-                >
-                  {o.label}
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {isPending ? t("languageSaving") : o.description}
-                </div>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium" dir={o.value === "he" ? "rtl" : "ltr"}>{o.label}</span>
+                  <span className="block text-footnote text-muted-foreground">{isPending ? t("languageSaving") : o.description}</span>
+                </span>
+                {isActive && <Check className="size-5 text-primary" aria-hidden />}
               </button>
             );
           })}
@@ -103,10 +99,22 @@ export default function AppearanceSettingsPage() {
   );
 }
 
+/** Autosave for plan switches: toast on save; on failure usePlan puts the old value back. */
+function useSavePlan() {
+  const tCommon = useTranslations("common");
+  const { update } = usePlan();
+  return (patch: Parameters<typeof update>[0]) =>
+    update(patch).then(
+      () => { toast.success(tCommon("saved")); },
+      (err) => { toast.error(err instanceof Error ? err.message : tCommon("tryAgain")); throw err; },
+    );
+}
+
 /** Focus settings: fewer moving parts for people who lose their place easily. */
 function ComfortCard() {
   const t = useTranslations("settings.appearance");
-  const { plan, update, loaded } = usePlan();
+  const { plan, loaded } = usePlan();
+  const update = useSavePlan();
   // Show the picked style at once; it follows plan.homeStyle again once saved (or if saving fails).
   const [picked, setPicked] = useState<HomeStyle | null>(null);
   if (picked && picked === plan.homeStyle) setPicked(null);
@@ -118,23 +126,17 @@ function ComfortCard() {
   ] as const;
   return (
     <SettingCard title={t("comfortTitle")} description={t("comfortDescription")}>
-      <div className="divide-y divide-border">
-        <div className="space-y-2 pb-3">
-          <span className="block font-medium">{t("homeStyle")}</span>
+      <SettingList>
+        <SettingRow label={t("homeStyle")} hint={t(`homeStyleHint_${homeStyle}`)}>
           <Segmented label={t("homeStyle")} value={homeStyle} onChange={(next) => { if (!loaded || next === homeStyle) return; setPicked(next); update({ homeStyle: next }).catch(() => setPicked(null)); }}
             options={HOME_STYLES.map((s) => ({ value: s, label: t(`homeStyle_${s}`) }))} />
-          <span className="block text-xs text-muted-foreground">{t(`homeStyleHint_${homeStyle}`)}</span>
-        </div>
+        </SettingRow>
         {rows.map((r) => (
-          <label key={r.key} className="flex cursor-pointer items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
-            <span>
-              <span className="block font-medium">{r.label}</span>
-              <span className="text-xs text-muted-foreground">{r.hint}</span>
-            </span>
-            <Switch checked={plan[r.key]} disabled={!loaded} onCheckedChange={(v) => update({ [r.key]: v })} />
-          </label>
+          <SettingRow key={r.key} label={r.label} hint={r.hint} htmlFor={`comfort-${r.key}`}>
+            <Switch id={`comfort-${r.key}`} checked={plan[r.key]} disabled={!loaded} onCheckedChange={(v) => void update({ [r.key]: v }).catch(() => {})} />
+          </SettingRow>
         ))}
-      </div>
+      </SettingList>
     </SettingCard>
   );
 }
@@ -142,16 +144,16 @@ function ComfortCard() {
 /** Pocket Pal: its own section, apart from the app's look, with the customization right under the switch. */
 function PetSettingsCard() {
   const t = useTranslations("settings.appearance");
-  const { plan, update, loaded } = usePlan();
+  const { plan, loaded } = usePlan();
+  const update = useSavePlan();
   return (
     <SettingCard title={t("petMode")} description={t("petModeHint")}>
-      <div className="divide-y divide-border">
-        <label className="flex cursor-pointer items-center justify-between gap-4 pb-3 last:pb-0">
-          <span className="font-medium">{t("petMode")}</span>
-          <Switch checked={plan.pet.enabled} disabled={!loaded} onCheckedChange={(v) => update({ pet: { ...plan.pet, enabled: v } })} />
-        </label>
+      <SettingList>
+        <SettingRow label={t("petShow")} htmlFor="pet-mode">
+          <Switch id="pet-mode" checked={plan.pet.enabled} disabled={!loaded} onCheckedChange={(v) => void update({ pet: { ...plan.pet, enabled: v } }).catch(() => {})} />
+        </SettingRow>
         {plan.pet.enabled && <div className="pt-4 pb-2"><PetCustomizer /></div>}
-      </div>
+      </SettingList>
     </SettingCard>
   );
 }

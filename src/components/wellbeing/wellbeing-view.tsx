@@ -72,7 +72,7 @@ export function WellbeingView() {
             {[...entries].reverse().map((e) => (
               <li key={e.date} className="flex items-baseline justify-between gap-3 text-footnote">
                 <span className="text-muted-foreground">{date(e.date)}</span>
-                <span className="font-semibold tabular-nums">{e.score}</span>
+                <span className="font-semibold tabular-nums">{e.score}<span className="font-normal text-muted-foreground">/100</span></span>
               </li>
             ))}
           </ul>

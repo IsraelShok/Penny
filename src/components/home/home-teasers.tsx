@@ -27,7 +27,7 @@ export function WelcomePrompt() {
   return (
     <div className="mb-4 flex items-center gap-2 rounded-2xl border border-border/60 bg-card p-2 md:mb-5">
       <Link href="/welcome" className="min-w-0 flex-1 rounded-xl px-3 py-2 hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
-        <span className="block text-subheadline font-medium">{t("prompt")}</span>
+        <span className="block text-footnote font-medium">{t("prompt")}</span>
         <span className="block text-footnote text-muted-foreground">{t("promptHint")}</span>
       </Link>
       <button
@@ -81,7 +81,7 @@ export function HomeTeasers() {
       {teasers.map((k) => (
         <Link key={k} href={content[k].href} className={card}>
           <span className="min-w-0">
-            <span className="block text-subheadline font-medium">{content[k].title}</span>
+            <span className="block text-footnote font-medium">{content[k].title}</span>
             <span className="block text-footnote text-muted-foreground">{content[k].body}</span>
           </span>
           <Forward className="text-muted-foreground" />

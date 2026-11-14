@@ -4,8 +4,7 @@ import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { SettingCard, StatusChip } from "@/components/settings/section-shell";
+import { SettingCard, SettingRow, StatusChip } from "@/components/settings/section-shell";
 import { usePrivacyMode } from "@/hooks/use-privacy-mode";
 
 export const PRIVACY_SHORTCUT = "Ctrl+Shift+P"; // not Alt+Shift: that switches keyboard language on Windows
@@ -35,15 +34,9 @@ export function PrivacyModeCard() {
   const [on, toggle] = usePrivacyMode();
   return (
     <SettingCard title={t("modeTitle")} description={t("modeDescription")} aside={<StatusChip on={on} label={on ? t("statusOn") : t("statusOff")} />}>
-      <div className="flex min-h-11 items-center justify-between gap-4">
-        <Label htmlFor="privacy-mode" className="flex-1 flex-wrap gap-x-2">
-          {t("modeLabel")}
-          <span className="text-xs font-normal text-muted-foreground">
-            {t("shortcutLabel")} <kbd dir="ltr" className="rounded border border-border px-1.5 font-sans">{PRIVACY_SHORTCUT}</kbd>
-          </span>
-        </Label>
+      <SettingRow label={t("modeLabel")} htmlFor="privacy-mode" hint={<>{t("shortcutLabel")} <kbd dir="ltr" className="rounded border border-border px-1.5 font-sans">{PRIVACY_SHORTCUT}</kbd></>}>
         <Switch id="privacy-mode" checked={on} onCheckedChange={toggle} aria-keyshortcuts="Control+Shift+P Meta+Shift+P" />
-      </div>
+      </SettingRow>
     </SettingCard>
   );
 }

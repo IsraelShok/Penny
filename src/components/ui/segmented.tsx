@@ -2,26 +2,29 @@
 
 import { cn } from "@/lib/utils";
 
-/** Pill tabs (text only, the chosen one filled with the accent): one choice from a few. Arrow keys move between options, as in a radio group. */
+/** Pill tabs (text only, the chosen one filled with the accent): one choice from a few. Arrow keys move between options, as in a radio group.
+ *  variant="track": the quieter iOS segmented control (grey track, raised thumb), for a filter that sits under a pill row. */
 export function Segmented<T extends string | number>({
   options,
   value,
   onChange,
   label,
   className,
+  variant = "pill",
 }: {
   options: { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
   label: string;
   className?: string;
+  variant?: "pill" | "track";
 }) {
   const index = options.findIndex((o) => o.value === value);
   return (
     <div
       role="radiogroup"
       aria-label={label}
-      className={cn("inline-flex flex-wrap gap-1", className)}
+      className={cn("inline-flex flex-wrap gap-1", variant === "track" && "flex-nowrap gap-0 rounded-full bg-[var(--segmented)] p-0.5", className)}
       onKeyDown={(e) => {
         const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
         if (!step) return;
@@ -46,7 +49,9 @@ export function Segmented<T extends string | number>({
             onClick={() => onChange(o.value)}
             className={cn(
               "min-h-11 rounded-full px-3.5 text-sm font-medium tabular-nums transition-[background-color,color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-              selected ? "bg-primary font-semibold text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+              variant === "track"
+                ? cn("min-h-9 flex-1 whitespace-nowrap px-3 text-[13px] md:min-h-8", selected ? "bg-[var(--segmented-thumb)] font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")
+                : selected ? "bg-primary font-semibold text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
             )}
           >
             {o.label}

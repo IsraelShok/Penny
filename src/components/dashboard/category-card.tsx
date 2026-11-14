@@ -115,6 +115,8 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
   const percent = Math.min(999, Math.round(data.percentSpent));
   const vsLast = data.vsLastMonth;
   const isTracking = data.budgetMode === "tracking";
+  // Budgeted mode without an amount yet: no ring or pace pill (0% and "on track" would mean nothing).
+  const hasBudget = !isTracking && data.budget > 0;
   const categoryName = translateCategoryName(data.categoryName, tCat);
   const parentName = data.parentName ? translateCategoryName(data.parentName, tCat) : null;
   return (
@@ -122,7 +124,7 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className="group w-full cursor-pointer rounded-2xl p-5 text-start transition-colors duration-200 ease-out hover:border-[#D6C9AC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+      className="group w-full cursor-pointer rounded-2xl p-5 text-start transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <div
@@ -189,7 +191,7 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
             </div>
           </div>
         </div>
-        {!isTracking && (
+        {hasBudget && (
           <ProgressDonut
             percent={percent}
             color={data.categoryColor}
@@ -214,7 +216,6 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
             <VsTypical vsTypical={data.vsTypical} color={data.categoryColor} />
           ) : (
             <>
-              {data.budget === 0 && <span>{t("noBudgetSet")}</span>}
               {vsLast != null && <VsLastMonth pct={vsLast} />}
             </>
           )}
@@ -253,7 +254,7 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
               <span>{t("setBudgetToTrack")}</span>
             )}
           </div>
-          <StatusPill status={data.status} />
+          {hasBudget && <StatusPill status={data.status} />}
         </div>
       )}
     </button>
@@ -385,10 +386,9 @@ function tint(hex: string, opacity: number): string {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
+/** The category color pulled toward the text color: darker on light cards, lighter on dark ones, so it stays readable in both. */
 function shade(hex: string): string {
-  const { r, g, b } = parseHex(hex);
-  const factor = 0.78;
-  return `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
+  return `color-mix(in oklab, ${hex} 72%, var(--foreground))`;
 }
 
 function parseHex(hex: string): { r: number; g: number; b: number } {

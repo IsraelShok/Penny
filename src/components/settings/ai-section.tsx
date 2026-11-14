@@ -101,7 +101,9 @@ export function AISection() {
 
   return (
     <SectionShell title={t("title")} description={t("description")}>
-      <ul aria-label={t("providersListLabel")} className="divide-y divide-border/60 overflow-hidden rounded-2xl bg-card">
+      <section aria-labelledby="ai-providers">
+      <h3 id="ai-providers" className="mb-2 px-4 text-sm font-semibold text-muted-foreground">{t("providersListLabel")}</h3>
+      <ul className="divide-y divide-border/60 overflow-hidden rounded-2xl bg-card">
         {ROWS.map((row) => {
           const active = settings.aiProvider === row.id;
           const s = status(row.id);
@@ -135,8 +137,9 @@ export function AISection() {
         })}
       </ul>
       {settings.aiProvider === "none" && (
-        <p role="status" className="text-xs text-muted-foreground">{t("noProviderNote")}</p>
+        <p role="status" className="mt-2 px-4 text-footnote text-muted-foreground">{t("noProviderNote")}</p>
       )}
+      </section>
 
       <Sheet open={open !== null} onOpenChange={(o) => { if (!o) setOpen(null); }}>
         <SheetContent side="right" className="w-full p-0 sm:max-w-md! md:max-w-lg!">

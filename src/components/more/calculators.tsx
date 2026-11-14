@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Banknote, Calculator, Car, CreditCard, Flame, House, Landmark, LifeBuoy, PieChart, Percent, PiggyBank, Plane, Scale, Target, TrendingUp, type LucideIcon } from "lucide-react";
+import { Banknote, Calculator, ChevronLeft, Car, CreditCard, Flame, House, Landmark, LifeBuoy, PieChart, Percent, PiggyBank, Plane, Scale, Target, TrendingUp, type LucideIcon } from "lucide-react";
 import { CardShell } from "@/components/home/card-shell";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NumberField, numberError } from "@/components/ui/number-field";
 import { shekels } from "@/lib/money";
 import { IL } from "@/lib/il-defaults";
 import { inflation, leaseVsBuy, loan, mortgage, savingsGoal, split503020, type CalcSlug } from "@/lib/calculators";
@@ -76,6 +75,9 @@ const CALCS: Record<CalcSlug, Calc> = {
   } },
 };
 
+/** Counts, not money: no ₪ unit. */
+const UNITLESS = new Set(["years", "months", "points"]);
+
 /** Calculators that already live on the investments page. */
 const ELSEWHERE = [
   { key: "rentBuy", Icon: Scale, group: "planning" },
@@ -99,19 +101,35 @@ function tool(key: string): { Icon: LucideIcon; href: string } {
   return e ? { Icon: e.Icon, href: "href" in e ? e.href : "/investments?tab=tools" } : { Icon: CALCS[key as CalcSlug].Icon, href: `/calculators/${key}` };
 }
 
+/** One row of an inset grouped list: icon, title, one-line hint, chevron. */
+export function NavRow({ href, Icon, title, hint }: { href: string; Icon: LucideIcon; title: string; hint: string }) {
+  return (
+    <Link href={href} className="flex min-h-16 items-center gap-3 px-4 py-3 transition-[background-color] duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:px-5">
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary" aria-hidden><Icon className="size-[1.125rem]" /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold">{title}</span>
+        <span className="block text-footnote text-pretty text-muted-foreground">{hint}</span>
+      </span>
+      <ChevronLeft className="size-4 shrink-0 text-muted-foreground/70 ltr:rotate-180" aria-hidden />
+    </Link>
+  );
+}
+
+export const groupedList = "overflow-hidden rounded-2xl border border-border/60 bg-card divide-y divide-border/60";
+
 export function CalculatorTiles() {
   const t = useTranslations("calculators");
   return (
     <section aria-labelledby="calc-title" className="space-y-4">
       <div className="px-1">
-        <h2 id="calc-title" className="text-title-3 font-semibold">{t("title")}</h2>
-        <p className="mt-0.5 text-footnote text-pretty text-muted-foreground">{t("stagesIntro")}</p>
+        <h2 id="calc-title" className="text-title font-semibold">{t("title")}</h2>
+        <p className="mt-1 text-footnote text-pretty text-muted-foreground">{t("stagesIntro")}</p>
       </div>
-      <ol className="space-y-6">
+      <ol className="grid gap-x-6 gap-y-6 lg:grid-cols-2">
         {STAGES.map(([stage, keys], i) => (
           <li key={stage} aria-labelledby={`stage-${stage}`}>
-            <div className="mb-3 flex items-start gap-3 px-1">
-              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-footnote font-semibold text-primary-foreground tabular-nums" aria-hidden>{i + 1}</span>
+            <div className="mb-2 flex items-start gap-3 px-1">
+              <span className="mt-px grid size-6 shrink-0 place-items-center rounded-full bg-primary text-caption font-semibold text-primary-foreground tabular-nums" aria-hidden>{i + 1}</span>
               <div className="min-w-0">
                 <h3 id={`stage-${stage}`} className="text-headline font-semibold">
                   <span className="sr-only">{t("stageN", { n: i + 1 })} </span>{t(`stage_${stage}`)}
@@ -119,20 +137,10 @@ export function CalculatorTiles() {
                 <p className="text-footnote text-pretty text-muted-foreground">{t(`stage_${stage}_why`)}</p>
               </div>
             </div>
-            <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className={groupedList}>
               {keys.map((key) => {
                 const { Icon, href } = tool(key);
-                return (
-                  <li key={key}>
-                    <Link href={href} className="flex h-full min-h-14 items-center gap-3 rounded-2xl bg-card p-4 transition-[background-color] duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary" aria-hidden><Icon className="size-5" /></span>
-                      <span className="min-w-0">
-                        <span className="block font-semibold">{t(`${key}_title`)}</span>
-                        <span className="mt-0.5 block text-footnote text-pretty text-muted-foreground">{t(`${key}_q`)}</span>
-                      </span>
-                    </Link>
-                  </li>
-                );
+                return <li key={key}><NavRow href={href} Icon={Icon} title={t(`${key}_title`)} hint={t(`${key}_q`)} /></li>;
               })}
             </ul>
           </li>
@@ -151,25 +159,20 @@ export function CalculatorView({ slug }: { slug: CalcSlug }) {
   const n: N = (k) => { const x = Number(v[k]); return Number.isFinite(x) ? Math.max(0, x) : 0; };
   const out = c.run(n, (x) => shekels(Number.isFinite(x) ? x : 0, locale));
   return (
-    <CardShell label={t(`${slug}_title`)}>
-      <p className="text-caption text-pretty text-muted-foreground">{t(`${slug}_explain`, { year: IL.year, prime: IL.primeRate })}</p>
-      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+    <CardShell>
+      <p className="text-footnote text-pretty text-muted-foreground">{t(`${slug}_explain`, { year: IL.year, prime: IL.primeRate })}</p>
+      <div className="mt-5 grid grid-cols-1 gap-4 min-[22rem]:grid-cols-2 md:grid-cols-3">
         {c.fields.map(([k, , suffix]) => (
-          <div key={k} className="space-y-1.5">
-            <Label htmlFor={`calc-${k}`}>{t(`f_${k}`)}</Label>
-            <div className="relative">
-              <Input id={`calc-${k}`} type="number" inputMode="decimal" step="any" min="0" dir="ltr" value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} className={suffix ? "pr-8" : undefined} />
-              {suffix && <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-footnote text-muted-foreground">{suffix}</span>}
-            </div>
-          </div>
+          <NumberField key={k} id={`calc-${k}`} label={t(`f_${k}`)} value={v[k]} onChange={(x) => setV({ ...v, [k]: x })}
+            unit={suffix ?? (UNITLESS.has(k) ? undefined : "₪")} error={numberError(v[k], t("invalid"))} />
         ))}
       </div>
-      <div className="mt-6" aria-live="polite">
-        <p className="figure text-[1.5rem] leading-tight text-pretty">{t(out.head[0], out.head[1])}</p>
+      <div className="mt-6 rounded-2xl bg-primary/8 p-4 sm:p-5" aria-live="polite">
+        <p className="text-title font-semibold text-pretty tabular-nums">{t(out.head[0], out.head[1])}</p>
         {out.rows.length > 0 && (
-          <dl className="mt-3 space-y-2 text-footnote tabular-nums">
+          <dl className="mt-3 divide-y divide-border/60 text-footnote tabular-nums">
             {out.rows.map(([k, val]) => (
-              <div key={k} className="flex items-baseline justify-between gap-3">
+              <div key={k} className="flex items-baseline justify-between gap-3 py-2 last:pb-0">
                 <dt className="text-muted-foreground">{t(`r_${k}`)}</dt>
                 <dd className="font-semibold" dir="ltr">{val}</dd>
               </div>
@@ -177,7 +180,7 @@ export function CalculatorView({ slug }: { slug: CalcSlug }) {
           </dl>
         )}
       </div>
-      <p className="mt-5 text-caption text-muted-foreground">{t("notAdvice")}</p>
+      <p className="mt-4 text-caption text-muted-foreground">{t("notAdvice")}</p>
     </CardShell>
   );
 }

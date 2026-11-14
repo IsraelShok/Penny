@@ -89,7 +89,7 @@ export default function CategoriesSettingsPage() {
       >
         <div className="flex flex-wrap items-center gap-2">
           <Segmented
-            className="rounded-full bg-card p-0.5"
+            variant="track"
             label={t("title")}
             value={activeKind}
             onChange={setActiveKind}
@@ -190,7 +190,7 @@ function GroupBlock({
   const listId = useId();
   return (
     <section>
-      <div className="mb-2 flex items-center gap-2 px-1">
+      <div className="mb-1 flex items-center gap-2 px-4">
         <button
           type="button"
           aria-expanded={open}
@@ -200,14 +200,14 @@ function GroupBlock({
         >
           <ChevronDown aria-hidden className={`size-4 shrink-0 text-muted-foreground transition-transform ${open ? "" : "-rotate-90 rtl:rotate-90"}`} />
           <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
-          <span title={title} className="truncate text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</span>
+          <span title={title} className="truncate text-sm font-semibold text-muted-foreground">{title}</span>
           <span className="shrink-0 text-xs tabular-nums text-muted-foreground/80">{tp("subcount", { count: Children.count(children) })}</span>
         </button>
         {parent ? (
           <button
             type="button"
             onClick={() => onSelect(parent.id)}
-            className="ms-auto text-xs uppercase tracking-[0.08em] text-muted-foreground hover:text-foreground"
+            className="ms-auto inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
           >
             {t("editGroup")}
           </button>

@@ -30,7 +30,7 @@ export function KidSummary({ member, month }: { member: string; month: string })
         <ul className="mt-3 grid gap-1 text-sm">
           {transactions.map((x) => (
             <li key={x.id} className="flex justify-between gap-3">
-              <span className="truncate"><span className="tabular-nums text-xs text-muted-foreground" dir="ltr">{x.date.slice(0, 10)}</span> {x.description}</span>
+              <span className="truncate" title={x.description}><span className="tabular-nums text-xs text-muted-foreground" dir="ltr">{x.date.slice(0, 10)}</span> {x.description}</span>
               <span className="tabular-nums">{money(-x.amount)}</span>
             </li>
           ))}

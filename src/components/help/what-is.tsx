@@ -18,7 +18,7 @@ export function WhatIs({ concept, className }: { concept: Concept; className?: s
         <CircleHelp className="size-4" aria-hidden />
       </PopoverTrigger>
       <PopoverContent align="start" className="text-start">
-        <p className="text-subheadline font-semibold">{t(`${concept}.term`)}</p>
+        <p className="font-semibold">{t(`${concept}.term`)}</p>
         <p className="mt-1 text-footnote">{t(`${concept}.body`)}</p>
       </PopoverContent>
     </Popover>

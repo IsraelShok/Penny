@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Segmented } from "@/components/ui/segmented";
-import { SectionShell, SettingCard } from "@/components/settings/section-shell";
+import { SectionShell, SettingCard, SettingList, SettingRow } from "@/components/settings/section-shell";
 import { getAssets, getInsights, listIntegrations, getLegacyNotes, getOwners, getPlan, getSettings, saveLegacyNotes, getLegacyExport, updateLegacyExport, postLegacyExport, type LegacyExportConfig } from "@/lib/api";
 import { buildLegacySections, LEGACY_TEXT_MAX, type LegacyNotes, type LegacyRow } from "@/lib/legacy";
 import { shekels } from "@/lib/money";
@@ -116,18 +116,20 @@ export function LegacyDocument() {
     <SectionShell title={t("title")} description={t("description")}>
       <style>{LEGACY_CSS}</style>
       <div className="legacy-print-hidden print-hidden space-y-4">
-        <div className="flex gap-3 rounded-2xl bg-primary/10 p-4 text-sm leading-relaxed" role="note">
-          <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-          <p>{t("privacyNotice")}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => window.print()}><Printer className="h-4 w-4" />{t("print")}</Button>
-          <Button variant="outline" onClick={exportHtml}><Download className="h-4 w-4" />{t("downloadHtml")}</Button>
-          <Button variant="outline" onClick={exportJson}><FileJson className="h-4 w-4" />{t("downloadJson")}</Button>
-        </div>
+        <section aria-labelledby="legacy-export-title">
+          <h3 id="legacy-export-title" className="mb-2 px-4 text-sm font-semibold text-muted-foreground">{t("exportTitle")}</h3>
+          <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card">
+            {([[Printer, t("print"), () => window.print()], [Download, t("downloadHtml"), exportHtml], [FileJson, t("downloadJson"), exportJson]] as const).map(([Icon, label, run]) => (
+              <button key={label} type="button" onClick={run} className="flex min-h-11 w-full items-center gap-3 px-4 py-3 text-start font-medium text-primary hover:bg-foreground/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
+                <Icon className="size-4" aria-hidden />{label}
+              </button>
+            ))}
+          </div>
+          <p role="note" className="mt-2 flex gap-1.5 px-4 text-footnote text-muted-foreground"><Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden />{t("privacyNotice")}</p>
+        </section>
         {notes && (
           <SettingCard title={t("notesTitle")} description={t("notesDescription")}>
-            <div className="space-y-4">
+            <div className="divide-y divide-border">
               {(["contacts", "documents", "wishes", "steps"] as const).map((k) => (
                 <NoteField
                   key={`${k}:${notes[k] ?? ""}`}
@@ -205,8 +207,8 @@ function rowSub(r: LegacyRow, t: ReturnType<typeof useTranslations<"legacy">>) {
 function NoteField({ id, label, placeholder, initial, onSave }: { id: string; label: string; placeholder: string; initial: string; onSave: (v: string) => void }) {
   const [value, setValue] = useState(initial);
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
+    <div className="space-y-1.5 py-3 first:pt-0 last:pb-0">
+      <Label htmlFor={id} className="font-medium">{label}</Label>
       <textarea
         id={id}
         value={value}
@@ -230,32 +232,32 @@ function AutoExportCard({ config, onChange }: { config: LegacyExportConfig; onCh
   const last = config.lastAt ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(config.lastAt)) : null;
   return (
     <SettingCard title={t("title")} description={t("description")}>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <Label htmlFor="legacy-auto">{t("enable")}</Label>
+      <SettingList>
+        <SettingRow label={t("enable")} htmlFor="legacy-auto">
           <Switch id="legacy-auto" checked={config.enabled} onCheckedChange={(v) => update.mutate({ enabled: v })} />
+        </SettingRow>
+        <SettingRow label={t("frequency")}>
+          <Segmented
+            label={t("frequency")}
+            value={config.frequency}
+            onChange={(v) => update.mutate({ frequency: v })}
+            options={[{ value: "weekly", label: t("weekly") }, { value: "monthly", label: t("monthly") }]}
+          />
+        </SettingRow>
+        <div className="space-y-1.5 py-3 last:pb-0">
+          <Label htmlFor="legacy-dir" className="font-medium">{t("folder")}</Label>
+          <Input id="legacy-dir" dir="ltr" value={dir} onChange={(e) => setDir(e.target.value)} onBlur={() => dir.trim() !== config.dir && update.mutate({ dir })} aria-describedby="legacy-dir-hint" />
+          <p id="legacy-dir-hint" className="text-footnote text-muted-foreground">{t("secureHint")}</p>
         </div>
-        <Segmented
-          label={t("frequency")}
-          value={config.frequency}
-          onChange={(v) => update.mutate({ frequency: v })}
-          options={[{ value: "weekly", label: t("weekly") }, { value: "monthly", label: t("monthly") }]}
-        />
-        <div className="space-y-1.5">
-          <Label htmlFor="legacy-dir">{t("folder")}</Label>
-          <Input id="legacy-dir" dir="ltr" value={dir} onChange={(e) => setDir(e.target.value)} onBlur={() => dir.trim() !== config.dir && update.mutate({ dir })} />
-          <p className="text-xs text-muted-foreground">{t("secureHint")}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2" role="status">
+          <span className="text-footnote text-muted-foreground">{last ? t("last", { date: last }) : t("never")}</span>
+          <Button variant="ghost" size="sm" className="-me-2 text-primary" onClick={() => open.mutate()}>
+            <FolderOpen className="size-4" aria-hidden />{t("openFolder")}
+          </Button>
         </div>
-        <p className="text-sm text-muted-foreground" role="status">
-          {last ? t("last", { date: last }) : t("never")}
-          {" · "}
-          <button type="button" className="text-primary underline-offset-2 hover:underline" onClick={() => open.mutate()}>
-            <FolderOpen className="me-1 inline h-3.5 w-3.5" aria-hidden />{t("openFolder")}
-          </button>
-        </p>
-        {config.status === "locked" && <p className="text-sm text-muted-foreground">{t("locked")}</p>}
-        {config.status === "error" && <p role="alert" className="text-sm text-destructive">{t("error")}</p>}
-      </div>
+        {config.status === "locked" && <p className="pt-2 text-sm text-muted-foreground">{t("locked")}</p>}
+        {config.status === "error" && <p role="alert" className="pt-2 text-sm text-destructive">{t("error")}</p>}
+      </SettingList>
     </SettingCard>
   );
 }

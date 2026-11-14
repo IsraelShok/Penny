@@ -27,6 +27,7 @@ export function StatementImportCard() {
   const [positiveIsExpense, setPositiveIsExpense] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inputKey, setInputKey] = useState(0);
+  const [fileName, setFileName] = useState("");
 
   const header = table[headerRow] ?? [];
   const { rows, skipped } = useMemo(
@@ -47,6 +48,7 @@ export function StatementImportCard() {
     setMap(null);
     setError(null);
     setInputKey((k) => k + 1);
+    setFileName("");
   }
 
   const save = useMutation({
@@ -101,14 +103,22 @@ export function StatementImportCard() {
         </details>
         <div className="space-y-1.5">
           <Label htmlFor="statement-file">{t("file")}</Label>
-          <input
-            key={inputKey}
-            id="statement-file"
-            type="file"
-            accept={`${IMPORT_EXTS.join(",")},text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`}
-            onChange={(e) => void onFile(e.target.files?.[0])}
-            className="block w-full text-footnote file:me-3 file:rounded-lg file:border-0 file:bg-secondary file:px-3 file:py-2 file:text-footnote file:font-medium file:text-secondary-foreground"
-          />
+          {/* The native picker's text follows the browser's language, not the app's; ours is translated. */}
+          <div className="flex min-w-0 items-center gap-3">
+            <input
+              key={inputKey}
+              id="statement-file"
+              type="file"
+              accept={`${IMPORT_EXTS.join(",")},text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`}
+              onChange={(e) => { setFileName(e.target.files?.[0]?.name ?? ""); void onFile(e.target.files?.[0]); }}
+              className="peer sr-only"
+            />
+            <label htmlFor="statement-file" className="inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full bg-secondary px-4 text-footnote font-medium text-secondary-foreground hover:bg-secondary/80 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring">
+              <FileUp className="size-4" aria-hidden />
+              {t("choose")}
+            </label>
+            <span className="min-w-0 truncate text-footnote text-muted-foreground" title={fileName || undefined}>{fileName || t("noFile")}</span>
+          </div>
           <p className="text-caption text-muted-foreground">{t("fileHint")}</p>
         </div>
 

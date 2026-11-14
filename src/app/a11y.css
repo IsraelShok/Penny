@@ -34,9 +34,9 @@ html.a11y-hc-light, html.a11y-hc-light :is(.budget-studio, .studio-page) {
   --secondary: #ececec !important; --secondary-foreground: #000000 !important;
   --muted: #ececec !important; --muted-foreground: #1f1f1f !important;
   --accent: #e3e3f7 !important; --accent-foreground: #000000 !important;
-  --action: #1a0dab !important; --destructive: #a00000 !important;
+  --action: #1a0dab !important; --destructive: #a00000 !important; --destructive-foreground: #ffffff !important;
   --border: #000000 !important; --input: #000000 !important; --ring: #000000 !important;
-  --status-on-track: #00561b !important; --status-heads-up: #7a3600 !important; --status-over: #a00000 !important; --status-plenty-left: #1a0dab !important;
+  --status-on-track: #00561b !important; --status-heads-up: #7a3600 !important; --status-over: #a00000 !important; --status-plenty-left: #1a0dab !important; --expense: #a00000 !important;
   --chart-1: #1a0dab !important; --chart-2: #5f5f5f !important; --chart-3: #00561b !important; --chart-4: #9a9a9a !important; --chart-5: #7a3600 !important;
   --segmented: #ececec !important; --segmented-thumb: #ffffff !important;
   --sidebar: #ffffff !important; --sidebar-foreground: #000000 !important; --sidebar-primary: #1a0dab !important; --sidebar-primary-foreground: #ffffff !important;
@@ -52,9 +52,9 @@ html.a11y-hc-dark, html.a11y-hc-dark :is(.budget-studio, .studio-page) {
   --secondary: #1f1f1f !important; --secondary-foreground: #ffffff !important;
   --muted: #1f1f1f !important; --muted-foreground: #ededed !important;
   --accent: #262626 !important; --accent-foreground: #ffffff !important;
-  --action: #ffe14d !important; --destructive: #ff8f8f !important;
+  --action: #ffe14d !important; --destructive: #ff8f8f !important; --destructive-foreground: #000000 !important;
   --border: #ffffff !important; --input: #ffffff !important; --ring: #ffe14d !important;
-  --status-on-track: #6dff9a !important; --status-heads-up: #ffc56b !important; --status-over: #ff8f8f !important; --status-plenty-left: #ffe14d !important;
+  --status-on-track: #6dff9a !important; --status-heads-up: #ffc56b !important; --status-over: #ff8f8f !important; --status-plenty-left: #ffe14d !important; --expense: #ff8f8f !important;
   --chart-1: #ffe14d !important; --chart-2: #9a9a9a !important; --chart-3: #6dff9a !important; --chart-4: #5a5a5a !important; --chart-5: #ffc56b !important;
   --segmented: #1f1f1f !important; --segmented-thumb: #3a3a3a !important;
   --sidebar: #000000 !important; --sidebar-foreground: #ffffff !important; --sidebar-primary: #ffe14d !important; --sidebar-primary-foreground: #000000 !important;

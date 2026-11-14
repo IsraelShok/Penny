@@ -21,7 +21,7 @@ describe("full wipe", () => {
     fs.writeFileSync(path.join(dir, "sync.log"), "log");
     const { POST } = await import("@/app/api/data/wipe/route");
 
-    expect((await POST(post({ confirm: "delete" }))).status).toBe(400);
+    expect((await POST(post({ confirm: "nope" }))).status).toBe(400);
     expect(getGlobalSetting("telegram_chat_id")).toBe("9");
 
     expect((await POST(post({ confirm: "מחיקה" }))).status).toBe(200);

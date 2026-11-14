@@ -10,7 +10,7 @@ import { shekels } from "@/lib/money";
 import { KID_TRACKS, kidProjection, STATE_MONTHLY_PER_CHILD, type KidPlan, type KidTrack } from "@/lib/kids";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { NumberField } from "@/components/ui/number-field";
 
 const blank = (memberId: string): KidPlan => ({ memberId, stateValue: 0, track: "medium", doubling: false, extraMonthly: 0, returnPct: 4, assetIds: [] });
 
@@ -40,7 +40,7 @@ export function KidsInvestments() {
   return (
     <CardShell id="kids" label={t("title")} className="scroll-mt-20">
       {children.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("noChildren")} <Link href="/settings/household" className="text-primary underline underline-offset-4">{t("addChild")}</Link></p>
+        <p className="text-footnote text-pretty text-muted-foreground">{t("noChildren")} <Link href="/settings/household" className="text-primary underline underline-offset-4">{t("addChild")}</Link></p>
       ) : (
         <ul className="space-y-4">
           {children.map((c) => {
@@ -56,19 +56,19 @@ export function KidsInvestments() {
                   {t("stateLine", { amount: shekels(k.stateValue, locale), track: t(`track_${k.track}`), monthly: shekels(STATE_MONTHLY_PER_CHILD * (k.doubling ? 2 : 1), locale) })} · {t("parentLine", { amount: shekels(holdings, locale), monthly: shekels(k.extraMonthly, locale) })}
                 </p>
                 {p ? (
-                  <p className="mt-2 text-sm">{t("projection", { at18: shekels(p.at18, locale), at21: shekels(p.at21, locale), ret: k.returnPct })}</p>
-                ) : <p className="mt-2 text-sm text-muted-foreground">{t("needBirthYear")}</p>}
+                  <p className="mt-2 text-footnote font-medium">{t("projection", { at18: shekels(p.at18, locale), at21: shekels(p.at21, locale), ret: k.returnPct })}</p>
+                ) : <p className="mt-2 text-footnote text-muted-foreground">{t("needBirthYear")}</p>}
                 {e ? (
                   <form className="mt-3 space-y-3" onSubmit={(ev) => { ev.preventDefault(); void save(e); }}>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <label className="space-y-1 text-sm">{t("stateValue")}<Input type="number" min={0} value={e.stateValue} onChange={(ev) => setEditing({ ...e, stateValue: Number(ev.target.value) })} /></label>
-                      <label className="space-y-1 text-sm">{t("track")}
-                        <select className="min-h-11 w-full rounded-xl border bg-background px-3" value={e.track} onChange={(ev) => setEditing({ ...e, track: ev.target.value as KidTrack })}>
+                      <NumberField id={`kid-${c.id}-state`} label={t("stateValue")} unit="₪" value={e.stateValue} onChange={(v) => setEditing({ ...e, stateValue: Math.max(0, Number(v) || 0) })} />
+                      <label className="space-y-1.5 text-sm font-medium">{t("track")}
+                        <select className="min-h-11 w-full rounded-md border bg-background px-3 font-normal" value={e.track} onChange={(ev) => setEditing({ ...e, track: ev.target.value as KidTrack })}>
                           {KID_TRACKS.map((tr) => <option key={tr} value={tr}>{t(`track_${tr}`)}</option>)}
                         </select>
                       </label>
-                      <label className="space-y-1 text-sm">{t("extraMonthly")}<Input type="number" min={0} value={e.extraMonthly} onChange={(ev) => setEditing({ ...e, extraMonthly: Number(ev.target.value) })} /></label>
-                      <label className="space-y-1 text-sm">{t("returnPct")}<Input type="number" min={0} max={15} step={0.5} value={e.returnPct} onChange={(ev) => setEditing({ ...e, returnPct: Number(ev.target.value) })} /></label>
+                      <NumberField id={`kid-${c.id}-extra`} label={t("extraMonthly")} unit="₪" value={e.extraMonthly} onChange={(v) => setEditing({ ...e, extraMonthly: Math.max(0, Number(v) || 0) })} />
+                      <NumberField id={`kid-${c.id}-ret`} label={t("returnPct")} unit="%" value={e.returnPct} onChange={(v) => setEditing({ ...e, returnPct: Math.min(15, Math.max(0, Number(v) || 0)) })} />
                     </div>
                     <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={e.doubling} onChange={(ev) => setEditing({ ...e, doubling: ev.target.checked })} />{t("doubling", { amount: shekels(STATE_MONTHLY_PER_CHILD, locale) })}</label>
                     {owned.length > 0 && (
@@ -90,7 +90,7 @@ export function KidsInvestments() {
           })}
         </ul>
       )}
-      <p className="mt-3 text-xs text-muted-foreground">{t("assumption", { amount: shekels(STATE_MONTHLY_PER_CHILD, locale) })}</p>
+      <p className="mt-4 text-caption text-pretty text-muted-foreground">{t("assumption", { amount: shekels(STATE_MONTHLY_PER_CHILD, locale) })}</p>
     </CardShell>
   );
 }

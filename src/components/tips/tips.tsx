@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Lightbulb, X } from "lucide-react";
+import { Lightbulb, Search, X } from "lucide-react";
 import { dismissSuggestion, getSettings, getSuggestions } from "@/lib/api";
 import { TIPS, TIP_CATEGORIES, relevantTips, tipKey, tipOfDay, tipSignals, type Tip, type TipCategory } from "@/lib/tips";
 import { CardShell } from "@/components/home/card-shell";
@@ -102,19 +102,22 @@ export function TipsLibrary() {
   const [q, setQ] = useState("");
   const needle = q.trim().toLowerCase();
   const tips = TIPS.filter((t) => !s.dismissed.has(tipKey(t.id)) && (!cat || t.category === cat) && (!needle || `${t[lang].title} ${t[lang].body}`.toLowerCase().includes(needle)));
-  const chip = (active: boolean) => `min-h-11 rounded-full px-4 text-footnote font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring ${active ? "bg-primary text-primary-foreground" : "bg-card hover:bg-accent"}`;
+  const chip = (active: boolean) => `min-h-11 shrink-0 rounded-full px-4 text-footnote font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring ${active ? "bg-primary text-primary-foreground" : "bg-card hover:bg-accent"}`;
   return (
     <div className="space-y-4">
       <DailyTip />
-      <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={l.search} aria-label={l.search}
-        className="h-11 w-full rounded-xl border border-border bg-card px-4 text-body focus-visible:outline-2 focus-visible:outline-ring" />
-      <div className="flex flex-wrap gap-2" role="group" aria-label={l.tips}>
+      <div className="relative">
+        <Search className="pointer-events-none absolute inset-y-0 start-3.5 my-auto size-4 text-muted-foreground" aria-hidden />
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={l.search} aria-label={l.search}
+          className="h-11 w-full rounded-xl border border-input bg-card ps-10 pe-4 text-base placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring sm:text-sm" />
+      </div>
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0" role="group" aria-label={l.tips}>
         <button type="button" className={chip(!cat)} aria-pressed={!cat} onClick={() => setCat(null)}>{l.all}</button>
         {TIP_CATEGORIES.map((c) => <button key={c} type="button" className={chip(cat === c)} aria-pressed={cat === c} onClick={() => setCat(c)}>{l.cat[c]}</button>)}
       </div>
-      {tips.length === 0 ? <p className="text-footnote text-muted-foreground">{l.none}</p> : (
+      {tips.length === 0 ? <p className="py-8 text-center text-footnote text-muted-foreground">{l.none}</p> : (
         <ul className="grid gap-3 md:grid-cols-2">
-          {tips.map((t) => <li key={t.id} className="rounded-2xl border border-border/60 bg-card p-4"><TipItem tip={t} onDismiss={() => s.dismiss(t.id)} /></li>)}
+          {tips.map((t) => <li key={t.id} className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5"><TipItem tip={t} onDismiss={() => s.dismiss(t.id)} /></li>)}
         </ul>
       )}
       <Disclaimer />

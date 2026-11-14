@@ -180,7 +180,7 @@ export function CommandPalette({ placeholder, onClose }: { placeholder: string; 
               className={cn("flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-footnote", i === current && "bg-accent")}
             >
               <c.Icon className="size-4 shrink-0 text-muted-foreground" />
-              <span className="flex-1 truncate font-medium">{c.label}</span>
+              <span className="flex-1 truncate font-medium" title={c.label}>{c.label}</span>
               {c.hint && <span className="text-caption text-muted-foreground">{c.hint}</span>}
             </li>
           ))}

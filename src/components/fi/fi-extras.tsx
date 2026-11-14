@@ -17,6 +17,7 @@ import { TakeHome } from "@/components/fi/take-home";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
+import { NumberField } from "@/components/ui/number-field";
 import { Label } from "@/components/ui/label";
 import { Sparkline } from "@/components/ui/sparkline";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -204,19 +205,13 @@ function Goals({ goals }: { goals: Goal[] }) {
           <Label htmlFor="goal-name">{t("goalName")}</Label>
           <Input id="goal-name" required maxLength={60} placeholder={t("goalPlaceholder")} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="goal-target">{t("goalTarget")}</Label>
-          <Input id="goal-target" required type="number" min="1" dir="ltr" value={draft.targetAmount} onChange={(e) => setDraft({ ...draft, targetAmount: e.target.value })} />
-        </div>
+        <NumberField id="goal-target" label={t("goalTarget")} unit="₪" min="1" value={draft.targetAmount} onChange={(v) => setDraft({ ...draft, targetAmount: v })} />
         <div className="space-y-1.5">
           <Label htmlFor="goal-date">{t("goalDate")}</Label>
           <Input id="goal-date" required type="month" dir="ltr" value={draft.targetDate} onChange={(e) => setDraft({ ...draft, targetDate: e.target.value })} />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="goal-saved">{t("goalSaved")}</Label>
-          <Input id="goal-saved" type="number" min="0" dir="ltr" value={draft.savedAmount} onChange={(e) => setDraft({ ...draft, savedAmount: e.target.value })} />
-        </div>
-        <IconButton label={t("addGoal")} variant="default" type="submit" disabled={add.isPending}><Plus className="size-4" aria-hidden /></IconButton>
+        <NumberField id="goal-saved" label={t("goalSaved")} unit="₪" value={draft.savedAmount} onChange={(v) => setDraft({ ...draft, savedAmount: v })} />
+        <IconButton showLabel label={t("addGoal")} variant="default" type="submit" disabled={add.isPending || !draft.name.trim() || !(Number(draft.targetAmount) > 0) || !draft.targetDate}><Plus className="size-4" aria-hidden /></IconButton>
       </form>
     </CardShell>
   );

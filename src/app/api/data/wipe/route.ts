@@ -8,12 +8,13 @@ import { withSession } from "../../lock/session-cookie";
 
 export const dynamic = "force-dynamic";
 
-const WIPE_WORD = "מחיקה";
+// The typed confirmation word, in either UI language.
+const WIPE_WORDS = ["מחיקה", "delete"];
 
 /** Deletes everything: the database (credentials, settings, AI keys, Telegram), the key or wrapped key, and logs. Back to first run. */
 export async function POST(request: Request) {
   const { confirm, secret } = (await request.json().catch(() => ({}))) as { confirm?: unknown; secret?: unknown };
-  if (confirm !== WIPE_WORD) return NextResponse.json({ error: "confirm" }, { status: 400 });
+  if (typeof confirm !== "string" || !WIPE_WORDS.includes(confirm.trim().toLowerCase())) return NextResponse.json({ error: "confirm" }, { status: 400 });
   if (isLockEnabled()) {
     const check = await checkSecret(secret);
     if (!check.ok) return NextResponse.json({ error: check.reason, retryAfter: check.retryAfter }, { status: check.reason === "wait" ? 429 : 401 });

@@ -3,9 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { SettingCard, StatusChip } from "@/components/settings/section-shell";
+import { SettingCard, SettingRow, StatusChip } from "@/components/settings/section-shell";
 import { postLock } from "@/components/settings/app-lock-card";
 
 interface LanStatus {
@@ -36,11 +35,9 @@ export function LanAccessCard() {
   return (
     <SettingCard title={t("lanTitle")} description={t("lanDescription")} aside={s && <StatusChip on={s.enabled} label={s.enabled ? t("statusOn") : t("statusOff")} />}>
       <div className="space-y-4">
-        <div className="flex min-h-11 items-center justify-between gap-4">
-          <Label htmlFor="lan-access" className="flex-1">{t("lanLabel")}</Label>
+        <SettingRow label={t("lanLabel")} htmlFor="lan-access" hint={lockOff ? t("lanLockRequired") : undefined}>
           <Switch id="lan-access" checked={s?.enabled ?? false} disabled={!s || toggle.isPending || (lockOff && !s?.enabled)} onCheckedChange={(v) => toggle.mutate(v)} />
-        </div>
-        {lockOff && <p className="text-sm text-muted-foreground">{t("lanLockRequired")}</p>}
+        </SettingRow>
         {toggle.error && <p role="alert" className="text-sm text-destructive">{t(toggle.error.message === "lock_required" ? "lanLockRequired" : "lockError_failed")}</p>}
         {s?.enabled && (
           <>

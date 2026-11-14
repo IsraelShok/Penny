@@ -136,7 +136,7 @@ export function CategoryPicker({
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger className="inline-flex" disabled={disabled}>{trigger}</PopoverTrigger>
+      <PopoverTrigger className="inline-flex min-w-0 max-w-full rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60" disabled={disabled}>{trigger}</PopoverTrigger>
       <PopoverContent align="start" className="flex w-[360px] flex-col gap-2 overflow-hidden p-2" onKeyDown={categoryListKeyDown}>
         <CategoryBrowserHeader browser={browser} listId={listId} />
         <CategorySectionList
@@ -153,7 +153,7 @@ export function CategoryPicker({
               className={`flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-start text-sm hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:outline-ring ${indented ? "ps-5" : ""} ${c.id === currentId ? "font-semibold" : ""}`}
             >
               <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: c.color }} />
-              <span className="truncate">{browser.label(c)}</span>
+              <span className="truncate" title={browser.label(c)}>{browser.label(c)}</span>
             </button>
           )}
         />

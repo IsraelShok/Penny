@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InfoTip } from "@/components/ui/info-tip";
 import { ProviderBadge } from "@/components/setup/provider-badge";
 import { INVESTMENT_HOUSES } from "@/lib/investment-houses";
 import { INTERACTIVE, isPensionFund, LOGIN_FIELDS } from "@/lib/pension";
@@ -43,8 +44,10 @@ export function InvestmentHouses() {
 
   return (
     <section aria-labelledby="investment-houses">
-      <h3 id="investment-houses" className="text-footnote font-semibold text-muted-foreground">{t("groupInvestment")}</h3>
-      <p className="mb-2 mt-1 text-caption text-pretty text-muted-foreground">{t("investmentNote")}</p>
+      <div className="mb-2 flex items-center gap-1 px-4">
+        <h3 id="investment-houses" className="text-sm font-semibold text-muted-foreground">{t("groupInvestment")}</h3>
+        <InfoTip text={t("investmentNote")} />
+      </div>
       <ul className="divide-y divide-border/60 overflow-hidden rounded-2xl bg-card">
         {[...INVESTMENT_HOUSES].sort((x, y) => (locale === "he" ? x.name.he.localeCompare(y.name.he, "he") : x.name.en.localeCompare(y.name.en, "en"))).map((h) => {
           const name = locale === "he" ? h.name.he : h.name.en;

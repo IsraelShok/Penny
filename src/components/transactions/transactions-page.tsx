@@ -182,8 +182,8 @@ export function TransactionsPage() {
           label={tReview("viewLabel")}
           value={view}
           options={[
-            { value: "review", label: tReview("tab") },
             { value: "all", label: tReview("tabAll") },
+            { value: "review", label: tReview("tab") },
             { value: "settle", label: tSettle("tab") },
           ]}
           onChange={setView}
@@ -203,19 +203,6 @@ export function TransactionsPage() {
           </label>
         )}
         {kidFilter ? <KidSummary member={kidFilter} month={from.slice(0, 7)} /> : <>
-        <div className="w-fit">
-          <Segmented
-            label={t("filterLabel")}
-            value={kind}
-            options={filterOptions}
-            onChange={(v) => {
-              setKind(v);
-              setPage(0);
-              setCategoryFilter([]);
-            }}
-          />
-        </div>
-
         {tagFilter && (
           <button
             type="button"
@@ -228,6 +215,20 @@ export function TransactionsPage() {
         )}
 
         <TransactionsTable
+          kindFilter={
+            <Segmented
+              variant="track"
+              className="max-sm:w-full"
+              label={t("filterLabel")}
+              value={kind}
+              options={filterOptions}
+              onChange={(v) => {
+                setKind(v);
+                setPage(0);
+                setCategoryFilter([]);
+              }}
+            />
+          }
           allTags={(tagsQuery.data?.tags ?? []).map((x) => x.tag)}
           onTagClick={(tag) => { setTagFilter(tag); setPage(0); }}
           members={members}

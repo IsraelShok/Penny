@@ -182,7 +182,7 @@ export function ReviewInbox() {
                 aria-label={t("select", { name: r.description })}
               />
               <div className="min-w-0 flex-1">
-                <bdi className="block truncate font-medium">{r.description}</bdi>
+                <bdi className="block truncate font-medium" title={r.description}>{r.description}</bdi>
                 <span className="text-footnote text-muted-foreground">
                   {formatDate(r.date)} · {r.categoryId == null ? t("noCategory") : t("unsure")}
                 </span>

@@ -5,9 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Segmented } from "@/components/ui/segmented";
-import { SettingCard, StatusChip } from "@/components/settings/section-shell";
+import { SettingCard, SettingList, SettingRow, StatusChip } from "@/components/settings/section-shell";
 
 export interface LockStatus { enabled: boolean; idleMinutes: number }
 
@@ -51,21 +50,19 @@ export function AppLockCard() {
         }}
       >
         <p className="sr-only" aria-live="polite">{enabled ? t("lockOn") : t("lockOff")}</p>
-        {enabled && (
-          <div className="space-y-2">
-            <Label htmlFor="lock-current">{t("lockCurrent")}</Label>
-            <Input id="lock-current" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className="h-11" />
-          </div>
-        )}
-        <div className="space-y-2">
-          <Label htmlFor="lock-secret">{enabled ? t("lockNew") : t("lockSecret")}</Label>
-          <Input id="lock-secret" type="password" autoComplete="new-password" value={secret} onChange={(e) => setSecret(e.target.value)} className="h-11" aria-describedby="lock-hint" />
-          <p id="lock-hint" className="text-xs text-muted-foreground">{t("lockHint")}</p>
-        </div>
-        <div className="space-y-2">
-          <p className="text-sm">{t("lockIdle")}</p>
-          <Segmented label={t("lockIdle")} value={minutes} onChange={setIdle} options={IDLE.map((m) => ({ value: m, label: t("lockMinutes", { count: m }) }))} />
-        </div>
+        <SettingList>
+          {enabled && (
+            <SettingRow label={t("lockCurrent")} htmlFor="lock-current">
+              <Input id="lock-current" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className="h-11 w-full sm:w-56" />
+            </SettingRow>
+          )}
+          <SettingRow label={enabled ? t("lockNew") : t("lockSecret")} htmlFor="lock-secret" hint={<span id="lock-hint">{t("lockHint")}</span>}>
+            <Input id="lock-secret" type="password" autoComplete="new-password" value={secret} onChange={(e) => setSecret(e.target.value)} className="h-11 w-full sm:w-56" aria-describedby="lock-hint" />
+          </SettingRow>
+          <SettingRow label={t("lockIdle")}>
+            <Segmented label={t("lockIdle")} value={minutes} onChange={setIdle} options={IDLE.map((m) => ({ value: m, label: t("lockMinutes", { count: m }) }))} />
+          </SettingRow>
+        </SettingList>
         {error && <p role="alert" className="text-sm text-destructive">{t(error === "wrong" || error === "wait" || error === "weak" ? `lockError_${error}` : "lockError_failed")}</p>}
         <div className="flex flex-wrap gap-2">
           <Button type="submit" disabled={run.isPending || (enabled ? !current : !secret)}>{enabled ? t("lockSave") : t("lockEnable")}</Button>

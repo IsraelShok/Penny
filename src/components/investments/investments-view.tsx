@@ -1,7 +1,7 @@
 "use client";
 
 import { usePlan } from "@/hooks/use-plan";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -35,15 +35,6 @@ export function InvestmentsView() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div className={cn("flex flex-wrap justify-end gap-2", query.data?.assets.length === 0 && "hidden")}>
-        <IconButton showLabel label={t("importCsv")} variant="outline" onClick={() => setImporting(true)}>
-          <FileUp className="size-4" aria-hidden />
-        </IconButton>
-        <IconButton showLabel label={t("addAsset")} variant="default" onClick={() => setEditing("new")}>
-          <Plus className="size-4" aria-hidden />
-        </IconButton>
-      </div>
-
       {query.isError ? (
         <CardShell>
           <p className="text-footnote text-muted-foreground">{t("loadFailed")}</p>
@@ -67,7 +58,12 @@ export function InvestmentsView() {
           </div>
         </CardShell>
       ) : (
-        <Body data={query.data} onEdit={setEditing} />
+        <Body data={query.data} onEdit={setEditing} actions={
+          <div className="flex flex-wrap gap-2">
+            <IconButton showLabel label={t("importCsv")} variant="outline" size="sm" onClick={() => setImporting(true)}><FileUp className="size-4" aria-hidden /></IconButton>
+            <IconButton showLabel label={t("addAsset")} variant="default" size="sm" onClick={() => setEditing("new")}><Plus className="size-4" aria-hidden /></IconButton>
+          </div>
+        } />
       )}
 
       <KidsInvestments />
@@ -83,7 +79,7 @@ export function InvestmentsView() {
   );
 }
 
-function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => void }) {
+function Body({ data, onEdit, actions }: { data: AssetsPayload; onEdit: (a: Asset) => void; actions: ReactNode }) {
   const t = useTranslations("investments");
   const locale = useLocale();
   const owned = data.assets.filter((a) => !a.isLiability);
@@ -93,20 +89,20 @@ function Body({ data, onEdit }: { data: AssetsPayload; onEdit: (a: Asset) => voi
   return (
     <>
       {/* Net worth itself lives in FutureHero at the top of the page. */}
-      <Benchmarks data={data} />
-
       {missing.length > 0 && (
         <p className="rounded-2xl bg-card px-4 py-3 text-footnote text-status-heads-up" role="status">
           {t("missingPrices", { names: missing.map((a) => a.name).join(", ") })}
         </p>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <HoldingsList title={t("assetsTitle")} assets={owned} onEdit={onEdit} action={actions} />
+
+      <div className="grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+        <div className="md:col-span-2 lg:col-span-1"><Benchmarks data={data} /></div>
         <Allocation title={t("byType")} parts={groupBy(owned, (a) => t(`type_${a.type}`))} />
         <Allocation title={t("byCurrency")} parts={groupBy(owned, (a) => a.currency)} />
       </div>
 
-      <HoldingsList title={t("assetsTitle")} assets={owned} onEdit={onEdit} />
       {owed.length > 0 && <HoldingsList title={t("liabilitiesTitle")} assets={owed} onEdit={onEdit} />}
       {!usePlanSimple() && <InvestmentsExtras data={data} />}
     </>
@@ -177,7 +173,7 @@ function Benchmarks({ data }: { data: AssetsPayload }) {
   );
 }
 
-function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[]; onEdit: (a: Asset) => void }) {
+function HoldingsList({ title, assets, onEdit, action }: { title: string; assets: Asset[]; onEdit: (a: Asset) => void; action?: ReactNode }) {
   const t = useTranslations("investments");
   const locale = useLocale();
   const queryClient = useQueryClient();
@@ -198,13 +194,13 @@ function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[
   });
 
   return (
-    <CardShell label={title}>
-      <ul className="divide-y divide-border">
+    <CardShell label={title} action={action}>
+      <ul className="-mt-3 -mb-3 divide-y divide-border/60">
         {assets.map((a) => (
-          <li key={a.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
-            <div className="min-w-0 flex-1 basis-40">
-              <p className="truncate text-footnote font-medium">{a.name}</p>
-              <p className="truncate text-caption text-muted-foreground">
+          <li key={a.id} className="flex items-center gap-x-3 py-3 sm:gap-x-4">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-footnote font-medium" title={a.name}>{a.name}</p>
+              <p className="text-caption text-pretty text-muted-foreground">
                 {t(`type_${a.type}`)}
                 {a.symbol && a.quantity != null && (
                   <> · <span dir="ltr">{fmt(a.quantity, locale, a.quantity % 1 ? 2 : 0)} × {a.symbol}</span></>
@@ -218,7 +214,7 @@ function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[
             {a.quote && a.quote.series.length > 1 && (
               <Sparkline values={a.quote.series} color="var(--chart-1)" label={t("priceTrend", { name: a.name })} fitToRange className="hidden h-7 w-20 sm:block" />
             )}
-            <div className="text-end">
+            <div className="shrink-0 text-end">
               <p className={cn("text-footnote font-semibold tabular-nums", a.isLiability && "text-status-over")}>
                 {a.valueIls == null ? "—" : shekels(a.isLiability ? -a.valueIls : a.valueIls, locale)}
               </p>
@@ -229,7 +225,7 @@ function HoldingsList({ title, assets, onEdit }: { title: string; assets: Asset[
                 {a.gainIls != null && <span>{shekels(a.gainIls, locale)}</span>}
               </p>
             </div>
-            <div className={cn("flex shrink-0", a.source === "bank" && "invisible")} aria-hidden={a.source === "bank" || undefined}>
+            <div className={cn("-me-2 flex shrink-0", a.source === "bank" && "invisible")} aria-hidden={a.source === "bank" || undefined}>
               <Button variant="ghost" size="icon" aria-label={t("editAsset", { name: a.name })} onClick={() => onEdit(a)}>
                 <Pencil className="size-4" aria-hidden />
               </Button>

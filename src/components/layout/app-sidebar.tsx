@@ -230,11 +230,14 @@ export function AppSidebar() {
         </div>
       </SidebarContent>
 
-      <SidebarFooter>
-        <PetMini inSidebar />
+      <SidebarFooter className="gap-1 border-t border-sidebar-border">
+        {/* Collapsed, the pet shrinks to the rail's width instead of spilling past it. */}
+        <div className="transition-transform group-data-[collapsible=icon]:-my-2 group-data-[collapsible=icon]:scale-[0.7]">
+          <PetMini inSidebar />
+        </div>
         <WorkspaceSwitcher />
-        {/* Quick tools: lock, collapse and settings. One row open, one column collapsed. Privacy mode lives in Settings. */}
-        <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
+        {/* Quick tools: lock, a11y, collapse and settings. One row open, one column collapsed. Privacy mode lives in Settings. */}
+        <div className="flex items-center gap-0.5 group-data-[collapsible=icon]:flex-col">
           {lock.data?.enabled && (
             <IconButton
               label={t("lockNow")}

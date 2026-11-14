@@ -125,7 +125,7 @@ export function HomePage() {
         {/* The same forecast card as Simple mode: forecast, rings, legend and the month so far. */}
         <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
         <SuggestionsCard limit={3} href="/more#suggestions" />
-        <div className="mt-4"><DailyTip /></div>
+        <div className="mb-6 md:mb-8"><DailyTip /></div>
         <HealthCard />
         <MonthCelebration />
         <WelcomePrompt />

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Segmented } from "@/components/ui/segmented";
 import { CategoryPicker } from "@/components/dashboard/category-picker";
+import { CategoryChip } from "./category-chip";
 import { NewCategoryDialog } from "@/components/settings/new-category-dialog";
 import { OwnerPicker } from "@/components/transactions/owner-picker";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -140,9 +141,9 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
       <div className={field}>
         <span className="text-sm font-medium">{t("category")}</span>
         <CategoryPicker categories={categories} currentId={categoryId} onSelect={setCategoryId} onCreate={() => setNewCat(true)} createLabel={tSettingsCat("newCategoryButton")}
-          trigger={<span className={`${control} flex cursor-pointer items-center gap-2`}>
-            {category && <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: category.color }} />}
-            <span className="truncate">{category ? translateCategoryName(category.name, tCat) : t("noCategory")}</span>
+          trigger={<span className={`${control} flex min-w-0 cursor-pointer items-center`}>
+            {category ? <CategoryChip color={category.color}>{translateCategoryName(category.name, tCat)}</CategoryChip>
+              : <span className="truncate text-muted-foreground">{t("noCategory")}</span>}
           </span>} />
         <NewCategoryDialog open={newCat} onOpenChange={setNewCat} kind={kind} onCreated={(c) => setCategoryId(c.id)} />
       </div>

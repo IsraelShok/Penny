@@ -13,16 +13,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
-import { Check, Users } from "lucide-react";
-import { IconButton } from "@/components/ui/icon-button";
+import { Users } from "lucide-react";
+import { Forward } from "@/components/ui/dir-chevron";
 import { Input, InputGroup } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { SectionShell, SettingCard } from "@/components/settings/section-shell";
+import { SectionShell, SettingCard, SettingList, SettingRow } from "@/components/settings/section-shell";
 import { StarBanner } from "@/components/settings/star-banner";
 import { DataState } from "@/components/ui/data-state";
 import { getSettings, getSummary, updateSettings } from "@/lib/api";
-import { formatCurrency } from "@/lib/formatters";
+import type { AppSettings } from "@/lib/types";
 import type { Locale } from "@/i18n/routing";
 
 function todayLocalISO(): string {
@@ -36,6 +35,26 @@ function todayLocalISO(): string {
 function monthStartLocalISO(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+}
+
+/** Every control saves on change, iOS-style; a toast confirms, an error toast asks to retry. */
+function useAutosave(extraKeys: string[] = []) {
+  const t = useTranslations("settings.general");
+  const tCommon = useTranslations("common");
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: Partial<AppSettings>) => updateSettings(patch),
+    // Optimistic, so a switch or picker moves at once; a failure refetches the truth.
+    onMutate: (patch) => queryClient.setQueryData<AppSettings>(["settings"], (old) => (old ? { ...old, ...patch } : old)),
+    onSuccess: () => {
+      for (const key of ["settings", ...extraKeys]) queryClient.invalidateQueries({ queryKey: [key] });
+      toast.success(tCommon("saved"));
+    },
+    onError: (err) => {
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      toast.error(err instanceof Error ? err.message : t("failedToSave"));
+    },
+  });
 }
 
 export default function GeneralSettingsPage() {
@@ -61,16 +80,7 @@ export default function GeneralSettingsPage() {
             initialTarget={settings.monthlyTarget}
             typicalMonthly={summary?.typicalMonthly ?? null}
           />
-          <GeneralForm
-            key={settings.monthsToSync + ":" + settings.paydayDay}
-            initialMonths={settings.monthsToSync}
-            initialPayday={settings.paydayDay}
-          />
-          <AutoSyncCard
-            key={`auto:${settings.autoSyncEnabled}:${settings.autoSyncTime}`}
-            initialEnabled={settings.autoSyncEnabled}
-            initialTime={settings.autoSyncTime}
-          />
+          <SyncCard key={`time:${settings.autoSyncTime}`} settings={settings} />
         </>
       ) : isError ? (
         <DataState error onRetry={() => void refetch()} />
@@ -89,9 +99,10 @@ function ProfilesCard() {
   const t = useTranslations("profiles");
   return (
     <SettingCard title={t("settingsTitle")} description={t("settingsDescription")}>
-      <Link href="/profiles" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary hover:underline">
-        <Users className="size-4" aria-hidden />
-        {t("manage")}
+      <Link href="/profiles" className="-mx-4 -my-3 flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-ring">
+        <Users className="size-4 text-primary" aria-hidden />
+        <span className="min-w-0 flex-1 font-medium">{t("manage")}</span>
+        <Forward className="text-muted-foreground" />
       </Link>
     </SettingCard>
   );
@@ -105,36 +116,25 @@ function MonthlyTargetCard({
   typicalMonthly: number | null;
 }) {
   const t = useTranslations("settings.general");
-  const tCommon = useTranslations("common");
   const locale = useLocale() as Locale;
-  const queryClient = useQueryClient();
-  const [value, setValue] = useState(
-    initialTarget != null ? String(initialTarget) : ""
-  );
-
-  const mutation = useMutation({
-    mutationFn: updateSettings,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
-      toast.success(tCommon("saved"));
-    },
-  });
+  const mutation = useAutosave(["summary"]);
+  const [value, setValue] = useState(initialTarget != null ? String(initialTarget) : "");
 
   const parsed = value.trim() === "" ? null : Number(value);
   const valid = parsed == null || (Number.isFinite(parsed) && parsed >= 0);
-  const dirty =
-    (parsed ?? null) !== (initialTarget ?? null) && valid;
+  const commit = () => {
+    if (valid && (parsed ?? null) !== (initialTarget ?? null) && !mutation.isPending) mutation.mutate({ monthlyTarget: parsed });
+  };
 
   return (
     <div id="section-monthly-target">
-      <SettingCard
-        title={t("monthlyTargetTitle")}
-        description={t("monthlyTargetDescription")}
-      >
-        <div className="space-y-2 max-w-xs">
-          <Label htmlFor="monthly-target">{t("monthlyTargetLabel")}</Label>
-          <InputGroup prefix="₪">
+      <SettingCard title={t("monthlyTargetTitle")} description={t("monthlyTargetDescription")}>
+        <SettingRow
+          label={t("monthlyTargetLabel")}
+          htmlFor="monthly-target"
+          hint={typicalMonthly != null ? t("typicalLast3", { amount: shekels(typicalMonthly, locale) }) : t("noPriorHistory")}
+        >
+          <InputGroup prefix="₪" className="w-40">
             <Input
               id="monthly-target"
               type="number"
@@ -143,205 +143,90 @@ function MonthlyTargetCard({
               step={1}
               placeholder={t("monthlyTargetPlaceholder")}
               className="text-end tabular-nums"
+              aria-invalid={!valid || undefined}
               value={value}
               onChange={(e) => setValue(e.target.value)}
+              onBlur={commit}
+              onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
             />
           </InputGroup>
-          {typicalMonthly != null ? (
-            <p className="text-xs text-muted-foreground">
-              {t("typicalLast3", {
-                amount: shekels(typicalMonthly, locale),
-              })}
-            </p>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              {t("noPriorHistory")}
-            </p>
-          )}
-        </div>
-        <div className="mt-5 flex justify-end">
-          <IconButton showLabel
-            label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
-            variant="default"
-            onClick={() =>
-              mutation.mutate({ monthlyTarget: parsed })
-            }
-            disabled={!dirty || mutation.isPending}
-          >
-            <Check className="size-4" aria-hidden />
-          </IconButton>
-        </div>
+        </SettingRow>
       </SettingCard>
     </div>
   );
 }
 
-function GeneralForm({
-  initialMonths,
-  initialPayday,
-}: {
-  initialMonths: number;
-  initialPayday: number;
-}) {
+function SyncCard({ settings }: { settings: AppSettings }) {
   const t = useTranslations("settings.general");
   const tCommon = useTranslations("common");
-  const queryClient = useQueryClient();
-  const [months, setMonths] = useState(String(initialMonths));
-  const [paydayDay, setPaydayDay] = useState(String(initialPayday));
-
-  const mutation = useMutation({
-    mutationFn: updateSettings,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
-      toast.success(tCommon("saved"));
-    },
-  });
-
-  const dirty =
-    Number(months) !== initialMonths || Number(paydayDay) !== initialPayday;
-
-  return (
-    <SettingCard
-      title={t("syncWindowTitle")}
-      description={t("syncWindowDescription")}
-    >
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="space-y-2">
-          <div id="sync-months-label" className="text-xs font-medium text-foreground/80">
-            {t("monthsToSync")}
-          </div>
-          <Select value={months} onValueChange={(v) => v && setMonths(v)}>
-            <SelectTrigger aria-labelledby="sync-months-label">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[1, 2, 3, 6, 12].map((m) => (
-                <SelectItem key={m} value={String(m)}>
-                  {m} {m === 1 ? tCommon("month") : tCommon("months")}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            {t("banksLimit")}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div id="payday-label" className="text-xs font-medium text-foreground/80">{t("payday")}</div>
-          <Select value={paydayDay} onValueChange={(v) => v && setPaydayDay(v)}>
-            <SelectTrigger aria-labelledby="payday-label">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
-                <SelectItem key={d} value={String(d)}>
-                  {t("ordinalOfMonth", { ordinal: String(d) })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            {t("paydayHint")}
-          </p>
-        </div>
-      </div>
-      <div className="mt-5 flex justify-end">
-        <IconButton showLabel
-          label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
-          variant="default"
-          onClick={() =>
-            mutation.mutate({
-              monthsToSync: Number(months),
-              paydayDay: Number(paydayDay),
-            })
-          }
-          disabled={!dirty || mutation.isPending}
-        >
-          <Check className="size-4" aria-hidden />
-        </IconButton>
-      </div>
-    </SettingCard>
-  );
-}
-
-function AutoSyncCard({
-  initialEnabled,
-  initialTime,
-}: {
-  initialEnabled: boolean;
-  initialTime: string;
-}) {
-  const t = useTranslations("settings.general");
-  const tCommon = useTranslations("common");
-  const queryClient = useQueryClient();
-  const [enabled, setEnabled] = useState(initialEnabled);
-  const [time, setTime] = useState(initialTime);
-
-  const mutation = useMutation({
-    mutationFn: updateSettings,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
-      queryClient.invalidateQueries({ queryKey: ["home"] });
-      toast.success(tCommon("saved"));
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : t("failedToSave"));
-    },
-  });
-
+  const mutation = useAutosave(["summary", "home"]);
+  const [time, setTime] = useState(settings.autoSyncTime);
   const timeValid = /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
-  const dirty =
-    timeValid && (enabled !== initialEnabled || time !== initialTime);
+  const saveTime = () => {
+    if (timeValid && time !== settings.autoSyncTime) mutation.mutate({ autoSyncTime: time });
+  };
 
   return (
-    <SettingCard
-      title={t("autoSyncTitle")}
-      description={t("autoSyncDescription")}
-    >
-      <div className="flex items-center justify-between gap-4">
-        <div className="space-y-1">
-          <Label htmlFor="auto-sync-toggle" className="text-sm font-medium">
-            {t("dailyAutoSync")}
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            {t("runsInIsraelTime")}
-          </p>
-        </div>
-        <Switch
-          id="auto-sync-toggle"
-          checked={enabled}
-          onCheckedChange={setEnabled}
-        />
-      </div>
-      <div className="mt-5 grid gap-2 sm:max-w-xs">
-        <Label htmlFor="auto-sync-time" className="text-xs font-medium text-foreground/80">
-          {t("timeOfDay")}
-        </Label>
-        <Input
-          id="auto-sync-time"
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          disabled={!enabled}
-          className="tabular-nums"
-        />
-        <p className="text-xs text-muted-foreground">
-          {t("timeOfDayHint")}
-        </p>
-      </div>
-      <div className="mt-5 flex justify-end">
-        <IconButton showLabel
-          label={mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
-          variant="default"
-          onClick={() =>
-            mutation.mutate({ autoSyncEnabled: enabled, autoSyncTime: time })
-          }
-          disabled={!dirty || mutation.isPending}
-        >
-          <Check className="size-4" aria-hidden />
-        </IconButton>
-      </div>
-    </SettingCard>
+    <>
+      <SettingCard title={t("syncWindowTitle")} description={t("syncWindowDescription")}>
+        <SettingList>
+          <SettingRow label={t("monthsToSync")} labelId="sync-months-label" hint={t("banksLimit")}>
+            <Select value={String(settings.monthsToSync)} onValueChange={(v) => v && mutation.mutate({ monthsToSync: Number(v) })}>
+              <SelectTrigger aria-labelledby="sync-months-label" className="w-40">
+                <SelectValue>{(v: string) => `${v} ${v === "1" ? tCommon("month") : tCommon("months")}`}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 6, 12].map((m) => (
+                  <SelectItem key={m} value={String(m)}>
+                    {m} {m === 1 ? tCommon("month") : tCommon("months")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingRow>
+          <SettingRow label={t("payday")} labelId="payday-label" hint={t("paydayHint")}>
+            <Select value={String(settings.paydayDay)} onValueChange={(v) => v && mutation.mutate({ paydayDay: Number(v) })}>
+              <SelectTrigger aria-labelledby="payday-label" className="w-40">
+                <SelectValue>{(v: string) => t("ordinalOfMonth", { ordinal: v })}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                  <SelectItem key={d} value={String(d)}>
+                    {t("ordinalOfMonth", { ordinal: String(d) })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingRow>
+        </SettingList>
+      </SettingCard>
+
+      <SettingCard title={t("autoSyncTitle")} description={t("autoSyncDescription")}>
+        <SettingList>
+          <SettingRow label={t("dailyAutoSync")} htmlFor="auto-sync-toggle" hint={t("runsInIsraelTime")}>
+            <Switch
+              id="auto-sync-toggle"
+              checked={settings.autoSyncEnabled}
+              disabled={mutation.isPending}
+              onCheckedChange={(v) => mutation.mutate({ autoSyncEnabled: v })}
+            />
+          </SettingRow>
+          {settings.autoSyncEnabled && (
+            <SettingRow label={t("timeOfDay")} htmlFor="auto-sync-time" hint={t("timeOfDayHint")}>
+              <Input
+                id="auto-sync-time"
+                type="time"
+                dir="ltr"
+                value={time}
+                aria-invalid={!timeValid || undefined}
+                onChange={(e) => setTime(e.target.value)}
+                onBlur={saveTime}
+                className="w-32 tabular-nums"
+              />
+            </SettingRow>
+          )}
+        </SettingList>
+      </SettingCard>
+    </>
   );
 }

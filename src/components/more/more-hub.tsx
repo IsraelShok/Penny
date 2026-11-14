@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { MoreHero } from "@/components/ui/page-hero";
 import { SuggestionsCard } from "@/components/home/suggestions-card";
-import { CalculatorTiles } from "@/components/more/calculators";
+import { CalculatorTiles, NavRow, groupedList } from "@/components/more/calculators";
 import { ChevronLeft, LayoutDashboard, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, Sparkles } from "lucide-react";
 import { DailyTip } from "@/components/tips/tips";
 
@@ -49,29 +49,18 @@ export function MoreHub() {
       <DailyTip />
       <CalculatorTiles />
       <SuggestionsCard limit={50} />
-      {GROUPS.map((g) => (
-        <section key={g.key} aria-labelledby={`more-${g.key}`}>
-          <h2 id={`more-${g.key}`} className="mb-3 px-1 text-footnote font-semibold text-muted-foreground">{t(`group_${g.key}`)}</h2>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {g.items.map(({ href, key, Icon }) => (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className="flex h-full items-start gap-4 rounded-2xl bg-card p-5 transition-[background-color] duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                >
-                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary" aria-hidden>
-                    <Icon className="size-5" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-headline font-semibold">{t(`${key}_title`)}</span>
-                    <span className="mt-0.5 block text-footnote text-pretty text-muted-foreground">{t(`${key}_hint`)}</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      <div className="grid gap-x-6 gap-y-6 lg:grid-cols-2">
+        {GROUPS.map((g) => (
+          <section key={g.key} aria-labelledby={`more-${g.key}`}>
+            <h2 id={`more-${g.key}`} className="mb-2 px-1 text-footnote font-semibold text-muted-foreground">{t(`group_${g.key}`)}</h2>
+            <ul className={groupedList}>
+              {g.items.map(({ href, key, Icon }) => (
+                <li key={href}><NavRow href={href} Icon={Icon} title={t(`${key}_title`)} hint={t(`${key}_hint`)} /></li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
     </div>
   );
 }

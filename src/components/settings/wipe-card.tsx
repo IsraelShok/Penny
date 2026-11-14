@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SettingCard } from "@/components/settings/section-shell";
 import { getLockStatus, postLock } from "@/components/settings/app-lock-card";
 
-const WORD = "מחיקה";
-
 /** Deletes everything and returns to first run. The word must be typed exactly. */
 export function WipeCard() {
   const t = useTranslations("settings.privacy");
+  // Matches the server (api/data/wipe), which accepts either word.
+  const WORD = useLocale() === "he" ? "מחיקה" : "delete";
   const lock = useQuery({ queryKey: ["lock"], queryFn: getLockStatus });
   const [confirm, setConfirm] = useState("");
   const [secret, setSecret] = useState("");
@@ -39,7 +39,7 @@ export function WipeCard() {
           </div>
         )}
         {error && <p role="alert" className="text-sm text-destructive">{t(error === "wrong" || error === "wait" ? `lockError_${error}` : "lockError_failed")}</p>}
-        <Button type="submit" variant="destructive" disabled={wipe.isPending || confirm.trim() !== WORD || (locked && !secret)}>{t("wipeCta")}</Button>
+        <Button type="submit" variant="destructive" disabled={wipe.isPending || confirm.trim().toLowerCase() !== WORD || (locked && !secret)}>{t("wipeCta")}</Button>
       </form>
     </SettingCard>
   );

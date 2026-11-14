@@ -2,6 +2,7 @@
 // Run: node tests/e2e/text-collisions.mjs                 (BASE defaults to http://127.0.0.1:3002)
 //      BASE=http://127.0.0.1:3000 OUT=./collisions node tests/e2e/text-collisions.mjs
 //      QUICK=1 node tests/e2e/text-collisions.mjs           (widths 320/768/1440, light only)
+//      THEMES=dark ONLY=/budget node tests/e2e/text-collisions.mjs  (dark only; forces the "midnight" theme over saved appearance)
 //      ONLY=/budget,/fi node tests/e2e/text-collisions.mjs  (subset of routes)
 // Needs Google Chrome (playwright-core, channel "chrome"). Writes OUT/report.json, OUT/summary.txt
 // and a screenshot crop per unique issue. Exits 1 when non-allowlisted issues remain.
@@ -26,7 +27,7 @@ let ROUTES = [
 ];
 if (process.env.ONLY) ROUTES = process.env.ONLY.split(",");
 const WIDTHS = QUICK ? [320, 768, 1440] : [320, 375, 390, 768, 1024, 1280, 1440, 1920];
-const THEMES = QUICK ? ["light"] : ["light", "dark"];
+const THEMES = process.env.THEMES?.split(",") ?? (QUICK ? ["light"] : ["light", "dark"]);
 const LANGS = ["he", "en"];
 const ZOOM_WIDTHS = QUICK ? [] : [390, 1440];
 
@@ -36,9 +37,6 @@ const ALLOW = [
   // 390px at 200% text is a ~195px-wide layout, below the 320px WCAG 1.4.10 reflow floor; kept as advisory in report.json.
   { config: (i) => i.zoom > 1 && i.width < 768, reason: "390px + 200% text is narrower than the 320px reflow minimum; advisory only" },
   { type: "element-overlap", selector: /cn-toast/, reason: "sonner toast caught mid enter-animation (one-off recap toast); settles without overlap" },
-  // shortcut: deferred, the transactions list is being reworked in parallel; drop these two once that lands and re-run.
-  { type: "clipped", route: /^\/transactions/, reason: "320px: amount column/week totals clipped inside the transactions table; table is being reworked in parallel" },
-  { type: "truncated-no-title", route: /^\/transactions/, reason: "merchant/category names truncated without title in the transactions list; being reworked in parallel" },
 ];
 const allowed = (i) => ALLOW.find((a) => (!a.type || a.type === i.type) && (!a.config || a.config(i)) && (!a.route || a.route.test(i.route)) && (!a.selector || a.selector.test(i.selector)) && (!a.text || a.text.test(i.text)));
 
@@ -185,6 +183,32 @@ function audit() {
     add("truncated-no-title", el, el.textContent, el.getBoundingClientRect(), ell ? "ellipsis" : "line-clamp");
   }
 
+  // Contrast (WCAG 1.4.3): text color vs. the solid backgrounds under it. Any CSS color (oklch too) resolves through a 1px canvas.
+  const cx = Object.assign(document.createElement("canvas"), { width: 1, height: 1 }).getContext("2d", { willReadFrequently: true });
+  const rgba = (c) => { cx.clearRect(0, 0, 1, 1); cx.fillStyle = "#000"; cx.fillStyle = c; cx.fillRect(0, 0, 1, 1); const d = cx.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
+  const over = (top, a, base) => base.map((v, i) => top[i] * a + v * (1 - a));
+  const lum = (c) => { const [r, g, b] = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const pageBg = rgba(getComputedStyle(document.body).backgroundColor);
+  for (const t of texts) {
+    const s = getComputedStyle(t.el);
+    if (t.el.closest(":disabled, [aria-disabled=true]")) continue; // WCAG exempts inactive controls
+    let opacity = 1, layers = [], unknown = false;
+    for (let e = t.el; e && e !== document.documentElement; e = e.parentElement) {
+      const es = getComputedStyle(e);
+      opacity *= Number(es.opacity);
+      if (es.backgroundImage !== "none" || es.backdropFilter !== "none" && rgba(es.backgroundColor)[3] < 0.9) { unknown = true; break; } // gradients/images/glass: can't tell
+      const bg = rgba(es.backgroundColor);
+      if (bg[3] > 0) { layers.push(bg); if (bg[3] >= 0.99) break; }
+    }
+    if (unknown) continue;
+    let bg = pageBg.slice(0, 3);
+    for (const l of layers.reverse()) bg = over(l, l[3], bg);
+    const fg = rgba(s.color), text = over(fg, fg[3] * opacity, bg);
+    const [a, b] = [lum(text), lum(bg)].sort((x, y) => y - x), ratio = (a + 0.05) / (b + 0.05);
+    const size = parseFloat(s.fontSize), large = size >= 24 || (size >= 18.66 && Number(s.fontWeight) >= 700);
+    if (ratio < (large ? 3 : 4.5)) add("low-contrast", t.el, t.n.data, t.rects[0], `${ratio.toFixed(2)}:1 (${s.color} on rgb(${bg.map(Math.round)}))`);
+  }
+
   // RTL/LTR: app convention is "₪1,234" (₪ visually left of the digits) and "-₪"; punctuation at the logical end.
   const rtl = document.documentElement.dir === "rtl";
   const charRect = (n, i) => { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + 1); return r.getClientRects()[0]; };
@@ -246,13 +270,28 @@ let total = 0, shots = 0;
 async function runJob({ lang, theme, width, zoom }) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, locale: lang === "he" ? "he-IL" : "en-US" });
   await ctx.addCookies([{ name: "NEXT_LOCALE", value: lang, url: BASE }]);
-  // Force the app's own theme the way its pre-paint script reads it (studio prefs in localStorage).
-  await ctx.addInitScript(({ theme, zoom }) => {
+  const studioTheme = theme === "dark" ? "midnight" : "pearl";
+  // Force the app's own theme the way its pre-paint script reads it (studio prefs in localStorage, the mirror and every per-profile copy).
+  await ctx.addInitScript((studioTheme) => {
     try {
-      const k = "shekel.budget-studio.v1", p = JSON.parse(localStorage.getItem(k) || "{}");
-      p.theme = theme === "dark" ? "midnight" : "pearl"; localStorage.setItem(k, JSON.stringify(p));
+      const k = "shekel.budget-studio.v1";
+      for (const key of [k, ...Object.keys(localStorage).filter((x) => x.startsWith(k))]) {
+        const p = JSON.parse(localStorage.getItem(key) || "{}"); p.theme = studioTheme; localStorage.setItem(key, JSON.stringify(p));
+      }
     } catch {}
-  }, { theme, zoom });
+  }, studioTheme);
+  // The saved appearance from the server (loaded after a profile is picked) would win over localStorage: rewrite its theme in flight.
+  // Read-only: preference writes never reach the server.
+  await ctx.route(/\/api\/preferences/, async (route) => {
+    const req = route.request();
+    if (req.method() !== "GET") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ revision: 0 }) }).catch(() => {});
+    if (!new URL(req.url()).searchParams.get("key")?.startsWith("studio")) return route.continue().catch(() => {});
+    // A dev-server hiccup (ECONNRESET) must not crash the run: fall back to the forced theme alone.
+    const res = await route.fetch().catch(() => null);
+    const body = res ? await res.json().catch(() => ({ value: null, revision: 0 })) : { value: null, revision: 0 };
+    body.value = { ...(body.value && typeof body.value === "object" ? body.value : {}), theme: studioTheme };
+    return route.fulfill(res ? { response: res, json: body } : { json: body }).catch(() => {});
+  });
   const p = await ctx.newPage();
   // Text zoom = the browser's default font size (Settings > Font size), so rem sizes and rem/em media queries both scale.
   if (zoom !== 1) await (await ctx.newCDPSession(p)).send("Page.setFontSizes", { fontSizes: { standard: 16 * zoom, fixed: 13 * zoom } });
@@ -264,10 +303,13 @@ async function runJob({ lang, theme, width, zoom }) {
     await p.waitForTimeout(900); // let entrance transitions settle
     await p.evaluate(() => document.fonts.ready);
     let issues = [];
+    // Guard: a config labelled dark must really render dark (and light, light).
+    if ((await p.evaluate(() => document.documentElement.classList.contains("dark")).catch(() => null)) !== (theme === "dark"))
+      issues.push({ type: "theme-not-applied", selector: "html", text: `expected ${theme}`, rect: { x: 0, y: 0, w: 10, h: 10 }, extra: "" });
     let ok = false;
-    try { issues = [...(await p.evaluate(audit)), ...(await dockCheck(p))]; ok = true; }
+    try { issues.push(...(await p.evaluate(audit)), ...(await dockCheck(p))); ok = true; }
     catch { await p.waitForTimeout(1500); } // a late client redirect/refresh can destroy the context once; retry below
-    if (!ok) try { issues = [...(await p.evaluate(audit)), ...(await dockCheck(p))]; } catch (e) { issues = [{ type: "audit-error", selector: "", text: String(e).slice(0, 80), rect: { x: 0, y: 0, w: 10, h: 10 }, extra: "" }]; }
+    if (!ok) try { issues.push(...(await p.evaluate(audit)), ...(await dockCheck(p))); } catch (e) { issues.push({ type: "audit-error", selector: "", text: String(e).slice(0, 80), rect: { x: 0, y: 0, w: 10, h: 10 }, extra: "" }); }
     for (const i of issues) {
       Object.assign(i, { route, width, lang, theme, zoom });
       const a = allowed(i);

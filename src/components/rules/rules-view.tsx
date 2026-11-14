@@ -5,14 +5,15 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { IconButton } from "@/components/ui/icon-button";
 import { Plus, Trash2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { SectionShell, SettingCard } from "@/components/settings/section-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createRule, createRuleWithPast, deleteRule, getCategories, listRules, previewRule } from "@/lib/api";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { Rule } from "@/server/rules/engine";
 
-const selectClass = "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
+const selectClass = "h-11 w-full rounded-md border border-input bg-background px-3 text-sm";
 
 export function RulesView() {
   const t = useTranslations("rules");
@@ -111,14 +112,8 @@ export function RulesView() {
   };
 
   return (
-    <div className="grid gap-6">
-      <p className="text-muted-foreground">{t("description")}</p>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("add")}</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <SectionShell title={t("title")} description={t("description")}>
+      <SettingCard title={t("add")}>
           <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-1.5">
               <Label htmlFor="rule-field">{t("when")}</Label>
@@ -188,26 +183,26 @@ export function RulesView() {
                   <span className="block">{t("previewSample")} {preview.sample.map((d, i) => <bdi key={i}>{i ? ", " : ""}{d}</bdi>)}</span>
                 ) : null}
               </p>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="size-4" checked={applyToPast} onChange={(e) => setApplyToPast(e.target.checked)} />
+              <label className="flex min-h-11 cursor-pointer items-center justify-between gap-4 font-medium">
                 {t("applyToPast")}
+                <Switch checked={applyToPast} onCheckedChange={setApplyToPast} />
               </label>
             </div>
             <div className="sm:col-span-2">
-              <IconButton label={t("add")} variant="default" type="submit"><Plus className="size-4" aria-hidden /></IconButton>
+              <IconButton showLabel label={t("add")} variant="default" type="submit"><Plus className="size-4" aria-hidden /></IconButton>
               {missing ? <span id="rule-missing" role="alert" className="ms-3 text-sm text-destructive">{t(missing)}</span> : null}
               {error ? <span role="alert" className="ms-3 text-sm text-destructive">{t("saveFailed")}</span> : null}
             </div>
           </form>
-        </CardContent>
-      </Card>
+      </SettingCard>
 
+      <SettingCard title={t("title")}>
       {rules.length === 0 ? (
-        <p className="text-muted-foreground">{t("emptyHint")}</p>
+        <p className="py-1 text-footnote text-muted-foreground">{t("emptyHint")}</p>
       ) : (
-        <ul className="grid gap-2">
+        <ul className="divide-y divide-border">
           {rules.map((r) => (
-            <li key={r.id} className="flex items-center justify-between gap-3 rounded-md border p-3">
+            <li key={r.id} className="flex min-h-11 items-center justify-between gap-3 py-1.5">
               <span className="min-w-0 break-words">
                 {t(r.field)} {t(r.op)} <bdi className="font-medium">{r.value}</bdi>
                 {` ${t("arrow")} `}
@@ -220,6 +215,7 @@ export function RulesView() {
           ))}
         </ul>
       )}
-    </div>
+      </SettingCard>
+    </SectionShell>
   );
 }

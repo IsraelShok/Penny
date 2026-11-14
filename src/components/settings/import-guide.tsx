@@ -13,7 +13,17 @@ export function ImportGuide() {
       <ol className="list-decimal space-y-1.5 ps-5">
         {STEPS.map((s) => <li key={s}>{t(`step_${s}`)}</li>)}
       </ol>
-      <div className="overflow-x-auto rounded-xl border">
+      {/* Phones: a stacked list; the three-column table is too cramped under 640px. */}
+      <ul aria-label={t("tableCaption")} className="divide-y rounded-xl border sm:hidden">
+        {IMPORT_FORMATS.map((f) => (
+          <li key={f.ext} className="px-3 py-2">
+            <bdi className="block font-medium">{f.label}</bdi>
+            <span className="block text-muted-foreground">{t(`note_${f.note}`)}</span>
+          </li>
+        ))}
+        <li className="px-3 py-2 text-muted-foreground">{t("colSources")}: {t("sourcesAll")}</li>
+      </ul>
+      <div className="hidden overflow-x-auto rounded-xl border sm:block">
         <table className="w-full">
           <caption className="sr-only">{t("tableCaption")}</caption>
           <thead className="bg-muted/40 text-muted-foreground">

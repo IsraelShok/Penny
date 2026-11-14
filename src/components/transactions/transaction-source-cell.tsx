@@ -53,9 +53,9 @@ export function TransactionSourceCell({
         <div className="h-5 w-5 shrink-0 rounded-md bg-muted" aria-hidden />
       )}
       <div className="min-w-0">
-        <div className="truncate text-sm leading-tight">{primary}</div>
+        <div className="truncate text-sm leading-tight" title={primary}>{primary}</div>
         {secondary ? (
-          <div className="truncate text-xs text-muted-foreground">{secondary}</div>
+          <div className="truncate text-xs text-muted-foreground" title={secondary}>{secondary}</div>
         ) : null}
       </div>
     </div>

@@ -68,7 +68,7 @@ function TopMerchants({ merchants, loading }: TopMerchantsProps) {
                 <span className="w-4 text-end text-xs tabular-nums text-muted-foreground">
                   {idx + 1}
                 </span>
-                <div className="min-w-0 flex-1 truncate text-sm font-medium">
+                <div className="min-w-0 flex-1 truncate text-sm font-medium" title={m.description}>
                   {m.description}
                 </div>
               </div>
@@ -242,7 +242,7 @@ function OutlierRow({
         <div className="mt-0.5 text-sm text-muted-foreground">—</div>
       ) : (
         <div className="mt-0.5 flex items-baseline justify-between gap-3">
-          <div className="min-w-0 truncate text-sm font-medium">
+          <div className="min-w-0 truncate text-sm font-medium" title={txn.description}>
             {txn.description}
           </div>
           <div

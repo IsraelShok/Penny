@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { GoalsHero } from "@/components/ui/page-hero";
-import { GoalFocus } from "@/components/home/goal-focus";
+import { Plus } from "lucide-react";
+import { CardShell } from "@/components/home/card-shell";
+import { Skeleton } from "@/components/ui/skeleton";
 import { VacationPlans } from "./vacation-plans";
 import { CustomGoals } from "./custom-goals";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -71,46 +73,45 @@ export function JourneyView() {
     }
   }
 
-  const hero = <div className="mx-auto mb-6 max-w-xl"><GoalsHero /></div>;
-  if (loading || assets.isLoading) return <>{hero}<p className="mx-auto max-w-xl text-subheadline text-muted-foreground">{t("loading")}</p></>;
-
-  if (items.length === 0) {
-    return (
-      <>{hero}<div className="mx-auto max-w-xl card-surface text-center">
-        <div className="mb-6 text-start"><GoalFocus /></div>
-        <div className="mb-6 text-start"><CustomGoals /></div>
-        <div className="mb-6 text-start"><VacationPlans /></div>
-        <p className="text-body">{t("empty")}</p>
-        <Link href="/settings/household" className="mt-3 inline-block text-subheadline text-primary hover:underline">
-          {t("addEvent")}
-        </Link>
-      </div></>
-    );
-  }
+  const goals = (
+    <div className="space-y-4 md:space-y-6">
+      <CustomGoals />
+      <VacationPlans />
+    </div>
+  );
+  const addEvent = (
+    <Link href="/settings/household" className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
+      <Plus className="size-4" aria-hidden />{t("addEvent")}
+    </Link>
+  );
 
   return (
-    <div className="mx-auto max-w-xl">
-      <div className="mb-6"><GoalsHero /></div>
-      <div className="mb-6"><GoalFocus /></div>
-      <div className="mb-6"><CustomGoals /></div>
-      <div className="mb-6"><VacationPlans /></div>
-      <p className="mb-6 text-subheadline text-muted-foreground">{me ? t("introNamed", { name: me }) : t("intro")}</p>
-      <ol className="relative space-y-6 border-s-2 border-border ps-6">
-        {items.map((it) => (
-          <li key={it.key} className="relative">
-            <span
-              aria-hidden
-              className={`absolute -start-[1.95rem] top-1.5 size-3.5 rounded-full ring-4 ring-background ${it.life ? "bg-muted-foreground" : "bg-primary"}`}
-            />
-            <p className="text-footnote text-muted-foreground">{it.date ? fmtDate.format(new Date(it.date)) : t("now")}</p>
-            <h2 className="text-headline font-semibold">{it.title}</h2>
-            <p className="text-subheadline text-muted-foreground">{it.body}</p>
-          </li>
-        ))}
-      </ol>
-      <Link href="/settings/household" className="mt-8 inline-block text-subheadline text-primary hover:underline">
-        {t("addEvent")}
-      </Link>
+    <div className="space-y-4 md:space-y-6">
+      <GoalsHero />
+      <div className="grid items-start gap-4 md:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        {goals}
+        <CardShell label={t("title")} action={addEvent} className="h-auto">
+          {loading || assets.isLoading ? (
+            <div className="space-y-3" aria-busy><Skeleton className="h-4 w-1/3" /><Skeleton className="h-4 w-2/3" /><Skeleton className="h-4 w-1/2" /><span className="sr-only">{t("loading")}</span></div>
+          ) : items.length === 0 ? (
+            <p className="text-footnote text-pretty text-muted-foreground">{t("empty")}</p>
+          ) : (
+            <>
+              <p className="mb-5 text-footnote text-pretty text-muted-foreground">{t("intro")}</p>
+              <ol className="relative space-y-5 border-s-2 border-border/70 ps-5">
+                {items.map((it) => (
+                  <li key={it.key} className="relative">
+                    <span aria-hidden className={`absolute -start-[1.69rem] top-1 size-3 rounded-full ring-4 ring-card ${it.life ? "bg-muted-foreground" : "bg-primary"}`} />
+                    <p className="text-caption font-medium text-muted-foreground">{it.date ? fmtDate.format(new Date(it.date)) : t("now")}</p>
+                    <h3 className="mt-0.5 font-semibold">{it.title}</h3>
+                    <p className="text-footnote text-pretty text-muted-foreground">{it.body}</p>
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
+        </CardShell>
+      </div>
     </div>
   );
 }

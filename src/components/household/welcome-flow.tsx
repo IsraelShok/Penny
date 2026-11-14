@@ -23,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const chip =
-  "rounded-full border px-4 py-2 text-subheadline transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+  "rounded-full border px-4 py-2 text-footnote transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 const chipOn = "border-primary bg-primary text-primary-foreground";
 const chipOff = "border-border bg-card hover:bg-accent";
 
@@ -43,7 +43,7 @@ export function WelcomeFlow() {
   const { plan, loaded, update: updatePlan } = usePlan();
   const [prof, setProf] = useState<UserProfile | null>(null);
 
-  if (loading || !loaded) return <p className="text-subheadline text-muted-foreground">{t("loading")}</p>;
+  if (loading || !loaded) return <p className="text-footnote text-muted-foreground">{t("loading")}</p>;
 
   const list = members ?? household.members;
   const incomeShape = income === undefined ? household.incomeShape : income;
@@ -99,18 +99,18 @@ export function WelcomeFlow() {
       <section className="mt-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6" aria-labelledby="welcome-step">
         {step === 0 && (
           <>
-            <h2 id="welcome-step" className="text-title3 font-semibold">{t("aboutTitle")}</h2>
-            <p className="mt-1 text-subheadline text-muted-foreground">{t("aboutHint")}</p>
+            <h2 id="welcome-step" className="text-title font-semibold">{t("aboutTitle")}</h2>
+            <p className="mt-1 text-footnote text-muted-foreground">{t("aboutHint")}</p>
             {chips("situation", SITUATIONS, (v) => t(`situation.${v}`))}
-            <p className="mt-5 text-subheadline font-medium">{t("householdSizeLabel")}</p>
+            <p className="mt-5 text-footnote font-medium">{t("householdSizeLabel")}</p>
             {chips("householdSize", SIZES, (n) => (n === 5 ? "5+" : String(n)))}
           </>
         )}
 
         {step === 4 && (
           <>
-            <h2 id="welcome-step" className="text-title3 font-semibold">{t("goalTitle")}</h2>
-            <p className="mt-1 text-subheadline text-muted-foreground">{t("goalHint")}</p>
+            <h2 id="welcome-step" className="text-title font-semibold">{t("goalTitle")}</h2>
+            <p className="mt-1 text-footnote text-muted-foreground">{t("goalHint")}</p>
             {chips("goal", GOALS, (v) => t(`goal.${v}`))}
             {profile.goal === "save" && (
               <Input
@@ -127,18 +127,18 @@ export function WelcomeFlow() {
 
         {step === 5 && (
           <>
-            <h2 id="welcome-step" className="text-title3 font-semibold">{t("levelTitle")}</h2>
-            <p className="mt-1 text-subheadline text-muted-foreground">{t("levelHint")}</p>
+            <h2 id="welcome-step" className="text-title font-semibold">{t("levelTitle")}</h2>
+            <p className="mt-1 text-footnote text-muted-foreground">{t("levelHint")}</p>
             {chips("confidence", CONFIDENCE, (v) => t(`confidence.${v}`))}
-            <p className="mt-5 text-subheadline font-medium">{t("detailLabel")}</p>
+            <p className="mt-5 text-footnote font-medium">{t("detailLabel")}</p>
             {chips("detail", DETAIL, (v) => t(`detail.${v}`))}
           </>
         )}
 
         {step === 1 && (
           <>
-            <h2 id="welcome-step" className="text-title3 font-semibold">{t("whoTitle")}</h2>
-            <p className="mt-1 text-subheadline text-muted-foreground">{t("whoHint")}</p>
+            <h2 id="welcome-step" className="text-title font-semibold">{t("whoTitle")}</h2>
+            <p className="mt-1 text-footnote text-muted-foreground">{t("whoHint")}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {MEMBER_ROLES.map((r) => (
                 <button
@@ -156,7 +156,7 @@ export function WelcomeFlow() {
               <ul className="mt-5 space-y-3">
                 {list.map((m) => (
                   <li key={m.id} className="flex flex-wrap items-center gap-2">
-                    <span className="w-24 text-subheadline text-muted-foreground">{tH(`role.${m.role}`)}</span>
+                    <span className="w-24 text-footnote text-muted-foreground">{tH(`role.${m.role}`)}</span>
                     <Input
                       aria-label={t("nameFor", { role: tH(`role.${m.role}`) })}
                       placeholder={t("namePlaceholder")}
@@ -198,8 +198,8 @@ export function WelcomeFlow() {
 
         {step === 2 && (
           <>
-            <h2 id="welcome-step" className="text-title3 font-semibold">{t("incomeTitle")}</h2>
-            <p className="mt-1 text-subheadline text-muted-foreground">{t("incomeHint")}</p>
+            <h2 id="welcome-step" className="text-title font-semibold">{t("incomeTitle")}</h2>
+            <p className="mt-1 text-footnote text-muted-foreground">{t("incomeHint")}</p>
             <div className="mt-4 flex flex-wrap gap-2" role="group" aria-labelledby="welcome-step">
               {INCOME_SHAPES.map((s) => (
                 <button
@@ -218,8 +218,8 @@ export function WelcomeFlow() {
 
         {step === 3 && (
           <>
-            <h2 id="welcome-step" className="text-title3 font-semibold">{t("styleTitle")}</h2>
-            <p className="mt-1 text-subheadline text-muted-foreground">{t("styleHint")}</p>
+            <h2 id="welcome-step" className="text-title font-semibold">{t("styleTitle")}</h2>
+            <p className="mt-1 text-footnote text-muted-foreground">{t("styleHint")}</p>
             <div className="mt-4 grid gap-2" role="group" aria-labelledby="welcome-step">
               {MONEY_STYLES.map((s) => (
                 <button

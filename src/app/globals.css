@@ -28,6 +28,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -46,6 +47,7 @@
   --color-gold: var(--gold);
   --color-action: var(--action);
   --color-status-plenty-left: var(--status-plenty-left);
+  --color-expense: var(--expense);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -123,6 +125,7 @@
   --action: #3d2fd3;
   --gold: #000000;
   --destructive: #d70015;
+  --destructive-foreground: #ffffff;
   --border: #e4e1f4;
   --input: #7f7aa3;
   --ring: #2f22b0;
@@ -138,6 +141,8 @@
   /* Cash flow by month: income green, expenses a muted red; >=3:1 on the card. */
   --flow-income: #15803d;
   --flow-expense: #c8444f;
+  /* Money-out amounts in lists: a calm rose, >=4.5:1 on the card and its hover/selected rows. */
+  --expense: #a8364a;
   /* Simple mode rings, drawn on the dark hero card in every theme. */
   --ring-income: #a99bff;
   --ring-spending: #f5b94a;
@@ -182,6 +187,7 @@
   --action: #8b80ff;
   --gold: #ffffff;
   --destructive: #ff453a;
+  --destructive-foreground: #161421; /* light red fill in dark: white text would fail contrast */
   --border: #2c2850;
   --input: #6e68a3;
   --ring: #aaa2ff;
@@ -195,6 +201,7 @@
   --bucket-saving: #30d158;
   --flow-income: #30d158;
   --flow-expense: #ff7a72;
+  --expense: #f4939b;
   --status-on-track: #30d158;
   --status-heads-up: #ff9f0a;
   --status-over: #ff8a80;

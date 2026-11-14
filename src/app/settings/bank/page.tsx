@@ -73,7 +73,7 @@ export default function BankSettingsPage() {
     <>
       <SectionShell title={t("title")} description={t("description")}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="text-xs text-muted-foreground">
+          <div className="px-4 text-footnote text-muted-foreground">
             {countLabel}
             {lastSync ? (
               <>
@@ -89,7 +89,6 @@ export default function BankSettingsPage() {
           </div>
         </div>
 
-        {!isPending && !isError && integrations.length > 0 && <h3 className="text-footnote font-semibold text-muted-foreground">{t("groupConnected", { count: integrations.length })}</h3>}
         {isPending ? <p role="status">{t("loading")}</p> : isError ? <div role="alert"><p>{t("loadFailed")}</p><Button variant="outline" className="mt-3" onClick={() => void refetch()}>{t("retry")}</Button></div> : integrations.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             {t.rich("noneConnectedPrompt", {
@@ -97,6 +96,8 @@ export default function BankSettingsPage() {
             })}
           </div>
         ) : (
+          <section aria-labelledby="banks-connected">
+          <h3 id="banks-connected" className="mb-2 px-4 text-sm font-semibold text-muted-foreground">{t("groupConnected", { count: integrations.length })}</h3>
           <div className="overflow-hidden rounded-2xl bg-card">
             <ul className="divide-y divide-border/60">
               {[...integrations].sort((x, y) => x.label.localeCompare(y.label, locale)).map((integration) => {
@@ -178,6 +179,7 @@ export default function BankSettingsPage() {
               })}
             </ul>
           </div>
+          </section>
         )}
         {/* Every provider we can read, connected or not, so nothing is hidden in a menu. */}
         {!isPending && !isError && (() => {
@@ -188,7 +190,7 @@ export default function BankSettingsPage() {
             <>
               {groups.map((g) => (
                 <section key={g.kind} aria-labelledby={`not-connected-${g.kind}`}>
-                  <h3 id={`not-connected-${g.kind}`} className="mb-2 text-footnote font-semibold text-muted-foreground">{t(g.kind === "bank" ? "groupBanks" : "groupCards")}</h3>
+                  <h3 id={`not-connected-${g.kind}`} className="mb-2 px-4 text-sm font-semibold text-muted-foreground">{t(g.kind === "bank" ? "groupBanks" : "groupCards")}</h3>
                   <ul className="divide-y divide-border/60 overflow-hidden rounded-2xl bg-card">
                     {g.items.map((b) => {
                       const name = translateProviderName(b.id, b.name, tBanks);

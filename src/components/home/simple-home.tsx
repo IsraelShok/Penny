@@ -95,7 +95,7 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
           </div>
         </Card>
       ) : !cf ? (
-        <div className="wallet h-64 rounded-3xl p-6">{monthNav}<div role="status" className="mt-6 h-24 animate-pulse rounded-2xl bg-white/10"><span className="sr-only">{t("loading")}</span></div></div>
+        <div className="wallet h-64 rounded-3xl px-5 pt-[22px] min-[600px]:rounded-[28px] min-[600px]:px-[30px] min-[600px]:pt-7"><div className="flex justify-end">{monthNav}</div><div role="status" className="mt-6 h-24 animate-pulse rounded-2xl bg-white/10"><span className="sr-only">{t("loading")}</span></div></div>
       ) : (() => {
         const growthTotal = wealth.reduce((sum, g) => sum + groups![g].growth, 0);
         const weeksTable = (
@@ -188,16 +188,17 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
 
         const spentPct = cf.totalExpected > 0 ? Math.min(100, (cf.totalSpent / cf.totalExpected) * 100) : cf.totalSpent > 0 ? 100 : 0;
         const hero = (
-          <section className="wallet shrink-0 overflow-hidden rounded-3xl border border-white/10 p-6 shadow-sm">
-            <div className="mb-3">{monthNav}</div>
-            <div className="flex items-baseline justify-between gap-3 text-footnote text-muted-foreground">
-              <span className="truncate">{name && !cardOnly ? t("hi", { name }) : null}</span>
-              <SyncLine run={run} />
+          // Same frame as the Budget and Overview heroes (.studio-overview): 28/30px padding, 28px corners, month on the end side.
+          <section className="wallet shrink-0 overflow-hidden rounded-3xl px-5 pb-4 pt-[22px] shadow-sm min-[600px]:rounded-[28px] min-[600px]:px-[30px] min-[600px]:pb-5 min-[600px]:pt-7">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-footnote text-muted-foreground">
+              <span className="min-w-0 truncate">{name && !cardOnly ? t("hi", { name }) : <SyncLine run={run} />}</span>
+              {monthNav}
             </div>
+            {name && !cardOnly && <div className="mt-1 text-footnote text-muted-foreground"><SyncLine run={run} /></div>}
             <div className="hero-with-aside"><div className="min-w-0 flex-1">
-            <h2 className="mt-3 text-base font-medium text-pretty">{t(offset === 0 ? "forecastTitle" : "endedTitle", { month: monthName })}</h2>
+            <h2 className="mt-4 text-sm font-medium text-pretty">{t(offset === 0 ? "forecastTitle" : "endedTitle", { month: monthName })}</h2>
             {cf.forecast < 0 && <p className="mt-2 flex items-center gap-1 text-footnote font-medium text-status-heads-up"><AlertCircle className="size-4 shrink-0" aria-hidden />{t("forecastShort")}</p>}
-            <p className={`mt-1 text-5xl font-medium tracking-tight tabular-nums ${cf.forecast < 0 ? "text-status-heads-up" : ""}`}>
+            <p className={`studio-amount figure ${cf.forecast < 0 ? "text-status-heads-up" : ""}`}>
               <Signed n={cf.forecast} />
             </p>
             {offset === 0 && <BalancePill bank={cash.data?.bank ?? null} accounts={cash.data?.accounts ?? []} />}
@@ -249,9 +250,9 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
               {[savingsLine, fixedLine, incomeLine, offLine].map((l) => card(l))}
             </div>
 
-            {/* Desktop, one screen, top to bottom: the forecast card,
-                the chart across the full width so every column fits one row, then the picked line's detail. */}
-            <div className="hidden lg:flex lg:h-[calc(100dvh-12.5rem)] lg:min-h-[34rem] lg:flex-col lg:gap-3">
+            {/* Desktop, top to bottom: the forecast card, the chart across the full width so every column fits one row,
+                then the picked line's detail. No fixed viewport height: the taller hero squeezed the chart and panel to nothing. */}
+            <div className="hidden lg:flex lg:flex-col lg:gap-3">
               {hero}
               <Card>
                 <div className="px-3 pt-3">
@@ -262,9 +263,8 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
                   <LinesChart lines={lines} selected={current.key} onSelect={setSelected} label={t("linesTitle")} />
                 </div>
               </Card>
-              <section aria-live="polite" className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card">
-                {/* Focusable so keyboard users can scroll it (WCAG 2.1.1). */}
-                <div key={current.key} tabIndex={0} role="region" aria-label={t("linesTitle")} className="min-h-0 flex-1 overflow-y-auto pb-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">{panel(current)}</div>
+              <section aria-live="polite" aria-label={current.title} className="overflow-hidden rounded-2xl border border-border/60 bg-card pb-2">
+                <div key={current.key}>{panel(current)}</div>
               </section>
             </div>
           </>
@@ -562,7 +562,8 @@ function Meter({ title, spent, expected, spentLabel, expectedLabel, tone, showLe
     <div className="px-5 pb-5 pt-3 sm:px-6">
       <div className="flex justify-between text-xs text-muted-foreground"><span>{spentLabel}</span><span>{expectedLabel}</span></div>
       <div className="flex justify-between text-lg tabular-nums">
-        <bdi className="font-semibold" style={{ color: tone }}>{formatCurrency(spent)}</bdi>
+        {/* The ring tones are pale (made for the dark hero); pulled toward the text color so they stay readable on light cards. */}
+        <bdi className="font-semibold" style={{ color: `color-mix(in oklab, ${tone} 55%, var(--foreground))` }}>{formatCurrency(spent)}</bdi>
         <bdi className="text-muted-foreground">{formatCurrency(expected)}</bdi>
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full" style={{ background: `color-mix(in oklab, ${bar} 18%, transparent)` }} role="progressbar"

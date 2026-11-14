@@ -21,6 +21,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { FiHero } from "@/components/ui/page-hero";
 import { Segmented } from "@/components/ui/segmented";
 import { Input } from "@/components/ui/input";
+import { NumberField, numberError } from "@/components/ui/number-field";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -186,7 +187,7 @@ function Body({ data }: { data: FiPayload }) {
             <span>{shekels(target, locale)}</span>
           </div>
         </div>
-        <dl className="mt-8 grid grid-cols-3 gap-6">
+        <dl className="mt-8 grid grid-cols-3 gap-4 sm:gap-6">
           <Stat label={t("savingsRate")} value={savingsRate == null ? "—" : `${Math.round(savingsRate * 100)}%`} />
           <Stat label={t("yearsOfLiving")} value={spend > 0 ? fmt(savings / (spend * 12), locale, 1) : "—"} hint={t("yearsOfLivingHint")} />
           <Stat label={t("safeWithdrawal")} value={shekels((savings * plan.rate) / 12, locale)} hint={t("safeWithdrawalHint")} />
@@ -247,23 +248,21 @@ function Body({ data }: { data: FiPayload }) {
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div title={hint}>
-      <dt className="text-caption text-muted-foreground">{label}</dt>
-      <dd className="figure mt-1 text-[1.75rem] leading-tight">{value}</dd>
+    <div title={hint} className="flex flex-col">
+      <dt className="text-caption text-pretty text-muted-foreground">{label}</dt>
+      <dd className="figure mt-auto pt-1 text-[1.75rem] leading-tight">{value}</dd>
     </div>
   );
 }
 
+/** Counts and ages, not money: no ₪ unit. */
+const UNITLESS = /(years|Years|trades|age|factor|-km\w+)$/;
+
 function Field({ id, label, value, placeholder, onChange, suffix }: { id: string; label: string; value: string; placeholder?: string; onChange: (v: string) => void; suffix?: string }) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
-      <div className="relative">
-        <Input id={id} type="number" inputMode="decimal" step="any" min="0" dir="ltr" value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className={suffix ? "pr-8" : undefined} />
-        {suffix && <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-footnote text-muted-foreground">{suffix}</span>}
-      </div>
-    </div>
-  );
+  const tc = useTranslations("calculators");
+  // Some labels carry their own trailing "₪"; the unit sits in the field instead.
+  const unit = suffix ?? (UNITLESS.test(id) ? undefined : "₪");
+  return <NumberField id={id} label={label.replace(/\s*₪\s*$/, "")} unit={unit} value={value} placeholder={placeholder} onChange={onChange} error={numberError(value, tc("invalid"))} />;
 }
 
 function AggressiveSaving({ spend, income, savings, annualReturn, rate }: { spend: number; income: number; savings: number; annualReturn: number; rate: number }) {

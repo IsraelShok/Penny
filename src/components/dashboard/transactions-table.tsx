@@ -1,7 +1,7 @@
 "use client";
 
 import { Forward, Back } from "@/components/ui/dir-chevron";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { SplitEditor } from "@/components/transactions/split-editor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CategoryChip } from "@/components/transactions/category-chip";
 import { IconButton } from "@/components/ui/icon-button";
 import {
   DropdownMenu,
@@ -119,6 +120,8 @@ interface TransactionsTableProps {
   onEdit?: (txn: TransactionWithCategory) => void;
   /** Shows a "+" (add transaction) button after the category filter, desktop only. */
   onAdd?: () => void;
+  /** Leads the filter bar (the income/expense switch), so the list's filters read as one group. */
+  kindFilter?: ReactNode;
 }
 
 const PAGE_SIZE = 50;
@@ -147,6 +150,7 @@ export function TransactionsTable({
   accountOwners = {},
   onEdit,
   onAdd,
+  kindFilter,
 }: TransactionsTableProps) {
   const catBrowser = useCategoryBrowser(categories);
   const catListId = useId();
@@ -393,7 +397,7 @@ export function TransactionsTable({
     >
       <div className={cn("flex min-w-0 items-center gap-2", isGroup && "font-semibold")}>
         <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ backgroundColor: cat.color }} />
-        <span className="truncate">{catBrowser.label(cat)}</span>
+        <span className="truncate" title={catBrowser.label(cat)}>{catBrowser.label(cat)}</span>
       </div>
     </MultiFilterOption>
   );
@@ -408,9 +412,10 @@ export function TransactionsTable({
         onCreated={(cat) => newCatFor && void handleCategoryChange(newCatFor.txnId, cat.id)}
       />
       <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <CardTitle>{t("pageTitle")}</CardTitle>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <CardTitle className="sr-only">{t("pageTitle")}</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {kindFilter}
+          <div className="flex min-w-0 flex-wrap items-center gap-2 max-sm:w-full">
             <Input
               placeholder={t("search")}
               aria-label={t("search")}
@@ -419,7 +424,7 @@ export function TransactionsTable({
                 onSearchChange(e.target.value);
                 onPageChange(0);
               }}
-              className="h-8 w-[200px] max-w-full"
+              className="h-8 w-[200px] max-w-full max-sm:w-full"
             />
             {showAccountFilter ? (
               <TransactionMultiFilter
@@ -452,7 +457,7 @@ export function TransactionsTable({
                           radius={5}
                         />
                       ) : null}
-                      <span className="truncate">{primary}</span>
+                      <span className="truncate" title={primary}>{primary}</span>
                     </div>
                   </MultiFilterOption>
                 ))}
@@ -581,7 +586,7 @@ export function TransactionsTable({
                     activeField={sortField}
                     activeOrder={sortOrder}
                     onSort={onSortChange}
-                    className="lg:w-[116px]"
+                    className="hidden lg:table-cell lg:w-[120px]"
                     align="end"
                     sortAscLabel={t("sortAsc")}
                     sortDescLabel={t("sortDesc")}
@@ -598,11 +603,11 @@ export function TransactionsTable({
                 {week.start && (
                   <tr>
                     <th colSpan={7} scope="colgroup" className="sticky top-[var(--app-header-h,0px)] z-10 bg-popover px-4 pb-1.5 pt-4 text-start text-xs font-semibold text-muted-foreground">
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
                         <span>{weekLabel(week.start, week.end)}</span>
                         <span className="flex gap-3 font-medium tabular-nums">
                           {weekIn !== 0 && <span className="text-status-on-track">{signedShekels(weekIn, locale)}</span>}
-                          {weekOut !== 0 && <span className="text-foreground">{signedShekels(-weekOut, locale)}</span>}
+                          {weekOut !== 0 && <span className="text-expense">{signedShekels(-weekOut, locale)}</span>}
                         </span>
                       </div>
                     </th>
@@ -610,15 +615,16 @@ export function TransactionsTable({
                 )}
                 {week.items.map((txn) => {
                   const isIncome = txn.chargedAmount > 0;
-                  // One convention app-wide: income green with "+", expense plain with "−", transfers uncolored.
-                  const amountTone = txn.kind === "income" ? "text-status-on-track" : txn.kind === "transfer" ? "text-muted-foreground" : undefined;
+                  // Income green with "+", expense a calm rose with "−" (same as the week totals), transfers muted.
+                  const amountTone = txn.kind === "income" ? "text-status-on-track" : txn.kind === "transfer" ? "text-muted-foreground" : "text-expense";
+                  const amount = signedShekels(txn.chargedAmount, locale, 2);
                   const categoryKind: Kind = isIncome ? "income" : "expense";
                   const categoryName = txn.categoryName
                     ? translateCategoryName(txn.categoryName, tCat)
                     : t("rowUncategorized");
                   const isSelected = selected.includes(txn.id);
                   const categoryControl = (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex min-w-0 items-center gap-1.5">
                           <CategoryPicker
                             categories={categoriesForKind(categoryKind)}
                             currentId={txn.categoryId}
@@ -627,21 +633,10 @@ export function TransactionsTable({
                             onCreate={() => setNewCatFor({ txnId: txn.id, kind: isIncome ? "income" : "expense" })}
                             createLabel={tSettingsCat("newCategoryButton")}
                             trigger={
-                              <Badge
-                                variant="outline"
-                                className="cursor-pointer transition-colors hover:bg-accent"
-                                style={
-                                  txn.categoryColor
-                                    ? {
-                                        borderColor: txn.categoryColor + "66",
-                                        backgroundColor: txn.categoryColor + "26",
-                                        color: "var(--foreground)",
-                                      }
-                                    : undefined
-                                }
-                              >
+                              <CategoryChip color={txn.allocations?.length ? null : txn.categoryColor}
+                                className="cursor-pointer transition-shadow hover:ring-1 hover:ring-current/40">
                                 {txn.allocations?.length ? t("splitCount", { count: txn.allocations.length }) : categoryName}
-                              </Badge>
+                              </CategoryChip>
                             }
                           />
                           {txn.needsReview && (
@@ -674,14 +669,16 @@ export function TransactionsTable({
                       // Row tap edits; taps on the row's own controls (checkbox, pickers, menu, tags) keep their job.
                       onClick={onEdit ? (e) => { if (!(e.target as HTMLElement).closest("button,input,select,a,label,[role=button],[role=menu],[role=menuitem],[role=dialog],[role=listbox]")) onEdit(txn); } : undefined}
                     >
-                      <TableCell>
+                      <TableCell className="max-lg:pt-3.5 max-lg:align-top">
                         <input className="size-4" type="checkbox" aria-label={t("selectRow", { name: txn.description })} disabled={editing || isFetching} checked={isSelected} onChange={e => setSelected(e.target.checked ? [...selected, txn.id] : selected.filter(id => id !== txn.id))} />
                       </TableCell>
                       <TableCell className="hidden whitespace-nowrap text-xs tabular-nums text-muted-foreground lg:table-cell">
                         {dayLabel(txn.date)}
                       </TableCell>
                       <TableCell className="whitespace-normal [overflow-wrap:anywhere]">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        {/* Below lg the amount rides on the name line (iOS list style) instead of its own column, so nothing clips at 320px. */}
+                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                           {onEdit ? (
                             <button type="button" className="min-h-11 text-start font-medium hover:underline focus-visible:outline-2 focus-visible:outline-ring lg:min-h-0" aria-label={tManual("editRow", { name: txn.description })} onClick={() => onEdit(txn)}>{txn.description}</button>
                           ) : <div className="font-medium">{txn.description}</div>}
@@ -710,12 +707,14 @@ export function TransactionsTable({
                             </span>
                           )}
                           {onTagClick && (
-                            // "Add tag" shows on row hover or keyboard focus; on touch only for a selected row (the edit sheet has tags too).
+                            // "Add tag" shows on row hover or keyboard focus; on touch and below lg only for a selected row (the edit sheet has tags too), so it never widens a phone row.
                             <TagChips id={txn.id} tags={txn.tags ?? []} allTags={allTags} onFilter={onTagClick} className="mt-0"
-                              addClassName="[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/row:opacity-100 group-focus-within/row:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:hidden [@media(hover:none)]:group-data-[state=selected]/row:inline-flex" />
+                              addClassName="[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/row:opacity-100 group-focus-within/row:opacity-100 focus-visible:opacity-100 max-lg:hidden [@media(hover:none)]:hidden max-lg:group-data-[state=selected]/row:inline-flex [@media(hover:none)]:group-data-[state=selected]/row:inline-flex" />
                           )}
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs tabular-nums text-muted-foreground lg:hidden">
+                        <span className={cn("shrink-0 whitespace-nowrap font-medium leading-[2.75rem] tabular-nums lg:hidden", amountTone)}>{amount}</span>
+                        </div>
+                        <div className="-mt-1 flex min-w-0 flex-wrap items-center gap-2 text-xs tabular-nums text-muted-foreground lg:hidden">
                           {dayLabel(txn.date)}
                           {categoryControl}
                         </div>
@@ -755,10 +754,10 @@ export function TransactionsTable({
                           accountLabel={txn.accountLabel}
                         />
                       </TableCell>
-                      <TableCell className={cn("whitespace-nowrap text-end font-medium tabular-nums", amountTone)}>
-                        {signedShekels(txn.chargedAmount, locale, 2)}
+                      <TableCell className={cn("hidden whitespace-nowrap text-end font-medium tabular-nums lg:table-cell", amountTone)}>
+                        {amount}
                       </TableCell>
-                      <TableCell className="text-end">
+                      <TableCell className="text-end max-lg:align-top">
                         <DropdownMenu>
                           <DropdownMenuTrigger
                             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
