@@ -15,19 +15,19 @@ const GROUPS = [
     { href: "/wellbeing", key: "wellbeing", Icon: HeartPulse },
   ] },
   { key: "explore", items: [
-    { href: "/ask", key: "ask", Icon: MessageCircleQuestion, tint: "bg-[#5856d6]" },
-    { href: "/journey", key: "journey", Icon: Route, tint: "bg-[#30b0c7]" },
-    { href: "/life", key: "life", Icon: Compass, tint: "bg-[#007aff]" },
-    { href: "/calculators", key: "calculators", Icon: Calculator, tint: "bg-[#a2845e]" },
+    { href: "/ask", key: "ask", Icon: MessageCircleQuestion },
+    { href: "/journey", key: "journey", Icon: Route },
+    { href: "/life", key: "life", Icon: Compass },
+    { href: "/calculators", key: "calculators", Icon: Calculator },
     { href: "/learn", key: "learn", Icon: BookOpen },
   ] },
   { key: "help", items: [
-    { href: "/help", key: "help", Icon: LifeBuoy, tint: "bg-[#ff3b30]" },
-    { href: "/welcome", key: "welcome", Icon: HandHeart, tint: "bg-[#ff9500]" },
+    { href: "/help", key: "help", Icon: LifeBuoy },
+    { href: "/welcome", key: "welcome", Icon: HandHeart },
   ] },
   { key: "documents", items: [
-    { href: "/settings/legacy", key: "legacy", Icon: FileHeart, tint: "bg-[#8e8e93]" },
-    { href: "/settings/data", key: "import", Icon: FileUp, tint: "bg-[#8e8e93]" },
+    { href: "/settings/legacy", key: "legacy", Icon: FileHeart },
+    { href: "/settings/data", key: "import", Icon: FileUp },
   ] },
 ] as const;
 

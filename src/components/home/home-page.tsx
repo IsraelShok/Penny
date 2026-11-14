@@ -17,7 +17,6 @@ import { MonthCelebration } from "./month-celebration";
 import { PersonalGrid } from "./personal-grid";
 import { ScenarioCard } from "./scenario-card";
 import { GoalFocus } from "./goal-focus";
-import { MoneyTreeCard } from "./money-tree-card";
 import { HomeTeasers, WelcomePrompt } from "./home-teasers";
 import { CategoryScroll } from "./category-scroll";
 import { HistoricalTrendCard } from "./historical-trend-card";
@@ -87,7 +86,6 @@ export function HomePage() {
           <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
           <Greeting name={settings?.displayName} />
           <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
-          {loaded && <MoneyTreeCard />}
           {loaded && companion && <MoneyMap />}
           {loaded && <WelcomePrompt />}
           {loaded && !simple && <Link href="/?view=detail" className={linkClass}>{t("detailLink")}</Link>}
@@ -115,7 +113,7 @@ export function HomePage() {
       {/* The detail view of the Companion style always offers the way back. */}
       {companion && <div className="mx-auto w-full max-w-6xl px-4 pt-3 md:px-6 lg:px-8"><Link href="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-footnote font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{t("companionLink")}</Link></div>}
       {simple ? (
-        <div className="px-4 pb-8 pt-3"><SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} /><MoneyTreeCard /></div>
+        <div className="px-4 pb-8 pt-3"><SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} /></div>
       ) : (
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
@@ -130,7 +128,6 @@ export function HomePage() {
         <div className="mb-6 md:mb-8"><DailyTip /></div>
         <HealthCard />
         <MonthCelebration />
-        <MoneyTreeCard />
         <WelcomePrompt />
         <PersonalGrid render={id => {
           if (id === "goals") return <GoalFocus />;

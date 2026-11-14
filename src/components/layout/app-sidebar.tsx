@@ -47,8 +47,6 @@ interface NavDef {
   href: string;
   labelKey: string;
   Icon: React.ComponentType<{ className?: string }>;
-  /** iOS Settings-style icon tile colour. */
-  tint?: string;
   match: (p: string) => boolean;
 }
 
@@ -59,7 +57,6 @@ export const NAV: NavDef[] = [
   {
     href: "/budget",
     labelKey: "budget",
-    tint: "bg-[#34c759]",
     Icon: Wallet,
     match: (p: string) => ["/budget", "/overview", "/insights"].some((r) => p.startsWith(r)),
   },
@@ -72,7 +69,6 @@ export const NAV: NavDef[] = [
   {
     href: "/more",
     labelKey: "more",
-    tint: "bg-[#8e8e93]",
     Icon: LayoutGrid,
     // Calculators and the occasional tools; the hub stays lit while you use one.
     match: (p: string) => ["/more", "/calculators", "/recap", "/ask", "/wellbeing", "/help", "/control", "/markets", "/learn", "/car", "/discounted-home"].some((r) => p.startsWith(r)),
@@ -91,7 +87,6 @@ export const FOOTER_NAV: NavDef[] = [
   {
     href: "/settings",
     labelKey: "settings",
-    tint: "bg-[#8e8e93]",
     Icon: SettingsIcon,
     match: (p: string) => p.startsWith("/settings"),
   },
@@ -223,7 +218,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       render={
                         <Link href={item.href} onClick={() => setOpenMobile(false)} aria-current={item.match(pathname) ? "page" : undefined}>
-                          <span className={`grid size-7 shrink-0 place-items-center rounded-[0.5rem] text-white ${item.tint}`} aria-hidden><item.Icon /></span>
+                          <item.Icon />
                           <span>{label}</span>
                         </Link>
                       }

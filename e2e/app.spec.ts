@@ -1,13 +1,6 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("core screens", () => {
-  test("home shows the money tree seed on an empty account", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "עץ הכסף שלך" })).toBeVisible();
-    await expect(page.getByRole("img", { name: /עץ הכסף שלך, בשלב זרע/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: "לשתול" })).toHaveAttribute("href", "/investments");
-  });
-
   test("no page scrolls sideways", async ({ page }) => {
     for (const path of ["/", "/learn", "/learn/electric-car", "/calculators", "/car", "/discounted-home", "/calculators/mortgage", "/calculators/debt"]) {
       await page.goto(path);
