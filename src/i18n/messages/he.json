@@ -4400,6 +4400,11 @@
   "manualTxn": {
     "add": "הוספה",
     "addTitle": "הוספת תנועה",
+    "today": "היום",
+    "yesterday": "אתמול",
+    "moreDetails": "עוד פרטים",
+    "saveExpense": "הוספת הוצאה",
+    "saveIncome": "הוספת הכנסה",
     "editTitle": "עריכת תנועה",
     "expense": "הוצאה",
     "income": "הכנסה",

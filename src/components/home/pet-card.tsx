@@ -6,7 +6,9 @@ import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Clock, X } from "lucide-react";
-import { getCashAhead, getHome, getResilience } from "@/lib/api";
+import { getCashAhead, getHome, getResilience, listProfiles } from "@/lib/api";
+import { useActiveProfileId } from "@/lib/workspace-store";
+import type { Profile } from "@/lib/types";
 import { usePlan } from "@/hooks/use-plan";
 import { useA11y } from "@/components/a11y/a11y-menu";
 import { useGentle } from "@/hooks/use-gentle";
@@ -27,6 +29,10 @@ function usePet() {
   const home = useQuery({ queryKey: ["home"], queryFn: getHome, enabled: on });
   const res = useQuery({ queryKey: ["resilience"], queryFn: getResilience, enabled: on });
   const cash = useQuery({ queryKey: ["cash-ahead"], queryFn: getCashAhead, enabled: on });
+  // The pet wears the active person's own Pip (their profile picture), so Home matches who's using it.
+  const profiles = useQuery<Profile[]>({ queryKey: ["profiles"], queryFn: listProfiles, staleTime: 60_000, enabled: on });
+  const activeId = useActiveProfileId();
+  const own = profiles.data?.find((p) => p.id === activeId)?.avatarPet;
   const lines = useMemo(() => {
     if (!home.data || !res.data) return null;
     const m = home.data.thisMonth, f = (k: string) => res.data.factors.find((x) => x.key === k);
@@ -43,7 +49,8 @@ function usePet() {
   const today = petToday();
   const todo = petTodo(lines, plan.pet.snooze, today);
   // Snoozed items don't weigh on its mood either: it shouldn't keep fretting over what you asked it to set aside.
-  return { pet: plan.pet, mood: petMood(lines.filter((l) => l.ok || todo.includes(l))), todo, today };
+  const pet = own ? { ...plan.pet, color: own.color, skin: own.skin, name: own.name || plan.pet.name } : plan.pet;
+  return { pet, mood: petMood(lines.filter((l) => l.ok || todo.includes(l))), todo, today };
 }
 type PetState = NonNullable<ReturnType<typeof usePet>>;
 

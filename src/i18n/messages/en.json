@@ -4400,6 +4400,11 @@
   "manualTxn": {
     "add": "Add",
     "addTitle": "Add transaction",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "moreDetails": "More details",
+    "saveExpense": "Add expense",
+    "saveIncome": "Add income",
     "editTitle": "Edit transaction",
     "expense": "Expense",
     "income": "Income",

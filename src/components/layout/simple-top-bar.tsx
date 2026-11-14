@@ -43,13 +43,13 @@ export function SimpleTopBar() {
                 aria-current={active ? "page" : undefined}
                 title={t(item.labelKey)}
                 className={cn(
-                  "inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-full px-3 text-sm transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring",
+                  "group inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-full px-3 text-sm transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring",
                   active && "bg-primary/10 font-semibold text-primary hover:bg-primary/10"
                 )}
               >
                 <item.Icon className="size-4" aria-hidden />
-                {/* Tablet widths: icons only, so the bar never runs under the buttons. */}
-                <span className="max-lg:sr-only">{t(item.labelKey)}</span>
+                {/* Icons only; the name opens on hover or keyboard focus (screen readers always get it). */}
+                <span className="sr-only group-hover:not-sr-only group-focus-visible:not-sr-only">{t(item.labelKey)}</span>
               </Link>
             );
           })}
