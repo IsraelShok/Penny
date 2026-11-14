@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
 import { WorkspaceNameCard } from "@/components/settings/workspace-controls";
+import { DataState } from "@/components/ui/data-state";
 import { getSettings, getSummary, updateSettings } from "@/lib/api";
 import { formatCurrency } from "@/lib/formatters";
 import type { Locale } from "@/i18n/routing";
@@ -39,7 +40,7 @@ function monthStartLocalISO(): string {
 export default function GeneralSettingsPage() {
   const t = useTranslations("settings.general");
   const tCommon = useTranslations("common");
-  const { data: settings } = useQuery({
+  const { data: settings, isError, refetch } = useQuery({
     queryKey: ["settings"],
     queryFn: getSettings,
   });
@@ -73,6 +74,8 @@ export default function GeneralSettingsPage() {
             initialTime={settings.autoSyncTime}
           />
         </>
+      ) : isError ? (
+        <DataState error onRetry={() => void refetch()} />
       ) : (
         <SettingCard>
           <div className="text-sm text-muted-foreground">{tCommon("loading")}</div>

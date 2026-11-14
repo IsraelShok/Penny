@@ -50,7 +50,12 @@ export function CommandPalette({ placeholder, onClose }: { placeholder: string; 
   const close = () => { setOpen(false); setQ(""); setActive(0); setAsked(null); onClose(); };
 
   // Focus after the opening click settles (a tooltip or menu may take focus back on that click).
-  useEffect(() => { const id = setTimeout(() => inputRef.current?.focus(), 50); return () => clearTimeout(id); }, []);
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    const id = setTimeout(() => inputRef.current?.focus(), 50);
+    // Give focus back to whatever opened the search, unless the user already moved it elsewhere.
+    return () => { clearTimeout(id); if (opener?.isConnected && (!document.activeElement || document.activeElement === document.body)) opener.focus(); };
+  }, []);
   useEffect(() => {
     // Clicking anywhere outside the search closes it (unmounting resets the query).
     const onPointer = (e: PointerEvent) => { if (!rootRef.current?.closest("[data-search-root]")?.contains(e.target as Node)) onClose(); };

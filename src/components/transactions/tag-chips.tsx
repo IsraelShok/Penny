@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Plus, X } from "lucide-react";
@@ -18,6 +18,7 @@ export function TagChips({ id, tags, allTags, onFilter }: { id: number; tags: st
   const listId = useId();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
+  const refocus = useRef(false); // after Enter/Esc, return focus to the add button instead of losing it
 
   const save = async (next: string[], undo?: string[]) => {
     try {
@@ -60,8 +61,8 @@ export function TagChips({ id, tags, allTags, onFilter }: { id: number; tags: st
             placeholder={t("placeholder")}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") { e.preventDefault(); add(); }
-              if (e.key === "Escape") { setDraft(""); setAdding(false); }
+              if (e.key === "Enter") { e.preventDefault(); refocus.current = true; add(); }
+              if (e.key === "Escape") { refocus.current = true; setDraft(""); setAdding(false); }
             }}
             onBlur={add}
             className="h-6 w-32 rounded-full border border-border bg-background px-2 text-xs focus-visible:outline-2 focus-visible:outline-ring"
@@ -71,7 +72,7 @@ export function TagChips({ id, tags, allTags, onFilter }: { id: number; tags: st
           </datalist>
         </>
       ) : (
-        <Button variant="ghost" size="sm" className="h-6 gap-1 px-2 text-xs text-muted-foreground" onClick={() => setAdding(true)}>
+        <Button ref={(el) => { if (el && refocus.current) { refocus.current = false; el.focus(); } }} variant="ghost" size="sm" className="h-6 gap-1 px-2 text-xs text-muted-foreground" onClick={() => setAdding(true)}>
           <Plus className="size-3" aria-hidden />
           {t("add")}
         </Button>

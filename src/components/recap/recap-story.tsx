@@ -147,10 +147,10 @@ export function RecapStory() {
           </div>
 
           <div className="mt-5 flex items-center justify-between gap-3">
-            <Button variant="ghost" size="lg" onClick={() => go(at - 1)} disabled={at === 0} className="gap-1 px-4 font-semibold">
+            <Button variant="ghost" size="lg" onClick={() => go(at - 1)} disabled={at === 0} className="gap-1 px-2 font-semibold sm:px-4">
               <Back />{t("prev")}
             </Button>
-            <div className="flex items-center gap-1">
+            <div className="flex min-w-0 flex-wrap items-center justify-center sm:gap-1">
               {cards.map((c, i) => (
                 <button key={c.title + i} type="button" onClick={() => go(i)} aria-label={t("goTo", { n: i + 1, title: c.title })} aria-current={i === at ? "step" : undefined}
                   className="grid size-6 place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-ring">
@@ -158,7 +158,7 @@ export function RecapStory() {
                 </button>
               ))}
             </div>
-            <Button variant="ghost" size="lg" onClick={() => go(at + 1)} disabled={at === total - 1} className="gap-1 px-4 font-semibold">
+            <Button variant="ghost" size="lg" onClick={() => go(at + 1)} disabled={at === total - 1} className="gap-1 px-2 font-semibold sm:px-4">
               {t("next")}<Forward />
             </Button>
           </div>

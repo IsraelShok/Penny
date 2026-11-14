@@ -31,18 +31,19 @@ import type { Workspace } from "@/lib/types";
 
 function useActiveWorkspace() {
   const activeId = useActiveWorkspaceId();
-  const { data: workspaces = [] } = useQuery<Workspace[]>({
+  const { data: workspaces = [], isError } = useQuery<Workspace[]>({
     queryKey: ["workspaces"],
     queryFn: listWorkspaces,
   });
   const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
-  return { workspaces, active };
+  return { workspaces, active, isError };
 }
 
 export function WorkspaceNameCard() {
   const t = useTranslations("settings.workspace");
   const tCommon = useTranslations("common");
-  const { active } = useActiveWorkspace();
+  const { active, isError } = useActiveWorkspace();
+  if (isError) return null; // the page shows the shared load-error state
   if (!active) {
     return (
       <SettingCard title={t("nameTitle")}>

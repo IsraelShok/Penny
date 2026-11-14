@@ -211,7 +211,7 @@ export function CategoryGrid({
                 >
                   {f.label}
                   <span
-                    className={`tabular-nums ${active ? "opacity-80" : "opacity-60"}`}
+                    className={`tabular-nums ${active ? "opacity-80" : ""}`}
                   >
                     {count}
                   </span>

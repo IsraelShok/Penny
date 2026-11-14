@@ -391,11 +391,11 @@ export function TransactionsTable({
   return (
     <Card className="rounded-2xl bg-card shadow-none">
       <CardHeader>
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <CardTitle className="font-semibold text-2xl">
             {t("pageTitle")}
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Input
               placeholder={t("search")}
               aria-label={t("search")}
@@ -404,7 +404,7 @@ export function TransactionsTable({
                 onSearchChange(e.target.value);
                 onPageChange(0);
               }}
-              className="h-8 w-[200px]"
+              className="h-8 w-[200px] max-w-full"
             />
             {showAccountFilter ? (
               <TransactionMultiFilter
