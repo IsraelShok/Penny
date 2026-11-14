@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useLocale } from "next-intl";
 import { Check, Sparkles, ArrowUpLeft, Circle } from "lucide-react";
 import { toast } from "sonner";
@@ -9,13 +9,15 @@ import { useActiveWorkspaceId } from "@/lib/workspace-store";
 import type { DashboardSummary } from "@/lib/types";
 import { studioCopy } from "./studio-copy";
 
+const noSubscribe = () => () => {}; // read once per render; this component's own writes go through state
+
 export function StudioJourney({ data, month }: { data: DashboardSummary; month: string }) {
   const c = studioCopy(useLocale());
   const workspace = useActiveWorkspaceId();
   const key = `shekel.budget-review.v1.${workspace ?? "default"}.${month}`;
-  const [reviewKey, setReviewKey] = useState<string | null>(null);
-  useEffect(() => { try { setReviewKey(localStorage.getItem(key) === "true" ? key : null); } catch { setReviewKey(null); } }, [key]);
-  const reviewed = reviewKey === key;
+  const stored = useSyncExternalStore(noSubscribe, () => { try { return localStorage.getItem(key) === "true"; } catch { return false; } }, () => false);
+  const [toggled, setToggled] = useState<{ key: string; on: boolean } | null>(null);
+  const reviewed = toggled?.key === key ? toggled.on : stored;
   // categoryBreakdown contains leaf transactions, unlike parent rollups.
   const categorizedCount = data.categoryBreakdown.filter((row) => row.categoryId > 0).reduce((sum, row) => sum + row.count, 0);
   const steps = [
@@ -25,7 +27,7 @@ export function StudioJourney({ data, month }: { data: DashboardSummary; month: 
   ];
   const complete = steps.filter((step) => step.done).length;
   const toggle = () => {
-    setReviewKey(reviewed ? null : key);
+    setToggled({ key, on: !reviewed });
     try { if (reviewed) localStorage.removeItem(key); else localStorage.setItem(key, "true"); }
     catch { toast.error(c.storageError); }
     if (!reviewed) toast.success(c.reviewed);

@@ -1,7 +1,7 @@
 "use client";
 
 import { Forward, Back } from "@/components/ui/dir-chevron";
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -172,7 +172,8 @@ export function TransactionsTable({
   const [undoToken, setUndoToken] = useState<string | null>(null);
   const he = locale === "he";
   const selectionKey = transactions.map(t => t.id).join(",");
-  useEffect(() => { setSelected([]); }, [selectionKey]);
+  const [prevSelectionKey, setPrevSelectionKey] = useState(selectionKey);
+  if (selectionKey !== prevSelectionKey) { setPrevSelectionKey(selectionKey); setSelected([]); }
   const selectedRows = transactions.filter(t => selected.includes(t.id));
   const selectedKind = selectedRows[0]?.kind;
   const bulkCategories = categories.filter(c => c.kind === selectedKind && selectedRows.every(r => r.kind === c.kind) && !categories.some(child => child.parentId === c.id));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useMessages, useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -338,9 +338,11 @@ function BudgetSection({
     data ? String(Math.round(data.budget)) : ""
   );
 
-  useEffect(() => {
+  const [prevData, setPrevData] = useState(data);
+  if (data !== prevData) {
+    setPrevData(data);
     if (data) setAmount(String(Math.round(data.budget)));
-  }, [data]);
+  }
 
   const handleBlur = () => {
     if (!data) return;
@@ -563,9 +565,11 @@ function DescriptionSection({ category }: { category: Category }) {
   const stored = category.description ?? "";
   const initial = locale === "he" && seededHe && /^[A-Za-z]/.test(stored.trim()) ? seededHe : stored;
   const [value, setValue] = useState(initial);
-  useEffect(() => {
+  const [prevInitial, setPrevInitial] = useState(initial);
+  if (initial !== prevInitial) {
+    setPrevInitial(initial);
     setValue(initial);
-  }, [initial]);
+  }
 
   const mutation = useMutation({
     mutationFn: (next: string | null) =>

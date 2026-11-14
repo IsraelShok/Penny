@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo, useSyncExternalStore } from "react";
 import { readStored } from "@/lib/legacy-names";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -37,6 +37,8 @@ function readViewMode(): CategoryViewMode {
   }
 }
 
+const noSubscribe = () => () => {}; // read once per render; this component's own writes go through state
+
 export function Dashboard() {
   const t = useTranslations("dashboard");
   const locale = useLocale() as Locale;
@@ -44,13 +46,12 @@ export function Dashboard() {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
-  const [viewMode, setViewMode] = useState<CategoryViewMode>("collapsed");
+  const [chosenViewMode, setViewMode] = useState<CategoryViewMode | null>(null);
+  const storedViewMode = useSyncExternalStore(noSubscribe, readViewMode, (): CategoryViewMode => "collapsed");
+  const viewMode = chosenViewMode ?? storedViewMode;
   const { preferences, save, resolvedStudioTheme } = useStudio();
   const c = studioCopy(locale);
 
-  useEffect(() => {
-    setViewMode(readViewMode());
-  }, []);
 
   const handleViewModeChange = useCallback((mode: CategoryViewMode) => {
     setViewMode(mode);

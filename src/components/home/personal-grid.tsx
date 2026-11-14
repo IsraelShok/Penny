@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {loadPreference,storePreference} from "@/lib/preference-sync";
@@ -12,6 +12,15 @@ import { parseLayout, presetLayout, type Tile, type WidgetId, type LayoutPreset 
 const labels: Record<WidgetId, [string, string]> = { thisMonth: ["החודש שלי", "This month"], bills: ["חיובים קרובים", "Upcoming bills"], goals: ["היעד שלי", "My goal"], planner: ["מה יקרה אם…", "What if…"], needsAttention: ["לטיפול", "To review"], cashFlow: ["תזרים", "Cash flow"], historicalTrend: ["מגמות", "Trends"], categories: ["קטגוריות", "Categories"], recentTransactions: ["תנועות אחרונות", "Recent activity"], topMerchants: ["בתי עסק", "Merchants"], bankHealth: ["מקורות ועדכון", "Sources & freshness"] };
 type Saved = { name: string; tiles: Tile[] };
 
+const noSubscribe = () => () => {}; // read once per render; this component's own writes go through state
+const cleanSaved = (saved: unknown): Saved[] => Array.isArray(saved) ? saved.filter((s: Saved) => typeof s?.name === "string").slice(0, 8).map((s: Saved) => ({ name: s.name.slice(0, 40), tiles: parseLayout(s.tiles) })) : [];
+// undefined: server and hydration render; false: storage unavailable.
+function readLayout(raw: string | null | false | undefined): { tiles: Tile[]; saved: Saved[] } {
+  if (raw === undefined || raw === false) return { tiles: presetLayout("daily"), saved: [] };
+  try { const data = JSON.parse(raw ?? "null"); return { tiles: parseLayout(data?.tiles), saved: cleanSaved(data?.saved) }; }
+  catch { return { tiles: presetLayout("daily"), saved: [] }; }
+}
+
 export function PersonalGrid({ render }: { render: (id: WidgetId) => ReactNode }) {
   const he = useLocale() === "he";
   const t = useTranslations("homeGrid");
@@ -19,24 +28,23 @@ export function PersonalGrid({ render }: { render: (id: WidgetId) => ReactNode }
   const profileId=useActiveProfileId(); // per profile: each person keeps their own look
   const key = `penny.home-layout.v1.${mobile ? "mobile" : "desktop"}`;
   const remoteKey=mobile?"home-mobile":"home-desktop";
-  const [tiles, setTiles] = useState<Tile[]>(() => presetLayout("daily"));
-  const [saved, setSaved] = useState<Saved[]>([]);
+  const tag = `${key}|${profileId}`;
+  const raw = useSyncExternalStore(noSubscribe, () => { try { return localStorage.getItem(key); } catch { return false; } }, () => undefined);
+  const stored = useMemo(() => readLayout(raw), [raw]);
+  const [own, setOwn] = useState<{ tag: string; tiles: Tile[]; saved: Saved[] } | null>(null);
+  const { tiles, saved } = own?.tag === tag ? own : stored;
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
   const [drag, setDrag] = useState<WidgetId | null>(null);
+  const [prevTag, setPrevTag] = useState(tag);
+  if (tag !== prevTag) { setPrevTag(tag); setEditing(false); }
   useEffect(() => {
-    try {
-      const data = JSON.parse(localStorage.getItem(key) ?? "null");
-      setTiles(parseLayout(data?.tiles));
-      setSaved(Array.isArray(data?.saved) ? data.saved.filter((s: Saved) => typeof s?.name === "string").slice(0, 8).map((s: Saved) => ({ name: s.name.slice(0, 40), tiles: parseLayout(s.tiles) })) : []);
-    } catch { setTiles(presetLayout("daily")); setSaved([]); }
     let active=true;
-    void loadPreference(remoteKey).then(value=>{if(!active||!value||typeof value!=="object")return;const data=value as {tiles:unknown;saved:Saved[]};setTiles(parseLayout(data.tiles));setSaved(Array.isArray(data.saved)?data.saved.filter(s=>typeof s?.name==="string").slice(0,8).map(s=>({name:s.name.slice(0,40),tiles:parseLayout(s.tiles)})):[]);}).catch(()=>{});
-    setEditing(false);
+    void loadPreference(remoteKey).then(value=>{if(!active||!value||typeof value!=="object")return;const data=value as {tiles:unknown;saved:Saved[]};setOwn({tag,tiles:parseLayout(data.tiles),saved:cleanSaved(data.saved)});}).catch(()=>{});
     return ()=>{active=false;};
-  }, [key,remoteKey,profileId]);
+  }, [tag,remoteKey]);
   function persist(next: Tile[], layouts = saved) {
-    setTiles(next); setSaved(layouts);
+    setOwn({ tag, tiles: next, saved: layouts });
     void storePreference(remoteKey,{tiles:next,saved:layouts}).catch(()=>toast.error(he?"נשמר מקומית; הסנכרון לשרת נכשל. רעננו לפני ניסיון נוסף.":"Saved locally; server sync failed. Reload before retrying."));
     try { localStorage.setItem(key, JSON.stringify({ tiles: next, saved: layouts })); }
     catch { toast.error(t("browserStorageUnavailable")); }

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,14 +12,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Goal } from "@/lib/types";
 
+const noSubscribe = () => () => {}; // read once per render; this component's own writes go through state
+
 export function GoalFocus() {
   const locale = useLocale(); const t = useTranslations("goalFocus"); const he = locale === "he"; const title = t("smallStepsMeaningfulGoals");
   const q = useQuery({ queryKey: ["plan"], queryFn: getPlan }); const qc = useQueryClient();
   const profileId = useActiveProfileId(); // per profile
   const focusKey = `penny.goal-focus.p${profileId ?? "default"}`;
-  const [selected, setSelected] = useState<number | null>(null);
+  const stored = useSyncExternalStore(noSubscribe, () => { try { return Number(localStorage.getItem(focusKey)) || null; } catch { return null; } }, () => null);
+  const [chosen, setSelected] = useState<{ key: string; id: number } | null>(null);
+  const selected = chosen?.key === focusKey ? chosen.id : stored;
   const [draft, setDraft] = useState<Partial<Goal> | null>(null); const [busy, setBusy] = useState(false);
-  useEffect(() => { try { setSelected(Number(localStorage.getItem(focusKey)) || null); } catch { setSelected(null); } setDraft(null); }, [focusKey]);
+  const [prevFocusKey, setPrevFocusKey] = useState(focusKey);
+  if (focusKey !== prevFocusKey) { setPrevFocusKey(focusKey); setDraft(null); }
   if (q.isPending) return <CardSkeleton label={title} />;
   if (q.isError) return <CardError label={title} />;
   const goal = q.data.goals.find(g => g.id === selected) ?? q.data.goals[0];
@@ -39,7 +44,7 @@ export function GoalFocus() {
       <p className="text-xs text-muted-foreground">{t("savingsAreSelfReported")}</p>
       <div className="flex gap-2"><Button disabled={busy} type="submit">{t("save")}</Button><Button disabled={busy} variant="ghost" type="button" onClick={() => setDraft(null)}>{t("cancel")}</Button></div>
     </form> : <>
-      {goal ? <><label className="block text-sm">{t("myFocus")}<select className="mt-2 min-h-11 w-full rounded-xl border bg-background px-3" value={goal.id} onChange={e => { setSelected(Number(e.target.value)); try { localStorage.setItem(focusKey, e.target.value); } catch { toast.error(t("couldNotSaveYour")); } }}>{q.data.goals.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label><p className="mt-4 text-3xl font-semibold"><bdi>{shekels(goal.savedAmount, locale)}</bdi><span className="ms-2 text-sm font-normal text-muted-foreground">{t("of")} {shekels(goal.targetAmount, locale)}</span></p><progress aria-label={goal.name} value={pct} max={100} className="mt-4 h-3 w-full accent-primary" /><div className="mt-2 flex justify-between text-xs">{[25, 50, 75, 100].map(n => <span key={n} className={pct >= n ? "font-semibold text-primary" : "text-muted-foreground"}>{pct >= n ? "✓ " : ""}{n}%</span>)}</div><p className="mt-3 text-sm text-muted-foreground">{pct >= 100 ? t("youReachedYourGoal") : t("everyStepCountsYou")}</p><Button className="mt-3" variant="outline" onClick={() => setDraft({ ...goal, savedAmount: goal.openingSavedAmount ?? goal.savedAmount })}>{t("updateProgress")}</Button></> : <p className="text-muted-foreground">{t("chooseSomethingMeaningfulAn")}</p>}
+      {goal ? <><label className="block text-sm">{t("myFocus")}<select className="mt-2 min-h-11 w-full rounded-xl border bg-background px-3" value={goal.id} onChange={e => { setSelected({ key: focusKey, id: Number(e.target.value) }); try { localStorage.setItem(focusKey, e.target.value); } catch { toast.error(t("couldNotSaveYour")); } }}>{q.data.goals.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label><p className="mt-4 text-3xl font-semibold"><bdi>{shekels(goal.savedAmount, locale)}</bdi><span className="ms-2 text-sm font-normal text-muted-foreground">{t("of")} {shekels(goal.targetAmount, locale)}</span></p><progress aria-label={goal.name} value={pct} max={100} className="mt-4 h-3 w-full accent-primary" /><div className="mt-2 flex justify-between text-xs">{[25, 50, 75, 100].map(n => <span key={n} className={pct >= n ? "font-semibold text-primary" : "text-muted-foreground"}>{pct >= n ? "✓ " : ""}{n}%</span>)}</div><p className="mt-3 text-sm text-muted-foreground">{pct >= 100 ? t("youReachedYourGoal") : t("everyStepCountsYou")}</p><Button className="mt-3" variant="outline" onClick={() => setDraft({ ...goal, savedAmount: goal.openingSavedAmount ?? goal.savedAmount })}>{t("updateProgress")}</Button></> : <p className="text-muted-foreground">{t("chooseSomethingMeaningfulAn")}</p>}
       <Button className="mt-3 ms-2" variant="ghost" onClick={() => setDraft({ name: "", savedAmount: 0, targetDate: new Date().toISOString().slice(0, 7) })}>{t("newGoal")}</Button>
     </>}
   </CardShell>;

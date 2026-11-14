@@ -50,10 +50,7 @@ export function BankStep({ onComplete }: BankStepProps) {
   });
 
   // Pick the right starting view once we've heard back from the query
-  useEffect(() => {
-    if (isPending || sub != null) return;
-    setSub(integrations.length > 0 ? "ready" : "pick");
-  }, [isPending, integrations.length, sub]);
+  if (!isPending && sub == null) setSub(integrations.length > 0 ? "ready" : "pick");
 
   const connectedIds = new Set(integrations.map((i) => i.provider));
   const selected = selectedId
@@ -501,9 +498,11 @@ function CredentialForm({
   >("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [prevCredentialId, setPrevCredentialId] = useState(credentialId);
+  if (credentialId !== prevCredentialId) {
+    setPrevCredentialId(credentialId);
     setSavedCredentialId(credentialId);
-  }, [credentialId]);
+  }
 
   useEffect(() => {
     if (!isEdit || credentialId == null) return;

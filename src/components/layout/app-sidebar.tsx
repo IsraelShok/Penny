@@ -131,7 +131,8 @@ export function AppSidebar() {
   const [settingsMenu, setSettingsMenu] = useState(onSettings);
   const menuRef = useRef<HTMLDivElement>(null);
   const focusAfterSwap = useRef(false);
-  useEffect(() => { if (onSettings) setSettingsMenu(true); }, [onSettings]);
+  const [prevOnSettings, setPrevOnSettings] = useState(onSettings);
+  if (onSettings !== prevOnSettings) { setPrevOnSettings(onSettings); if (onSettings) setSettingsMenu(true); }
   useEffect(() => {
     if (!focusAfterSwap.current) return;
     focusAfterSwap.current = false;

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { InfoTip } from "@/components/ui/info-tip";
@@ -107,7 +109,8 @@ export function AheadHero({ forecast, ...s }: HeroState & { forecast?: { date: s
   const t = useTranslations("pageHero");
   const ts = useTranslations("sections");
   const locale = useLocale();
-  const until = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+  const [now] = useState(() => Date.now());
+  const until = new Date(now + 30 * 864e5).toISOString().slice(0, 10);
   const soon = (forecast ?? []).filter((f) => f.date <= until);
   return <PageHero title={ts("ahead")} icon={<CalendarClock size={15} aria-hidden="true" />} {...s}
     label={t("aheadLabel")} value={shekels(soon.reduce((sum, f) => sum + f.total, 0), locale)}

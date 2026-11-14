@@ -158,7 +158,8 @@ export function PetCustomizer() {
   const t = useTranslations("pet");
   const { plan, update, loaded } = usePlan();
   const [draft, setDraft] = useState<PetSettings>(plan.pet);
-  useEffect(() => { if (loaded) setDraft(plan.pet); }, [loaded]); // eslint-disable-line react-hooks/exhaustive-deps -- take the stored pet once it loads
+  const [wasLoaded, setWasLoaded] = useState(loaded);
+  if (loaded !== wasLoaded) { setWasLoaded(loaded); if (loaded) setDraft(plan.pet); } // take the stored pet once it loads
   const save = (next: PetSettings) => { setDraft(next); void update({ pet: next }).catch(() => {}); };
   const name = draft.name || t("defaultName");
   const swatch = "size-11 rounded-full ring-offset-2 ring-offset-background focus-visible:outline-2 focus-visible:outline-ring aria-checked:ring-2 aria-checked:ring-foreground";

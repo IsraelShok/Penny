@@ -178,9 +178,11 @@ function CredentialsForm({
     message: string;
   } | null>(null);
 
-  useEffect(() => {
+  const [prevCredentialId, setPrevCredentialId] = useState(credentialId);
+  if (credentialId !== prevCredentialId) {
+    setPrevCredentialId(credentialId);
     setSavedCredentialId(credentialId);
-  }, [credentialId]);
+  }
 
   useEffect(() => {
     if (!isEdit || credentialId == null) return;

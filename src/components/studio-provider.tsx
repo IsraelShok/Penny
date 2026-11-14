@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, useSyncExternalStore, type ReactNode } from "react";
+import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { useLocale } from "next-intl";
@@ -24,31 +25,40 @@ type StudioContextValue = {
 };
 const StudioContext = createContext<StudioContextValue | null>(null);
 
+const noSubscribe = () => () => {}; // read once per render; writes go through state, other tabs via the storage listener
+// Each profile keeps its own look; STUDIO_KEY mirrors the active one for the pre-paint script.
+function readStored(id: number | null): StudioPreferences | null {
+  try {
+    const stored = localStorage.getItem(profileKey(id)) ?? localStorage.getItem(STUDIO_KEY);
+    const legacy = localStorage.getItem("theme");
+    return stored ? parseStudioPreferences(stored) : { ...DEFAULT_STUDIO, theme: legacy === "dark" ? "midnight" : legacy === "light" ? "pearl" : "system" } as StudioPreferences;
+  } catch { return null; /* Preferences remain usable without storage. */ }
+}
+
 /** One owner for appearance, shared by routes and portalled menus/dialogs. */
 export function StudioProvider({ children }: { children: ReactNode }) {
-  const [preferences, setPreferences] = useState<StudioPreferences>(DEFAULT_STUDIO);
-  const [ready, setReady] = useState(false);
+  const ready = useIsHydrated();
   const { resolvedTheme, setTheme } = useTheme();
   const locale = useLocale();
   const profileId=useActiveProfileId(); // per profile: each person keeps their own look
+  // Snapshot is the raw key set so it stays stable between reads; parsed below.
+  const raw = useSyncExternalStore(noSubscribe, () => { try { return JSON.stringify([localStorage.getItem(profileKey(profileId)), localStorage.getItem(STUDIO_KEY), localStorage.getItem("theme")]); } catch { return ""; } }, () => "");
+  const stored = useMemo(() => (raw ? readStored(profileId) : null), [raw, profileId]);
+  const [own, setOwn] = useState<{ id: number | null; p: StudioPreferences } | null>(null);
+  const preferences = own?.id === profileId ? own.p : stored ?? DEFAULT_STUDIO;
+  const setPreferences = useCallback((p: StudioPreferences) => setOwn({ id: profileId, p }), [profileId]);
   useEffect(() => {
-    try {
-      // Each profile keeps its own look; STUDIO_KEY mirrors the active one for the pre-paint script.
-      const stored = localStorage.getItem(profileKey(profileId)) ?? localStorage.getItem(STUDIO_KEY);
-      const legacy = localStorage.getItem("theme");
-      const prefs = stored ? parseStudioPreferences(stored) : { ...DEFAULT_STUDIO, theme: legacy === "dark" ? "midnight" : legacy === "light" ? "pearl" : "system" } as StudioPreferences;
-      setPreferences(prefs);
-      writeLocal(profileId, prefs);
-    } catch { /* Preferences remain usable without storage. */ }
+    if (stored) try { writeLocal(profileId, stored); } catch { /* Preferences remain usable without storage. */ }
+  }, [profileId, stored]);
+  useEffect(() => {
     let active=true;
     void loadPreference("studio").then(value=>{if(active&&value){const prefs=parseStudioPreferences(JSON.stringify(value));setPreferences(prefs);try{writeLocal(profileId,prefs);}catch{}}}).catch(()=>{});
-    setReady(true);
     const sync = (event: StorageEvent) => {
       if (event.key === STUDIO_KEY || event.key === null) setPreferences(parseStudioPreferences(event.newValue));
     };
     window.addEventListener("storage", sync);
     return () => {active=false;window.removeEventListener("storage", sync);};
-  }, [profileId]);
+  }, [profileId, setPreferences]);
   useEffect(() => {
     if (ready) setTheme(preferences.theme === "system" ? "system" : preferences.theme === "midnight" ? "dark" : "light");
   }, [preferences.theme, ready, setTheme]);
@@ -70,7 +80,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     void storePreference("studio",value).catch(()=>toast.error(locale==="he"?"העיצוב נשמר מקומית, אך הסנכרון לשרת נכשל. רעננו לפני ניסיון נוסף.":"Saved locally, but server sync failed. Reload before retrying."));
     try { writeLocal(profileId, value); return true; }
     catch { toast.error(studioCopy(locale).storageError); return false; }
-  }, [locale, profileId]);
+  }, [locale, profileId, setPreferences]);
   return <StudioContext.Provider value={{ preferences, preview: setPreferences, save, resolvedStudioTheme }}>{children}</StudioContext.Provider>;
 }
 

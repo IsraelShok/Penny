@@ -50,7 +50,7 @@ export function LegacyDocument() {
   const tBanks = useTranslations("banks");
   const locale = useLocale();
   const qc = useQueryClient();
-  const docRef = useRef<HTMLDivElement>(null);
+  const [docEl, setDocEl] = useState<HTMLDivElement | null>(null); // state, not a ref: the export buttons read it while rendering their handlers
 
 
   const assets = useQuery({ queryKey: ["assets"], queryFn: getAssets });
@@ -89,7 +89,7 @@ export function LegacyDocument() {
     URL.revokeObjectURL(url);
   };
   const docHtml = () =>
-    `<!doctype html><html lang="${locale}" dir="${locale === "he" ? "rtl" : "ltr"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t("docTitle")}</title><style>body{margin:0;padding:24px;background:#f2f2f7}${LEGACY_CSS}</style></head><body>${docRef.current?.outerHTML ?? ""}</body></html>`;
+    `<!doctype html><html lang="${locale}" dir="${locale === "he" ? "rtl" : "ltr"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t("docTitle")}</title><style>body{margin:0;padding:24px;background:#f2f2f7}${LEGACY_CSS}</style></head><body>${docEl?.outerHTML ?? ""}</body></html>`;
   const exportHtml = () => download(`family-document-${today()}.html`, "text/html", docHtml());
   const exportJson = () =>
     download(`family-document-${today()}.json`, "application/json", JSON.stringify({ generatedAt: new Date().toISOString(), owner: me, notes, sections }, null, 2));
@@ -101,7 +101,7 @@ export function LegacyDocument() {
   const sentRef = useRef("");
   // While auto-export is on, every change to the rendered document (or folder) is sent and written, debounced.
   useEffect(() => {
-    if (!auto?.enabled || loading || !docRef.current) return;
+    if (!auto?.enabled || loading || !docEl) return;
     const html = docHtml();
     const key = auto.dir + html;
     if (key === sentRef.current) return;
@@ -149,7 +149,7 @@ export function LegacyDocument() {
       {loading ? (
         <p className="text-sm text-muted-foreground">{t("loading")}</p>
       ) : (
-        <div ref={docRef} className="legacy-doc" dir={locale === "he" ? "rtl" : "ltr"}>
+        <div ref={setDocEl} className="legacy-doc" dir={locale === "he" ? "rtl" : "ltr"}>
           <h1>{t("docTitle")}</h1>
           <p className="meta">{me ? t("belongsTo", { name: me, date: dateText }) : t("dated", { date: dateText })}</p>
           <p className="intro">{t("docIntro")}</p>

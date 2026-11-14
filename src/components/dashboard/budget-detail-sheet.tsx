@@ -279,7 +279,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
       <div className="space-y-5 p-6 pt-3">
         {data.category.isParent && data.children && data.children.length > 0 && (
           <ChildrenBreakdownSection
-            children={data.children}
+            subcategories={data.children}
             budgetSource={data.budgetSource}
             color={data.category.color}
           />
@@ -456,11 +456,11 @@ function DetailContent({ data }: { data: CategoryDetail }) {
 }
 
 function ChildrenBreakdownSection({
-  children,
+  subcategories: children,
   budgetSource,
   color,
 }: {
-  children: CategoryChildBreakdown[];
+  subcategories: CategoryChildBreakdown[];
   budgetSource: "own" | "rollup" | "leaf";
   color: string;
 }) {

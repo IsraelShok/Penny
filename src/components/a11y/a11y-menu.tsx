@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Accessibility, RotateCcw } from "lucide-react";
@@ -34,27 +34,31 @@ function writeLocal(id: number | null, p: A11yPrefs) {
   } catch { /* Works without storage; the choice just won't survive a reload. */ }
 }
 
+const noSubscribe = () => () => {}; // read once per render; this provider's own writes go through state
+
 /** Owns the accessibility choices for the active profile and the menu sheet; Alt+A opens it from anywhere. */
 export function A11yProvider({ children }: { children: ReactNode }) {
-  const [prefs, setPrefs] = useState<A11yPrefs>(DEFAULT_A11Y);
   const [open, setOpen] = useState(false);
   const profileId = useActiveProfileId();
+  // undefined: server and hydration render; false: no storage.
+  const raw = useSyncExternalStore(noSubscribe, () => { try { return localStorage.getItem(profileKey(profileId)); } catch { return false; } }, () => undefined);
+  const stored = useMemo(() => (raw === undefined || raw === false ? DEFAULT_A11Y : parseA11y(raw)), [raw]);
+  const [own, setOwn] = useState<{ id: number | null; p: A11yPrefs } | null>(null);
+  const prefs = own?.id === profileId ? own.p : stored;
   const latest = useRef(prefs); // quick successive changes each build on the last one, not a stale render
-  latest.current = prefs;
 
   useEffect(() => {
     let live = true;
-    try { setPrefs(parseA11y(localStorage.getItem(profileKey(profileId)))); } catch { /* no storage */ }
-    loadPreference("a11y").then((v) => { if (live && v) { const p = parseA11y(v); setPrefs(p); writeLocal(profileId, p); } }).catch(() => {});
+    loadPreference("a11y").then((v) => { if (live && v) { const p = parseA11y(v); latest.current = p; setOwn({ id: profileId, p }); writeLocal(profileId, p); } }).catch(() => {});
     return () => { live = false; };
   }, [profileId]);
 
-  useEffect(() => { applyA11yClasses(document.documentElement, prefs); }, [prefs]);
+  useEffect(() => { latest.current = prefs; applyA11yClasses(document.documentElement, prefs); }, [prefs]);
 
   const set = useCallback((patch: Partial<A11yPrefs>) => {
     const next = { ...latest.current, ...patch };
     latest.current = next;
-    setPrefs(next);
+    setOwn({ id: profileId, p: next });
     writeLocal(profileId, next);
     void storePreference("a11y", next).catch(() => {}); // local copy already applied; server sync is best effort
   }, [profileId]);
