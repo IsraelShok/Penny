@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { MoreHero } from "@/components/ui/page-hero";
 import { SuggestionsCard } from "@/components/home/suggestions-card";
 import { CalculatorTiles, NavRow, groupedList } from "@/components/more/calculators";
-import { ChevronLeft, LayoutDashboard, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, Sparkles } from "lucide-react";
+import { BookOpen, Calculator, ChevronLeft, LayoutDashboard, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, Sparkles } from "lucide-react";
 import { DailyTip } from "@/components/tips/tips";
 
 /** Everything that isn't daily, in one calm place: the menu stays short, nothing gets lost. */
@@ -15,17 +15,19 @@ const GROUPS = [
     { href: "/wellbeing", key: "wellbeing", Icon: HeartPulse },
   ] },
   { key: "explore", items: [
-    { href: "/ask", key: "ask", Icon: MessageCircleQuestion },
-    { href: "/journey", key: "journey", Icon: Route },
-    { href: "/life", key: "life", Icon: Compass },
+    { href: "/ask", key: "ask", Icon: MessageCircleQuestion, tint: "bg-[#5856d6]" },
+    { href: "/journey", key: "journey", Icon: Route, tint: "bg-[#30b0c7]" },
+    { href: "/life", key: "life", Icon: Compass, tint: "bg-[#007aff]" },
+    { href: "/calculators", key: "calculators", Icon: Calculator, tint: "bg-[#a2845e]" },
+    { href: "/learn", key: "learn", Icon: BookOpen },
   ] },
   { key: "help", items: [
-    { href: "/help", key: "help", Icon: LifeBuoy },
-    { href: "/welcome", key: "welcome", Icon: HandHeart },
+    { href: "/help", key: "help", Icon: LifeBuoy, tint: "bg-[#ff3b30]" },
+    { href: "/welcome", key: "welcome", Icon: HandHeart, tint: "bg-[#ff9500]" },
   ] },
   { key: "documents", items: [
-    { href: "/settings/legacy", key: "legacy", Icon: FileHeart },
-    { href: "/settings/data", key: "import", Icon: FileUp },
+    { href: "/settings/legacy", key: "legacy", Icon: FileHeart, tint: "bg-[#8e8e93]" },
+    { href: "/settings/data", key: "import", Icon: FileUp, tint: "bg-[#8e8e93]" },
   ] },
 ] as const;
 

@@ -1,20 +1,16 @@
 import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
+const QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
 
+function subscribe(onChange: () => void) {
+  const mql = window.matchMedia(QUERY)
+  mql.addEventListener("change", onChange)
+  return () => mql.removeEventListener("change", onChange)
+}
+
+// Server and hydration render as desktop, then switch: reading the window on the first client
+// render made phones hydrate a different sidebar than the server sent.
 export function useIsMobile() {
-  // Match the server on the first client render, then resolve the viewport.
-  const [isMobile, setIsMobile] = React.useState(false)
-
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    setIsMobile(mql.matches)
-    const onChange = (e: MediaQueryListEvent) => {
-      setIsMobile(e.matches)
-    }
-    mql.addEventListener("change", onChange)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
-
-  return isMobile
+  return React.useSyncExternalStore(subscribe, () => window.matchMedia(QUERY).matches, () => false)
 }

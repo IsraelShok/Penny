@@ -17,6 +17,7 @@ import { MonthCelebration } from "./month-celebration";
 import { PersonalGrid } from "./personal-grid";
 import { ScenarioCard } from "./scenario-card";
 import { GoalFocus } from "./goal-focus";
+import { MoneyTreeCard } from "./money-tree-card";
 import { HomeTeasers, WelcomePrompt } from "./home-teasers";
 import { CategoryScroll } from "./category-scroll";
 import { HistoricalTrendCard } from "./historical-trend-card";
@@ -128,6 +129,7 @@ export function HomePage() {
         <div className="mb-6 md:mb-8"><DailyTip /></div>
         <HealthCard />
         <MonthCelebration />
+        <MoneyTreeCard />
         <WelcomePrompt />
         <PersonalGrid render={id => {
           if (id === "goals") return <GoalFocus />;

@@ -57,3 +57,8 @@ next-env.d.ts
 
 # desktop installer output
 /dist-desktop/
+
+# e2e
+/e2e/.data/
+/test-results/
+/playwright-report/

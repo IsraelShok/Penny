@@ -81,9 +81,9 @@ export function ProfilesPage() {
         {managing ? t("manageTitle") : t("title")}
       </h1>
 
-      <ul className="mt-10 flex max-w-3xl flex-wrap justify-center gap-6 sm:gap-8">
-        {profiles.map((p) => (
-          <li key={p.id}>
+      <ul className="mt-10 flex max-w-3xl flex-wrap justify-center gap-6 sm:gap-10">
+        {profiles.map((p, i) => (
+          <li key={p.id} className="motion-safe:animate-[fadeIn_0.45s_ease-out_both]" style={{ animationDelay: `${120 + i * 70}ms` }}>
             <button
               type="button"
               className={tile}
@@ -106,7 +106,7 @@ export function ProfilesPage() {
             </button>
           </li>
         ))}
-        <li>
+        <li className="motion-safe:animate-[fadeIn_0.45s_ease-out_both]" style={{ animationDelay: `${120 + profiles.length * 70}ms` }}>
           <button type="button" className={tile} onClick={() => openEditor()}>
             <span
               className={cn(

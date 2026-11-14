@@ -32,7 +32,7 @@
   "common": {
     "save": "Save",
     "saving": "Saving…",
-      "saveChanges": "Save changes",
+    "saveChanges": "Save changes",
     "saved": "Saved",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -105,7 +105,9 @@
     "collapse": "Collapse menu",
     "future": "Future",
     "activity": "Activity",
-    "mobileNavigation": "Mobile navigation"
+    "mobileNavigation": "Mobile navigation",
+    "calculators": "Calculators",
+    "learn": "Learn"
   },
   "home": {
     "pageTitle": "Home",
@@ -147,7 +149,7 @@
     "allClear": "No transactions waiting for review.",
     "bankConnections": "Bank connections",
     "noBanksConnectedYet": "No banks connected yet.",
-      "manage": "Manage",
+    "manage": "Manage",
     "statusOk": "OK",
     "statusStale": "Not up to date",
     "statusError": "Sync incomplete",
@@ -1180,8 +1182,12 @@
     "Pension": "Pension"
   },
   "banks": {
-    "cash": { "name": "Cash" },
-    "manual": { "name": "Manual" },
+    "cash": {
+      "name": "Cash"
+    },
+    "manual": {
+      "name": "Manual"
+    },
     "isracard": {
       "name": "Isracard",
       "blurb": "Israeli Mastercard / Visa"
@@ -1878,7 +1884,7 @@
   },
   "cashAhead": {
     "title": "Free to spend",
-      "connect": "Connect a bank account",
+    "connect": "Connect a bank account",
     "noBalance": "Connect a bank account to see how much is free until your next salary.",
     "until": "until {date} ({days} days)",
     "perDay": "{amount} a day",
@@ -1909,7 +1915,7 @@
     "loading": "Loading today’s overview…",
     "loadFailed": "Today’s overview could not fully load. Try again.",
     "needsBalance": "No bank balance is available yet. Check the connection and sync.",
-      "connect": "Connect a bank account",
+    "connect": "Connect a bank account",
     "connectHint": "Start your money overview",
     "manageBanks": "Review bank connections",
     "syncHint": "Sync the account to load its balance",
@@ -2016,7 +2022,7 @@
     "hint": "Connect and sync an account to see your transactions and summaries here.",
     "periodTitle": "No transactions in this period yet",
     "periodHint": "Choose another period above or sync your account in bank settings.",
-      "connect": "Connect a bank account",
+    "connect": "Connect a bank account",
     "retry": "Try again"
   },
   "household": {
@@ -3018,7 +3024,15 @@
     "welcome_hint": "Short questions that fit the app to you",
     "control_badge": "Start here",
     "control_title": "Money Center",
-    "control_hint": "Data, commitments, goals, rules, reports and debt planning"
+    "control_hint": "Data, commitments, goals, rules, reports and debt planning",
+    "car_title": "Car cost calculator",
+    "car_hint": "Petrol, hybrid or electric: what each really costs",
+    "discountedHome_title": "Discounted home vs market",
+    "discountedHome_hint": "Dira BeHanacha or buying now: which leaves you better off",
+    "calculators_title": "Calculators",
+    "calculators_hint": "Car, home, debt, saving and more",
+    "learn_title": "Learn",
+    "learn_hint": "Short guides on money, in plain words"
   },
   "telegram": {
     "title": "Telegram bot",
@@ -3028,7 +3042,7 @@
     "howNewBot": "Pick a name and a username for the bot.",
     "howCopy": "Copy the token it sends and paste it here.",
     "tokenLabel": "Bot token",
-      "connect": "Connect",
+    "connect": "Connect",
     "errorFormat": "That doesn't look like a bot token. Copy it again from BotFather.",
     "errorRejected": "Telegram didn't accept the token. Check you copied all of it and that you're online.",
     "privacy": "Stored encrypted on this computer only.",
@@ -3132,7 +3146,7 @@
   "profiles": {
     "title": "Who's using this?",
     "manageTitle": "Manage profiles",
-      "manage": "Manage profiles",
+    "manage": "Manage profiles",
     "done": "Done",
     "add": "Add profile",
     "edit": "Edit profile",
@@ -3690,7 +3704,164 @@
     "r_savings": "Savings (20%)",
     "r_gap": "Left to target",
     "r_covered": "Months already covered",
-    "r_fireTarget": "Target"
+    "r_fireTarget": "Target",
+    "page": {
+      "title": "Calculators",
+      "hint": "Every money question, worked out in your numbers"
+    },
+    "group": {
+      "money": "Saving, investing and debt",
+      "home": "Home",
+      "life": "Car, salary and fees"
+    },
+    "item": {
+      "growth": {
+        "title": "How money grows",
+        "hint": "What a monthly saving becomes over the years"
+      },
+      "debt": {
+        "title": "Getting out of debt",
+        "hint": "Which debt to pay first, and when you are free"
+      },
+      "fi": {
+        "title": "Financial independence",
+        "hint": "When your money can support you"
+      },
+      "discountedHome": {
+        "title": "Discounted home vs market",
+        "hint": "Winning the lottery or buying now"
+      },
+      "renovation": {
+        "title": "Renovation budget",
+        "hint": "What it really costs, and how to pay for it"
+      },
+      "rentBuy": {
+        "title": "Rent or buy",
+        "hint": "On the financial independence page"
+      },
+      "car": {
+        "title": "Car cost",
+        "hint": "Petrol, hybrid or electric: the full cost"
+      },
+      "takeHome": {
+        "title": "Take-home pay",
+        "hint": "Gross to net, on the financial independence page"
+      },
+      "fees": {
+        "title": "Fund fees",
+        "hint": "What fees cost you over the years"
+      },
+      "mortgage": {
+        "title": "Mortgage",
+        "hint": "Tracks, monthly payment and what it really costs"
+      }
+    },
+    "investLink": "See how to start investing",
+    "disclaimer": "Estimates for planning, not financial advice.",
+    "growthCalc": {
+      "inputs": "Your saving",
+      "initial": "Starting amount, ₪",
+      "monthly": "Each month, ₪",
+      "years": "Years",
+      "ret": "Return after fees, % a year",
+      "result": "After {years} years",
+      "split": "You put in {deposited}; the market added {earned}.",
+      "chartLabel": "Balance by year: deposits and returns",
+      "deposited": "Your deposits",
+      "earned": "Returns",
+      "waitCost": "Starting five years later would leave you {amount} less. Time in the market is the biggest lever.",
+      "nudge": "A broad, low-fee index fund or an investment provident fund (קופת גמל להשקעה) lets small monthly amounts grow like this."
+    },
+    "debtCalc": {
+      "debts": "Your debts",
+      "name": "Name",
+      "balance": "Balance, ₪",
+      "rate": "Interest, % a year",
+      "min": "Minimum payment, ₪",
+      "remove": "Remove",
+      "add": "Add a debt",
+      "debtN": "Debt {n}",
+      "sampleCard": "Credit card",
+      "sampleLoan": "Loan",
+      "sampleOverdraft": "Overdraft",
+      "budget": "Total you can pay each month, ₪",
+      "strategy": "Order",
+      "avalanche": "Highest interest first",
+      "snowball": "Smallest balance first",
+      "avalancheHint": "Saves the most interest.",
+      "snowballHint": "Quick wins that keep you motivated.",
+      "result": "Debt-free in",
+      "duration": "{years, plural, =0 {} one {# year} other {# years}}{both, select, yes { and } other {}}{months, plural, =0 {} one {# month} other {# months}}",
+      "interest": "Total interest: {amount}",
+      "compare": "{strategy}: {amount} interest, {time}",
+      "tooLow": "The minimums add up to {amount}; raise the monthly budget to at least that.",
+      "nudge": "Once you are debt-free, keep paying {amount} a month, to yourself. Invested, it becomes your safety net and then your freedom."
+    },
+    "renoCalc": {
+      "what": "What you are renovating",
+      "finish": "Finish level",
+      "basic": "Basic",
+      "standard": "Standard",
+      "premium": "Premium",
+      "kind": {
+        "kitchen": "Kitchens (~{cost})",
+        "bathroom": "Bathrooms (~{cost})",
+        "room": "Rooms (~{cost})",
+        "flooring": "Whole-home flooring (~{cost})",
+        "paint": "Whole-home paint (~{cost})"
+      },
+      "extra": "Other, ₪",
+      "pay": "How you pay",
+      "buffer": "Buffer for surprises, %",
+      "savings": "From savings, ₪",
+      "rate": "Loan interest, % a year",
+      "years": "Loan years",
+      "result": "Total budget",
+      "base": "Works",
+      "bufferAmount": "Buffer",
+      "fromSavings": "From savings",
+      "loan": "Loan",
+      "monthly": "Monthly payment",
+      "interest": "Interest",
+      "nudge": "Saving {monthly} a month for {months} months before starting avoids about {interest} in interest.",
+      "disclaimer": "Typical Israeli prices, Nov 2026; get three quotes. Renovations almost always run over, so keep the buffer. Not financial advice."
+    },
+    "mortgageCalc": {
+      "basics": "The basics",
+      "loan": "Mortgage amount, ₪",
+      "propertyValue": "Property value, ₪",
+      "income": "Net household income, ₪ a month",
+      "prime": "Prime today, %",
+      "inflation": "Expected inflation, % a year",
+      "shock": "Prime change from year 2, points",
+      "tracks": "Your tracks (תמהיל)",
+      "tracksHint": "Banks split a mortgage into tracks. Prime moves with the Bank of Israel rate; fixed stays the same; fixed-linked has a lower rate, but the balance grows with the CPI.",
+      "trackKind": "Track type",
+      "kind": {
+        "prime": "Prime",
+        "fixed": "Fixed, unlinked",
+        "fixedLinked": "Fixed, CPI-linked"
+      },
+      "share": "Share, %",
+      "spread": "Prime +/−, %",
+      "rate": "Rate, %",
+      "years": "Years",
+      "remove": "Remove",
+      "add": "Add a track",
+      "trackLine": "{principal} · first payment {payment} · costs {cost} over its life",
+      "result": "Your mortgage",
+      "firstPayment": "First monthly payment",
+      "maxPayment": "Highest monthly payment (estimate)",
+      "totalPaid": "Total you will pay",
+      "costLine": "{cost} above the loan · ₪{per} per ₪1 borrowed",
+      "warnShares": "The track shares add up to {total}%. They should add up to 100%.",
+      "warnFixed": "Bank of Israel rules require at least {min}% of the mortgage at a fixed rate.",
+      "warnLtv": "The loan is {ltv}% of the property value. For a first home banks lend up to {max}%.",
+      "warnPtiOver": "The payment is {pti}% of your income. Banks won’t approve more than 50%.",
+      "warnPtiHigh": "The payment is {pti}% of your income. Above 40% leaves little room for surprises.",
+      "tip": "Try a prime change of +2 points: if the higher payment still fits comfortably, the mix is safe. Every extra shekel you pay early on the most expensive track saves the most.",
+      "disclaimer": "Rates are examples; take offers from at least three banks or a mortgage advisor."
+    }
   },
   "categoryPicker": {
     "view": "View",
@@ -3906,8 +4077,7 @@
     "skin_901": "Gold",
     "skin_1401": "Denim",
     "skin_1601": "Marble"
-  }
-,
+  },
   "a11y": {
     "nav": "Accessibility",
     "open": "Accessibility menu",
@@ -3960,5 +4130,131 @@
       "todo": "To be filled in by the owner",
       "reviewed": "Last reviewed: {date}"
     }
+  },
+  "moneyTree": {
+    "title": "Your money tree",
+    "netWorth": "Net worth",
+    "artLabel": "Your money tree, at the {stage} stage",
+    "stage": {
+      "0": "Seed",
+      "1": "Sprout",
+      "2": "Sapling",
+      "3": "Young tree",
+      "4": "Blossoming tree",
+      "5": "Fruit-bearing tree",
+      "6": "Ancient tree"
+    },
+    "plant": "Plant your seed: add your accounts, savings and investments, and watch the tree grow with your wealth.",
+    "plantAction": "Plant it",
+    "growing": "Your tree grew by {amount} this month. Money that is invested grows on its own, like water for the roots.",
+    "steady": "Your tree is steady. Every shekel you invest waters the roots and helps it grow.",
+    "autumn": "A little autumn this month. It happens to every tree, and it grows back. Investing for the long run is what makes it bloom.",
+    "water": "Grow it by investing",
+    "toNext": "{amount} more to reach {stage}"
+  },
+  "car": {
+    "title": "Car cost calculator",
+    "subtitle": "What a car really costs to own: gas, hybrid, plug-in or electric",
+    "sharedTitle": "How you drive",
+    "years": "Years you will keep it",
+    "kmPerYear": "Km per year",
+    "fuelPrice": "Fuel, ₪ per litre",
+    "electricityPrice": "Electricity, ₪ per kWh",
+    "investReturn": "Investment return, % a year",
+    "carA": "Car A",
+    "carB": "Car B",
+    "typeLabel": "Engine type",
+    "type": {
+      "gas": "Petrol",
+      "hybrid": "Hybrid",
+      "phev": "Plug-in hybrid",
+      "ev": "Electric"
+    },
+    "price": "Price, ₪",
+    "downShare": "Paid up front, %",
+    "loanRate": "Loan interest, % a year",
+    "loanYears": "Loan years",
+    "moreAssumptions": "More assumptions",
+    "litersPer100": "Litres per 100 km",
+    "kwhPer100": "kWh per 100 km",
+    "electricShare": "Km on electricity, %",
+    "insuranceYearly": "Insurance, ₪ a year",
+    "maintenanceYearly": "Maintenance, ₪ a year",
+    "licenseYearly": "Licence fee, ₪ a year",
+    "resaleAfter5": "Value left after 5 years, %",
+    "resultTitle": "Total cost over {years} years",
+    "same": "Both cars cost about the same.",
+    "verdict": "{car} is cheaper by {amount}, about {perMonth} a month.",
+    "perMonth": "{amount} a month",
+    "perKm": "₪{amount} per km",
+    "loanPayment": "Loan payment: {amount} a month",
+    "part": {
+      "depreciation": "Value lost",
+      "energy": "Fuel and charging",
+      "insurance": "Insurance",
+      "maintenance": "Maintenance",
+      "license": "Licence",
+      "interest": "Loan interest",
+      "missedReturn": "Missed investment return"
+    },
+    "investNudge": "Choosing the cheaper car and investing the difference of {amount} a month lets the saving keep growing. Cash paid for a car stops earning; invested money keeps working.",
+    "investLink": "See how to start investing",
+    "disclaimer": "Estimates from typical Israeli figures (Nov 2026). Change any assumption to match your offer. Not financial advice."
+  },
+  "discountedHome": {
+    "title": "Discounted home vs open market",
+    "subtitle": "Dira BeHanacha (formerly Mehir LaMishtaken) or buying now: where you stand after years",
+    "apartmentTitle": "The apartment",
+    "programTitle": "If you win the lottery",
+    "mortgageTitle": "Mortgage",
+    "moreAssumptions": "More assumptions",
+    "in": {
+      "marketPrice": "Market price, ₪",
+      "equity": "Your own money, ₪",
+      "horizon": "Compare after, years",
+      "appreciation": "Home prices rise, % a year",
+      "discountPct": "Discount, %",
+      "discountCap": "Discount cap, ₪",
+      "yearsToKeys": "Years until the keys",
+      "rent": "Rent while waiting, ₪ a month",
+      "linkedShare": "Price linked to the construction index, %",
+      "indexRate": "Construction index, % a year",
+      "rentGrowth": "Rent rises, % a year",
+      "mortgageRate": "Mortgage interest, % a year",
+      "mortgageYears": "Mortgage years"
+    },
+    "resultTitle": "Where you stand after {years} years",
+    "same": "Both paths end up about the same.",
+    "verdict_discounted": "The discounted home leaves you better off by about {amount}.",
+    "verdict_market": "Buying on the open market now leaves you better off by about {amount}: the wait and the rent eat the discount.",
+    "discountedTitle": "Discounted home",
+    "marketTitle": "Open market, now",
+    "better": "Better",
+    "position": "Home value minus mortgage left and everything paid",
+    "price": "Final price",
+    "discount": "Discount",
+    "indexation": "Index linkage added",
+    "rentPaid": "Rent paid while waiting",
+    "purchaseTax": "Purchase tax",
+    "loan": "Mortgage",
+    "monthlyPayment": "Monthly payment",
+    "interestPaid": "Interest paid",
+    "homeValue": "Home value then",
+    "mortgageLeft": "Mortgage left",
+    "tip": "While you wait for the keys, your equity can grow: money kept in a money-market fund or a broad index fund earns instead of sitting idle. Check eligibility and the lottery terms on the official program site before deciding.",
+    "investLink": "See where to keep the money meanwhile",
+    "disclaimer": "Estimates. The discount, cap, sale and rental limits change between lotteries. Purchase tax by the single-home brackets (2026). Not financial advice."
+  },
+  "learn": {
+    "title": "Knowledge center",
+    "subtitle": "Short, plain guides for every money decision",
+    "search": "Search guides",
+    "topic": "Topic",
+    "all": "All guides",
+    "empty": "No guides match. Try another word.",
+    "minutes": "{n} min read",
+    "takeaway": "The bottom line",
+    "related": "Read next",
+    "disclaimer": "General education, not personal financial advice."
   }
 }
