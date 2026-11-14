@@ -4671,7 +4671,7 @@
   "update": {
     "title": "גרסה חדשה זמינה: {version}",
     "how_desktop": "מורידים את קובץ ההתקנה החדש ומריצים אותו. הנתונים נשמרים.",
-    "how_docker": "מריצים את Penny-update.bat. הוא מגבה את הנתונים קודם.",
+    "how_docker": "מריצים Penny-update.bat (ווינדוס) או ‎./Penny-update.sh (מק). הוא מגבה את הנתונים קודם.",
     "how_source": "מריצים git pull ומפעילים מחדש.",
     "download": "הורדה",
     "whatsNew": "מה חדש",
