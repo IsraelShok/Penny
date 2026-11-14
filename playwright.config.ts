@@ -27,6 +27,6 @@ export default defineConfig({
     url: `http://127.0.0.1:${PORT}/api/health`,
     timeout: 180_000,
     reuseExistingServer: !process.env.CI,
-    env: { SPENT_DATA_DIR: "e2e/.data" },
+    env: { PENNY_DATA_DIR: "e2e/.data" },
   },
 });

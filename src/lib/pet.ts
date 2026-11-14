@@ -1,4 +1,4 @@
-/** Pocket Pal: a small household pet whose mood comes from the finances. Pure; see docs/superpowers/specs/2026-11-14-financial-pet-design.md. */
+/** Pocket Pal: a small household pet whose mood comes from the finances. Pure. */
 
 export type PetMood = "happy" | "ok" | "hungry" | "caring";
 export type PetStat = "food" | "energy" | "joy" | "health" | "tidy";

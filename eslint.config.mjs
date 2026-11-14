@@ -12,7 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Worktrees and local tool output, not project code.
+    ".claude/**",
+    ".playwright-mcp/**",
+    "dist-desktop/**",
   ]),
+  // Electron entry points are CommonJS by design.
+  { files: ["**/*.cjs"], rules: { "@typescript-eslint/no-require-imports": "off" } },
 ]);
 
 export default eslintConfig;

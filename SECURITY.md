@@ -93,6 +93,19 @@ Run `npm run security:audit` to check for known vulnerabilities, and
 `npm run security:outdated` to see if anything is out of date. Re-audit
 after every upgrade.
 
+### Known audit findings (checked 2026-11-14)
+
+`npm audit` reports issues in packages that only the bank scrapers pull in through
+Puppeteer. None of them read data from websites in Penny:
+
+- `extract-zip`, `basic-ftp`, `get-uri`, `proxy-agent`: Puppeteer uses them to download a
+  browser at install time or to read a proxy config. Penny sets no proxy.
+- `zod` 3 inside `chromium-bidi`: checks messages from the local browser process.
+- `glob`, `minimatch`, `deepmerge`: run on fixed values in build or scraper code.
+
+Do not run `npm audit fix --force`: it downgrades `israeli-bank-scrapers` to an old
+version. These findings go away when the scraper libraries update Puppeteer.
+
 ## Threats this design accepts
 
 | Threat | Why we accept it |
