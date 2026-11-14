@@ -69,7 +69,16 @@ describe("parseHtmlTable", () => {
 describe("markDuplicates", () => {
   it("skips only as many identical rows as are already stored", () => {
     const r = { date: "2024-02-01", description: "קפה", amount: -12 };
-    const out = markDuplicates([r, r, { ...r, amount: -13 }], new Map([["2024-02-01|-12|קפה", 1]]));
+    const out = markDuplicates([r, r, { ...r, amount: -13 }], [{ date: "2024-02-01", amount: -12 }]);
     expect(out.map((x) => [x.seq, x.duplicate])).toEqual([[1, true], [2, false], [1, false]]);
+  });
+
+  it("matches a synced row a day apart with other text, but not two days apart", () => {
+    const rows = [
+      { date: "2024-02-01", description: "SUPER-PHARM TLV", amount: -80 },
+      { date: "2024-02-05", description: "שופרסל", amount: -200 },
+    ];
+    const out = markDuplicates(rows, [{ date: "2024-02-02T00:00:00.000Z", amount: -80 }, { date: "2024-02-03", amount: -200 }]);
+    expect(out.map((x) => x.duplicate)).toEqual([true, false]);
   });
 });

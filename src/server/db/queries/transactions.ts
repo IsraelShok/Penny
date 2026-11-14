@@ -87,6 +87,23 @@ export function insertTransactions(
       updated_at = CASE WHEN transactions.status = 'pending' THEN datetime('now') ELSE transactions.updated_at END
   `);
 
+  // A row an imported statement already stored (same account and amount, a day apart at most) becomes this
+  // synced row in place, so its category, notes and tags stay and it is not counted twice. The bank's version wins.
+  const fileTwinStmt = db.prepare(
+    `SELECT id FROM transactions
+     WHERE workspace_id = ? AND provider = 'file' AND account_number = ? AND charged_amount = ?
+       AND abs(julianday(substr(date, 1, 10)) - julianday(substr(?, 1, 10))) <= 1
+     ORDER BY abs(julianday(substr(date, 1, 10)) - julianday(substr(?, 1, 10))) LIMIT 1`
+  );
+  const adoptStmt = db.prepare(`
+    UPDATE transactions SET
+      date = @date, processed_date = @processedDate, original_amount = @originalAmount, original_currency = @originalCurrency,
+      charged_amount = @chargedAmount, charged_currency = @chargedCurrency, description = @description, memo = @memo,
+      type = @type, status = @status, identifier = @identifier, installment_number = @installmentNumber,
+      installment_total = @installmentTotal, provider = @provider, credential_id = @credentialId,
+      sync_run_id = @syncRunId, dedup_hash = @dedupHash, dedup_sequence = @dedupSequence, updated_at = datetime('now')
+    WHERE id = @id`);
+
   const batchInsert = db.transaction(() => {
     for (const txn of transactions) {
       const hash = dedupHashFor(txn);
@@ -126,8 +143,14 @@ export function insertTransactions(
       };
 
       if (batchCount > existingCount) {
-        insertStmt.run(params);
-        added++;
+        const twin = fileTwinStmt.get(workspaceId, txn.accountNumber, txn.chargedAmount, txn.date, txn.date) as { id: number } | undefined;
+        if (twin) {
+          adoptStmt.run({ ...params, id: twin.id });
+          updated++;
+        } else {
+          insertStmt.run(params);
+          added++;
+        }
       } else {
         const result = insertStmt.run(params);
         if (result.changes > 0) {
@@ -978,16 +1001,14 @@ export function deleteCashExpense(workspaceId: number, id: number): boolean {
 
 // ---- Statement file import ---------------------------------------------------
 
-/** Stored rows per "date|amount|description" for one account label, over the given date range. */
-export function countStoredForImport(workspaceId: number, account: string, from: string, to: string): Map<string, number> {
-  const rows = getDb()
+/** Stored rows of one account from a day before `from` to a day after `to` (bank sync and earlier files alike). */
+export function storedForImport(workspaceId: number, account: string, from: string, to: string): { date: string; amount: number }[] {
+  return getDb()
     .prepare(
-      `SELECT substr(date, 1, 10) AS date, charged_amount AS amount, description, COUNT(*) AS n FROM transactions
-       WHERE workspace_id = ? AND account_number = ? AND substr(date, 1, 10) BETWEEN ? AND ?
-       GROUP BY substr(date, 1, 10), charged_amount, description`
+      `SELECT substr(date, 1, 10) AS date, charged_amount AS amount FROM transactions
+       WHERE workspace_id = ? AND account_number = ? AND substr(date, 1, 10) BETWEEN date(?, '-1 day') AND date(?, '+1 day')`
     )
-    .all(workspaceId, account, from, to) as { date: string; amount: number; description: string; n: number }[];
-  return new Map(rows.map((r) => [`${r.date}|${r.amount}|${r.description}`, r.n]));
+    .all(workspaceId, account, from, to) as { date: string; amount: number }[];
 }
 
 /**

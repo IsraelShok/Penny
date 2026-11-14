@@ -17,11 +17,13 @@ services:
     environment:
       # The container is the sandbox; Chromium's own sandbox needs privileges a container does not have.
       PENNY_DISABLE_CHROMIUM_SANDBOX: "1"
-      # Tell the user (in Telegram) when a newer version exists. Nothing is installed automatically.
+      # Tell the user (in the app and Telegram) when a newer release exists. Nothing is installed automatically. 0 turns it off.
       PENNY_UPDATE_CHECK: ${PENNY_UPDATE_CHECK:-1}
     volumes:
       # legacy: spent-data volume from installs before the Penny rename (renaming it would orphan existing data)
       - spent-data:/data
+      # Drop bank and investment-house statements here, one subfolder per account (created on the first scan).
+      - ./imports:/data/import
     security_opt:
       - no-new-privileges:true
 

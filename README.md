@@ -214,12 +214,15 @@ On Windows, double-click `Penny-docker.bat` instead: it builds, starts and opens
 - The app is published on `127.0.0.1` only. The database and encryption key live in the data volume and survive updates.
 - Settings go in `.env` (copied from `.env.example`); compose reads it automatically.
 - The image build runs the test suite. If the tests fail, no image is produced.
-- **Updates:** with Telegram configured, Penny tells you when a newer version exists (`PENNY_UPDATE_CHECK`, on by default in compose). Nothing installs itself. Run `Penny-update.bat` (or `Penny-update.ps1`): it pulls with `--ff-only`, backs up the database and key to `/data/backups` (newest five kept), builds (tests included), switches, and rolls back to the previous image if the new one is not healthy.
+- **Updates:** Penny shows a banner (and a Telegram message, if set up) when a newer release exists. Nothing installs itself. Run `Penny-update.bat` (or `Penny-update.ps1`): it switches to the newest release tag, backs up the database and key to `/data/backups` (newest five kept), builds (tests included), switches, and rolls back to the previous image if the new one is not healthy.
+- **Statement files:** drop bank or investment-house exports into the `imports/` folder next to `docker-compose.yml` (see [Importing statement files](#importing-statement-files)).
 - Ollama on the host: set `PENNY_ALLOW_REMOTE_OLLAMA=1` and use `http://host.docker.internal:11434`.
 
 ### Desktop app
 
 Download **Penny Setup.exe** from the [Releases page](https://github.com/Sergey-Bar/Penny/releases), run it, and open Penny from the Start menu. No Node.js, no terminal. Your data stays in `%APPDATA%\Penny\data` on your computer, and bank sync uses the Chrome or Edge you already have.
+
+When a new version is out, Penny shows a banner with a download link. Run the new installer over the old one: your data stays.
 
 To build the installer yourself: `npm run desktop:build` (output in `dist-desktop/`).
 
@@ -239,6 +242,15 @@ On Linux there is no native menubar. `npm run setup` installs the service and op
 First launch of the menubar on macOS/Windows shows an unsigned-binary warning (Gatekeeper / SmartScreen). That's expected: you built it locally and didn't pay for a code-signing certificate. Right-click → Open (macOS) or "More info" → "Run anyway" (Windows). One-time.
 
 Open **`http://penny.localhost:41234`** and bookmark it.
+
+## Importing statement files
+
+For accounts Penny cannot sync (or months the bank no longer shows), import the bank's or investment house's export (CSV, XLSX, XLS):
+
+- **Drag and drop:** Settings → Data → import a file, and pick the account from the list.
+- **Import folder:** Penny watches a folder (Settings → Data shows where; in Docker it is `./imports`). It creates one subfolder per connected account, such as `max (1234)`. A file dropped there is imported into that account and moved to `imported/` (or to `failed/`, with a note saying why). For an account Penny does not sync, such as a pension fund, create a folder with its name.
+
+Sync and files work together. A transaction that is in both is stored once: same account, same amount, at most a day apart. When the bank sync brings a transaction you already imported from a file, the synced version replaces it and keeps your category, notes and tags.
 
 ## First-time setup
 

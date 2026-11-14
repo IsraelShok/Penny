@@ -3,7 +3,7 @@ import "server-only";
 import fs from "fs";
 import path from "path";
 import { getGlobalSetting, setGlobalSetting } from "@/server/db/queries/settings";
-import { countStoredForImport, insertFileImport } from "@/server/db/queries/transactions";
+import { getAccountNumbers, insertFileImport, storedForImport } from "@/server/db/queries/transactions";
 import { applyMerchantRulesToSyncRun } from "@/server/db/queries/excluded-merchants";
 import { applyRulesToSyncRun } from "@/server/db/queries/rules";
 import { isKeyLocked } from "@/server/lib/encryption";
@@ -15,7 +15,7 @@ import { IMPORT_EXTS, markDuplicates, MAX_IMPORT_ROWS, statementRows, type Impor
 /** Dedupe against stored rows, insert, then the same merchant memory and rules a bank sync gets. Shared by /api/import and the folder scan. */
 export function saveStatementImport(workspaceId: number, account: string, rows: ImportRow[], dryRun = false) {
   const dates = rows.map((r) => r.date).sort();
-  const marked = markDuplicates(rows, countStoredForImport(workspaceId, account, dates[0], dates[dates.length - 1]));
+  const marked = markDuplicates(rows, storedForImport(workspaceId, account, dates[0], dates[dates.length - 1]));
   const fresh = marked.filter((r) => !r.duplicate);
   const duplicates = marked.length - fresh.length;
   if (dryRun || fresh.length === 0) return { ready: fresh.length, duplicates, added: 0, batchId: null as number | null };
@@ -60,6 +60,19 @@ export function moveInto(dir: string, name: string, sub: "imported" | "failed", 
   return dest;
 }
 
+/** Subfolder for one account, e.g. "max (1234)". The account number in brackets is what the scan reads back. */
+export function folderNameFor(a: { accountNumber: string; label: string | null; provider: string }): string {
+  const name = `${a.label || a.provider} (${a.accountNumber})`;
+  return name.replace(/[<>:"/\|?*\u0000-\u001f]/g, "-").trim().slice(0, 80);
+}
+
+/** Account for a subfolder: the number in trailing brackets, else the folder name itself (a new account, e.g. a pension fund). */
+export function accountForFolder(name: string): string {
+  return (/\(([^()]+)\)\s*$/.exec(name)?.[1] ?? name).trim().slice(0, 40);
+}
+
+const SKIP_DIRS = new Set(["imported", "failed"]);
+
 // ---- settings + scan ----
 
 export interface FolderImportConfig {
@@ -89,7 +102,7 @@ export function getFolderImportConfig(): FolderImportConfig {
   } catch {}
   const defaultDir = defaultImportDir();
   return {
-    enabled: s.enabled === true,
+    enabled: s.enabled !== false, // on by default: dropping a statement in the folder should just work
     dir: typeof s.dir === "string" && s.dir ? s.dir : defaultDir,
     defaultDir,
     account: typeof s.account === "string" && s.account.trim() ? s.account : DEFAULT_ACCOUNT,
@@ -146,30 +159,42 @@ export async function scanImportFolder(now = false): Promise<FolderImportConfig>
     try {
       prev = JSON.parse(getGlobalSetting(SEEN) ?? "{}");
     } catch {}
-    const { ready, seen } = pickStableFiles(dir, prev);
-    const files = now ? Object.keys(seen) : ready;
     const workspaceId = firstWorkspace();
-    for (const name of files) {
-      const at = new Date().toISOString();
-      try {
-        const { rows } = await statementRows(new Uint8Array(fs.readFileSync(path.join(dir, name))), name);
-        if (rows.length === 0) throw new Error("noRows");
-        if (rows.length > MAX_IMPORT_ROWS) throw new Error("tooMany");
-        const r = saveStatementImport(workspaceId, c.account, rows);
-        moveInto(dir, name, "imported");
-        c.history.unshift({ at, file: name, added: r.added, duplicates: r.duplicates, error: null });
-        if (r.added > 0) {
-          c.totalAdded += r.added;
-          c.lastAddedAt = at;
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message.slice(0, 200) : "failed";
+    // One subfolder per known account, so a downloaded statement lands on the right account.
+    for (const a of getAccountNumbers(workspaceId)) fs.mkdirSync(path.join(dir, folderNameFor(a)), { recursive: true });
+    const folders: { folder: string; account: string; prefix: string }[] = [{ folder: dir, account: c.account, prefix: "" }];
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory() && !SKIP_DIRS.has(e.name) && !e.name.startsWith(".")) folders.push({ folder: path.join(dir, e.name), account: accountForFolder(e.name), prefix: `${e.name}/` });
+    }
+    const seen: Seen = {};
+    for (const { folder, account, prefix } of folders) {
+      const mine = Object.fromEntries(Object.entries(prev).filter(([k]) => k.startsWith(prefix) && !k.slice(prefix.length).includes("/")).map(([k, v]) => [k.slice(prefix.length), v]));
+      const picked = pickStableFiles(folder, mine);
+      const files = now ? Object.keys(picked.seen) : picked.ready;
+      for (const name of files) {
+        const label = prefix + name;
+        const at = new Date().toISOString();
         try {
-          moveInto(dir, name, "failed", `${at}\n${msg}\n`);
-        } catch {} // file vanished or locked: retried next scan
-        c.history.unshift({ at, file: name, added: 0, duplicates: 0, error: msg });
+          const { rows } = await statementRows(new Uint8Array(fs.readFileSync(path.join(folder, name))), name);
+          if (rows.length === 0) throw new Error("noRows");
+          if (rows.length > MAX_IMPORT_ROWS) throw new Error("tooMany");
+          const r = saveStatementImport(workspaceId, account, rows);
+          moveInto(folder, name, "imported");
+          c.history.unshift({ at, file: label, added: r.added, duplicates: r.duplicates, error: null });
+          if (r.added > 0) {
+            c.totalAdded += r.added;
+            c.lastAddedAt = at;
+          }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message.slice(0, 200) : "failed";
+          try {
+            moveInto(folder, name, "failed", `${at}\n${msg}\n`);
+          } catch {} // file vanished or locked: retried next scan
+          c.history.unshift({ at, file: label, added: 0, duplicates: 0, error: msg });
+        }
+        delete picked.seen[name];
       }
-      delete seen[name];
+      for (const [k, v] of Object.entries(picked.seen)) seen[prefix + k] = v;
     }
     setGlobalSetting(SEEN, JSON.stringify(seen));
     return save({ ...c, history: c.history.slice(0, 20), lastScanAt: new Date().toISOString(), status: "ok", error: null });

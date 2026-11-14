@@ -91,6 +91,7 @@ async function start() {
       HOSTNAME: host,
       PENNY_LISTEN_HOST: host,
       PENNY_RESTARTABLE: "1",
+      PENNY_INSTALL: "desktop",
       PENNY_DATA_DIR: dataDir,
       ...(browser ? { PUPPETEER_EXECUTABLE_PATH: browser } : {}),
     },

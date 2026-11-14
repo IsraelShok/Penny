@@ -36,6 +36,11 @@ export function StatementImportCard() {
   );
   const tooMany = rows.length > MAX_IMPORT_ROWS;
   const deferredAccount = useDeferredValue(account.trim());
+  // Synced accounts, so a statement lands on the same account as the bank sync and dedupes against it.
+  const accounts = useQuery({
+    queryKey: ["import-accounts"],
+    queryFn: async () => ((await (await fetch("/api/transactions/owners")).json()) as { accounts?: { accountNumber: string; label: string | null; provider: string }[] }).accounts ?? [],
+  });
 
   const check = useQuery({
     queryKey: ["file-import-check", deferredAccount, rows],
@@ -155,7 +160,8 @@ export function StatementImportCard() {
 
             <div className="space-y-1.5">
               <Label htmlFor="statement-account">{t("account")}</Label>
-              <Input id="statement-account" value={account} maxLength={40} placeholder={t("accountPlaceholder")} onChange={(e) => setAccount(e.target.value)} />
+              <Input id="statement-account" list="statement-accounts" value={account} maxLength={40} placeholder={t("accountPlaceholder")} onChange={(e) => setAccount(e.target.value)} />
+              <datalist id="statement-accounts">{accounts.data?.map((a) => <option key={a.accountNumber} value={a.accountNumber}>{a.label || a.provider}</option>)}</datalist>
               <p className="text-caption text-muted-foreground">{t("accountHint")}</p>
             </div>
 

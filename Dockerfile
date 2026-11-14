@@ -26,6 +26,7 @@ RUN apt-get update \
 ARG PENNY_COMMIT=unknown
 ENV NODE_ENV=production \
     PENNY_DATA_DIR=/data \
+    PENNY_INSTALL=docker \
     PENNY_COMMIT=${PENNY_COMMIT} \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 COPY --from=build --chown=node:node /app /app

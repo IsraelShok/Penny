@@ -101,17 +101,27 @@ export function buildImportRows(body: string[][], map: ImportMap, positiveIsExpe
 export const importKey = (r: ImportRow) => `${r.date}|${r.amount}|${r.description}`;
 
 /**
- * Marks rows already stored for this account. `existing` counts stored rows per importKey; the
- * n-th identical row in the file is a duplicate only if at least n are already stored, so two
- * real coffees on the same day both survive. `seq` is that occurrence number (for dedup_sequence).
+ * Marks rows already stored for this account, whether a bank sync or an earlier file stored them.
+ * A stored row matches a file row with the same amount dated within a day (banks and exports often
+ * differ by a day and in the description text); each stored row matches at most one file row, so two
+ * real coffees both survive. `seq` numbers identical rows in the file (for dedup_sequence).
  */
-export function markDuplicates(rows: ImportRow[], existing: Map<string, number>) {
+export function markDuplicates(rows: ImportRow[], stored: { date: string; amount: number }[]) {
+  const day = (d: string) => Date.parse(d.slice(0, 10)) / 86_400_000;
+  const pool = stored.map((r) => ({ day: day(r.date), amount: r.amount, used: false }));
   const seen = new Map<string, number>();
   return rows.map((r) => {
     const k = importKey(r);
     const seq = (seen.get(k) ?? 0) + 1;
     seen.set(k, seq);
-    return { ...r, seq, duplicate: seq <= (existing.get(k) ?? 0) };
+    const d = day(r.date);
+    let best: (typeof pool)[number] | undefined;
+    for (const p of pool) {
+      if (p.used || p.amount !== r.amount || Math.abs(p.day - d) > 1) continue;
+      if (!best || Math.abs(p.day - d) < Math.abs(best.day - d)) best = p;
+    }
+    if (best) best.used = true;
+    return { ...r, seq, duplicate: best !== undefined };
   });
 }
 

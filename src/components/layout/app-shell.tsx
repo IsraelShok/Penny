@@ -9,6 +9,7 @@ import {
 import { AppSidebar } from "./app-sidebar";
 import { PageWheelNav } from "./page-wheel-nav";
 import { AlertNotifier } from "./alert-notifier";
+import { UpdateBanner } from "./update-banner";
 import { BottomBar } from "./bottom-bar";
 import { PrivacyHotkey } from "@/components/settings/privacy-mode-switch";
 import { useTranslations } from "next-intl";
@@ -35,6 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-background focus:px-5 focus:py-3 focus:outline-2">{t("skipToContent")}</a>
       <AppSidebar />
       <SidebarInset id="main-content" tabIndex={-1} className="mobile-dock-content">
+        <UpdateBanner />
         {children}
         <Suspense fallback={null}><PageWheelNav /></Suspense>
         <AlertNotifier />

@@ -11,7 +11,8 @@ const HELP_INTRO = "לחצו ☰ תפריט למטה בכל רגע.";
 import { listAllWorkspaceIds } from "../lib/workspace-context";
 import { israelToday } from "../lib/date-utils";
 import { getActivitySnapshot } from "../sync/activity";
-import { checkForUpdate, createUpdateNotifier } from "../update/check";
+import { createUpdateNotifier, HOW_TO_UPDATE } from "../update/check";
+import { currentInstall, latestUpdate, updatesEnabled } from "../update/latest";
 import { redactError } from "../lib/redact";
 
 declare global {
@@ -142,18 +143,12 @@ export async function restartBot(): Promise<void> {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** With PENNY_UPDATE_CHECK=1, tells the user in Telegram when the tracked branch has a newer commit. Never installs anything. */
+/** Tells the user in Telegram once per new release (the app also shows a banner). Off with PENNY_UPDATE_CHECK=0. Never installs anything. */
 function scheduleUpdateCheck(send: (text: string) => Promise<void>): void {
-  const current = pennyEnv("COMMIT") ?? "";
-  if (pennyEnv("UPDATE_CHECK") !== "1" || !current || current === "unknown") return;
-
-  const notify = createUpdateNotifier(send);
+  if (!updatesEnabled()) return;
+  const notify = createUpdateNotifier(send, HOW_TO_UPDATE[currentInstall()]);
   const run = async () => {
-    const info = await checkForUpdate({
-      repo: pennyEnv("UPDATE_REPO") || "Sergey-Bar/Penny",
-      branch: pennyEnv("UPDATE_BRANCH") || "main",
-      current,
-    });
+    const info = await latestUpdate();
     if (info) await notify(info).catch((err) => console.error("[update]", redactError(err)));
   };
   setTimeout(() => void run(), 60_000).unref();

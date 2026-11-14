@@ -1,0 +1,35 @@
+name: Release
+
+# Push a tag like v0.2.0 (matching package.json "version") to publish a release with the Windows installer.
+# Running copies see it through the update banner; Docker users update with Penny-update.bat.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Tag matches package.json
+        shell: bash
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "1"
+      - run: npm test
+      - run: npm run desktop:build
+      - name: Publish the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp "dist-desktop/Penny Setup ${GITHUB_REF_NAME#v}.exe" "Penny-Setup.exe"
+          gh release create "$GITHUB_REF_NAME" "Penny-Setup.exe" --title "Penny $GITHUB_REF_NAME" --generate-notes

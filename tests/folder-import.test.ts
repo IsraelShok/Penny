@@ -10,7 +10,7 @@ vi.mock("@/server/db/queries/rules", () => ({}));
 vi.mock("@/server/db", () => ({}));
 vi.mock("@/server/lib/encryption", () => ({ isKeyLocked: () => false }));
 
-import { isImportable, moveInto, pickStableFiles } from "@/server/lib/folder-import";
+import { accountForFolder, folderNameFor, isImportable, moveInto, pickStableFiles } from "@/server/lib/folder-import";
 import { statementRows } from "@/lib/file-import";
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "folder-import-"));
@@ -55,5 +55,14 @@ describe("folder import files", () => {
       { date: "2024-02-01", description: "קפה", amount: -12.5 },
       { date: "2024-02-02", description: "משכורת", amount: 1000 },
     ]);
+  });
+});
+
+describe("account subfolders", () => {
+  it("names a folder per account and reads the account back", () => {
+    const name = folderNameFor({ accountNumber: "1234", label: "Max: family/card", provider: "max" });
+    expect(name).toBe("Max- family-card (1234)");
+    expect(accountForFolder(name)).toBe("1234");
+    expect(accountForFolder("Altshuler pension")).toBe("Altshuler pension");
   });
 });

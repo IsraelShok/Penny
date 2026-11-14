@@ -2488,7 +2488,7 @@
     "positiveIsExpense": "Positive amounts are spending (as on card statements)",
     "account": "Account name",
     "accountPlaceholder": "e.g. Isracard 1234",
-    "accountHint": "Use the same name every time — that's how duplicates are found.",
+    "accountHint": "Pick an existing account so rows from sync and from the file are not counted twice.",
     "previewCaption": "First ten rows",
     "summary": "{ready} ready to save · {skipped} rows without data skipped · {duplicates} already there",
     "tooMany": "Up to {max} rows per import. Split the file by period.",
@@ -2527,7 +2527,7 @@
       "enable": "Import automatically from the folder",
       "dir": "Folder",
       "saveDir": "Save",
-      "dirHint": "Full path. The folder is created if missing.",
+      "dirHint": "Full path. Each account gets its own subfolder here: a file dropped in it goes to that account. Files in the main folder go to the account below. For a new account (say a pension fund), just create a folder with its name.",
       "resetDir": "Back to the default folder",
       "account": "Account name for files",
       "minutes": "Scan every (minutes, 1–60)",
@@ -4256,5 +4256,14 @@
     "takeaway": "The bottom line",
     "related": "Read next",
     "disclaimer": "General education, not personal financial advice."
+  },
+  "update": {
+    "title": "Penny {version} is available",
+    "how_desktop": "Download the new installer and run it. Your data stays.",
+    "how_docker": "Run Penny-update.bat. It backs up your data first.",
+    "how_source": "Run git pull and restart Penny.",
+    "download": "Download",
+    "whatsNew": "What's new",
+    "dismiss": "Not now"
   }
 }
