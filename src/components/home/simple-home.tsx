@@ -246,7 +246,7 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
                 <div className="px-3 pt-3">
                   <div className="flex items-center justify-between gap-4 px-2">
                     <h2 className="text-headline font-semibold">{t("linesTitle")}</h2>
-                    <div className="w-60 shrink-0">{trackButton}</div>
+                    <div className="w-fit shrink-0 whitespace-nowrap">{trackButton}</div>
                   </div>
                   <LinesChart lines={lines} selected={current.key} onSelect={setSelected} label={t("linesTitle")} />
                 </div>

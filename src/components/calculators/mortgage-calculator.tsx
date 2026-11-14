@@ -59,10 +59,10 @@ export function MortgageCalculator() {
             <li key={i} className="rounded-xl border border-border/60 p-3">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <Select value={tr.kind} onValueChange={(k) => k && setTrack(i, { kind: k as TrackKind, ratePct: RATE[k as TrackKind] })}>
-                  <SelectTrigger className="min-w-48" aria-label={t("trackKind")}><SelectValue>{(k: string) => t(`kind.${k}`)}</SelectValue></SelectTrigger>
+                  <SelectTrigger className="w-auto min-w-48" aria-label={t("trackKind")}><SelectValue>{(k: string) => t(`kind.${k}`)}</SelectValue></SelectTrigger>
                   <SelectContent>{KINDS.map((k) => <SelectItem key={k} value={k}>{t(`kind.${k}`)}</SelectItem>)}</SelectContent>
                 </Select>
-                <button type="button" onClick={() => set({ tracks: v.tracks.filter((_, j) => j !== i) })} disabled={v.tracks.length === 1} className="min-h-11 rounded-full px-3 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-ring">
+                <button type="button" onClick={() => set({ tracks: v.tracks.filter((_, j) => j !== i) })} disabled={v.tracks.length === 1} className="min-h-11 rounded-full px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-ring">
                   {t("remove")}
                 </button>
               </div>
