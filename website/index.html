@@ -189,18 +189,8 @@ npm run setup</pre></div></div>
 <!-- Pip is BoopFace (MIT), the same face the app uses. Photos: Unsplash free licence. -->
 <script type="module">
   import './assets/boopface/boopface-lite.js';
+  import './os-lead.js';
   const pip = document.querySelector('boop-face'), say = document.getElementById('pip-say'), moods = [...document.querySelectorAll('[data-pip]')];
-  // Lead with the visitor's OS; without JS, Windows stays primary. iPads report as Mac, so touch rules them out.
-  const ua = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent;
-  const mac = /mac/i.test(ua);
-  const os = /android|iphone|ipad/i.test(navigator.userAgent) || (mac && navigator.maxTouchPoints > 1) ? null
-    : mac ? 'mac' : /linux|x11|cros|chrome os/i.test(ua) ? 'linux' : null;
-  const lead = os && document.querySelector(`.cta [data-os="${os}"]`);
-  if (lead) {
-    for (const b of document.querySelectorAll('.cta [data-os]')) b.classList.replace('btn-primary', 'btn-ghost');
-    lead.classList.replace('btn-ghost', 'btn-primary');
-    lead.parentElement.prepend(lead);
-  }
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) pip.setAttribute('motion', 'reduce');
   for (const b of moods) b.addEventListener('click', () => {
     pip.play?.(b.dataset.pip);
