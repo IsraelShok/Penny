@@ -37,7 +37,9 @@
         <h1><em>כסף רגוע</em><br>למשק הבית.</h1>
         <p class="lead">הבנקים, התקציב והעתיד שלכם במקום אחד. תקציב לכל שבוע, כלים לכל החלטה גדולה, וכל הנתונים נשארים אצלכם בבית.</p>
         <div class="cta">
-          <a class="btn btn-primary" href="https://github.com/Sergey-Bar/Penny/releases">הורדה ל-Windows</a>
+          <a class="btn btn-primary" data-os="win" href="https://github.com/Sergey-Bar/Penny/releases/latest">הורדה ל-Windows</a>
+          <a class="btn btn-ghost" data-os="mac" href="https://github.com/Sergey-Bar/Penny/releases/latest">הורדה ל-Mac</a>
+          <a class="btn btn-ghost" data-os="linux" href="#install">Docker</a>
           <a class="btn btn-ghost" href="https://github.com/Sergey-Bar/Penny">הקוד בגיטהאב</a>
         </div>
       </div>
@@ -166,10 +168,10 @@
     <div class="wrap">
       <div class="section-head">
         <span class="kicker">התקנה</span>
-        <h2>שלוש דרכים להתחיל.</h2>
+        <h2>ארבע דרכים להתחיל.</h2>
         <p>בפעם הראשונה, תהליך פתיחה קצר מלווה אתכם: פרופיל ופיפ, חיבור בנק או ייבוא קובץ, יעד חודשי ותקציבים.</p>
       </div>
-      <div class="install"><div class="card"><span class="tag">הכי פשוט</span><h3>Windows</h3><p>מורידים את Penny Setup.exe ומריצים. בלי טרמינל ובלי Node.js. לעדכון, מריצים את המתקין החדש.</p><a class="btn btn-solid" href="https://github.com/Sergey-Bar/Penny/releases">להורדה</a></div><div class="card"><span class="tag">מומלץ</span><h3>Docker</h3><p>הכול בקונטיינר מבודד, עם עדכון וחזרה אוטומטית לגרסה הקודמת אם משהו לא תקין.</p><pre>docker compose up -d --build</pre></div><div class="card"><span class="tag">למפתחים</span><h3>מקוד המקור</h3><p>מתקין שירות שרץ תמיד, ואפליקציה בשורת התפריטים ב-macOS וב-Windows.</p><pre>git clone https://github.com/Sergey-Bar/Penny.git
+      <div class="install"><div class="card"><span class="tag">הכי פשוט</span><h3>Windows</h3><p>מורידים את Penny Setup.exe ומריצים. בלי טרמינל ובלי Node.js. לעדכון, מריצים את המתקין החדש.</p><a class="btn btn-solid" href="https://github.com/Sergey-Bar/Penny/releases/latest">להורדה</a></div><div class="card"><span class="tag">הכי פשוט</span><h3>macOS</h3><p>מורידים את קובץ ה-dmg (ל-Apple silicon או ל-Intel) וגוררים ל-Applications. בפתיחה הראשונה: הגדרות המערכת ← פרטיות ואבטחה ← לפתוח בכל זאת.</p><a class="btn btn-solid" href="https://github.com/Sergey-Bar/Penny/releases/latest">להורדה</a></div><div class="card"><span class="tag">מומלץ</span><h3>Docker</h3><p>הכול בקונטיינר מבודד, עם עדכון וחזרה אוטומטית לגרסה הקודמת אם משהו לא תקין.</p><pre>docker compose up -d --build</pre></div><div class="card"><span class="tag">למפתחים</span><h3>מקוד המקור</h3><p>מתקין שירות שרץ תמיד, ואפליקציה בשורת התפריטים ב-macOS וב-Windows.</p><pre>git clone https://github.com/Sergey-Bar/Penny.git
 cd Penny && npm install
 npm run setup</pre></div></div>
       <p class="note">זה כלי אישי לחשבונות שלכם בלבד. משיכת נתונים אוטומטית מבנקים עלולה להפר את תנאי השימוש שלהם. המחשבונים נותנים הערכה, לא ייעוץ.</p>
@@ -187,6 +189,7 @@ npm run setup</pre></div></div>
 <!-- Pip is BoopFace (MIT), the same face the app uses. Photos: Unsplash free licence. -->
 <script type="module">
   import './assets/boopface/boopface-lite.js';
+  import './os-lead.js';
   const pip = document.querySelector('boop-face'), say = document.getElementById('pip-say'), moods = [...document.querySelectorAll('[data-pip]')];
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) pip.setAttribute('motion', 'reduce');
   for (const b of moods) b.addEventListener('click', () => {
