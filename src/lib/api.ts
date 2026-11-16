@@ -479,6 +479,39 @@ export async function fetchInsuranceDocument(docId: number) {
   return res.blob();
 }
 
+export function getPlanned() {
+  return fetchJSON<import("./planned").PlannedPayload>(`/api/planned`);
+}
+
+/** Creates a planned expense, or updates it when item.id is set. */
+export function savePlannedItem(item: Record<string, unknown>) {
+  return fetchJSON<{ success: boolean; id: number }>(`/api/planned`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ item }),
+  });
+}
+
+export function deletePlannedItem(id: number) {
+  return fetchJSON<{ success: boolean }>(`/api/planned/${id}`, { method: "DELETE" });
+}
+
+export function setPlannedItemStatus(id: number, status: "planned" | "matched" | "cancelled") {
+  return fetchJSON<{ success: boolean }>(`/api/planned/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+}
+
+export function plannedAction(action: "match" | "link" | "reject" | "unlink", ids: { itemId?: number; txnId?: number } = {}) {
+  return fetchJSON<{ success?: boolean; matched?: number; ambiguous?: number }>(`/api/planned/act`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, ...ids }),
+  });
+}
+
 export function getAssets() {
   return fetchJSON<AssetsPayload>(`/api/assets`);
 }
