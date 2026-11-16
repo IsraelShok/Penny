@@ -918,16 +918,85 @@ export interface Goal {
 
 export const POLICY_KINDS = ["health", "shaban", "life", "mortgage_life", "disability", "long_term_care", "home", "car", "travel", "other"] as const;
 
+export const INSURANCE_DOC_KINDS = ["policy", "appendix", "renewal", "claim", "other"] as const;
+
 export interface InsurancePolicy {
   id: number;
   name: string;
   kind: (typeof POLICY_KINDS)[number];
   provider: string | null;
+  /** The monthly cost. A yearly premium is stored as premium / 12. */
   monthlyPremium: number;
   /** YYYY-MM the policy renews, if known. */
   renewalMonth?: string | null;
   /** Who the policy covers, free text (a name); empty means the whole household. */
   insured?: string | null;
+  policyNumber?: string | null;
+  /** Account number the premium is charged to; empty matches any account. */
+  paymentAccount?: string | null;
+  /** Text that identifies this policy on the statement, e.g. "הפניקס". */
+  matchPattern?: string | null;
+  /** YYYY-MM-DD. */
+  startDate?: string | null;
+  /** YYYY-MM-DD; drives the renewal reminder when set. */
+  endDate?: string | null;
+  /** Sum insured. */
+  coverage?: number | null;
+  deductible?: number | null;
+  agentName?: string | null;
+  agentPhone?: string | null;
+  notes?: string | null;
+  archived?: boolean;
+}
+
+export interface InsuranceDocument {
+  id: number;
+  policyId: number;
+  fileName: string;
+  originalName: string;
+  mime: string;
+  size: number;
+  kind: (typeof INSURANCE_DOC_KINDS)[number];
+  uploadedAt: string;
+}
+
+export interface InsurancePayments {
+  /** Gross premium charges in the last 12 months. */
+  last12: number;
+  count: number;
+  lastDate: string | null;
+  lastAmount: number | null;
+}
+
+export interface InsurancePolicyView extends InsurancePolicy {
+  archived: boolean;
+  documents: InsuranceDocument[];
+  payments: InsurancePayments;
+  renewalSoon: boolean;
+}
+
+/** Insurance-looking charges that no policy explains yet. */
+export interface InsuranceUnlinkedCharge {
+  description: string;
+  account: string;
+  count: number;
+  total: number;
+  lastDate: string;
+  lastAmount: number;
+}
+
+export interface InsurancePayload {
+  policies: InsurancePolicyView[];
+  unlinked: InsuranceUnlinkedCharge[];
+  totals: {
+    count: number;
+    monthly: number;
+    paidLast12: number;
+    renewalsSoon: number;
+    documents: number;
+  };
+  /** Account numbers that appear in transactions, for the paying-account picker. */
+  accounts: string[];
 }
 
 export interface PlanPayload {

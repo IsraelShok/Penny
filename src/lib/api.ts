@@ -24,6 +24,7 @@ import type {
   MarketsPayload,
   FiPayload,
   PlanPayload,
+  InsurancePayload,
 } from "./types";
 import { getActiveProfileIdSync, getActiveWorkspaceIdSync } from "./workspace-store";
 
@@ -431,6 +432,51 @@ export function getFi() {
 
 export function getMarkets() {
   return fetchJSON<MarketsPayload>(`/api/markets`);
+}
+
+export function getInsurance() {
+  return fetchJSON<InsurancePayload>(`/api/insurance`);
+}
+
+/** Creates a policy, or updates it when item.id is set. */
+export function saveInsurancePolicy(item: Record<string, unknown>) {
+  return fetchJSON<{ success: boolean; id: number }>(`/api/insurance`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ item }),
+  });
+}
+
+export function deleteInsurancePolicy(id: number) {
+  return fetchJSON<{ success: boolean }>(`/api/insurance/${id}`, { method: "DELETE" });
+}
+
+export function uploadInsuranceDocument(policyId: number, file: File, kind: string) {
+  const form = new FormData();
+  form.set("file", file);
+  form.set("kind", kind);
+  return fetchJSON<import("./types").InsuranceDocument>(`/api/insurance/${policyId}/documents`, { method: "POST", body: form });
+}
+
+export function setInsuranceDocumentKind(docId: number, kind: string) {
+  return fetchJSON<{ success: boolean }>(`/api/insurance/documents/${docId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind }),
+  });
+}
+
+export function deleteInsuranceDocument(docId: number) {
+  return fetchJSON<{ success: boolean }>(`/api/insurance/documents/${docId}`, { method: "DELETE" });
+}
+
+/** The stored file as a blob, so a non-default workspace opens the right one. */
+export async function fetchInsuranceDocument(docId: number) {
+  const res = await fetch(`/api/insurance/documents/${docId}`, withWorkspaceHeader()).catch(() => {
+    throw new Error(friendlyError("network"));
+  });
+  if (!res.ok) throw new Error(friendlyError(res.status, await res.text().catch(() => "")));
+  return res.blob();
 }
 
 export function getAssets() {

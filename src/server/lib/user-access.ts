@@ -33,8 +33,8 @@ export function endUserSession(request:Request){const token=cookieToken(request)
 /** Fail closed for every API not explicitly supported for household members. */
 export function allowedMemberRoute(path:string,method:string,role:"viewer"|"editor"){
  if(path==="/api/access"||path==="/api/workspaces"&&method==="GET"||path==="/api/preferences")return true;
- const reads=/^\/api\/(home|summary|cash-ahead|balance-forecast|control|plan|assets|fi|overview|recap|resilience|wellbeing|suggestions|insights|periodic|budgets|categories|transactions)(\/|$)/;
+ const reads=/^\/api\/(home|summary|cash-ahead|balance-forecast|control|plan|assets|fi|overview|recap|resilience|wellbeing|suggestions|insights|periodic|budgets|categories|transactions|insurance)(\/|$)/;
  if(method==="GET")return reads.test(path);
  if(role!=="editor")return false;
- return /^\/api\/(control|plan|periodic|budgets|categories|transactions)(\/|$)/.test(path);
+ return /^\/api\/(control|plan|periodic|budgets|categories|transactions|insurance)(\/|$)/.test(path);
 }
