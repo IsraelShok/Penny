@@ -192,8 +192,9 @@ npm run setup</pre></div></div>
   const pip = document.querySelector('boop-face'), say = document.getElementById('pip-say'), moods = [...document.querySelectorAll('[data-pip]')];
   // Lead with the visitor's OS; without JS, Windows stays primary. iPads report as Mac, so touch rules them out.
   const ua = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent;
-  const os = /android|iphone|ipad/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1 ? null
-    : /mac/i.test(ua) ? 'mac' : /linux|x11|cros/i.test(ua) ? 'linux' : null;
+  const mac = /mac/i.test(ua);
+  const os = /android|iphone|ipad/i.test(navigator.userAgent) || (mac && navigator.maxTouchPoints > 1) ? null
+    : mac ? 'mac' : /linux|x11|cros|chrome os/i.test(ua) ? 'linux' : null;
   const lead = os && document.querySelector(`.cta [data-os="${os}"]`);
   if (lead) {
     for (const b of document.querySelectorAll('.cta [data-os]')) b.classList.replace('btn-primary', 'btn-ghost');
