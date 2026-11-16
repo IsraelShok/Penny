@@ -5,7 +5,7 @@ import { usePlan } from "@/hooks/use-plan";
 import { Segmented } from "@/components/ui/segmented";
 import { HOME_STYLES, type HomeStyle } from "@/lib/plan";
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Palette } from "lucide-react";
 
 import { useRouter } from "next/navigation";
 import { StudioEditor } from "@/components/dashboard/studio-editor";
@@ -55,7 +55,7 @@ export default function AppearanceSettingsPage() {
   ];
 
   return (
-    <SectionShell title={t("title")} description={t("description")}>
+    <SectionShell title={t("title")} description={t("description")} icon={<Palette aria-hidden />}>
       <SettingCard title={t("languageCardTitle")} description={t("languageCardDescription")}>
         <div role="radiogroup" aria-label={t("languageCardTitle")} className="divide-y divide-border">
           {langOptions.map((o) => {

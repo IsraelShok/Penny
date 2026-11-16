@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronDown, Plus, AlertCircle, Menu, MoreVertical, Landmark, CalendarDays, Tags, ArrowLeftRight, PiggyBank, Settings, SlidersHorizontal, Search } from "lucide-react";
+import { ChevronDown, Plus, AlertCircle, Menu, MoreVertical, Landmark, CalendarDays, Tags, ArrowLeftRight, PiggyBank, Settings, SlidersHorizontal, Search, ArrowUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Forward } from "@/components/ui/dir-chevron";
 import { MonthNav, MonthStrip, monthKey, shiftMonth } from "@/components/ui/month-nav";
+import { Segmented } from "@/components/ui/segmented";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { toast } from "sonner";
 import {
@@ -32,8 +34,11 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
   const t = useTranslations("home.simple");
   const locale = useLocale();
   const [offset, setOffset] = useState(0);
-  // Desktop: which line the detail panel shows.
+  // Desktop: which line the detail panel shows, and how the chart is ordered and narrowed.
   const [selected, setSelected] = useState("variable");
+  const [chartSort, setChartSort] = useState<"amount" | "name">("amount");
+  const [chartDesc, setChartDesc] = useState(true);
+  const [chartFilter, setChartFilter] = useState<"all" | "over" | "active">("all");
 
   const queryClient = useQueryClient();
   const tCat = useTranslations("categoriesSeeded");
@@ -172,7 +177,12 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
           ],
         };
         const lines = [variableLine, ...tracked, savingsLine, fixedLine, incomeLine, offLine];
-        const current = lines.find((l) => l.key === selected) ?? variableLine;
+        // The chart sorts biggest first and can be narrowed, so a household with many categories still finds one.
+        const overLine = (l: LineView) => !!l.showLeft && l.expected > 0 && l.spent > l.expected;
+        const visibleLines = lines
+          .filter((l) => (chartFilter === "all" ? true : chartFilter === "over" ? overLine(l) : l.spent > 0))
+          .sort((a, b) => (chartSort === "name" ? a.title.localeCompare(b.title, locale) : chartDesc ? b.spent - a.spent : a.spent - b.spent));
+        const current = visibleLines.find((l) => l.key === selected) ?? visibleLines[0] ?? variableLine;
 
         const spentPct = cf.totalExpected > 0 ? Math.min(100, (cf.totalSpent / cf.totalExpected) * 100) : cf.totalSpent > 0 ? 100 : 0;
         const hero = (
@@ -215,12 +225,13 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
             }}
           />
         );
-        const panel = (l: LineView) => (
+        // Desktop detail opens its first section, so the weeks sit right under the chart; phone cards stay closed.
+        const panel = (l: LineView, openFirst = false) => (
           <>
             <Head title={l.title}>{l.menu}</Head>
             {!l.noMeter && <Meter title={l.title} spent={l.spent} expected={l.expected} spentLabel={l.spentLabel} expectedLabel={l.expectedLabel} tone={l.tone} showLeft={l.showLeft} />}
             {l.noMeter && <div className="h-3" />}
-            {l.sections.map((s) => <Expand key={s.label} id={`home.${l.key}.${s.label}`} label={s.label} total={s.total}>{s.content}</Expand>)}
+            {l.sections.map((s, i) => <Expand key={s.label} id={`home.${l.key}.${s.label}`} label={s.label} total={s.total} defaultOpen={openFirst && i === 0}>{s.content}</Expand>)}
           </>
         );
         const card = (l: LineView) => <Card key={l.key}>{panel(l)}</Card>;
@@ -244,15 +255,42 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
               {hero}
               <Card>
                 <div className="px-3 pt-3">
-                  <div className="flex items-center justify-between gap-4 px-2">
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-2">
                     <h2 className="text-headline font-semibold">{t("linesTitle")}</h2>
-                    <div className="w-fit shrink-0 whitespace-nowrap">{trackButton}</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Segmented
+                        label={t("filterLabel")}
+                        value={chartFilter}
+                        onChange={(v) => setChartFilter(v as typeof chartFilter)}
+                        options={[
+                          { value: "all", label: t("filterAll") },
+                          { value: "over", label: t("filterOver") },
+                          { value: "active", label: t("filterActive") },
+                        ]}
+                      />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-medium hover:bg-accent">
+                          <ArrowUpDown className="size-3.5" aria-hidden />
+                          {chartSort === "name" ? t("sortName") : chartDesc ? t("sortAmountDesc") : t("sortAmountAsc")}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setChartSort("amount"); setChartDesc(true); }}>{t("sortAmountDesc")}</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setChartSort("amount"); setChartDesc(false); }}>{t("sortAmountAsc")}</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setChartSort("name")}>{t("sortName")}</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <div className="w-fit shrink-0 whitespace-nowrap">{trackButton}</div>
+                    </div>
                   </div>
-                  <LinesChart lines={lines} selected={current.key} onSelect={setSelected} label={t("linesTitle")} />
+                  {visibleLines.length === 0 ? (
+                    <p className="px-2 py-8 text-center text-footnote text-muted-foreground">{t("noLines")}</p>
+                  ) : (
+                    <LinesChart lines={visibleLines} selected={current.key} onSelect={setSelected} label={t("linesTitle")} />
+                  )}
                 </div>
               </Card>
               <section aria-live="polite" aria-label={current.title} className="overflow-hidden rounded-2xl border border-border/60 bg-card pb-2">
-                <div key={current.key}>{panel(current)}</div>
+                <div key={current.key}>{panel(current, true)}</div>
               </section>
             </div>
           </>
@@ -269,28 +307,38 @@ type LineView = {
   sections: { label: string; total?: number; content: React.ReactNode }[];
 };
 
-/** One column per cash-flow line: the track is what's expected, the fill is what happened. Click to open it below. */
+/**
+ * One column per cash-flow line: the track is what's expected, the fill is what happened.
+ * With many lines only the chosen one shows its name, so twenty categories still read as a chart.
+ */
 function LinesChart({ lines, selected, onSelect, label }: { lines: LineView[]; selected: string; onSelect: (k: string) => void; label: string }) {
   const formatCurrency = useMoney();
   return (
-    <div role="group" aria-label={label} className="grid grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-1 px-1 pb-2 pt-2">
+    <div role="group" aria-label={label} className="no-scrollbar flex items-end gap-1 overflow-x-auto px-1 pb-1 pt-2">
       {lines.map((l) => {
         const sel = l.key === selected;
         const pct = l.expected > 0 ? Math.min(100, (l.spent / l.expected) * 100) : l.spent > 0 ? 100 : 0;
         const over = l.showLeft && l.expected > 0 && l.spent > l.expected;
+        const amount = formatCurrency(l.spent);
         return (
           <button
             key={l.key}
             type="button"
             aria-pressed={sel}
+            aria-label={`${l.title}: ${amount}`}
+            title={`${l.title} · ${amount}`}
             onClick={() => onSelect(l.key)}
-            className={`flex h-28 min-w-0 flex-col items-center gap-1 rounded-xl px-1.5 pb-1.5 pt-2 transition-colors focus-visible:outline-2 focus-visible:outline-ring ${sel ? "bg-accent ring-1 ring-primary/30" : "hover:bg-accent/60"}`}
+            className={cn(
+              "flex h-44 min-w-12 flex-1 flex-col items-center justify-end gap-1 rounded-lg px-0.5 pb-1 transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+              sel ? "bg-accent" : "hover:bg-accent/50",
+            )}
           >
-            <bdi className="text-xs font-semibold tabular-nums">{formatCurrency(l.spent)}</bdi>
-            <span className="relative flex w-7 flex-1 items-end overflow-hidden rounded-lg" style={{ background: `color-mix(in oklab, ${l.tone} 26%, transparent)` }} aria-hidden>
-              <span className="w-full rounded-lg transition-[height] duration-500" style={{ height: `${pct}%`, background: over ? "var(--status-over)" : l.tone }} />
+            <bdi className={cn("text-[11px] tabular-nums", sel ? "font-semibold" : "text-muted-foreground")}>{amount}</bdi>
+            <span className="relative flex w-full max-w-10 flex-1 items-end overflow-hidden rounded-md" style={{ background: `color-mix(in oklab, ${l.tone} 26%, transparent)` }} aria-hidden>
+              <span className="w-full rounded-md transition-[height] duration-500" style={{ height: `${pct}%`, background: over ? "var(--status-over)" : l.tone }} />
             </span>
-            <span className={`line-clamp-2 w-full break-words text-center text-xs leading-tight ${sel ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{l.title}</span>
+            {/* Space is kept for every label so the bars keep one baseline; only the chosen title is inked. */}
+            <span className={cn("h-4 w-full truncate text-center text-[11px] leading-4", sel ? "font-semibold text-foreground" : "text-transparent")}>{l.title}</span>
           </button>
         );
       })}
@@ -615,16 +663,27 @@ function WeeksList({ weeks }: { weeks: Week[] }) {
   );
 }
 
-/** A card's section, always shown: a label row, then its content. */
-function Expand({ label, total, children }: { id: string; label: string; total?: number; children: React.ReactNode }) {
+/** A card's section: a label row that opens it, so a long page stays a list of headlines. */
+function Expand({ label, total, defaultOpen, children }: { id: string; label: string; total?: number; defaultOpen?: boolean; children: React.ReactNode }) {
   const formatCurrency = useMoney();
+  const [open, setOpen] = useState(!!defaultOpen);
+  const id = useId();
   return (
     <section className="border-t border-border">
-      <h3 className="flex min-h-12 items-center justify-between px-5 text-sm font-medium sm:px-6">
-        <span>{label}</span>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((o) => !o)}
+        className="flex min-h-12 w-full items-center justify-between gap-3 px-5 text-sm font-medium transition-colors hover:bg-accent/40 focus-visible:outline-2 focus-visible:outline-ring sm:px-6"
+      >
+        <span className="flex items-center gap-1.5">
+          <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-180")} aria-hidden />
+          {label}
+        </span>
         {total != null && <bdi className="font-normal tabular-nums">{formatCurrency(total)}</bdi>}
-      </h3>
-      <div className="px-5 sm:px-6">{children}</div>
+      </button>
+      {open && <div id={id} className="px-5 sm:px-6">{children}</div>}
     </section>
   );
 }

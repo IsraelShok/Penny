@@ -261,7 +261,15 @@
       "clearAll": "Clear",
       "noMatches": "No category by that name",
       "weekBudget": "Week's budget",
-      "thisWeek": "This week"
+      "thisWeek": "This week",
+      "sortAmountDesc": "Amount · highest",
+      "sortAmountAsc": "Amount · lowest",
+      "sortName": "Name",
+      "filterLabel": "Filter",
+      "filterAll": "All",
+      "filterOver": "Over",
+      "filterActive": "Has spend",
+      "noLines": "No lines match this filter."
     },
     "map": {
       "title": "Your whole picture",
@@ -309,6 +317,13 @@
         "property": "Add your home, if you own one",
         "netWorth": "Add a few areas to see your net worth"
       }
+    },
+    "quick": {
+      "label": "Quick actions",
+      "add": "Add",
+      "import": "Import file",
+      "budget": "Budget",
+      "search": "Search"
     }
   },
   "syncPill": {
@@ -698,7 +713,11 @@
       "groupBanks": "Banks",
       "groupCards": "Non-bank credit cards",
       "kindBank": "Bank",
-      "kindCard": "Card"
+      "kindCard": "Card",
+      "modeLabel": "How to connect",
+      "modeAuto": "Automatic connection",
+      "modeManual": "File import",
+      "manualDisclaimer": "File import works on a statement you downloaded from your bank or card issuer — no passwords, no account access. The automatic connection reads your bank's site through community scrapers; using them is at your own responsibility."
     },
     "ai": {
       "title": "AI provider",
@@ -2214,7 +2233,24 @@
     "lateSummary": "Not arrived yet: {names}",
     "late": "Not arrived",
     "pricierUp": "Price went up",
-    "cardBill": "Card {last4}"
+    "cardBill": "Card {last4}",
+    "accountsTitle": "Balance by account",
+    "accountsHint": "Every bank account on its own, with a possible range for estimates.",
+    "accountSelect": "Account",
+    "allAccounts": "All accounts",
+    "accountLowest": "Lowest point: {amount} on {date}",
+    "accountEnd": "At the end of the period: {amount}",
+    "accountEndLabel": "At the end",
+    "accountShortfall": "To stay above the reserve you need {amount} more by {date}",
+    "accountShortfallNoDate": "To stay above the reserve you need {amount} more",
+    "accountStale": "Balance last synced on {date}",
+    "accountStaleNever": "Balance has not synced yet",
+    "bandNote": "The line is the expected balance; the band is the possible range.",
+    "cardsTitle": "Cards and the bank that pays them",
+    "cardsHint": "This is how the forecast knows which account each statement leaves.",
+    "cardInferred": "Detected automatically",
+    "mappingSaved": "Link saved",
+    "saveMappingFailed": "The link was not saved. Try again."
   },
   "budgetPlan": {
     "open": "Build a budget from your average",

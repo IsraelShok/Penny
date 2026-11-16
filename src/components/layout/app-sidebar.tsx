@@ -176,8 +176,15 @@ export function AppSidebar() {
           <SidebarGroup className="pb-0">
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => swapMenu(false)} tooltip={tc("back")}>
-                  <ChevronRight className="ltr:rotate-180" aria-hidden />
+                {/* A real button, not a quiet row: leaving settings should be the easiest thing on the menu. */}
+                <SidebarMenuButton
+                  onClick={() => swapMenu(false)}
+                  tooltip={tc("back")}
+                  variant="outline"
+                  size="lg"
+                  className="bg-sidebar-accent/60 font-semibold shadow-sm hover:bg-sidebar-accent focus-visible:ring-2"
+                >
+                  <ChevronRight className="text-primary ltr:rotate-180" aria-hidden />
                   <span>{tc("back")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>

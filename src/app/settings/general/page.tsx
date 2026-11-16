@@ -1,6 +1,7 @@
 "use client";
 
 import { shekels } from "@/lib/money";
+import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -68,7 +69,7 @@ export default function GeneralSettingsPage() {
   });
 
   return (
-    <SectionShell title={t("title")} description={t("description")}>
+    <SectionShell title={t("title")} description={t("description")} icon={<SlidersHorizontal aria-hidden />}>
       {settings ? (
         <>
           <MonthlyTargetCard

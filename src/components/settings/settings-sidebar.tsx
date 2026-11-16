@@ -16,6 +16,7 @@ import {
   HeartHandshake,
   Lock,
   Accessibility,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlan } from "@/hooks/use-plan";
@@ -127,6 +128,7 @@ export function SettingsMobileNav() {
   const pathname = usePathname();
   const tSidebar = useTranslations("settings.sidebar");
   const tRoot = useTranslations();
+  const tCommon = useTranslations("common");
   const t = (k: string) => (k.includes(".") ? tRoot(k) : tSidebar(k));
   const allItems = GROUPS.flatMap((g) => g.items);
   const navRef = useRef<HTMLElement>(null);
@@ -139,6 +141,14 @@ export function SettingsMobileNav() {
     // Desktop has these sections in the side menu, except in simple mode (no side menu there).
     <nav ref={navRef} aria-label={tSidebar("title")} className={cn("no-scrollbar -mx-4 mb-4 overflow-x-auto border-b border-border/40 px-4", !simple && "md:hidden")}>
       <div className="flex gap-1.5 pb-3 pt-1">
+        {/* Leaving settings should never need hunting: the way back is the first thing on the strip. */}
+        <Link
+          href="/"
+          className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 text-footnote font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          <ChevronRight className="size-4 ltr:rotate-180" aria-hidden />
+          {tCommon("back")}
+        </Link>
         {allItems.map((item) => {
           const active = item.match(pathname);
           return (

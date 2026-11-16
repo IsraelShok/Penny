@@ -261,7 +261,15 @@
       "clearAll": "ניקוי",
       "noMatches": "אין קטגוריה בשם הזה",
       "weekBudget": "תקציב לשבוע",
-      "thisWeek": "השבוע"
+      "thisWeek": "השבוע",
+      "sortAmountDesc": "סכום · מהגבוה",
+      "sortAmountAsc": "סכום · מהנמוך",
+      "sortName": "שם",
+      "filterLabel": "סינון",
+      "filterAll": "הכל",
+      "filterOver": "חריגה",
+      "filterActive": "עם הוצאות",
+      "noLines": "אין שורות שמתאימות לסינון הזה."
     },
     "map": {
       "title": "התמונה המלאה",
@@ -309,6 +317,13 @@
         "property": "הוסיפו את הדירה, אם יש לכם",
         "netWorth": "הוסיפו כמה תחומים כדי לראות שווי נקי"
       }
+    },
+    "quick": {
+      "label": "פעולות מהירות",
+      "add": "הוספה",
+      "import": "ייבוא קובץ",
+      "budget": "תקציב",
+      "search": "חיפוש"
     }
   },
   "syncPill": {
@@ -698,7 +713,11 @@
       "groupBanks": "בנקים",
       "groupCards": "חברות אשראי חוץ־בנקאי",
       "kindBank": "בנק",
-      "kindCard": "אשראי"
+      "kindCard": "אשראי",
+      "modeLabel": "צורת חיבור",
+      "modeAuto": "חיבור אוטומטי",
+      "modeManual": "ייבוא קבצים",
+      "manualDisclaimer": "ייבוא קובץ עובד על דף חשבון או תדפיס אשראי שהורדתם מהבנק או מחברת האשראי — בלי סיסמאות ובלי גישה לחשבון. החיבור האוטומטי קורא את האתר של הבנק בעזרת סקרייפרים, ואחריות השימוש בהם עליכם."
     },
     "ai": {
       "title": "ספק AI",
@@ -2214,7 +2233,24 @@
     "lateSummary": "עוד לא הגיעו: {names}",
     "late": "לא הגיע",
     "pricierUp": "התייקר",
-    "cardBill": "כרטיס {last4}"
+    "cardBill": "כרטיס {last4}",
+    "accountsTitle": "יתרה לפי חשבון",
+    "accountsHint": "כל חשבון בנק בנפרד, עם טווח אפשרי להערכות.",
+    "accountSelect": "חשבון",
+    "allAccounts": "כל החשבונות",
+    "accountLowest": "הנקודה הנמוכה: {amount} ב-{date}",
+    "accountEnd": "בסוף התקופה: {amount}",
+    "accountEndLabel": "בסוף התקופה",
+    "accountShortfall": "כדי לא לרדת מתחת לרזרבה צריך עוד {amount} עד {date}",
+    "accountShortfallNoDate": "כדי לא לרדת מתחת לרזרבה צריך עוד {amount}",
+    "accountStale": "היתרה עודכנה לאחרונה ב-{date}",
+    "accountStaleNever": "היתרה עוד לא סונכרנה",
+    "bandNote": "הקו הוא הצפי; הרצועה היא הטווח האפשרי.",
+    "cardsTitle": "כרטיסים והבנק שמשלם אותם",
+    "cardsHint": "כך התחזית יודעת מאיזה חשבון יורד כל חיוב.",
+    "cardInferred": "זוהה אוטומטית",
+    "mappingSaved": "השיוך נשמר",
+    "saveMappingFailed": "השיוך לא נשמר. נסו שוב."
   },
   "budgetPlan": {
     "open": "לבנות תקציב מהממוצע שלך",

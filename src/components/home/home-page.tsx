@@ -28,6 +28,7 @@ import { SyncFailureBanner } from "./sync-failure-banner";
 import { SimpleHome } from "./simple-home";
 import { MoneyMap } from "./money-map";
 import { NextStep } from "./today-card";
+import { QuickActions } from "./quick-actions";
 import { PetHeroAside } from "./pet-card";
 import { usePlan } from "@/hooks/use-plan";
 import { CardError, CardSkeleton } from "./card-shell";
@@ -84,6 +85,7 @@ export function HomePage() {
         <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
           <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
           <Greeting name={settings?.displayName} />
+          <div className="rise-in mb-3"><QuickActions /></div>
           <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
           {loaded && companion && <MoneyMap />}
           {loaded && <WelcomePrompt />}
@@ -111,6 +113,7 @@ export function HomePage() {
       />
       {/* The detail view of the Companion style always offers the way back. */}
       {companion && <div className="mx-auto w-full max-w-6xl px-4 pt-3 md:px-6 lg:px-8"><Link href="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-footnote font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{t("companionLink")}</Link></div>}
+      <div className="rise-in mx-auto w-full max-w-6xl px-4 pb-1 md:px-6 lg:px-8"><QuickActions /></div>
       {simple ? (
         <div className="px-4 pb-8 pt-3"><SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} /></div>
       ) : (

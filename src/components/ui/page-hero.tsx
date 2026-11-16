@@ -84,12 +84,12 @@ export function FutureHero() {
   </PageHero>;
 }
 
-export function MoreHero() {
+export function MoreHero({ aside }: { aside?: React.ReactNode }) {
   const t = useTranslations("pageHero");
   const tn = useTranslations("nav");
   const q = useQuery({ queryKey: ["suggestions"], queryFn: getSuggestions });
   const n = q.data?.suggestions.length ?? 0;
-  return <PageHero title={tn("more")} icon={<LayoutGrid size={15} aria-hidden="true" />} loading={q.isPending} error={q.isError} onRetry={() => q.refetch()}
+  return <PageHero title={tn("more")} icon={<LayoutGrid size={15} aria-hidden="true" />} loading={q.isPending} error={q.isError} onRetry={() => q.refetch()} aside={aside}
     label={t("moreLabel")} value={n} sentence={n ? t("moreSentence") : t("moreEmpty")} />;
 }
 

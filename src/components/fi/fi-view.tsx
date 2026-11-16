@@ -188,7 +188,7 @@ function Body({ data }: { data: FiPayload }) {
           </div>
         </div>
         <dl className="mt-8 grid grid-cols-3 gap-4 sm:gap-6">
-          <Stat label={t("savingsRate")} value={savingsRate == null ? "—" : `${Math.round(savingsRate * 100)}%`} />
+          <Stat label={t("savingsRate")} value={savingsRate == null ? "—" : `${Math.round(savingsRate * 100)}%`} ltr />
           <Stat label={t("yearsOfLiving")} value={spend > 0 ? fmt(savings / (spend * 12), locale, 1) : "—"} hint={t("yearsOfLivingHint")} />
           <Stat label={t("safeWithdrawal")} value={shekels((savings * plan.rate) / 12, locale)} hint={t("safeWithdrawalHint")} />
         </dl>
@@ -247,11 +247,11 @@ function Body({ data }: { data: FiPayload }) {
   );
 }
 
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function Stat({ label, value, hint, ltr }: { label: string; value: string; hint?: string; /** Percentages and figures keep their own direction inside Hebrew. */ ltr?: boolean }) {
   return (
     <div title={hint} className="flex flex-col">
       <dt className="text-caption text-pretty text-muted-foreground">{label}</dt>
-      <dd className="figure mt-auto pt-1 text-[1.75rem] leading-tight">{value}</dd>
+      <dd className="figure mt-auto pt-1 text-[1.75rem] leading-tight">{ltr ? <bdi dir="ltr">{value}</bdi> : value}</dd>
     </div>
   );
 }
@@ -354,7 +354,7 @@ function Bridge({ age, years, spend, income, savings, annualReturn, rate }: { ag
             <tbody>
               {table.map((r) => (
                 <tr key={r.rate} className={cn(r === closest && "font-semibold text-primary")} aria-current={r === closest || undefined}>
-                  <td className="py-0.5">{Math.round(r.rate * 100)}%</td>
+                  <td className="py-0.5"><bdi dir="ltr">{Math.round(r.rate * 100)}%</bdi></td>
                   <td className="py-0.5 text-end">{r.years == null ? t("never") : r.years === 0 ? t("already") : t("years", { years: fmt(r.years, locale, 1) })}</td>
                 </tr>
               ))}

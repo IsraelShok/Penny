@@ -1,17 +1,11 @@
 "use client";
 
 import { Forward } from "@/components/ui/dir-chevron";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { SyncActions } from "@/components/layout/sidebar-sync";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import {
-  RefreshCw,
-  Loader2,
-  CircleCheck,
-  CircleAlert,
-  FileUp,
-} from "lucide-react";
+import { RefreshCw, Loader2, CircleCheck, CircleAlert, FileUp, Landmark, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ProviderBadge } from "@/components/setup/provider-badge";
@@ -28,6 +22,7 @@ import { translateProviderName, useFormatterLabels } from "@/lib/i18n-data";
 import { formatLastSync } from "@/lib/formatters";
 import type { Integration } from "@/lib/types";
 import { InvestmentHouses } from "@/components/settings/investment-houses";
+import { Segmented } from "@/components/ui/segmented";
 
 // The manual path: jump to the import card and open its file picker.
 function pickStatementFile() {
@@ -44,6 +39,22 @@ interface SheetState {
 
 export default function BankSettingsPage() {
   const t = useTranslations("settings.bank");
+  // Two ways in, as tabs: connect an account, or bring a file. ?mode=manual deep-links the second.
+  const [mode, setMode] = useState<"auto" | "manual">("auto");
+  useEffect(() => {
+    // Deferred on purpose: settling the tab must not happen inside the effect's render pass.
+    const id = setTimeout(() => {
+      const m = new URLSearchParams(window.location.search).get("mode");
+      if (m === "manual" || m === "auto") setMode(m);
+    }, 0);
+    return () => clearTimeout(id);
+  }, []);
+  const pickMode = (m: "auto" | "manual") => {
+    setMode(m);
+    const url = new URL(window.location.href);
+    url.searchParams.set("mode", m);
+    window.history.replaceState(null, "", url);
+  };
   const tBanks = useTranslations("banks");
   const labels = useFormatterLabels();
   const locale = useLocale();
@@ -82,7 +93,17 @@ export default function BankSettingsPage() {
 
   return (
     <>
-      <SectionShell title={t("title")} description={t("description")}>
+      <SectionShell title={t("title")} description={t("description")} icon={<Landmark aria-hidden />}>
+        <Segmented
+          variant="track"
+          label={t("modeLabel")}
+          value={mode}
+          onChange={(v) => pickMode(v as "auto" | "manual")}
+          options={[{ value: "auto", label: t("modeAuto") }, { value: "manual", label: t("modeManual") }]}
+        />
+
+        {mode === "auto" ? (
+        <>
         {/* Two ways in for every account: connect it, or bring a file. */}
         <SettingCard title={t("waysTitle")}>
           <SettingList>
@@ -232,12 +253,22 @@ export default function BankSettingsPage() {
             </>
           );
         })()}
+        </>
+        ) : (
+        <>
         <InvestmentHouses />
 
         <section id="import" aria-label={t("groupImport")} className="scroll-mt-20 space-y-7">
           <StatementImportCard />
           <FolderImportCard />
         </section>
+
+        <div className="flex items-start gap-2 rounded-2xl bg-muted/40 px-4 py-3 text-footnote text-muted-foreground">
+          <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <p className="text-pretty">{t("manualDisclaimer")}</p>
+        </div>
+        </>
+        )}
 
         <section aria-labelledby="data-heading" className="space-y-7 border-t border-border/60 pt-6">
           <h2 id="data-heading" className="px-4 text-lg font-semibold">{t("groupData")}</h2>

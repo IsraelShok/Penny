@@ -7,7 +7,7 @@ import { useLocale, useTranslations, useMessages } from "next-intl";
 import { shekels } from "@/lib/money";
 import { Segmented } from "@/components/ui/segmented";
 import { translateCategoryName } from "@/lib/i18n-data";
-import { ChevronDown, Plus, Search } from "lucide-react";
+import { ChevronDown, Layers, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { IconButton } from "@/components/ui/icon-button";
 import { SectionShell } from "@/components/settings/section-shell";
@@ -86,6 +86,7 @@ export default function CategoriesSettingsPage() {
       <SectionShell
         title={t("title")}
         description={t("description")}
+        icon={<Layers aria-hidden />}
       >
         <div className="flex flex-wrap items-center gap-2">
           <Segmented
