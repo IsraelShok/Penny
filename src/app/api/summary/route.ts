@@ -8,6 +8,7 @@ import {
   getCategorySpendInRange,
   getTopMerchantPerCategory,
   getNeedsReviewCountByCategory,
+  getUncategorizedSpend,
 } from "@/server/db/queries/transactions";
 import { getAllCategories } from "@/server/db/queries/categories";
 import {
@@ -32,6 +33,13 @@ function parseISODate(s: string): Date {
   return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
 
+/** A real calendar date in YYYY-MM-DD form; anything else falls back to the default range. */
+function isoOrNull(raw: string | null): string | null {
+  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
+  const date = parseISODate(raw);
+  return Number.isNaN(date.getTime()) || toLocalISODate(date) !== raw ? null : raw;
+}
+
 export async function GET(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const { searchParams } = new URL(request.url);
@@ -41,9 +49,14 @@ export async function GET(request: Request) {
     new Date(now.getFullYear(), now.getMonth() + 1, 0)
   );
 
-  const from = searchParams.get("from") ?? defaultFrom;
-  const to = searchParams.get("to") ?? defaultTo;
-  const months = Number(searchParams.get("months") ?? "12");
+  // Bad or hand-edited params must not leak "Invalid Date" into the hero copy or blank the chart.
+  const requestedFrom = isoOrNull(searchParams.get("from")) ?? defaultFrom;
+  const requestedTo = isoOrNull(searchParams.get("to")) ?? defaultTo;
+  const [from, to] = requestedFrom <= requestedTo ? [requestedFrom, requestedTo] : [requestedTo, requestedFrom];
+  const monthsRaw = Number(searchParams.get("months") ?? "12");
+  const months = Number.isFinite(monthsRaw)
+    ? Math.min(Math.max(Math.trunc(monthsRaw), 1), 36)
+    : 12;
 
   const fromDate = parseISODate(from);
   const monthLabel = fromDate.toLocaleDateString("en-US", { month: "long" });
@@ -319,6 +332,8 @@ export async function GET(request: Request) {
     categoryBreakdown: getCategoryBreakdown(workspaceId, from, to),
     // New fields for the budgets dashboard:
     categoriesWithData,
+    // Spending with no category never reaches a category card; the budget screen shows it as its own row.
+    uncategorized: getUncategorizedSpend(workspaceId, from, to),
     totalBudget,
     budgetedSpent,
     overallPercentSpent,

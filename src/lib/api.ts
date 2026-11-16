@@ -49,6 +49,7 @@ const ERRORS = {
     403: "אין הרשאה לפעולה הזאת.",
     404: "לא מצאנו את מה שחיפשתם. ייתכן שזה נמחק.",
     409: "הנתונים השתנו בינתיים. רעננו את הדף ונסו שוב.",
+    syncBusy: "סנכרון כבר רץ עכשיו. נסו שוב בעוד רגע.",
     429: "יותר מדי ניסיונות. חכו רגע ונסו שוב.",
     server: "משהו השתבש אצלנו. נסו שוב בעוד רגע.",
   },
@@ -59,6 +60,7 @@ const ERRORS = {
     403: "You don't have permission for this.",
     404: "We couldn't find that. It may have been deleted.",
     409: "The data changed meanwhile. Refresh the page and try again.",
+    syncBusy: "A sync is already running. Try again in a moment.",
     429: "Too many attempts. Wait a moment and try again.",
     server: "Something went wrong on our side. Try again in a moment.",
   },
@@ -78,6 +80,7 @@ export function friendlyError(status: number | "network", body = "", lang = uiLa
   if (fits) return detail;
   const m = ERRORS[lang];
   if (status === "network") return m.network;
+  if (status === 409) return m.syncBusy;
   return status in m ? m[status as keyof typeof m] : status >= 500 ? m.server : m[400];
 }
 
@@ -739,6 +742,12 @@ export function startSync(
         })
       );
 
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        onEvent({ type: "error", data: { message: friendlyError(res.status, text) } });
+        return;
+      }
+
       const reader = res.body?.getReader();
       if (!reader) return;
 
@@ -1039,11 +1048,25 @@ export function deleteCashExpense(id: number) {
   return fetchJSON<{ success: boolean }>(`/api/transactions/cash?id=${id}`, { method: "DELETE" });
 }
 
-export function importStatement(account: string, rows: { date: string; description: string; amount: number }[], dryRun = false) {
-  return fetchJSON<{ ready: number; duplicates: number; added: number; batchId: number | null }>(`/api/import`, {
+export type ImportSource = "bank" | "card";
+
+export function importStatement(
+  account: string,
+  rows: { date: string; description: string; amount: number }[],
+  dryRun = false,
+  source: ImportSource = "bank",
+) {
+  return fetchJSON<{
+    ready: number;
+    duplicates: number;
+    added: number;
+    batchId: number | null;
+    categorized: number;
+    needsReview: number;
+  }>(`/api/import`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ account, rows, dryRun }),
+    body: JSON.stringify({ account, rows, dryRun, source }),
   });
 }
 

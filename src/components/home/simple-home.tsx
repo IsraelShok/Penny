@@ -178,31 +178,39 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
         const hero = (
           // Same frame as the Budget and Overview heroes (.studio-overview): 28/30px padding, 28px corners, month on the end side.
           <section className="wallet shrink-0 overflow-hidden rounded-3xl px-5 pb-4 pt-[22px] shadow-sm min-[600px]:rounded-[28px] min-[600px]:px-[30px] min-[600px]:pb-5 min-[600px]:pt-7">
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-footnote text-muted-foreground">
-              <span className="min-w-0 truncate">{name && !cardOnly ? t("hi", { name }) : <SyncLine run={run} />}</span>
-              {monthNav}
-            </div>
-            {name && !cardOnly && <div className="mt-1 text-footnote text-muted-foreground"><SyncLine run={run} /></div>}
-            <div className="hero-with-aside"><div className="min-w-0 flex-1">
-            <h2 className="mt-4 text-sm font-medium text-pretty">{t(offset === 0 ? "forecastTitle" : "endedTitle", { month: monthName })}</h2>
-            {cf.forecast < 0 && <p className="mt-2 flex items-center gap-1 text-footnote font-medium text-status-heads-up"><AlertCircle className="size-4 shrink-0" aria-hidden />{t("forecastShort")}</p>}
-            <p className={`studio-amount figure ${cf.forecast < 0 ? "text-status-heads-up" : ""}`}>
-              <Signed n={cf.forecast} />
-            </p>
-            {offset === 0 && <BalancePill bank={cash.data?.bank ?? null} accounts={cash.data?.accounts ?? []} />}
-            </div>{heroAside && <div className="hero-aside">{heroAside}</div>}</div>
-            <div className="mt-5">
-              <div className="flex items-baseline justify-between gap-3 text-footnote">
-                <span className="text-muted-foreground">{t("spentSoFar")}</span>
-                <span className="tabular-nums"><bdi className="font-semibold">{formatCurrency(cf.totalSpent)}</bdi> / <bdi className="text-muted-foreground">{formatCurrency(cf.totalExpected)}</bdi></span>
+            {/* Wide screens: the figure on one side, this month's detail on the other, split by a hairline. */}
+            <div className="lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start lg:gap-x-12">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-footnote text-muted-foreground">
+                  <span className="min-w-0 truncate">{name && !cardOnly ? t("hi", { name }) : <SyncLine run={run} />}</span>
+                  {monthNav}
+                </div>
+                {name && !cardOnly && <div className="mt-1 text-footnote text-muted-foreground"><SyncLine run={run} /></div>}
+                <div className="hero-with-aside"><div className="min-w-0 flex-1">
+                <h2 className="mt-4 text-sm font-medium text-pretty">{t(offset === 0 ? "forecastTitle" : "endedTitle", { month: monthName })}</h2>
+                {cf.forecast < 0 && <p className="mt-2 flex items-center gap-1 text-footnote font-medium text-status-heads-up"><AlertCircle className="size-4 shrink-0" aria-hidden />{t("forecastShort")}</p>}
+                <p className={`studio-amount figure ${cf.forecast < 0 ? "text-status-heads-up" : ""}`}>
+                  <Signed n={cf.forecast} />
+                </p>
+                {offset === 0 && <BalancePill bank={cash.data?.bank ?? null} accounts={cash.data?.accounts ?? []} />}
+                </div>{heroAside && <div className="hero-aside">{heroAside}</div>}</div>
+                <div className="mt-5">
+                  <div className="flex items-baseline justify-between gap-3 text-footnote">
+                    <span className="text-muted-foreground">{t("spentSoFar")}</span>
+                    <span className="tabular-nums"><bdi className="font-semibold">{formatCurrency(cf.totalSpent)}</bdi> / <bdi className="text-muted-foreground">{formatCurrency(cf.totalExpected)}</bdi></span>
+                  </div>
+                  <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/15" role="progressbar"
+                    aria-valuenow={Math.round(spentPct)} aria-valuemin={0} aria-valuemax={100} aria-label={t("spentSoFar")}
+                    aria-valuetext={t("meterText", { spent: formatCurrency(cf.totalSpent), expected: formatCurrency(cf.totalExpected) })}>
+                    <div className="h-full rounded-full transition-[width] duration-500 ease-out" style={{ width: `${spentPct}%`, background: `linear-gradient(90deg, ${RING.spending}, #ffd98a)` }} />
+                  </div>
+                </div>
               </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/15" role="progressbar"
-                aria-valuenow={Math.round(spentPct)} aria-valuemin={0} aria-valuemax={100} aria-label={t("spentSoFar")}
-                aria-valuetext={t("meterText", { spent: formatCurrency(cf.totalSpent), expected: formatCurrency(cf.totalExpected) })}>
-                <div className="h-full rounded-full" style={{ width: `${spentPct}%`, background: RING.spending }} />
+              <div className="mt-5 lg:mt-1 lg:border-s lg:border-white/15 lg:ps-8">
+                {extra}
               </div>
             </div>
-            {extra}
+            {/* Full width under both columns: twelve months need the room. */}
             <MonthStrip value={month} onChange={goMonth} max={thisMonth} />
           </section>
         );

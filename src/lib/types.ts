@@ -152,6 +152,8 @@ export interface DashboardSummary {
   topMerchants: MerchantSummary[];
   categoryBreakdown: CategoryBreakdown[];
   categoriesWithData: CategoryWithData[];
+  /** Expenses in the range that still have no category. */
+  uncategorized: { spent: number; count: number };
   totalBudget: number;
   budgetedSpent: number;
   overallPercentSpent: number;

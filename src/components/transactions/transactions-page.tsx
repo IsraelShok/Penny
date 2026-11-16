@@ -48,7 +48,8 @@ export function TransactionsPage() {
   const params=useSearchParams();
   const t = useTranslations("transactions");
   const tReview = useTranslations("review");
-  const [view, setView] = useState<"review" | "all" | "settle">("all");
+  // ?review=1 is how the budget screen sends people to the transactions that still need a category.
+  const [view, setView] = useState<"review" | "all" | "settle">(() => (params.get("review") === "1" ? "review" : "all"));
   const tSettle = useTranslations("settle");
   const tKids = useTranslations("kids");
   const [kidFilter, setKidFilter] = useState<string>("");

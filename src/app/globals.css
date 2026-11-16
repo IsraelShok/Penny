@@ -238,24 +238,47 @@
   isolation: isolate;
   overflow: hidden;
   /* Text sits only on the deep stops (light text ≥ 5:1); the bright violet is a blurred glow behind. */
-  background: linear-gradient(135deg, #2a1fb8 0%, #3b2bd6 55%, #4a33e6 100%);
+  background: linear-gradient(140deg, #231a9e 0%, #3325c6 42%, #4a33e6 78%, #6b45f0 100%);
   color: var(--foreground);
+  /* One long, soft shadow instead of a border: the card reads as lit, not framed. */
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 18%) inset,
+    0 18px 40px -18px rgb(43 26 176 / 55%),
+    0 2px 8px -2px rgb(24 16 90 / 25%);
 }
-/* "Silk": soft plum, magenta and periwinkle light pooled in the corners (ESH uses smoke; this is woven, not drifting). */
+/* "Silk": soft plum, magenta and periwinkle light pooled in the corners, drifting slowly so the card feels alive. */
 .wallet::before {
   content: "";
   position: absolute;
-  inset: -30%;
+  inset: -35%;
   background:
-    radial-gradient(45% 60% at 90% 0%, #8d6bff 0%, transparent 70%),
-    radial-gradient(40% 55% at 0% 100%, #a24fe0 0%, transparent 70%);
-  opacity: 0.45;
-  filter: blur(40px);
+    radial-gradient(42% 55% at 88% 4%, #b18cff 0%, transparent 72%),
+    radial-gradient(38% 52% at 4% 96%, #e05bd0 0%, transparent 72%),
+    radial-gradient(30% 40% at 60% 50%, #5f8bff 0%, transparent 70%);
+  opacity: 0.5;
+  filter: blur(46px);
   z-index: -2;
   pointer-events: none;
+  animation: auroraDrift 26s ease-in-out infinite alternate;
+}
+/* Fine grain over the gradient: kills the flat "CSS gradient" look and adds texture at any zoom. */
+.wallet::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+@keyframes auroraDrift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(3%, 2%, 0) scale(1.08); }
 }
 @media (prefers-reduced-transparency: reduce) {
   .wallet::before { display: none; }
+  .wallet::after { display: none; }
 }
 
 /* Tesla-style figures: big, thin, tight. */
@@ -292,6 +315,17 @@ html[lang="he"] {
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "cv11";
+    /* Two very soft light pools behind everything: the page has depth without a single image. */
+    background-image:
+      radial-gradient(60rem 40rem at 105% -10%, color-mix(in oklab, var(--primary) 9%, transparent), transparent 70%),
+      radial-gradient(50rem 34rem at -10% 8%, color-mix(in oklab, var(--chart-4) 7%, transparent), transparent 70%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(60rem 40rem at 105% -10%, color-mix(in oklab, var(--primary) 16%, transparent), transparent 70%),
+      radial-gradient(50rem 34rem at -10% 8%, color-mix(in oklab, var(--chart-2) 10%, transparent), transparent 70%);
   }
   html {
     @apply font-sans;
@@ -450,7 +484,8 @@ html[lang="he"] .text-display {
    Header row: title (17/22 semibold) with an optional (i) right after it, optional subtitle (14/20 muted)
    under it; one action (14 medium, primary) on the end. Big number: 22/28 semibold tabular. Body: 14/20. */
 @layer components {
-  .card-surface { border-radius: var(--radius-2xl); border: 1px solid color-mix(in oklab, var(--border) 60%, transparent); background-color: var(--card); color: var(--card-foreground); padding: 1.25rem; }
+  .card-surface { border-radius: var(--radius-2xl); border: 1px solid color-mix(in oklab, var(--border) 60%, transparent); background-color: var(--card); color: var(--card-foreground); padding: 1.25rem; box-shadow: 0 1px 2px rgb(20 18 43 / 4%), 0 10px 26px -22px rgb(20 18 43 / 45%); }
+  html.dark .card-surface { box-shadow: 0 1px 0 rgb(255 255 255 / 3%) inset, 0 10px 26px -22px rgb(0 0 0 / 80%); }
   @media (min-width: 40rem) { .card-surface { padding: 1.5rem; } }
   .card-head { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 0.75rem; margin-bottom: 1rem; }
   .card-title { display: flex; align-items: center; gap: 0.25rem; min-width: 0; font-size: var(--text-headline); line-height: var(--text-headline--line-height); font-weight: 600; color: var(--foreground); text-wrap: balance; }
@@ -458,4 +493,54 @@ html[lang="he"] .text-display {
   .card-action { flex-shrink: 0; max-width: 100%; font-size: var(--text-footnote); font-weight: 500; color: var(--primary); }
   .card-figure { font-size: var(--text-title); line-height: var(--text-title--line-height); font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
   .card-body { font-size: var(--text-footnote); line-height: 1.25rem; }
+}
+
+/* ── Motion and touch primitives ────────────────────────────────────────────
+   One entrance, one press, one hover lift: enough to make the app feel hand-made
+   without choreographing every screen. */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Stagger with `style={{ "--i": n }}`; 45ms apart reads as a wave, not a delay. */
+.rise-in {
+  animation: riseIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* Everything tappable answers back. */
+.press { transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease; }
+.press:active { transform: scale(0.972); }
+@media (hover: hover) {
+  .lift { transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease; }
+  .lift:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -18px rgb(20 18 43 / 50%); }
+}
+html.dark .lift:hover { box-shadow: 0 14px 30px -18px rgb(0 0 0 / 70%); }
+
+/* A chip that carries a small icon and a hint of the accent: the quick-action rail. */
+.quick-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0.25rem;
+  border-radius: 1.125rem;
+  text-align: center;
+  line-height: 1.15;
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  background: color-mix(in oklab, var(--card) 92%, transparent);
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.55), transparent);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+html.dark .quick-chip { background-image: linear-gradient(180deg, rgb(255 255 255 / 0.06), transparent); }
+.quick-chip:hover { border-color: color-mix(in oklab, var(--primary) 45%, var(--border)); }
+.quick-chip svg { color: var(--primary); }
+@media (min-width: 40rem) {
+  .quick-chip { flex-direction: row; gap: 0.5rem; min-height: 2.75rem; padding: 0 0.875rem; border-radius: 999px; text-align: start; font-size: var(--text-footnote); }
 }

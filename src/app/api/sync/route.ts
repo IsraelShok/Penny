@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { redact, redactError } from "@/server/lib/redact";
 import {
   runAllWorkspaces,
@@ -10,6 +11,7 @@ import {
 } from "@/server/lib/workspace-context";
 import { cancelOtpRequest } from "@/server/sync/otp-bridge";
 import { markSyncEnd, markSyncStart } from "@/server/sync/activity";
+import { tryAcquireSync } from "@/server/sync/lock";
 
 function sseEvent(
   event: string,
@@ -19,6 +21,15 @@ function sseEvent(
 }
 
 export async function POST(request: Request) {
+  // One sync at a time: two scrapes of the same bank at once can trip account lockout or send 2FA twice.
+  const releaseSync = tryAcquireSync("manual");
+  if (!releaseSync) {
+    return NextResponse.json(
+      { error: "sync-running", message: "A sync is already running. Wait for it to finish." },
+      { status: 409 }
+    );
+  }
+
   const body = (await request.json().catch(() => ({}))) as {
     credentialId?: number;
   };
@@ -65,7 +76,9 @@ export async function POST(request: Request) {
             await syncWorkspace(workspaceId, filterCredentialId, send)
           );
         } else {
-          summaries.push(...(await runAllWorkspaces(filterCredentialId, send)));
+          summaries.push(
+            ...(await runAllWorkspaces(filterCredentialId, send, "manual", { lockHeld: true }))
+          );
         }
 
         const totalAdded = summaries.reduce((s, w) => s + w.added, 0);
@@ -106,6 +119,7 @@ export async function POST(request: Request) {
         send("error", { message });
       } finally {
         if (headerPathTracking) markSyncEnd();
+        releaseSync();
       }
 
       controller.close();

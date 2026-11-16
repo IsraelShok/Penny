@@ -42,6 +42,7 @@ import { createAIProvider } from "@/server/ai/factory";
 import { ensureOllamaRunning } from "@/server/ai/ollama-manager";
 import { toLocalISODate } from "@/server/lib/date-utils";
 import { listAllWorkspaceIds } from "@/server/lib/workspace-context";
+import { SyncBusyError, tryAcquireSync } from "@/server/sync/lock";
 import { getWorkspace } from "@/server/db/queries/workspaces";
 import { BANK_PROVIDERS, type BankProvider, type SyncKind } from "@/lib/types";
 import {
@@ -578,8 +579,12 @@ const NOOP_SEND: SyncEventSender = () => {};
 export async function runAllWorkspaces(
   filterCredentialId?: number,
   onEvent?: SyncEventSender,
-  kind: SyncKind = "manual"
+  kind: SyncKind = "manual",
+  /** The caller already holds the sync lock (the SSE route does, so it can answer 409 itself). */
+  options: { lockHeld?: boolean } = {}
 ): Promise<WorkspaceSummary[]> {
+  const release = options.lockHeld ? null : tryAcquireSync(kind);
+  if (!options.lockHeld && !release) throw new SyncBusyError();
   const send = onEvent ?? NOOP_SEND;
   markSyncStart(kind);
   const since = new Date().toISOString().slice(0, 19).replace("T", " ");
@@ -597,5 +602,6 @@ export async function runAllWorkspaces(
     return summaries;
   } finally {
     markSyncEnd();
+    release?.();
   }
 }

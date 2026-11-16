@@ -136,8 +136,8 @@ export function SettingsMobileNav() {
     navRef.current?.querySelector<HTMLElement>('[aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "center" });
   }, [pathname]);
   return (
-    // Desktop has these sections in the side menu, except in simple mode (no side menu there).
-    <nav ref={navRef} aria-label={tSidebar("title")} className={cn("no-scrollbar -mx-4 mb-4 overflow-x-auto border-b border-border/40 px-4", !simple && "md:hidden")}>
+    // Phones reach these sections from the sidebar sheet; the strip is only for simple mode, which has no side menu.
+    <nav ref={navRef} aria-label={tSidebar("title")} className={cn("no-scrollbar -mx-4 mb-4 overflow-x-auto border-b border-border/40 px-4", simple ? "hidden md:block" : "hidden")}>
       <div className="flex gap-1.5 pb-3 pt-1">
         {allItems.map((item) => {
           const active = item.match(pathname);

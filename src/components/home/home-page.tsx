@@ -28,6 +28,7 @@ import { SyncFailureBanner } from "./sync-failure-banner";
 import { SimpleHome } from "./simple-home";
 import { MoneyMap } from "./money-map";
 import { NextStep } from "./today-card";
+import { QuickActions } from "./quick-actions";
 import { PetHeroAside } from "./pet-card";
 import { usePlan } from "@/hooks/use-plan";
 import { CardError, CardSkeleton } from "./card-shell";
@@ -75,9 +76,20 @@ export function HomePage() {
   const petAside = loaded && plan.pet.enabled ? <PetHeroAside /> : undefined;
   const nextStep = <NextStep home={data} homePending={isLoading} homeFailed={isError} />;
   const linkClass = "mx-auto flex min-h-11 w-fit items-center rounded-full px-4 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring";
+  // Simple or advanced, always reachable from Home — the companion style used to swallow this switch.
+  const modeToggle = (
+    <div role="group" aria-label={t("simple.modeLabel")} className="inline-flex rounded-full bg-muted p-0.5 text-sm">
+      {[true, false].map((v) => (
+        <button key={String(v)} type="button" aria-pressed={simple === v} onClick={() => { if (simple !== plan.simpleMode) router.replace("/", { scroll: false }); if (plan.simpleMode !== v) void update({ simpleMode: v }); }}
+          className={`relative rounded-full px-3 py-1 after:absolute after:-inset-y-2 after:inset-x-0 ${simple === v ? "bg-background font-medium shadow-sm" : "text-muted-foreground"}`}>
+          {t(v ? "simple.simple" : "simple.advanced")}
+        </button>
+      ))}
+    </div>
+  );
 
   // Until the plan loads, show only what both styles share (greeting and this month's card), so neither style flashes.
-  if (!loaded || (companion && !detail)) {
+  if (!loaded) {
     return (
       <>
         <PageHeader title={t("pageTitle")} largeTitle={false} />
@@ -85,9 +97,30 @@ export function HomePage() {
           <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
           <Greeting name={settings?.displayName} />
           <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
-          {loaded && companion && <MoneyMap />}
-          {loaded && <WelcomePrompt />}
-          {loaded && !simple && <Link href="/?view=detail" className={linkClass}>{t("detailLink")}</Link>}
+        </div>
+      </>
+    );
+  }
+
+  // The companion style: one calm overview, unless simple mode asks for the compact hero.
+  if (companion && !detail) {
+    return (
+      <>
+        <PageHeader title={t("pageTitle")} largeTitle={false} actions={modeToggle} />
+        <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
+          <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
+          <div className="rise-in mb-3"><QuickActions /></div>
+          {simple ? (
+            <SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} />
+          ) : (
+            <>
+              <Greeting name={settings?.displayName} />
+              <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
+              <MoneyMap />
+            </>
+          )}
+          <WelcomePrompt />
+          {!simple && <Link href="/?view=detail" className={linkClass}>{t("detailLink")}</Link>}
         </div>
       </>
     );
@@ -98,19 +131,11 @@ export function HomePage() {
       <PageHeader
         title={t("pageTitle")}
         largeTitle={false}
-        actions={
-          <div role="group" aria-label={t("simple.modeLabel")} className="inline-flex rounded-full bg-muted p-0.5 text-sm">
-            {[true, false].map((v) => (
-              <button key={String(v)} type="button" aria-pressed={simple === v} onClick={() => { if (simple !== plan.simpleMode) router.replace("/", { scroll: false }); if (plan.simpleMode !== v) void update({ simpleMode: v }); }}
-                className={`relative rounded-full px-3 py-1 after:absolute after:-inset-y-2 after:inset-x-0 ${simple === v ? "bg-background font-medium shadow-sm" : "text-muted-foreground"}`}>
-                {t(v ? "simple.simple" : "simple.advanced")}
-              </button>
-            ))}
-          </div>
-        }
+        actions={modeToggle}
       />
       {/* The detail view of the Companion style always offers the way back. */}
       {companion && <div className="mx-auto w-full max-w-6xl px-4 pt-3 md:px-6 lg:px-8"><Link href="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-footnote font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{t("companionLink")}</Link></div>}
+      <div className="rise-in mx-auto w-full max-w-6xl px-4 pb-2 md:px-6 lg:px-8"><QuickActions /></div>
       {simple ? (
         <div className="px-4 pb-8 pt-3"><SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} /></div>
       ) : (

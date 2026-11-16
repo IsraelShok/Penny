@@ -39,12 +39,17 @@ function reply(text: string, fromChatId: number, chatId: number): Promise<string
     isSyncRunning: () => getActivitySnapshot().sync.active,
     runSync: async () => {
       const { runAllWorkspaces } = await import("../sync/orchestrator");
-      const summaries = await runAllWorkspaces(undefined, undefined, "manual");
-      const added = summaries.reduce((s, w) => s + w.added, 0);
-      const failed = summaries.flatMap((w) => w.providers).filter((p) => !p.ok);
-      return failed.length
-        ? `⚠️ הסנכרון הסתיים עם שגיאות: ${failed.map((f) => f.label).join(", ")}`
-        : `✓ הסנכרון הסתיים, ${added} עסקאות חדשות`;
+      try {
+        const summaries = await runAllWorkspaces(undefined, undefined, "manual");
+        const added = summaries.reduce((s, w) => s + w.added, 0);
+        const failed = summaries.flatMap((w) => w.providers).filter((p) => !p.ok);
+        return failed.length
+          ? `⚠️ הסנכרון הסתיים עם שגיאות: ${failed.map((f) => f.label).join(", ")}`
+          : `✓ הסנכרון הסתיים, ${added} עסקאות חדשות`;
+      } catch (err) {
+        if ((err as Error).name === "SyncBusyError") return "סנכרון כבר רץ עכשיו, נסו שוב בעוד רגע.";
+        throw err;
+      }
     },
   });
 }

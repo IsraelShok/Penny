@@ -1,6 +1,7 @@
 import "server-only";
 import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
+import { roundCents } from "@/lib/money";
 import { isValidOwner, normalizeTag } from "@/lib/tags";
 import { EditError } from "@/server/db/queries/transaction-edits";
 
@@ -26,7 +27,7 @@ function check(db: Database.Database, ws: number, body: ManualInput, memberIds: 
   if (body.amount !== undefined) {
     const a = body.amount;
     if (typeof a !== "number" || !Number.isFinite(a) || a <= 0 || a > MAX_AMOUNT) throw new EditError("amount must be between 0 and 10,000,000");
-    out.amount = Math.round(a * 100) / 100;
+    out.amount = roundCents(a);
     if (out.amount === 0) throw new EditError("amount must be at least 0.01");
   }
   if (body.date !== undefined) {
