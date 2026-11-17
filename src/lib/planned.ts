@@ -38,6 +38,8 @@ export interface PlannedPayment {
   itemId: number;
   description: string;
   account: string | null;
+  /** Whether the account is a bank or a card (the forecast needs to know where the money leaves). */
+  accountKind: PlannedAccountKind;
   /** 1-based payment number. */
   n: number;
   amount: number;
@@ -136,6 +138,7 @@ export function plannedPayments(item: Pick<PlannedItem, "id" | "description" | "
         itemId: item.id,
         description: item.description,
         account: item.account,
+        accountKind: item.accountKind,
         n: k + 1,
         amount,
         spendDate: installments > 1 ? chargeDate : item.date,
@@ -149,6 +152,7 @@ export function plannedPayments(item: Pick<PlannedItem, "id" | "description" | "
         itemId: item.id,
         description: item.description,
         account: item.account,
+        accountKind: item.accountKind,
         n: k + 1,
         amount,
         spendDate: chargeDate,

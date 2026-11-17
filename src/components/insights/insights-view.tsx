@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInsights, listIntegrations, type InsightsPayload } from "@/lib/api";
 import { shekels } from "@/lib/money";
 import { BalanceForecastCard } from "./balance-forecast-card";
+import { AccountForecastCard } from "./account-forecast-card";
 import { RecurringCalendar } from "./recurring-calendar";
 import { OverdraftCard } from "./overdraft-card";
 import { More } from "@/components/overview/more";
@@ -46,6 +47,7 @@ export function InsightsView({ part }: { part: "ahead" | "recurring" }) {
     <div className="grid gap-6">
       {hero}
       <BalanceForecastCard />
+      <AccountForecastCard />
       <RecurringCalendar data={data} today={new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date())} />
       <Card>
         <CardHeader>

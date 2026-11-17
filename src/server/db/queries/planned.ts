@@ -15,6 +15,7 @@ import {
   type PlannedCharge,
   type PlannedItem,
   type PlannedItemView,
+  type PlannedPayment,
   type PlannedPayload,
   type PlannedStatus,
 } from "@/lib/planned";
@@ -294,3 +295,12 @@ export function plannedSpendBetween(workspaceId: number, today: string, from: st
   const timings = timingsFor(items, charges, billingDay);
   return plannedSpend(items, timings, from, to, today);
 }
+
+/** Every future planned payment with the account kind, for the per-account balance forecast. */
+export function plannedPaymentsForForecast(workspaceId: number, today: string, billingDay = 10): PlannedPayment[] {
+  const items = listPlanned(workspaceId, ["planned"]);
+  const charges = loadCharges(workspaceId, today);
+  const timings = timingsFor(items, charges, billingDay);
+  return items.flatMap((item) => plannedPayments(item, timings.get(item.id) ?? null));
+}
+

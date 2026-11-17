@@ -382,7 +382,19 @@ export function getOverview(period: string, offset: number) {
 }
 
 export function getBalanceForecast() {
-  return fetchJSON<{ forecast: import("./balance-forecast").BalanceForecast | null }>(`/api/balance-forecast`);
+  return fetchJSON<{
+    forecast: import("./balance-forecast").BalanceForecast | null;
+    accounts: import("./balance-forecast").BalanceForecastPayload | null;
+  }>(`/api/balance-forecast`);
+}
+
+/** Pins a card's statement to the bank account that pays it; null clears the choice. */
+export function setCardBankLink(card: string, bank: string | null) {
+  return fetchJSON<{ success: boolean }>(`/api/balance-forecast`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ card, bank }),
+  });
 }
 
 export function getCashAhead() {
