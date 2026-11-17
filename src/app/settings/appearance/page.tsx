@@ -5,7 +5,7 @@ import { usePlan } from "@/hooks/use-plan";
 import { Segmented } from "@/components/ui/segmented";
 import { HOME_STYLES, type HomeStyle } from "@/lib/plan";
 import { useState } from "react";
-import { Check, Palette } from "lucide-react";
+import { Check, Loader2, Palette } from "lucide-react";
 
 import { useRouter } from "next/navigation";
 import { StudioEditor } from "@/components/dashboard/studio-editor";
@@ -57,28 +57,37 @@ export default function AppearanceSettingsPage() {
   return (
     <SectionShell title={t("title")} description={t("description")} icon={<Palette aria-hidden />}>
       <SettingCard title={t("languageCardTitle")} description={t("languageCardDescription")}>
-        <div role="radiogroup" aria-label={t("languageCardTitle")} className="divide-y divide-border">
+        <div role="radiogroup" aria-label={t("languageCardTitle")} className="grid grid-cols-2 gap-2 py-1">
           {langOptions.map((o) => {
             const isActive = (mutation.isPending ? mutation.variables : storedLang) === o.value; // optimistic; reverts on error
             const isPending = mutation.isPending && mutation.variables === o.value;
+            const dir = o.value === "he" ? "rtl" : "ltr";
             return (
               <button
                 key={o.value}
                 type="button"
                 role="radio"
                 aria-checked={isActive}
+                lang={o.value}
+                dir={dir}
                 onClick={() => {
                   if (storedLang === o.value || mutation.isPending) return;
                   mutation.mutate(o.value);
                 }}
                 disabled={mutation.isPending}
-                className="flex min-h-11 w-full items-center gap-3 py-2.5 text-start first:pt-0 last:pb-0 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
+                className={`relative flex min-h-24 flex-col justify-between overflow-hidden rounded-xl border p-3 text-start transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-70 ${
+                  isActive ? "border-primary bg-primary/10" : "border-border/60 hover:border-border hover:bg-muted/40"
+                }`}
               >
-                <span className="min-w-0 flex-1">
-                  <span className="block font-medium" dir={o.value === "he" ? "rtl" : "ltr"}>{o.label}</span>
-                  <span className="block text-footnote text-muted-foreground">{isPending ? t("languageSaving") : o.description}</span>
+                <span className="flex w-full items-start justify-between gap-2">
+                  <span className="text-lg leading-6 font-semibold">{o.label}</span>
+                  <span aria-hidden className={`flex size-5 shrink-0 items-center justify-center rounded-full ${isActive ? "bg-primary text-primary-foreground" : "border border-border"}`}>
+                    {isPending ? <Loader2 className="size-3 animate-spin" /> : isActive ? <Check className="size-3.5" /> : null}
+                  </span>
                 </span>
-                {isActive && <Check className="size-5 text-primary" aria-hidden />}
+                <span className={`mt-2 line-clamp-2 text-caption leading-tight ${isActive ? "text-foreground/80" : "text-muted-foreground"}`}>
+                  {isPending ? t("languageSaving") : o.description}
+                </span>
               </button>
             );
           })}

@@ -76,9 +76,8 @@ export function HomePage() {
   const petAside = loaded && plan.pet.enabled ? <PetHeroAside /> : undefined;
   const nextStep = <NextStep home={data} homePending={isLoading} homeFailed={isError} />;
   const linkClass = "mx-auto flex min-h-11 w-fit items-center rounded-full px-4 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring";
-
   // Until the plan loads, show only what both styles share (greeting and this month's card), so neither style flashes.
-  if (!loaded || (companion && !detail)) {
+  if (!loaded) {
     return (
       <>
         <PageHeader title={t("pageTitle")} largeTitle={false} />
@@ -87,9 +86,30 @@ export function HomePage() {
           <Greeting name={settings?.displayName} />
           <div className="rise-in mb-3"><QuickActions /></div>
           <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
-          {loaded && companion && <MoneyMap />}
-          {loaded && <WelcomePrompt />}
-          {loaded && !simple && <Link href="/?view=detail" className={linkClass}>{t("detailLink")}</Link>}
+        </div>
+      </>
+    );
+  }
+
+  // The companion style: one calm overview, unless simple mode asks for the compact hero.
+  if (companion && !detail) {
+    return (
+      <>
+        <PageHeader title={t("pageTitle")} largeTitle={false}  />
+        <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
+          <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
+          <div className="rise-in mb-3"><QuickActions /></div>
+          {simple ? (
+            <SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} />
+          ) : (
+            <>
+              <Greeting name={settings?.displayName} />
+              <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
+              <MoneyMap />
+            </>
+          )}
+          <WelcomePrompt />
+          {!simple && <Link href="/?view=detail" className={linkClass}>{t("detailLink")}</Link>}
         </div>
       </>
     );

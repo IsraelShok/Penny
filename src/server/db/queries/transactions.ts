@@ -239,8 +239,10 @@ export function queryTransactions(
     values.push(params.to);
   }
   if (params.search) {
-    conditions.push("(t.description LIKE ? OR t.memo LIKE ?)");
-    const term = `%${params.search}%`;
+    // A literal % or _ typed into the search box must not behave as a wildcard.
+    const escaped = params.search.replace(/[\\%_]/g, (c) => `\\${c}`);
+    conditions.push("(t.description LIKE ? ESCAPE '\\' OR t.memo LIKE ? ESCAPE '\\')");
+    const term = `%${escaped}%`;
     values.push(term, term);
   }
   if (params.categoryIds && params.categoryIds.length > 0) {
@@ -252,10 +254,12 @@ export function queryTransactions(
     values.push(params.category);
   }
   const kind: TransactionKindFilter = params.kind ?? "all";
+  // Group by kind, not by sign: a refund is a positive amount with kind='expense' and
+  // would otherwise show up under the income filter.
   if (kind === "income") {
-    conditions.push("t.charged_amount > 0");
+    conditions.push("t.kind = 'income'");
   } else if (kind === "expense") {
-    conditions.push("t.charged_amount < 0");
+    conditions.push("t.kind = 'expense'");
   }
   if (params.provider) {
     conditions.push("t.provider = ?");
@@ -269,7 +273,10 @@ export function queryTransactions(
         : undefined;
   appendCredentialIdsFilter(conditions, values, credentialIds, "t.");
   if (params.needsReview) {
-    conditions.push("(t.needs_review = 1 OR (t.category_id IS NULL AND t.kind != 'transfer'))");
+    // Hidden rows are out of every total, so asking to categorize them is noise.
+    conditions.push(
+      "t.is_excluded = 0 AND (t.needs_review = 1 OR (t.category_id IS NULL AND t.kind != 'transfer'))"
+    );
   }
   if (params.tag) {
     conditions.push("EXISTS (SELECT 1 FROM transaction_tags tt WHERE tt.transaction_id = t.id AND tt.tag = ?)");
@@ -280,8 +287,17 @@ export function queryTransactions(
 
   const sortSql = resolveSortSql(params.sort);
   const sortOrder = params.order === "asc" ? "ASC" : "DESC";
-  const limit = Math.min(params.limit ?? 50, 200);
-  const offset = params.offset ?? 0;
+  // "limit=abc" from a hand-edited URL used to reach SQLite as NaN and throw a 500.
+  const rawLimit = params.limit;
+  const limit =
+    rawLimit != null && Number.isFinite(rawLimit)
+      ? Math.min(Math.max(Math.trunc(rawLimit), 1), 200)
+      : 50;
+  const rawOffset = params.offset;
+  const offset =
+    rawOffset != null && Number.isFinite(rawOffset)
+      ? Math.max(Math.trunc(rawOffset), 0)
+      : 0;
 
   const countRow = db
     .prepare(`SELECT COUNT(*) as total FROM transactions t ${where}`)
@@ -300,6 +316,23 @@ export function queryTransactions(
     transactions: rows.map(mapTransactionRow),
     total: countRow.total,
   };
+}
+
+/** Spend in the range that has no category yet, so the budget screen can show it instead of dropping it. */
+export function getUncategorizedSpend(
+  workspaceId: number,
+  from: string,
+  to: string
+): { spent: number; count: number } {
+  const row = getDb()
+    .prepare(
+      `SELECT COALESCE(SUM(-charged_amount), 0) as spent, COUNT(*) as count
+       FROM transactions
+       WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed'
+         AND is_excluded = 0 AND kind = 'expense' AND category_id IS NULL`
+    )
+    .get(workspaceId, from, to) as { spent: number; count: number };
+  return { spent: row.spent, count: row.count };
 }
 
 export function getUncategorizedTransactionIds(workspaceId: number): number[] {
@@ -779,11 +812,13 @@ export function getTransactionsSummary(
   appendCredentialIdsFilter(baseConditions, baseValues, summaryCredentialIds);
   const baseWhere = baseConditions.join(" AND ");
 
+  // Group by kind, not by sign: a refund is a positive amount with kind='expense' and must reduce
+  // spending instead of counting as income.
   const incomeAgg = db
     .prepare(
       `SELECT COALESCE(SUM(charged_amount), 0) as total, COUNT(*) as count
        FROM transactions
-       WHERE ${baseWhere} AND charged_amount > 0`
+       WHERE ${baseWhere} AND kind = 'income'`
     )
     .get(...baseValues) as { total: number; count: number };
 
@@ -791,19 +826,19 @@ export function getTransactionsSummary(
     .prepare(
       `SELECT COALESCE(SUM(-charged_amount), 0) as total, COUNT(*) as count
        FROM transactions
-       WHERE ${baseWhere} AND charged_amount < 0`
+       WHERE ${baseWhere} AND kind = 'expense'`
     )
     .get(...baseValues) as { total: number; count: number };
 
   const pickLargest = (sign: "income" | "expense"): TransactionWithCategory | null => {
-    const cmp = sign === "income" ? "> 0" : "< 0";
+    const kind = sign === "income" ? "income" : "expense";
     const tConditions = [
       "t.workspace_id = ?",
       "t.date >= ?",
       "t.date <= ?",
       "t.status = 'completed'",
       "t.is_excluded = 0",
-      `t.charged_amount ${cmp}`,
+      `t.kind = '${kind}'`,
     ];
     const tValues: (string | number)[] = [workspaceId, from, to];
     appendCredentialIdsFilter(tConditions, tValues, summaryCredentialIds, "t.");
@@ -824,7 +859,7 @@ export function getTransactionsSummary(
               SUM(-charged_amount) as total,
               COUNT(*) as count
        FROM transactions
-       WHERE ${baseWhere} AND charged_amount < 0
+       WHERE ${baseWhere} AND kind = 'expense'
        GROUP BY description
        ORDER BY total DESC
        LIMIT 5`
@@ -1020,7 +1055,9 @@ export function storedForImport(workspaceId: number, account: string, from: stri
 export function insertFileImport(
   workspaceId: number,
   account: string,
-  rows: { date: string; description: string; amount: number; seq: number }[]
+  rows: { date: string; description: string; amount: number; seq: number }[],
+  /** Card statements carry refunds as positive amounts, which must stay expenses (not income). */
+  source: "bank" | "card" = "bank",
 ): { batchId: number; added: number } {
   const db = getDb();
   return db.transaction(() => {
@@ -1038,12 +1075,35 @@ export function insertFileImport(
     let added = 0;
     for (const r of rows) {
       const hash = computeDedupHash({ accountNumber: account, date: r.date, originalAmount: r.amount, originalCurrency: "ILS", description: r.description });
-      // A statement has no provider type, so classify it like a bank row: transfer patterns, else sign.
-      const kind = detectKind(r.description, "hapoalim", r.amount);
+      // A statement has no provider type; classify it like the matching source: bank transfer
+      // patterns and sign, or a card row (always an expense, refunds included).
+      const kind = detectKind(r.description, source === "card" ? "isracard" : "hapoalim", r.amount);
       added += stmt.run(workspaceId, account, r.date, r.date, r.amount, r.amount, r.description, runId, hash, r.seq, kind).changes;
     }
     return { batchId: runId, added };
   })();
+}
+
+/** How many rows of one import batch got a category from rules or merchant memory. */
+export function countBatchCategories(workspaceId: number, batchId: number): { categorized: number; total: number } {
+  const row = getDb()
+    .prepare(
+      `SELECT COUNT(*) AS total, SUM(CASE WHEN category_id IS NOT NULL THEN 1 ELSE 0 END) AS categorized
+       FROM transactions WHERE workspace_id = ? AND sync_run_id = ? AND provider = 'file'`
+    )
+    .get(workspaceId, batchId) as { total: number; categorized: number | null };
+  return { total: row.total, categorized: row.categorized ?? 0 };
+}
+
+/** Flags uncategorized imported expenses for the review queue, the same way a sync does. */
+export function flagBatchForReview(workspaceId: number, batchId: number): number {
+  return getDb()
+    .prepare(
+      `UPDATE transactions SET needs_review = 1
+       WHERE workspace_id = ? AND sync_run_id = ? AND provider = 'file'
+         AND needs_review = 0 AND category_id IS NULL AND kind != 'transfer'`
+    )
+    .run(workspaceId, batchId).changes;
 }
 
 /** Undo for one import: removes only that batch's rows (provider 'file'). */

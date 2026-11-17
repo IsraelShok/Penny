@@ -123,8 +123,9 @@ export function getNeedsAttentionCounts(
     .get(workspaceId) as { count: number };
   const lowConfidence = db
     .prepare(
+      // The prompt asks for a 1-7 confidence and the UI shows "n/7", so anything at or below 4 is weak.
       `SELECT COUNT(*) as count FROM transactions
-       WHERE workspace_id = ? AND ai_confidence IS NOT NULL AND ai_confidence < 0.5
+       WHERE workspace_id = ? AND ai_confidence IS NOT NULL AND ai_confidence <= 4
          AND category_source = 'ai' AND status = 'completed' AND is_excluded = 0`
     )
     .get(workspaceId) as { count: number };

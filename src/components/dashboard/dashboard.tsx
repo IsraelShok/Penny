@@ -93,7 +93,7 @@ export function Dashboard() {
         {/* The overview carries the month picker, so it stays up on an empty month too. */}
         {summary && <div className={`studio-top-grid ${!preferences.showChart || period.data?.total === 0 ? "studio-single" : ""}`}>
           <StudioOverview data={summary} selectedDate={selectedDate} preferences={preferences} onMonthChange={(m) => setSelectedDate(new Date(`${m}-01T12:00:00`))} />
-          {preferences.showChart && period.data?.total !== 0 && <StudioDistribution categories={summary.categoriesWithData} chart={preferences.chart} onChartChange={(chart) => {
+          {preferences.showChart && period.data?.total !== 0 && <StudioDistribution categories={summary.categoriesWithData} uncategorized={summary.uncategorized} chart={preferences.chart} onChartChange={(chart) => {
             save({ ...preferences, chart });
           }} />}
         </div>}

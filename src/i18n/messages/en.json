@@ -271,7 +271,8 @@
       "filterAll": "All",
       "filterOver": "Over",
       "filterActive": "Has spend",
-      "noLines": "No lines match this filter."
+      "noLines": "No lines match this filter.",
+      "modeLabel": "View mode"
     },
     "map": {
       "title": "Your whole picture",
@@ -731,7 +732,21 @@
       "modeAuto": "Automatic connection",
       "modeManual": "File import",
       "manualDisclaimer": "File import works on a statement you downloaded from your bank or card issuer — no passwords, no account access. The automatic connection reads your bank's site through community scrapers; using them is at your own responsibility.",
-      "modeOpenBanking": "Open banking"
+      "modeOpenBanking": "Open banking",
+      "manualTitle": "Import by bank or institution",
+      "manualInstitution": "Bank, credit card or investment house",
+      "manualPick": "Choose an institution",
+      "manualOther": "Another institution / none",
+      "manualImportCta": "Choose a file",
+      "manualAccountNote": "The choice sets the account the rows land in, so the same statement is never counted twice even while the automatic connection is on.",
+      "disclaimerTitle": "Before you connect",
+      "disclaimerBody": "An automatic connection signs in to the bank's site on your behalf through an open-source library and runs a scraper in a local browser. It is not an official bank service.",
+      "disclaimerPointLogin": "Credentials are stored encrypted on this computer only; the password goes to the library and never to an external server.",
+      "disclaimerPointBreak": "If the bank changes its site or asks for extra verification, syncing can stop until the library is updated — file import keeps working.",
+      "disclaimerPointLocal": "Where the bank offers an official API, prefer it.",
+      "disclaimerLibraries": "The code that reads the sites (open source, yours to inspect):",
+      "manualSelected": "Rows will go to the account: {name}",
+      "manualOtherGroup": "Another institution"
     },
     "ai": {
       "title": "AI provider",
@@ -851,7 +866,10 @@
       "deleteEverything": "Delete everything",
       "deleteFailedFallback": "Data deletion did not finish. Refresh the page and check what remains before trying again.",
       "deletedToast": "Deleted {txCount} transactions, {memoryCount} memory entries",
-      "debugTitle": "Troubleshooting"
+      "debugTitle": "Troubleshooting",
+      "exportTitle": "Export all your data",
+      "exportDescription": "A CSV of every transaction for a backup or to move to another tool. Opens in Excel and in the browser.",
+      "exportButton": "Download CSV"
     },
     "categoryDetail": {
       "expenseCategory": "Expense category",
@@ -2706,7 +2724,30 @@
       "arrived": "{count} new transactions imported from the folder",
       "notAbsolute": "Use a full folder path starting with a drive letter (like C:) or /.",
       "failed": "Not saved. Please try again."
-    }
+    },
+    "dropHere": "Drop a statement file here",
+    "reading": "Reading the file…",
+    "changeFile": "Another file",
+    "statsRows": "transactions",
+    "statsRange": "date range",
+    "statsExpenses": "spent",
+    "signCard": "Detected a card statement: a positive amount is spending",
+    "signBank": "Detected a bank statement: a negative amount is spending",
+    "flip": "Amounts are reversed",
+    "mappingWarning": "Some columns were not recognised. Open the column mapping and pick the right ones.",
+    "noRows": "No rows match the mapped columns. Check the mapping.",
+    "previewNote": "Showing {shown} of {total}",
+    "advanced": "Column mapping and date order",
+    "headerRow": "Header row",
+    "rowOption": "Row {n}",
+    "dateOrder": "Date order",
+    "dateDmy": "Day/month/year",
+    "dateMdy": "Month/day/year",
+    "skipped": "{count} rows skipped — no date, description or amount",
+    "savedCategorized": "Saved {added} transactions · {categorized} categorised automatically · {review} to review",
+    "pdf": "This is a PDF. Export a CSV or Excel file from the bank — or paste the table into Excel and save it as xlsx.",
+    "tooLarge": "This file is too large (over 25MB). Try exporting a shorter period.",
+    "emptyFile": "The file is empty."
   },
   "ask": {
     "title": "Ask your money",
