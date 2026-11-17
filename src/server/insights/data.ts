@@ -3,7 +3,7 @@ import "server-only";
 import { getDb } from "../db/index";
 import { normalizeMerchant } from "../rules/normalize";
 import { addDays, israelDay, monthKey } from "../lib/date-utils";
-import { isBankProvider } from "../lib/transfers";
+import { isCardProvider } from "../lib/card-providers";
 import { usesScraperFork } from "../scrapers/select";
 import { detectRecurring, isActive, type Series } from "./recurring";
 import { projectInstallments, type ProjectedPayment } from "./installments";
@@ -56,7 +56,7 @@ function loadPendingByAccount(workspaceId: number): Map<string, number> {
     .all(workspaceId) as { account: string; amount: number; provider: string }[];
   const byAccount = new Map<string, number>();
   for (const r of rows) {
-    if (isBankProvider(r.provider)) continue;
+    if (!isCardProvider(r.provider)) continue;
     // The fork reports pending charges unsigned; the default library signs them like completed rows (refunds positive).
     const charge = usesScraperFork(r.provider) ? Math.abs(r.amount) : -r.amount;
     byAccount.set(r.account, (byAccount.get(r.account) ?? 0) + charge);
@@ -139,7 +139,7 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
 
   const pending = loadPendingByAccount(workspaceId);
   // Only cards have bills; bank-account debits are spending but not part of a card forecast.
-  const cardRows = rows.filter((r) => !isBankProvider(r.provider));
+  const cardRows = rows.filter((r) => isCardProvider(r.provider));
   const accounts = [...new Set([...cardRows.map((r) => r.account), ...pending.keys()])].sort();
   const cards: CardForecastInput[] = accounts.map((account) => {
     const own = cardRows.filter((r) => r.account === account);

@@ -10,6 +10,7 @@ import { plannedPaymentsForForecast } from "@/server/db/queries/planned";
 import { getWorkspaceSetting, setWorkspaceSetting } from "@/server/db/queries/settings";
 import { israelToday } from "@/server/lib/date-utils";
 import { isBankProvider } from "@/server/lib/transfers";
+import { isCardProvider } from "@/server/lib/card-providers";
 import { loadInsights } from "./data";
 import { forecastCards } from "./forecast";
 import { bankObligations } from "./obligations";
@@ -68,7 +69,7 @@ function cardAccounts(workspaceId: number): CardAccount[] {
     )
     .all(workspaceId) as { account: string; provider: string }[];
   return rows
-    .filter((r) => !isBankProvider(r.provider))
+    .filter((r) => isCardProvider(r.provider))
     .map((r) => ({ account: r.account, provider: r.provider, name: cardName(r.provider, r.account) }));
 }
 
