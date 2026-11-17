@@ -4,6 +4,7 @@ import { Forward } from "@/components/ui/dir-chevron";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { X } from "lucide-react";
 import { getOwners } from "@/lib/api";
 import { useHousehold } from "@/hooks/use-household";
@@ -21,6 +22,7 @@ const card =
 /** Calm "let's get to know you" invite on first run; never blocks Home. Reopen any time from More or Help. */
 export function WelcomePrompt() {
   const t = useTranslations("welcome");
+  const tc = useTranslations("common");
   const { household, loading, save } = useHousehold();
   const { plan, loaded, update } = usePlan();
   if (loading || !loaded || plan.profile.onboarded || !shouldShowWelcome(household)) return null;
@@ -33,7 +35,7 @@ export function WelcomePrompt() {
       <button
         type="button"
         aria-label={t("dismiss")}
-        onClick={() => { save({ welcomeDismissed: true }); void update({ profile: { ...plan.profile, onboarded: true } }).catch(() => {}); }}
+        onClick={() => { save({ welcomeDismissed: true }); void update({ profile: { ...plan.profile, onboarded: true } }).catch(() => toast.error(tc("saveFailed"))); }}
         className="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
       >
         <X className="size-4" aria-hidden />

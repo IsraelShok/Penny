@@ -59,7 +59,8 @@
     "day": "day",
     "days": "days",
     "perMonth": "/ month",
-    "moreInfo": "More info"
+    "moreInfo": "More info",
+    "saveFailed": "That change wasn't saved. Try again."
   },
   "nav": {
     "home": "Home",
@@ -2178,6 +2179,17 @@
     "count": "{n, plural, one {1 result} other {# results}}",
     "help": "How it works",
     "welcome": "Let's get to know you"
+  },
+  "errors": {
+    "title": "This screen didn't load",
+    "hint": "Something broke while showing the page. Your data is untouched — try again, and if it keeps happening, reload the app.",
+    "retry": "Try again",
+    "reload": "Reload",
+    "home": "Back home",
+    "details": "Technical details",
+    "digest": "Error code",
+    "notFoundTitle": "Page not found",
+    "notFoundHint": "The link may be out of date or the page may have moved. Head back home and carry on from there."
   },
   "dataState": {
     "loading": "Loading your data…",

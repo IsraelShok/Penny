@@ -8,7 +8,7 @@ import type {
   TransactionWithCategory,
   DashboardSummary,
   Category,
-  SyncRun,
+
   Budget,
   BudgetMode,
   Integration,
@@ -51,6 +51,22 @@ const ERRORS = {
     404: "לא מצאנו את מה שחיפשתם. ייתכן שזה נמחק.",
     409: "הנתונים השתנו בינתיים. רעננו את הדף ונסו שוב.",
     syncBusy: "סנכרון כבר רץ עכשיו. נסו שוב בעוד רגע.",
+    locked: "האפליקציה נעולה. הזינו את הקוד כדי להמשיך.",
+    signInRequired: "צריך לבחור משתמש מחדש. רעננו את הדף.",
+    streamLost: "החיבור נקטע לפני שהפעולה הסתיימה. בדקו ש־Penny פועלת ונסו שוב.",
+
+    ownerRequired: "רק הבעלים של Penny יכול לבצע את הפעולה הזאת.",
+    workspaceDenied: "אין הרשאה לסביבה הזאת.",
+    duplicateName: "כבר קיים פריט בשם הזה. בחרו שם אחר.",
+    lastProfile: "אי אפשר למחוק את הפרופיל האחרון. הוסיפו פרופיל חדש קודם.",
+    lastWorkspace: "אי אפשר למחוק את הסביבה האחרונה.",
+    hasChildren: "לקטגוריה הזאת יש תתי־קטגוריות. מחקו אותן קודם.",
+    targetMissing: "הקטגוריה שאליה משייכים כבר לא קיימת.",
+    notLeafTarget: "אפשר לבחור רק קטגוריה ראשית בתור הורה.",
+    kindMismatch: "אי אפשר לשים קטגוריית הוצאה תחת קטגוריית הכנסה, או להיפך.",
+    selfParent: "קטגוריה לא יכולה להיות ההורה של עצמה.",
+    childHasChildren: "לקטגוריה הזאת כבר יש תתי־קטגוריות, ולכן אי אפשר להעביר אותה.",
+
     429: "יותר מדי ניסיונות. חכו רגע ונסו שוב.",
     server: "משהו השתבש אצלנו. נסו שוב בעוד רגע.",
   },
@@ -62,38 +78,98 @@ const ERRORS = {
     404: "We couldn't find that. It may have been deleted.",
     409: "The data changed meanwhile. Refresh the page and try again.",
     syncBusy: "A sync is already running. Try again in a moment.",
+    locked: "The app is locked. Enter your code to continue.",
+    signInRequired: "Please choose a user again. Refresh the page.",
+    streamLost: "The connection dropped before it finished. Check that Penny is running and try again.",
+
+    ownerRequired: "Only the owner of Penny can do this.",
+    workspaceDenied: "You don't have access to this workspace.",
+    duplicateName: "Something with that name already exists. Pick another name.",
+    lastProfile: "The last profile can't be deleted. Add another profile first.",
+    lastWorkspace: "The last workspace can't be deleted.",
+    hasChildren: "This category has subcategories. Delete them first.",
+    targetMissing: "The category you're moving it under no longer exists.",
+    notLeafTarget: "Only a top-level category can be the parent.",
+    kindMismatch: "An expense category can't sit under an income category, or the other way round.",
+    selfParent: "A category can't be its own parent.",
+    childHasChildren: "This category already has subcategories, so it can't be moved.",
+
     429: "Too many attempts. Wait a moment and try again.",
     server: "Something went wrong on our side. Try again in a moment.",
   },
 } as const;
+
+/** Machine codes the API and the proxy send; they are never shown as they are. */
+/** A failed request: `status` lets callers tell a user error from a broken server. */
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number | "network") {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+/** A server `code` the app words itself; anything else falls back to the status text. */
+const CODE_MESSAGES: Record<string, keyof typeof ERRORS.he> = {
+  locked: "locked",
+  "sign-in-required": "signInRequired",
+  "sync-running": "syncBusy",
+  "owner-required": "ownerRequired",
+  "workspace-access-denied": "workspaceDenied",
+  "duplicate-name": "duplicateName",
+  "last-profile": "lastProfile",
+  "last-workspace": "lastWorkspace",
+  "has-children": "hasChildren",
+  "not-found": 404,
+  "target-not-found": "targetMissing",
+  "not-leaf-target": "notLeafTarget",
+  "kind-mismatch": "kindMismatch",
+  "self-parent": "selfParent",
+  "child-has-children": "childHasChildren",
+};
 
 const uiLang = (): "he" | "en" => (typeof document !== "undefined" && document.documentElement.lang === "en" ? "en" : "he");
 
 /** Picks a message the user can read: the server's own text when it is in the UI language, else one by status. */
 export function friendlyError(status: number | "network", body = "", lang = uiLang()): string {
   let detail = body.trim();
+  let serverCode = "";
   try {
-    const j = JSON.parse(detail) as { error?: unknown; message?: unknown };
+    const j = JSON.parse(detail) as { error?: unknown; message?: unknown; code?: unknown };
     detail = String(j.error ?? j.message ?? "");
+    serverCode = typeof j.code === "string" ? j.code : "";
   } catch {}
-  const hebrew = /[֐-׿]/.test(detail);
-  const fits = detail && detail.length < 200 && !/^\s*</.test(detail) && (lang === "he" ? hebrew : !hebrew);
-  if (fits) return detail;
   const m = ERRORS[lang];
+  // A machine code is an id, not copy: never show it as it is.
+  const key = CODE_MESSAGES[(serverCode || detail).toLowerCase()];
+  if (key) return m[key];
+  const hebrew = /[֐-׿]/.test(detail);
+  // A bare identifier ("bad_request", "not_restartable") is a code, not copy: it falls through
+  // to the status text, so every such code gets a readable message without an entry here.
+  const isCode = /^[a-z0-9_-]+$/.test(detail);
+  const fits = detail && detail.length < 200 && !isCode && !/^\s*</.test(detail) && (lang === "he" ? hebrew : !hebrew);
+  if (fits) return detail;
   if (status === "network") return m.network;
-  if (status === 409) return m.syncBusy;
+  // 409 covers duplicates, in-use records and the sync lock; only the lock has its own wording.
+  if (status === 409) return /sync/i.test(detail) && /running/i.test(detail) ? m.syncBusy : m[409];
   return status in m ? m[status as keyof typeof m] : status >= 500 ? m.server : m[400];
 }
 
 async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${url}`, withWorkspaceHeader(init)).catch(() => {
-    throw new Error(friendlyError("network"));
+    throw new ApiError(friendlyError("network"), "network");
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(friendlyError(res.status, text));
+    throw new ApiError(friendlyError(res.status, text), res.status);
   }
-  return res.json() as Promise<T>;
+  const raw = await res.text().catch(() => "");
+  // A DELETE answers 204 with no body: that is success, not a parse error.
+  if (!raw.trim()) return undefined as T;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    throw new ApiError(friendlyError(res.status, raw), res.status);
+  }
 }
 
 export function listProfiles() {
@@ -488,9 +564,9 @@ export function deleteInsuranceDocument(docId: number) {
 /** The stored file as a blob, so a non-default workspace opens the right one. */
 export async function fetchInsuranceDocument(docId: number) {
   const res = await fetch(`/api/insurance/documents/${docId}`, withWorkspaceHeader()).catch(() => {
-    throw new Error(friendlyError("network"));
+    throw new ApiError(friendlyError("network"), "network");
   });
-  if (!res.ok) throw new Error(friendlyError(res.status, await res.text().catch(() => "")));
+  if (!res.ok) throw new ApiError(friendlyError(res.status, await res.text().catch(() => "")), res.status);
   return res.blob();
 }
 
@@ -840,10 +916,15 @@ export function startSync(
       }
 
       const reader = res.body?.getReader();
-      if (!reader) return;
+      if (!reader) {
+        onEvent({ type: "error", data: { message: ERRORS[uiLang()].streamLost } });
+        return;
+      }
 
       const decoder = new TextDecoder();
       let buffer = "";
+      // A stream that stops without "complete" means the sync died mid-way; otherwise the UI spins forever.
+      let settled = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -860,6 +941,7 @@ export function startSync(
           } else if (line.startsWith("data: ") && currentEvent) {
             try {
               const data = JSON.parse(line.slice(6));
+              if (currentEvent === "complete" || currentEvent === "error") settled = true;
               onEvent({ type: currentEvent as SyncProgressEvent["type"], data });
             } catch {
               // skip malformed JSON
@@ -868,11 +950,12 @@ export function startSync(
           }
         }
       }
+      if (!settled) onEvent({ type: "error", data: { message: ERRORS[uiLang()].streamLost } });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       onEvent({
         type: "error",
-        data: { message: "Connection to sync service lost" },
+        data: { message: ERRORS[uiLang()].streamLost },
       });
     }
   })();
@@ -880,10 +963,6 @@ export function startSync(
   return { cancel: () => controller.abort() };
 }
 
-// Placeholder for last sync info
-export function getLastSync() {
-  return fetchJSON<SyncRun | null>("/api/sync/last").catch(() => null);
-}
 
 export interface PullProgress {
   status: string;
@@ -927,8 +1006,16 @@ export function pullOllamaModel(
         })
       );
 
+      if (!res.ok) {
+        onEvent({ type: "error", data: { status: "error", message: friendlyError(res.status, await res.text().catch(() => "")) } });
+        return;
+      }
+
       const reader = res.body?.getReader();
-      if (!reader) return;
+      if (!reader) {
+        onEvent({ type: "error", data: { status: "error", message: ERRORS[uiLang()].streamLost } });
+        return;
+      }
 
       const decoder = new TextDecoder();
       let buffer = "";
@@ -960,7 +1047,7 @@ export function pullOllamaModel(
       if (err instanceof DOMException && err.name === "AbortError") return;
       onEvent({
         type: "error",
-        data: { status: "error", message: "Connection to pull endpoint lost" },
+        data: { status: "error", message: ERRORS[uiLang()].streamLost },
       });
     }
   })();
@@ -993,8 +1080,10 @@ export function createRule(rule: Omit<Rule, "id">) {
 }
 
 export async function deleteRule(id: number) {
-  const res = await fetch(`${BASE}/api/rules/${id}`, withWorkspaceHeader({ method: "DELETE" }));
-  if (!res.ok) throw new Error("Delete failed");
+  const res = await fetch(`${BASE}/api/rules/${id}`, withWorkspaceHeader({ method: "DELETE" })).catch(() => {
+    throw new ApiError(friendlyError("network"), "network");
+  });
+  if (!res.ok) throw new ApiError(friendlyError(res.status, await res.text().catch(() => "")), res.status);
 }
 
 export function searchFunds(source: "gemel" | "pension", q: string) {

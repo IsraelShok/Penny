@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Clock, X } from "lucide-react";
 import { getCashAhead, getHome, getResilience, listProfiles } from "@/lib/api";
 import { useActiveProfileId } from "@/lib/workspace-store";
@@ -109,6 +110,7 @@ function PetButton({ p, px, onOpen, mini }: { p: PetState; px: number; onOpen: (
 /** What needs care, most important first; each item can be snoozed (tomorrow, a week) or hidden until next month, for the whole household. */
 function PetSheet({ p, open, onOpenChange }: { p: PetState; open: boolean; onOpenChange: (v: boolean) => void }) {
   const t = useTranslations("pet");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const gentle = useGentle();
   const { plan, update } = usePlan();
@@ -123,7 +125,8 @@ function PetSheet({ p, open, onOpenChange }: { p: PetState; open: boolean; onOpe
   const hide = (l: PetLine, kind: "day" | "week" | "dismiss") => {
     setGone((g) => [...g, petKey(l)]);
     snooze.current = petSnooze(snooze.current, petKey(l), petSnoozeUntil(kind), p.today);
-    void update({ pet: { ...plan.pet, snooze: snooze.current } }).catch(() => {});
+    // A failed save must say so: the line is already hidden here, and reloading brings it back.
+    void update({ pet: { ...plan.pet, snooze: snooze.current } }).catch(() => toast.error(tc("saveFailed")));
   };
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -163,11 +166,12 @@ function PetSheet({ p, open, onOpenChange }: { p: PetState; open: boolean; onOpe
 /** Name, color, size and skin of the pet, shown inline in Settings; each choice is saved for the whole household. */
 export function PetCustomizer() {
   const t = useTranslations("pet");
+  const tc = useTranslations("common");
   const { plan, update, loaded } = usePlan();
   const [draft, setDraft] = useState<PetSettings>(plan.pet);
   const [wasLoaded, setWasLoaded] = useState(loaded);
   if (loaded !== wasLoaded) { setWasLoaded(loaded); if (loaded) setDraft(plan.pet); } // take the stored pet once it loads
-  const save = (next: PetSettings) => { setDraft(next); void update({ pet: next }).catch(() => {}); };
+  const save = (next: PetSettings) => { setDraft(next); void update({ pet: next }).catch(() => toast.error(tc("saveFailed"))); };
   const name = draft.name || t("defaultName");
   const swatch = "size-11 rounded-full ring-offset-2 ring-offset-background focus-visible:outline-2 focus-visible:outline-ring aria-checked:ring-2 aria-checked:ring-foreground";
 

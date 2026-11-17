@@ -1,5 +1,7 @@
 import "server-only";
 
+import { ApiError } from "@/server/lib/api-error";
+
 import { getDb } from "../index";
 import type { Profile } from "@/lib/types";
 import { parsePip, type AvatarInput, type ProfilePip } from "@/lib/profile-avatar";
@@ -16,8 +18,8 @@ const pipJson = (p: ProfilePip | null | undefined) => (p ? JSON.stringify(p) : n
 
 function cleanName(name: string): string {
   const trimmed = name.trim();
-  if (!trimmed) throw new Error("Profile name is required");
-  if (trimmed.length > 60) throw new Error("Profile name too long");
+  if (!trimmed) throw new ApiError("Profile name is required", 400);
+  if (trimmed.length > 60) throw new ApiError("Profile name too long", 400);
   return trimmed;
 }
 
@@ -46,7 +48,7 @@ export function createProfile(name: string, avatar: AvatarInput = {}): Profile {
 
 export function updateProfile(id: number, name: string, avatar: AvatarInput = {}): Profile {
   const existing = getProfile(id);
-  if (!existing) throw new Error("Profile not found");
+  if (!existing) throw new ApiError("Profile not found", 404);
   getDb()
     .prepare("UPDATE profiles SET name = ?, avatar_emoji = ?, avatar_color = ?, avatar_pet = ? WHERE id = ?")
     .run(
@@ -62,10 +64,10 @@ export function updateProfile(id: number, name: string, avatar: AvatarInput = {}
 /** Removes the profile and its UI preferences only; household data is never touched. */
 export function deleteProfile(id: number): void {
   const p = getProfile(id);
-  if (!p) throw new Error("Profile not found");
+  if (!p) throw new ApiError("Profile not found", 404);
   const db = getDb();
   const left = (db.prepare("SELECT COUNT(*) AS n FROM profiles WHERE workspace_id = ?").get(p.workspaceId) as { n: number }).n;
-  if (left <= 1) throw new Error("Cannot delete the only profile");
+  if (left <= 1) throw new ApiError("Cannot delete the only profile", 409, "last-profile");
   db.transaction(() => {
     db.prepare("DELETE FROM synced_preferences WHERE workspace_id = ? AND profile = ?").run(p.workspaceId, `p${id}`);
     db.prepare("DELETE FROM profiles WHERE id = ?").run(id);
