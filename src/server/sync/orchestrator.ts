@@ -34,6 +34,7 @@ import { applyRulesToSyncRun } from "@/server/db/queries/rules";
 import { getAllCategories } from "@/server/db/queries/categories";
 import { getRecentCorrections } from "@/server/db/queries/category-corrections";
 import { scrapeBank } from "@/server/scrapers";
+import { connectOpenBanking } from "@/server/open-banking/client";
 import {
   scrapeOneZeroFirstTime,
   scrapeOneZeroWithToken,
@@ -189,6 +190,11 @@ async function runScrapeForProvider(args: RunScrapeArgs): Promise<ScrapeResult> 
     }
 
     return result;
+  }
+
+  // Open banking is an API, not a browser session: no 2FA popup, no retries.
+  if (provider === "openBanking") {
+    return connectOpenBanking(credentials, startDate);
   }
 
   if (manualTwoFactor) {

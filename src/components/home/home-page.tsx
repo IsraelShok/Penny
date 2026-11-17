@@ -67,7 +67,7 @@ export function HomePage() {
 
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const { data: insights } = useQuery({ queryKey: ["insights"], queryFn: getInsights });
-  const { plan, loaded, update } = usePlan();
+  const { plan, loaded } = usePlan();
   const detail = searchParams.get("view") === "detail";
   // ?view=detail shows the advanced home without changing the saved mode (wheel paging lands here from Simple).
   const simple = plan.simpleMode && !(detail && plan.homeStyle !== "companion");
@@ -97,20 +97,8 @@ export function HomePage() {
 
   return (
     <>
-      <PageHeader
-        title={t("pageTitle")}
-        largeTitle={false}
-        actions={
-          <div role="group" aria-label={t("simple.modeLabel")} className="inline-flex rounded-full bg-muted p-0.5 text-sm">
-            {[true, false].map((v) => (
-              <button key={String(v)} type="button" aria-pressed={simple === v} onClick={() => { if (simple !== plan.simpleMode) router.replace("/", { scroll: false }); if (plan.simpleMode !== v) void update({ simpleMode: v }); }}
-                className={`relative rounded-full px-3 py-1 after:absolute after:-inset-y-2 after:inset-x-0 ${simple === v ? "bg-background font-medium shadow-sm" : "text-muted-foreground"}`}>
-                {t(v ? "simple.simple" : "simple.advanced")}
-              </button>
-            ))}
-          </div>
-        }
-      />
+      {/* The view is chosen in the sidebar menu, not by a toggle on the page. */}
+      <PageHeader title={t("pageTitle")} largeTitle={false} />
       {/* The detail view of the Companion style always offers the way back. */}
       {companion && <div className="mx-auto w-full max-w-6xl px-4 pt-3 md:px-6 lg:px-8"><Link href="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-footnote font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{t("companionLink")}</Link></div>}
       <div className="rise-in mx-auto w-full max-w-6xl px-4 pb-1 md:px-6 lg:px-8"><QuickActions /></div>

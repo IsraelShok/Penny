@@ -22,6 +22,7 @@ import { translateProviderName, useFormatterLabels } from "@/lib/i18n-data";
 import { formatLastSync } from "@/lib/formatters";
 import type { Integration } from "@/lib/types";
 import { InvestmentHouses } from "@/components/settings/investment-houses";
+import { OpenBankingCard } from "@/components/settings/open-banking-card";
 import { Segmented } from "@/components/ui/segmented";
 
 // The manual path: jump to the import card and open its file picker.
@@ -29,6 +30,9 @@ function pickStatementFile() {
   document.getElementById("import")?.scrollIntoView({ behavior: "smooth", block: "start" });
   document.getElementById("statement-file")?.click();
 }
+
+/** Open banking first, then the scraper, then a file. */
+type Mode = "openBanking" | "auto" | "manual";
 
 interface SheetState {
   open: boolean;
@@ -39,17 +43,17 @@ interface SheetState {
 
 export default function BankSettingsPage() {
   const t = useTranslations("settings.bank");
-  // Two ways in, as tabs: connect an account, or bring a file. ?mode=manual deep-links the second.
-  const [mode, setMode] = useState<"auto" | "manual">("auto");
+  // Three ways in, as tabs, open banking first: an API, a scraper, or a file. ?mode= deep-links one.
+  const [mode, setMode] = useState<Mode>("openBanking");
   useEffect(() => {
     // Deferred on purpose: settling the tab must not happen inside the effect's render pass.
     const id = setTimeout(() => {
       const m = new URLSearchParams(window.location.search).get("mode");
-      if (m === "manual" || m === "auto") setMode(m);
+      if (m === "manual" || m === "auto" || m === "openBanking") setMode(m);
     }, 0);
     return () => clearTimeout(id);
   }, []);
-  const pickMode = (m: "auto" | "manual") => {
+  const pickMode = (m: Mode) => {
     setMode(m);
     const url = new URL(window.location.href);
     url.searchParams.set("mode", m);
@@ -63,6 +67,9 @@ export default function BankSettingsPage() {
     queryKey: ["integrations"],
     queryFn: listIntegrations,
   });
+  const openBanking = integrations.find((i) => i.provider === "openBanking") ?? null;
+  // Each tab owns its own connections; an open banking account is not a scraped one.
+  const scraped = integrations.filter((i) => i.provider !== "openBanking");
   const { start, stateFor } = useBankSync();
   const [sheet, setSheet] = useState<SheetState>({
     open: false,
@@ -79,7 +86,8 @@ export default function BankSettingsPage() {
     return stamps.sort().slice(-1)[0];
   }, [integrations]);
 
-  const availableToAdd = BANK_PROVIDERS.filter((b) => b.enabled);
+  // Open banking has its own tab, so it never shows up as a bank to scrape.
+  const availableToAdd = BANK_PROVIDERS.filter((b) => b.enabled && b.id !== "openBanking");
 
   const sheetIntegration: Integration | null =
     sheet.mode === "edit" && sheet.credentialId != null
@@ -87,9 +95,9 @@ export default function BankSettingsPage() {
       : null;
 
   const countLabel =
-    integrations.length === 1
-      ? t("banksConnectedOne", { count: integrations.length })
-      : t("banksConnectedOther", { count: integrations.length });
+    scraped.length === 1
+      ? t("banksConnectedOne", { count: scraped.length })
+      : t("banksConnectedOther", { count: scraped.length });
 
   return (
     <>
@@ -98,11 +106,27 @@ export default function BankSettingsPage() {
           variant="track"
           label={t("modeLabel")}
           value={mode}
-          onChange={(v) => pickMode(v as "auto" | "manual")}
-          options={[{ value: "auto", label: t("modeAuto") }, { value: "manual", label: t("modeManual") }]}
+          onChange={(v) => pickMode(v)}
+          options={[
+            { value: "openBanking", label: t("modeOpenBanking") },
+            { value: "auto", label: t("modeAuto") },
+            { value: "manual", label: t("modeManual") },
+          ]}
         />
 
-        {mode === "auto" ? (
+        {mode === "openBanking" ? (
+        <OpenBankingCard
+          connected={openBanking}
+          onOpen={() =>
+            setSheet({
+              open: true,
+              mode: "edit",
+              providerId: "openBanking",
+              credentialId: openBanking?.id ?? null,
+            })
+          }
+        />
+        ) : mode === "auto" ? (
         <>
         {/* Two ways in for every account: connect it, or bring a file. */}
         <SettingCard title={t("waysTitle")}>
@@ -133,7 +157,7 @@ export default function BankSettingsPage() {
           </div>
         </div>
 
-        {isPending ? <p role="status">{t("loading")}</p> : isError ? <div role="alert"><p>{t("loadFailed")}</p><Button variant="outline" className="mt-3" onClick={() => void refetch()}>{t("retry")}</Button></div> : integrations.length === 0 ? (
+        {isPending ? <p role="status">{t("loading")}</p> : isError ? <div role="alert"><p>{t("loadFailed")}</p><Button variant="outline" className="mt-3" onClick={() => void refetch()}>{t("retry")}</Button></div> : scraped.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             {t.rich("noneConnectedPrompt", {
               addBankBold: (chunks) => <b>{chunks}</b>,
@@ -141,10 +165,10 @@ export default function BankSettingsPage() {
           </div>
         ) : (
           <section aria-labelledby="banks-connected">
-          <h3 id="banks-connected" className="mb-2 px-4 text-sm font-semibold text-muted-foreground">{t("groupConnected", { count: integrations.length })}</h3>
+          <h3 id="banks-connected" className="mb-2 px-4 text-sm font-semibold text-muted-foreground">{t("groupConnected", { count: scraped.length })}</h3>
           <div className="overflow-hidden rounded-2xl bg-card">
             <ul className="divide-y divide-border/60">
-              {[...integrations].sort((x, y) => x.label.localeCompare(y.label, locale)).map((integration) => {
+              {[...scraped].sort((x, y) => x.label.localeCompare(y.label, locale)).map((integration) => {
                 const info = BANK_PROVIDERS.find(
                   (b) => b.id === integration.provider
                 );

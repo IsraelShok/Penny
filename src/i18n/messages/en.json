@@ -108,7 +108,10 @@
     "mobileNavigation": "Mobile navigation",
     "mainNavigation": "Main navigation",
     "calculators": "Calculators",
-    "learn": "Learn"
+    "learn": "Learn",
+    "viewMode": "Home view",
+    "viewMinimal": "Minimal",
+    "viewFull": "Full"
   },
   "home": {
     "pageTitle": "Home",
@@ -184,9 +187,8 @@
     "detailLink": "This month in detail",
     "companionLink": "Back to the overview",
     "simple": {
-      "modeLabel": "View mode",
-      "simple": "Simple",
-      "advanced": "Advanced",
+      "simple": "Minimal",
+      "advanced": "Full",
       "monthNav": "Choose month",
       "prevMonth": "Previous month",
       "nextMonth": "Next month",
@@ -241,7 +243,7 @@
       "menuTransactions": "All transactions",
       "menuSavings": "Savings and investments",
       "menuSettings": "Settings",
-      "toAdvanced": "Switch to Advanced",
+      "toAdvanced": "Switch to the full view",
       "spendingRing": "Spending",
       "spentSoFar": "Spent so far",
       "loadFailed": "We couldn't load this month.",
@@ -636,7 +638,7 @@
       "languageSaving": "Switching language…",
       "comfortTitle": "Comfort and focus",
       "comfortDescription": "Fewer moving parts, fewer things on screen.",
-      "simpleMode": "Simple mode",
+      "simpleMode": "Minimal mode",
       "simpleModeHint": "Hides advanced analysis and keeps the essentials",
       "wheelPaging": "Scrolling changes page",
       "wheelPagingHint": "Scrolling past the end of a page opens the next one",
@@ -659,7 +661,7 @@
     },
     "bank": {
       "title": "Accounts & import",
-      "description": "Every account has two ways in: an automatic connection that syncs once a day, or a file you import yourself. Managing and deleting data is at the bottom of the page.",
+      "description": "Three ways to add an account: open banking through the bank's API, an automatic connection that syncs daily, or a manual file import. Below: data management and wiping.",
       "waysTitle": "How to bring in transactions",
       "autoLabel": "Automatic: connect a bank or card",
       "autoHint": "Transactions update on their own once a day.",
@@ -717,7 +719,8 @@
       "modeLabel": "How to connect",
       "modeAuto": "Automatic connection",
       "modeManual": "File import",
-      "manualDisclaimer": "File import works on a statement you downloaded from your bank or card issuer — no passwords, no account access. The automatic connection reads your bank's site through community scrapers; using them is at your own responsibility."
+      "manualDisclaimer": "File import works on a statement you downloaded from your bank or card issuer — no passwords, no account access. The automatic connection reads your bank's site through community scrapers; using them is at your own responsibility.",
+      "modeOpenBanking": "Open banking"
     },
     "ai": {
       "title": "AI provider",
@@ -980,6 +983,30 @@
       "wipeDescription": "Deletes everything: transactions, bank connections and logins, settings, AI keys, the bot, the encryption key and logs. The app returns to a fresh install. This cannot be undone.",
       "wipeConfirm": "To confirm, type \"{word}\"",
       "wipeCta": "Delete all data"
+    },
+    "openBanking": {
+      "title": "Connect the bank's API",
+      "description": "Open banking reads the account through the bank's official XS2A API, with no passwords and no browser imitating a login.",
+      "point1": "The bank, or a licensed provider, has to grant a consent — the app only receives a read-only token.",
+      "point2": "Once the consent is approved you get an endpoint and an access token from the bank, and enter them here.",
+      "point3": "No bank password and no SMS code, and the consent can be revoked at the bank at any time.",
+      "baseUrl": "API base URL",
+      "baseUrlHint": "For example https://xs2a.example.co.il — without /v1.",
+      "token": "Access token",
+      "tokenPlaceholder": "Token issued after the consent",
+      "tokenHint": "The token is stored encrypted like every other connection detail.",
+      "consentId": "Consent ID (optional)",
+      "label": "Account name (optional)",
+      "labelPlaceholder": "e.g. Checking account",
+      "connect": "Connect",
+      "test": "Test connection",
+      "testOk": "Connection works — {count} accounts found",
+      "testFailed": "The connection test failed",
+      "saved": "Connection saved — you can sync it from the menu.",
+      "saveFailed": "Saving the connection failed",
+      "connectedTitle": "Open banking connected",
+      "connectedHint": "Data comes from the bank's API, not a browser.",
+      "manage": "Manage"
     }
   },
   "onboarding": {
@@ -1390,7 +1417,8 @@
         "placeholder": "+972501234567",
         "hint": "Where the SMS one-time code will be sent. International format including the country code."
       }
-    }
+    },
+    "openBanking": "Open Banking"
   },
   "ollamaModels": {
     "llama3_2_3b": "Recommended. Fast and accurate enough for categorizing.",
@@ -1835,7 +1863,7 @@
     "tab_tools": "Calculators",
     "more": "More",
     "planSettings": "Plan settings",
-    "toolsSimple": "Calculators are hidden in simple mode. You can bring them back in settings."
+    "toolsSimple": "Calculators are hidden in minimal mode. You can bring them back in settings."
   },
   "plan": {
     "saved": "Saved",
@@ -2018,7 +2046,7 @@
     "statBill": "Card bill on {date}",
     "more": "More about this month",
     "less": "Less",
-    "simpleOn": "Simple mode is on.",
+    "simpleOn": "Minimal mode is on.",
     "simpleChange": "Change",
     "loading": "Loading today’s overview…",
     "loadFailed": "Today’s overview could not fully load. Try again.",
@@ -2112,8 +2140,8 @@
     "sync": "Sync now",
     "light": "Light mode",
     "dark": "Dark mode",
-    "simpleOn": "Turn on simple mode",
-    "simpleOff": "Turn off simple mode",
+    "simpleOn": "Turn on minimal mode",
+    "simpleOff": "Turn off minimal mode",
     "footer": "Arrows to move · Enter to choose · Esc to close · Ctrl+K anywhere",
     "dockHint": "Find a page or action…",
     "close": "Close search",
@@ -3520,9 +3548,9 @@
     "key_close": "Closes an open window or explanation",
     "key_move": "Moves between buttons and links",
     "youTitle": "Make it yours",
-    "youBody": "Answer the get-to-know-you questions again any time, or turn on simple mode.",
+    "youBody": "You can answer the intro questions again at any time, or switch on minimal mode.",
     "youCta": "Let's get to know you",
-    "simpleCta": "Simple mode and display",
+    "simpleCta": "Minimal mode and view",
     "importTitle": "Importing transactions from a file",
     "importCta": "Go to import and auto-folder"
   },

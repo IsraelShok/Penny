@@ -345,7 +345,8 @@ export type BankProvider =
   | "massad"
   | "beyahadBishvilha"
   | "behatsdaa"
-  | "oneZero";
+  | "oneZero"
+  | "openBanking";
 
 export interface CredentialField {
   key: string;
@@ -411,6 +412,38 @@ export const RECOMMENDED_OLLAMA_MODELS: OllamaModelInfo[] = [
 ];
 
 export const BANK_PROVIDERS: BankProviderInfo[] = [
+  {
+    // Not a bank of its own: any NextGenPSD2 / Bank of Israel XS2A endpoint.
+    id: "openBanking",
+    name: "Open Banking",
+    kind: "bank",
+    color: "#0B5FFF",
+    blurb: "Read accounts through the open banking API",
+    domain: "boi.org.il",
+    credentialFields: [
+      {
+        key: "baseUrl",
+        label: "Open banking API base URL",
+        type: "text",
+        placeholder: "https://xs2a.example.co.il",
+        hint: "The XS2A endpoint of your bank or aggregator, without /v1.",
+      },
+      {
+        key: "token",
+        label: "Access token",
+        type: "password",
+        placeholder: "Bearer token from the consent",
+        hint: "The token issued after you approved the account information consent.",
+      },
+      {
+        key: "consentId",
+        label: "Consent ID (optional)",
+        type: "text",
+        hint: "Sent as Consent-ID on every request when the endpoint expects it.",
+      },
+    ],
+    enabled: true,
+  },
   {
     id: "isracard",
     name: "Isracard",

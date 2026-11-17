@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SETTINGS_GROUPS } from "@/components/settings/settings-sidebar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Lock, PanelLeftIcon, Search } from "lucide-react";
+import { Lock, PanelLeftIcon, Search, Minimize2, Maximize2 } from "lucide-react";
 import { getActivity, getHome } from "@/lib/api";
 import { getLockStatus } from "@/components/settings/app-lock-card";
 import { SyncStatusPill } from "@/components/home/sync-status-pill";
@@ -113,7 +113,7 @@ export function AppSidebar() {
     setStatusOpen(o);
     if (o) queryClient.invalidateQueries({ queryKey: ["activity"] });
   }, [queryClient]);
-  const { plan } = usePlan();
+  const { plan, update } = usePlan();
   // Settings lives as an icon by the workspace, but the wheel still reaches it last.
   const pages = [...NAV, ...FOOTER_NAV];
   const lastWheel = useRef(0);
@@ -239,6 +239,40 @@ export function AppSidebar() {
         </SidebarGroup>
         ))}
         </div>
+        {/* How much Home shows: a menu choice under the pages, so it stays put instead of floating over the page. */}
+        {!settingsMenu && (
+          <SidebarGroup className="py-0">
+            <SidebarGroupLabel>{t("viewMode")}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {(
+                  [
+                    { minimal: true, label: t("viewMinimal"), Icon: Minimize2 },
+                    { minimal: false, label: t("viewFull"), Icon: Maximize2 },
+                  ] as const
+                ).map(({ minimal, label, Icon }) => {
+                  const active = plan.simpleMode === minimal;
+                  return (
+                    <SidebarMenuItem key={label}>
+                      <SidebarMenuButton
+                        onClick={() => {
+                          setOpenMobile(false);
+                          if (!active) void update({ simpleMode: minimal });
+                        }}
+                        isActive={active}
+                        aria-pressed={active}
+                        tooltip={label}
+                      >
+                        <Icon />
+                        <span>{label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="gap-1 border-t border-sidebar-border">

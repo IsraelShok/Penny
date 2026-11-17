@@ -4,6 +4,7 @@ import {
   getRequiresManualTwoFactor,
 } from "@/server/db/queries/bank-credentials";
 import { scrapeBank } from "@/server/scrapers";
+import { connectOpenBanking } from "@/server/open-banking/client";
 import type { BankProvider } from "@/lib/types";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
@@ -36,13 +37,16 @@ export async function POST(request: Request) {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const result = await scrapeBank(
-    workspaceId,
-    body.provider as BankProvider,
-    credentials,
-    sevenDaysAgo,
-    { manualTwoFactor }
-  );
+  const result =
+    body.provider === "openBanking"
+      ? await connectOpenBanking(credentials, sevenDaysAgo)
+      : await scrapeBank(
+          workspaceId,
+          body.provider as BankProvider,
+          credentials,
+          sevenDaysAgo,
+          { manualTwoFactor }
+        );
 
   if (!result.success) {
     return NextResponse.json({

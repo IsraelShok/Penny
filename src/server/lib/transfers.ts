@@ -17,6 +17,7 @@ const BANK_PROVIDERS_SET: ReadonlySet<BankProvider> = new Set<BankProvider>([
   "massad",
   "union",
   "oneZero",
+  "openBanking",
 ]);
 
 export const CREDIT_CARD_PAYMENT_PATTERNS: readonly RegExp[] = [
