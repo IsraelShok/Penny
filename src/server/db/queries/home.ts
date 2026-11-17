@@ -21,7 +21,7 @@ export function getCashFlow(
   const db = getDb();
   const income = db
     .prepare(
-      `SELECT COALESCE(SUM(charged_amount), 0) as total
+      `SELECT COALESCE(SUM(personal_amount), 0) as total
        FROM transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ?
          AND status = 'completed' AND kind = 'income' AND is_excluded = 0`
@@ -29,7 +29,7 @@ export function getCashFlow(
     .get(workspaceId, from, to) as { total: number };
   const expenses = db
     .prepare(
-      `SELECT COALESCE(SUM(-charged_amount), 0) as total
+      `SELECT COALESCE(SUM(-personal_amount), 0) as total
        FROM transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ?
          AND status = 'completed' AND kind = 'expense' AND is_excluded = 0`
@@ -64,7 +64,7 @@ export function getHistoricalTrend(
   }
 
   const stmt = db.prepare(
-    `SELECT COALESCE(SUM(-charged_amount), 0) as total
+    `SELECT COALESCE(SUM(-personal_amount), 0) as total
      FROM transactions
      WHERE workspace_id = ? AND date >= ? AND date <= ?
        AND status = 'completed' AND kind = 'expense' AND is_excluded = 0`
@@ -234,7 +234,7 @@ export function getCategorySnapshot(
 
   const spendRows = db
     .prepare(
-      `SELECT category_id as categoryId, SUM(-charged_amount) as amount
+      `SELECT category_id as categoryId, SUM(-personal_amount) as amount
        FROM category_transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ?
          AND status = 'completed' AND kind = 'expense'
@@ -328,14 +328,14 @@ export function getCategoryScroll(
          AND t.status = 'completed' AND t.kind = 'expense' AND t.is_excluded = 0`;
   const trendRows = db
     .prepare(
-      `SELECT COALESCE(c.parent_id, c.id) as key, substr(t.date, 1, 7) as month, SUM(-t.charged_amount) as amount
+      `SELECT COALESCE(c.parent_id, c.id) as key, substr(t.date, 1, 7) as month, SUM(-t.personal_amount) as amount
        FROM category_transactions t JOIN categories c ON c.id = t.category_id
        WHERE ${where} GROUP BY key, month`
     )
     .all(workspaceId, trendFrom, to) as Array<{ key: number; month: string; amount: number }>;
   const merchantRows = db
     .prepare(
-      `SELECT COALESCE(c.parent_id, c.id) as key, t.description as merchant, SUM(-t.charged_amount) as amount
+      `SELECT COALESCE(c.parent_id, c.id) as key, t.description as merchant, SUM(-t.personal_amount) as amount
        FROM category_transactions t JOIN categories c ON c.id = t.category_id
        WHERE ${where} GROUP BY key, merchant ORDER BY amount DESC`
     )

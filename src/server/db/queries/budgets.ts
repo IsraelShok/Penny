@@ -106,7 +106,7 @@ export function getAutoBudgetAverage(
   for (const { from, to } of periods) {
     const rows = db
       .prepare(
-        `SELECT category_id as categoryId, SUM(-charged_amount) as amount
+        `SELECT category_id as categoryId, SUM(-personal_amount) as amount
          FROM category_transactions
          WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND category_id IS NOT NULL
          GROUP BY category_id`
@@ -146,7 +146,7 @@ export function getMonthlyIncomes(workspaceId: number, months = 12, now = new Da
   const from = toLocalISODate(new Date(now.getFullYear(), now.getMonth() - months, 1));
   const rows = getDb()
     .prepare(
-      `SELECT substr(date, 1, 7) as month, SUM(charged_amount) as income FROM transactions
+      `SELECT substr(date, 1, 7) as month, SUM(personal_amount) as income FROM transactions
        WHERE workspace_id = ? AND kind = 'income' AND status = 'completed' AND is_excluded = 0 AND date >= ?
        GROUP BY month`
     )

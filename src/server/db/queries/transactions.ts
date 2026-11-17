@@ -379,7 +379,7 @@ export function getMonthlySummary(
   return getDb()
     .prepare(
       `SELECT strftime('%Y-%m', date) as month,
-              SUM(-charged_amount) as amount
+              SUM(-personal_amount) as amount
        FROM transactions
        WHERE workspace_id = ?
          AND date >= date('now', '-' || ? || ' months')
@@ -401,7 +401,7 @@ export function getTopMerchants(
   return getDb()
     .prepare(
       `SELECT description as name,
-              SUM(-charged_amount) as amount,
+              SUM(-personal_amount) as amount,
               COUNT(*) as count
        FROM transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense'
@@ -424,7 +424,7 @@ export function getCategoryBreakdown(
          COALESCE(t.category_id, 0) as categoryId,
          COALESCE(c.name, 'Uncategorized') as name,
          COALESCE(c.color, '#B5B3AC') as color,
-         SUM(-t.charged_amount) as amount,
+         SUM(-t.personal_amount) as amount,
          COUNT(DISTINCT t.id) as count
        FROM category_transactions t
        LEFT JOIN categories c ON t.category_id = c.id
@@ -450,7 +450,7 @@ export function getCategorySpendInRange(
   return getDb()
     .prepare(
       `SELECT category_id as categoryId,
-              SUM(-charged_amount) as amount,
+              SUM(-personal_amount) as amount,
               COUNT(DISTINCT id) as count
        FROM category_transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense' AND category_id IS NOT NULL
@@ -475,8 +475,8 @@ export function getTopMerchantPerCategory(
     .prepare(
       `SELECT category_id as categoryId, description as merchant, amount
        FROM (
-         SELECT category_id, description, SUM(-charged_amount) as amount,
-                ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY SUM(-charged_amount) DESC) as rn
+         SELECT category_id, description, SUM(-personal_amount) as amount,
+                ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY SUM(-personal_amount) DESC) as rn
          FROM category_transactions
          WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense' AND category_id IS NOT NULL
            AND is_excluded = 0
@@ -506,7 +506,7 @@ export function getCategorySpendByDay(
          SELECT date(d, '+1 day') FROM days WHERE d < date(?)
        )
        SELECT days.d as date,
-              COALESCE(SUM(-t.charged_amount), 0) as amount
+              COALESCE(SUM(-t.personal_amount), 0) as amount
        FROM days
        LEFT JOIN category_transactions t
          ON substr(t.date, 1, 10) = days.d
@@ -537,7 +537,7 @@ export function getTopMerchantsForCategory(
   return getDb()
     .prepare(
       `SELECT description as merchant,
-              SUM(-charged_amount) as amount,
+              SUM(-personal_amount) as amount,
               COUNT(DISTINCT id) as count
        FROM category_transactions
        WHERE workspace_id = ? AND category_id = ?
@@ -559,7 +559,7 @@ export function getPeriodTotal(
 ): number {
   const row = getDb()
     .prepare(
-      `SELECT COALESCE(SUM(-charged_amount), 0) as total
+      `SELECT COALESCE(SUM(-personal_amount), 0) as total
        FROM transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense'
          AND is_excluded = 0`
@@ -608,6 +608,7 @@ interface TransactionRow {
   credential_id: number | null;
   sync_run_id: number;
   kind: string;
+  business_share_pct: number;
   needs_review: number;
   is_excluded: number;
   owner?: string | null;
@@ -645,6 +646,7 @@ function mapTransactionRow(row: unknown): TransactionWithCategory {
     accountLabel: r.account_label ?? null,
     syncRunId: r.sync_run_id,
     kind: r.kind as "expense" | "income" | "transfer",
+    businessSharePct: r.business_share_pct ?? 0,
     needsReview: r.needs_review === 1,
     isExcluded: r.is_excluded === 1,
     createdAt: r.created_at,
@@ -930,7 +932,7 @@ export function setTransactionOwner(workspaceId: number, id: number, owner: stri
 export function getTagRows(workspaceId: number): import("@/lib/tags").TagRow[] {
   return getDb()
     .prepare(
-      `SELECT tt.tag, t.charged_amount AS amount, t.date, c.name AS category
+      `SELECT tt.tag, t.personal_amount AS amount, t.date, c.name AS category
        FROM transaction_tags tt
        JOIN transactions t ON t.id = tt.transaction_id
        LEFT JOIN categories c ON c.id = t.category_id
@@ -942,7 +944,7 @@ export function getTagRows(workspaceId: number): import("@/lib/tags").TagRow[] {
 export function getOwnerRows(workspaceId: number, from: string, to: string): import("@/lib/tags").OwnerRow[] {
   return getDb()
     .prepare(
-      `SELECT charged_amount AS amount, owner, account_number AS accountNumber
+      `SELECT personal_amount AS amount, owner, account_number AS accountNumber
        FROM transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ? AND kind = 'expense' AND is_excluded = 0 AND charged_amount < 0`
     )

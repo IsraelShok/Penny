@@ -70,6 +70,7 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
   const [tags, setTags] = useState((txn?.tags ?? []).join(", "));
   const [owner, setOwner] = useState<string | null>(txn?.owner ?? null);
   const [excluded, setExcluded] = useState(txn?.isExcluded ?? false);
+  const [businessShare, setBusinessShare] = useState(txn && txn.businessSharePct > 0 ? String(txn.businessSharePct) : "");
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [newCat, setNewCat] = useState(false);
@@ -81,11 +82,15 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
 
   const value = Number(amount.replace(",", "."));
   const amountOk = Number.isFinite(value) && value > 0 && value <= 10_000_000;
+  // Empty means "all personal"; otherwise a whole percent.
+  const business = businessShare.trim() === "" ? 0 : Number(businessShare.replace(",", "."));
+  const businessOk = Number.isInteger(business) && business >= 0 && business <= 100;
 
   async function save() {
     if (manual && (!amountOk || !date || !description.trim())) return toast.error(amountOk ? t("required") : t("invalidAmount"));
+    if (!businessOk) return toast.error(t("businessShareInvalid"));
     const input: ManualTransactionInput = {
-      description: description.trim(), memo: memo.trim() || null, owner, excluded,
+      description: description.trim(), memo: memo.trim() || null, owner, excluded, businessSharePct: business,
       tags: [...new Set(tags.split(",").map((s) => s.trim()).filter(Boolean))],
       ...(manual ? { kind, amount: value, date, account } : {}),
       // A split row keeps its split unless a category is picked here.
@@ -117,7 +122,7 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
   const [yesterday] = useState(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date(Date.now() - 864e5)));
   const chip = (on: boolean) => `inline-flex min-h-11 items-center rounded-full px-4 text-footnote font-medium focus-visible:outline-2 focus-visible:outline-ring ${on ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-accent"}`;
   // Optional fields stay folded on a new entry; an edit opens them when one is already filled.
-  const hasDetails = !!(txn && (memo || tags || owner || excluded || (account && account !== "cash")));
+  const hasDetails = !!(txn && (memo || tags || owner || excluded || businessShare.trim() || (account && account !== "cash")));
   return (
     <form className="flex min-h-full flex-col" onSubmit={(e) => { e.preventDefault(); void save(); }}>
       <div className="flex flex-col gap-4 p-4">
@@ -184,6 +189,19 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
               <Label htmlFor="mt-tags">{t("tags")}</Label>
               <Input id="mt-tags" className={control} value={tags} onChange={(e) => setTags(e.target.value)} />
             </div>
+            {txn?.kind !== "transfer" && (
+              <div className={field}>
+                <Label htmlFor="mt-business">{t("businessShare")}</Label>
+                <div className="flex items-center gap-2">
+                  <Input id="mt-business" className="h-11 w-24 rounded-lg border bg-background px-3 text-base tabular-nums" type="number" inputMode="numeric"
+                    min={0} max={100} step={5} placeholder="0" value={businessShare} aria-invalid={!businessOk}
+                    onChange={(e) => setBusinessShare(e.target.value)} />
+                  <span className="text-sm text-muted-foreground" aria-hidden>%</span>
+                </div>
+                <p className="text-xs text-pretty text-muted-foreground">{t("businessShareHint")}</p>
+                {!businessOk && <p className="text-xs text-destructive" role="alert">{t("businessShareInvalid")}</p>}
+              </div>
+            )}
             {members.length >= 2 && (
               <div className="flex min-h-11 items-center justify-between gap-3">
                 <span className="text-sm font-medium">{t("owner")}</span>

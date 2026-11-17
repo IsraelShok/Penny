@@ -13,6 +13,8 @@ import { upcomingBillingDates, type CardForecastInput } from "./forecast";
 interface Row {
   description: string;
   amount: number;
+  /** The household's own part of the amount, after any business share. */
+  personal: number;
   currency: string;
   date: string;
   billingDate: string;
@@ -26,7 +28,7 @@ interface Row {
 function loadRows(workspaceId: number): Row[] {
   return getDb()
     .prepare(
-      `SELECT t.description, t.charged_amount as amount,
+      `SELECT t.description, t.charged_amount as amount, t.personal_amount as personal,
               COALESCE(t.charged_currency, t.original_currency) as currency,
               t.date as date, t.processed_date as billingDate,
               t.account_number as account, t.installment_number as num, t.installment_total as total,
@@ -118,7 +120,7 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
     today
   );
 
-  const spent = (r: Row) => Math.max(0, -r.amount);
+  const spent = (r: Row) => Math.max(0, -r.personal);
   const thisMonth = monthKey(today, 0);
   const nextMonth = monthKey(today, 1);
   const prior = [-1, -2, -3].map((s) => monthKey(today, s));

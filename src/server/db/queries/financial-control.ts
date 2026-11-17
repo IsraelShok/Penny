@@ -17,7 +17,7 @@ export function controlPayload(ws:number, month=israelToday().slice(0,7)):Contro
  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw new Error("Invalid month");
  const previousMonth=shiftMonth(month,-1); const day=month===today.slice(0,7)?Number(today.slice(8)):31;
  const end=(m:string)=>monthDay(Number(m.slice(0,4)),Number(m.slice(5))-1,day);
- const aggregate=(m:string)=>db.prepare("SELECT COALESCE(t.category_id,0) AS categoryId,COALESCE(c.name,'Uncategorized') AS name,SUM(-t.charged_amount) AS amount FROM category_transactions t LEFT JOIN categories c ON c.id=t.category_id WHERE t.workspace_id=? AND t.kind='expense' AND t.status='completed' AND t.is_excluded=0 AND substr(t.date,1,10) BETWEEN ? AND ? GROUP BY t.category_id").all(ws,m+"-01",end(m)) as {categoryId:number;name:string;amount:number}[];
+ const aggregate=(m:string)=>db.prepare("SELECT COALESCE(t.category_id,0) AS categoryId,COALESCE(c.name,'Uncategorized') AS name,SUM(-t.personal_amount) AS amount FROM category_transactions t LEFT JOIN categories c ON c.id=t.category_id WHERE t.workspace_id=? AND t.kind='expense' AND t.status='completed' AND t.is_excluded=0 AND substr(t.date,1,10) BETWEEN ? AND ? GROUP BY t.category_id").all(ws,m+"-01",end(m)) as {categoryId:number;name:string;amount:number}[];
  const current=aggregate(month), previous=aggregate(previousMonth), ids=new Set([...current,...previous].map(c=>c.categoryId));
  const drivers=[...ids].map(id=>{const a=current.find(c=>c.categoryId===id),b=previous.find(c=>c.categoryId===id);return {categoryId:id,name:a?.name??b!.name,current:a?.amount??0,previous:b?.amount??0,delta:(a?.amount??0)-(b?.amount??0)};}).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
  const quality:QualityFinding[]=[];

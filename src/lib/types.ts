@@ -45,6 +45,8 @@ export interface Transaction {
   accountLabel: string | null;
   syncRunId: number;
   kind: "expense" | "income" | "transfer";
+  /** How much of this row belongs to a business, 0–100. The rest is the household's own spending. */
+  businessSharePct: number;
   needsReview: boolean;
   createdAt: string;
   updatedAt: string;

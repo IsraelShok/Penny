@@ -1292,6 +1292,7 @@ export function getInstalledAgents() {
 export type ManualTransactionInput = {
   kind?: "expense" | "income"; amount?: number; date?: string; description?: string; categoryId?: number | null;
   account?: string; memo?: string | null; tags?: string[]; owner?: string | null; excluded?: boolean;
+  businessSharePct?: number;
 };
 const jsonInit = (method: string, body?: unknown): RequestInit => ({ method, headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
 export function createManualTransaction(input: ManualTransactionInput) {
