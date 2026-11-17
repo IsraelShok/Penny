@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 127.0.0.1 -p 3000",
+    "demo": "node scripts/demo.mjs",
+    "dev:demo": "node scripts/demo.mjs --keep",
+    "demo:reset": "node scripts/demo.mjs --reset-only",
     "build": "next build",
     "start": "next start -H 127.0.0.1 -p 41234",
     "lint": "eslint",

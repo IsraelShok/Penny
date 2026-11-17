@@ -37,6 +37,9 @@ yarn-error.log*
 # local data (sqlite db, encryption key)
 /data/
 
+# demo household (made-up data, safe to delete)
+/demo-data/
+
 # claude code config + session artifacts (per-developer, not shared)
 /.claude/
 /.superpowers/

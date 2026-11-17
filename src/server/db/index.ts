@@ -4,6 +4,7 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import { runMigrations } from "./migrate";
 import { dataDir, dbPath } from "../lib/data-dir";
+import { ensureDemoData } from "../demo/seed";
 
 const DB_DIR = dataDir();
 const DB_PATH = dbPath(DB_DIR);
@@ -19,6 +20,7 @@ function createDatabase(): Database.Database {
   db.pragma("busy_timeout = 5000");
 
   runMigrations(db);
+  ensureDemoData(db);
 
   return db;
 }
