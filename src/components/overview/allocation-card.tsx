@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { CardShell } from "@/components/home/card-shell";
 import { Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -50,7 +51,7 @@ export function AllocationCard({
   // The household plan's emergency-fund target (shared by every profile, same value Home and FI use).
   const { plan, update } = usePlan();
   const months = plan.emergencyMonths;
-  const pickMonths = (v: string) => { void update({ emergencyMonths: Number(v) }).catch(() => {}); };
+  const pickMonths = (v: string) => { void update({ emergencyMonths: Number(v) }).catch(() => toast.error(tc("saveFailed"))); };
   if (income <= 0) return null;
   const liquidNow = liquidCash(assets.data?.assets ?? []);
   const a = allocate({ income, expenses, liquidNow, emergencyMonths: months });
