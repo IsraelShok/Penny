@@ -13,6 +13,7 @@ import { INTERACTIVE, isPensionFund, LOGIN_FIELDS } from "@/lib/pension";
 import { deletePension, listPension, pensionAction, type PensionConnection } from "@/lib/api";
 import { formatLastSync } from "@/lib/formatters";
 import { useFormatterLabels } from "@/lib/i18n-data";
+import { PensionReportImport } from "./pension-report-import";
 
 /** Investment houses: Meitav, Harel and Migdal connect and sync balances into assets; the rest are listed as coming soon. */
 export function InvestmentHouses() {
@@ -102,6 +103,7 @@ export function InvestmentHouses() {
           );
         })}
       </ul>
+      <PensionReportImport />
     </section>
   );
 }

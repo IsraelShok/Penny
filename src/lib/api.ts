@@ -1060,6 +1060,26 @@ export function pensionAction(body: Record<string, unknown>) {
 export function deletePension(id: number) {
   return fetchJSON<{ success: boolean }>(`/api/pension?id=${id}`, { method: "DELETE" });
 }
+export type PensionReportRecord = {
+  id: number;
+  asOf: string;
+  member: string;
+  source: string;
+  fileName: string | null;
+  issuedAt: string | null;
+  totalSavings: number;
+  products: number;
+  importedAt: string;
+};
+export function listPensionReports() {
+  return fetchJSON<{ reports: PensionReportRecord[] }>(`/api/pension/report`);
+}
+export function importPensionReport(report: unknown) {
+  return fetchJSON<{ products: number; created: number; updated: number; policies: number; policiesCreated: number; reportId: number }>(
+    `/api/pension/report`,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(report) }
+  );
+}
 
 export function getCashflowHealth() {
   return fetchJSON<{ hasData: boolean; signs: import("./cashflow-health").CashflowSign[]; level: import("./cashflow-health").CashflowLevel; avgIncome: number; avgExpenses: number }>(`/api/cashflow-health`);
