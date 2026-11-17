@@ -42,8 +42,11 @@ export default function BankSettingsPage() {
   const labels = useFormatterLabels();
   const locale = useLocale();
   const params = useSearchParams();
-  // Two lanes: the scraper connects and keeps itself current; a file import is a one-off snapshot.
-  const [mode, setMode] = useState<Mode>(() => (params.get("mode") === "manual" ? "manual" : "auto"));
+  // Three lanes: an API, a scraper that keeps itself current, or a one-off file snapshot.
+  const [mode, setMode] = useState<Mode>(() => {
+    const requested = params.get("mode");
+    return requested === "auto" || requested === "manual" ? requested : "openBanking";
+  });
 
   const { data: integrations = [], isPending, isError, refetch } = useQuery({
     queryKey: ["integrations"],
