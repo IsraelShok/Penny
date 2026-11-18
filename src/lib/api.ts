@@ -424,6 +424,46 @@ export function setTransactionExcluded(
   });
 }
 
+export interface PaybackTxn {
+  id: number;
+  date: string;
+  description: string;
+  /** Signed as charged: an expense is negative, a payback credit positive. */
+  amount: number;
+}
+
+export interface PaybackLinkView {
+  credit: PaybackTxn;
+  expense: PaybackTxn;
+}
+
+export interface PaybackState {
+  links: PaybackLinkView[];
+  candidates: PaybackTxn[];
+  /** How much of this expense earlier credits already covered. */
+  coveredAbs: number;
+}
+
+/** The links touching a transaction, plus the rows near it that could still be paired with it. */
+export function getPayback(id: number) {
+  return fetchJSON<PaybackState>(`/api/transactions/${id}/payback`);
+}
+
+/** Pairs a credit with the expense it repays; either id may be the credit. */
+export function linkPayback(id: number, targetId: number) {
+  return fetchJSON<{ success: boolean }>(`/api/transactions/${id}/payback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetId }),
+  });
+}
+
+export function unlinkPayback(creditId: number) {
+  return fetchJSON<{ success: boolean }>(`/api/transactions/${creditId}/payback`, {
+    method: "DELETE",
+  });
+}
+
 export interface ExcludedMerchantRule {
   id: number;
   provider: string;

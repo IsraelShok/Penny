@@ -15,6 +15,7 @@ import { CategoryChip } from "./category-chip";
 import { NewCategoryDialog } from "@/components/settings/new-category-dialog";
 import { OwnerPicker } from "@/components/transactions/owner-picker";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PaybackField } from "./payback-field";
 import { createManualTransaction, deleteManualTransaction, getCategories, getOwners, updateTransactionFields, type ManualTransactionInput } from "@/lib/api";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { TransactionWithCategory } from "@/lib/types";
@@ -60,7 +61,11 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
   const tSettingsCat = useTranslations("settings.categories");
   const queryClient = useQueryClient();
   const manual = !txn || isManualTxn(txn);
-  const [kind, setKind] = useState<"expense" | "income">(txn ? (txn.chargedAmount > 0 ? "income" : "expense") : "expense");
+  // A card refund is a positive amount that stays an expense: the kind, never the sign, decides.
+  const [kind, setKind] = useState<"expense" | "income">(txn && txn.kind === "income" ? "income" : "expense");
+  // A positive expense is a refund or a linked payback. Its sign is what nets it against the charge,
+  // so this sheet leaves its kind and amount alone or the totals would count it twice.
+  const netted = !!txn && txn.kind === "expense" && txn.chargedAmount > 0;
   const [amount, setAmount] = useState(txn ? String(Math.abs(txn.chargedAmount)) : "");
   const [date, setDate] = useState(txn ? txn.date.slice(0, 10) : today());
   const [description, setDescription] = useState(txn?.description ?? "");
@@ -87,12 +92,13 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
   const businessOk = Number.isInteger(business) && business >= 0 && business <= 100;
 
   async function save() {
-    if (manual && (!amountOk || !date || !description.trim())) return toast.error(amountOk ? t("required") : t("invalidAmount"));
+    if (manual && (!date || !description.trim())) return toast.error(t("required"));
+    if (manual && !netted && !amountOk) return toast.error(t("invalidAmount"));
     if (!businessOk) return toast.error(t("businessShareInvalid"));
     const input: ManualTransactionInput = {
       description: description.trim(), memo: memo.trim() || null, owner, excluded, businessSharePct: business,
       tags: [...new Set(tags.split(",").map((s) => s.trim()).filter(Boolean))],
-      ...(manual ? { kind, amount: value, date, account } : {}),
+      ...(manual ? { ...(netted ? {} : { kind, amount: value }), date, account } : {}),
       // A split row keeps its split unless a category is picked here.
       ...(categoryId !== null || !txn?.allocations?.length ? { categoryId } : {}),
     };
@@ -118,7 +124,8 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
 
   const field = "flex flex-col gap-1.5";
   const control = "h-11 w-full rounded-lg border bg-background px-3 text-base sm:text-sm";
-  const tone = kind === "income" ? "var(--status-on-track)" : "var(--expense)";
+  const positive = netted || kind === "income";
+  const tone = positive ? "var(--status-on-track)" : "var(--expense)";
   const [yesterday] = useState(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date(Date.now() - 864e5)));
   const chip = (on: boolean) => `inline-flex min-h-11 items-center rounded-full px-4 text-footnote font-medium focus-visible:outline-2 focus-visible:outline-ring ${on ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-accent"}`;
   // Optional fields stay folded on a new entry; an edit opens them when one is already filled.
@@ -127,7 +134,7 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
     <form className="flex min-h-full flex-col" onSubmit={(e) => { e.preventDefault(); void save(); }}>
       <div className="flex flex-col gap-4 p-4">
         <SheetHeader className="p-0"><SheetTitle>{txn ? t("editTitle") : t("addTitle")}</SheetTitle></SheetHeader>
-        {manual ? (
+        {netted ? <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">{t("nettedLock")}</p> : manual ? (
           <Segmented label={t("type")} value={kind} onChange={(k) => { setKind(k); setCategoryId(null); }}
             options={[{ value: "expense", label: t("expense") }, { value: "income", label: t("income") }]} />
         ) : (
@@ -137,8 +144,8 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
         <div className="rounded-2xl p-4 text-center" style={{ background: `color-mix(in oklab, ${tone} 10%, transparent)` }}>
           <Label htmlFor="mt-amount" className="justify-center text-footnote text-muted-foreground">{t("amount")}</Label>
           <div className="mt-1 flex items-baseline justify-center gap-1" dir="ltr" style={{ color: tone }}>
-            <span className="text-2xl font-semibold" aria-hidden>{kind === "income" ? "+" : "−"}₪</span>
-            <input id="mt-amount" autoFocus={!txn} inputMode="decimal" autoComplete="off" required={manual} disabled={!manual} placeholder="0"
+            <span className="text-2xl font-semibold" aria-hidden>{positive ? "+" : "−"}₪</span>
+            <input id="mt-amount" autoFocus={!txn} inputMode="decimal" autoComplete="off" required={manual} disabled={!manual || netted} placeholder="0"
               aria-invalid={manual && amount !== "" && !amountOk} value={amount} onChange={(e) => setAmount(e.target.value)}
               className="w-40 bg-transparent text-center text-4xl font-bold rounded-lg tabular-nums outline-none placeholder:text-current placeholder:opacity-30 focus-visible:underline focus-visible:decoration-2 focus-visible:underline-offset-8 disabled:opacity-70" />
           </div>
@@ -208,6 +215,8 @@ function Form({ txn, members, close }: { txn: TransactionWithCategory | null; me
                 <OwnerPicker label={tTags("ownerLabel")} value={owner} members={members} onChange={setOwner} />
               </div>
             )}
+            {/* Linking changes this row's kind and share, so close: the sheet holds the row from before it. */}
+            {txn && <PaybackField txn={txn} refresh={() => { refresh(); close(); }} />}
             <label className="flex min-h-11 items-center gap-3 text-sm">
               <input type="checkbox" className="size-5" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} />{t("exclude")}
             </label>

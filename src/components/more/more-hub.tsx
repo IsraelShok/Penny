@@ -5,12 +5,13 @@ import { useTranslations } from "next-intl";
 import { MoreHero } from "@/components/ui/page-hero";
 import { SuggestionsCard } from "@/components/home/suggestions-card";
 import { CalculatorTiles, NavRow, groupedList } from "@/components/more/calculators";
-import { BookOpen, Calculator, CalendarClock, ChevronLeft, LayoutDashboard, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, ShieldCheck, Sparkles } from "lucide-react";
+import { BookOpen, Calculator, CalendarClock, ChevronLeft, ClipboardCheck, LayoutDashboard, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, ShieldCheck, Sparkles } from "lucide-react";
 import { DailyTip } from "@/components/tips/tips";
 
 /** Everything that isn't daily, in one calm place: the menu stays short, nothing gets lost. */
 const GROUPS = [
   { key: "rituals", items: [
+    { href: "/reviews", key: "reviews", Icon: ClipboardCheck },
     { href: "/recap", key: "recap", Icon: Sparkles },
     { href: "/wellbeing", key: "wellbeing", Icon: HeartPulse },
   ] },
