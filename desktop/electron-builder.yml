@@ -22,6 +22,8 @@ win:
     - target: nsis
       arch: [x64]
 nsis:
+  # Pinned: the release workflow copies this exact file to Penny-Setup-<version>.exe, which the release notes and READMEs link to.
+  artifactName: Penny Setup ${version}.${ext}
   oneClick: true
   perMachine: false
   createDesktopShortcut: true
