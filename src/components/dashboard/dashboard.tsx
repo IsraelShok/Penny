@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo, useSyncExternalStore } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import { readStored } from "@/lib/legacy-names";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { DataState } from "@/components/ui/data-state";
 import { getSummary, getTransactions, listIntegrations, getBudgetMoves } from "@/lib/api";
-import { applyMoves } from "@/lib/budget-moves";
 import { IncomeSmoothingCard } from "./income-smoothing-card";
 import { getMonthRange } from "@/lib/formatters";
 import { PageHeader } from "@/components/layout/app-shell";
@@ -73,12 +72,9 @@ export function Dashboard() {
 
   const month = from.slice(0, 7);
   const moves = useQuery({ queryKey: ["budget-moves", month], queryFn: () => getBudgetMoves(month) });
-  // Effective budgets for this month: base budget ± "move from X" moves.
-  const summary = useMemo(() => {
-    const s = summaryQuery.data;
-    if (!s || !moves.data?.length) return s;
-    return { ...s, categoriesWithData: applyMoves(s.categoriesWithData, moves.data, s.timeElapsedPercent) };
-  }, [summaryQuery.data, moves.data]);
+  // The budgets in the summary already include base, carry-in and moves; the moves query only
+  // lists them for the card's own "moved from" rows and undo.
+  const summary = summaryQuery.data;
   const period = useQuery({ queryKey: ["budget-period", from, to], queryFn: () => getTransactions({ from, to, limit: 1 }), placeholderData: keepPreviousData });
   const banks = useQuery({ queryKey: ["integrations"], queryFn: listIntegrations });
 

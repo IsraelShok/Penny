@@ -3,6 +3,7 @@ import "server-only";
 import { getDb } from "../index";
 import { computeDedupHash } from "../../lib/dedup";
 import { detectKind } from "../../lib/transfers";
+import { BANK_PROVIDERS } from "@/lib/types";
 import type {
   TransactionWithCategory,
   MonthlySummary,
@@ -50,6 +51,17 @@ function dedupHashFor(txn: RawTransaction): string {
   });
 }
 
+/** A card company is connected, so the bank's card bill is money that already arrives as charges. */
+function hasCardCredential(workspaceId: number): boolean {
+  const cardProviders = BANK_PROVIDERS.filter((b) => b.kind === "card").map((b) => b.id);
+  if (cardProviders.length === 0) return false;
+  return (
+    getDb()
+      .prepare(`SELECT 1 FROM bank_credentials WHERE workspace_id = ? AND provider IN (${cardProviders.map(() => "?").join(",")}) LIMIT 1`)
+      .get(workspaceId, ...cardProviders) !== undefined
+  );
+}
+
 export function insertTransactions(
   workspaceId: number,
   transactions: RawTransaction[],
@@ -60,6 +72,7 @@ export function insertTransactions(
   const db = getDb();
   let added = 0;
   let updated = 0;
+  const cardExplainsBill = hasCardCredential(workspaceId);
 
   const hashCounts = new Map<string, number>();
 
@@ -116,7 +129,7 @@ export function insertTransactions(
       };
 
       const sequence = batchCount - 1;
-      const kind = detectKind(txn.description, provider, txn.chargedAmount);
+      const kind = detectKind(txn.description, provider, txn.chargedAmount, { cardExplainsBill });
 
       const params = {
         workspaceId,
@@ -1072,12 +1085,13 @@ export function insertFileImport(
        VALUES (?, ?, ?, ?, ?, 'ILS', ?, 'ILS', ?, 'normal', 'completed', 'file', ?, ?, ?, ?)
        ON CONFLICT(workspace_id, dedup_hash, dedup_sequence) DO NOTHING`
     );
+    const cardExplainsBill = hasCardCredential(workspaceId);
     let added = 0;
     for (const r of rows) {
       const hash = computeDedupHash({ accountNumber: account, date: r.date, originalAmount: r.amount, originalCurrency: "ILS", description: r.description });
       // A statement has no provider type; classify it like the matching source: bank transfer
       // patterns and sign, or a card row (always an expense, refunds included).
-      const kind = detectKind(r.description, source === "card" ? "isracard" : "hapoalim", r.amount);
+      const kind = detectKind(r.description, source === "card" ? "isracard" : "hapoalim", r.amount, { cardExplainsBill });
       added += stmt.run(workspaceId, account, r.date, r.date, r.amount, r.amount, r.description, runId, hash, r.seq, kind).changes;
     }
     return { batchId: runId, added };

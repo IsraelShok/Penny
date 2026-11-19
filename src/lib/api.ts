@@ -744,6 +744,27 @@ export function getBudgets() {
   return fetchJSON<Budget[]>("/api/budgets");
 }
 
+export function getFlowMatches() {
+  return fetchJSON<import("./flow-matches").FlowMatchView[]>("/api/flow-matches");
+}
+
+/** Undo one automatic pairing; the rows return to their previous classification. */
+export function cancelFlowMatch(id: number) {
+  return fetchJSON<{ success: boolean }>(`/api/flow-matches/${id}`, { method: "DELETE" });
+}
+
+export function getBudgetPeriod(month?: string) {
+  return fetchJSON<import("./finance-period").BudgetPeriodPayload>(`/api/budgets/period${month ? `?month=${month}` : ""}`);
+}
+
+export function setBudgetRollover(categoryId: number, rollover: import("./finance-period").RolloverRule) {
+  return fetchJSON<{ success: boolean }>("/api/budgets/period", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ categoryId, rollover }),
+  });
+}
+
 export function updateBudget(categoryId: number, amount: number | null) {
   return fetchJSON<{ success: boolean }>("/api/budgets", {
     method: "PUT",
@@ -1312,6 +1333,57 @@ export function importStatement(
 
 export function undoStatementImport(batchId: number) {
   return fetchJSON<{ removed: number }>(`/api/import?batch=${batchId}`, { method: "DELETE" });
+}
+
+export interface SheetRowInput {
+  date: string;
+  description: string;
+  amount: number;
+  kind: "expense" | "income";
+  account: string;
+  category?: string;
+  tags?: string[];
+  owner?: string | null;
+  businessSharePct?: number;
+  memo?: string | null;
+}
+
+export interface SheetImportResult {
+  dryRun: boolean;
+  ready: number;
+  added: number;
+  duplicates: number;
+  errors: number;
+  categorized: number;
+  needsReview: number;
+  importId: number | null;
+  batchId: number | null;
+  rows: { index: number; status: "added" | "duplicate" | "error"; code?: string }[];
+}
+
+/** Saves the smart sheet; dryRun only reports duplicates and per-row errors. */
+export function importSheet(rows: SheetRowInput[], dryRun = false) {
+  return fetchJSON<SheetImportResult>(`/api/import/sheet`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rows, dryRun }),
+  });
+}
+
+export function undoSheetImport(importId: number) {
+  return fetchJSON<{ removed: number }>(`/api/import/sheet?import=${importId}`, { method: "DELETE" });
+}
+
+/** Category suggestions from merchant memory (never written by the server). */
+export function suggestSheetCategories(rows: { description: string; kind: "expense" | "income" }[]) {
+  return fetchJSON<{ suggestions: { index: number; categoryId: number; name: string; kind: "expense" | "income" }[] }>(
+    `/api/import/sheet/suggest`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rows }),
+    },
+  );
 }
 
 export function getLegacyNotes() {

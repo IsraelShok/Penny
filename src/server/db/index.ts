@@ -39,3 +39,10 @@ export function getDb(): Database.Database {
   if (migratedConnection !== globalThis._db) { runMigrations(globalThis._db); migratedConnection = globalThis._db; }
   return globalThis._db;
 }
+
+/** Closes the shared connection so a restore can replace the file; the next getDb() reopens it. */
+export function closeDb(): void {
+  globalThis._db?.close();
+  globalThis._db = undefined;
+  migratedConnection = undefined;
+}

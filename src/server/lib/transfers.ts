@@ -56,13 +56,22 @@ function matchesTransferPattern(description: string): boolean {
   return CREDIT_CARD_PAYMENT_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
+export interface KindOptions {
+  /**
+   * A connected card scraper whose charges explain this bill. Without one the debit is real
+   * spending: marking it a transfer hid every card month from all totals.
+   */
+  cardExplainsBill?: boolean;
+}
+
 export function detectKind(
   description: string,
   provider: string,
-  chargedAmount: number
+  chargedAmount: number,
+  options: KindOptions = {}
 ): TransactionKind {
   if (isBankProvider(provider) && matchesTransferPattern(description)) {
-    return "transfer";
+    return options.cardExplainsBill ? "transfer" : "expense";
   }
   // A loan landing in the account is borrowed money, not earnings: counting it as income inflates savings.
   if (isBankProvider(provider) && chargedAmount > 0 && LOAN_DEPOSIT.test(description)) {

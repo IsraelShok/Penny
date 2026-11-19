@@ -61,7 +61,8 @@ export function SettingCard({
     <section id={id} className="scroll-mt-20">
       {(title || description) && (
         <div className="mb-2 flex items-center gap-1 px-4">
-          {title && <h3 className="text-[0.6875rem] font-semibold tracking-[0.09em] text-muted-foreground uppercase">{title}</h3>}
+          {/* A section eyebrow, not a heading: small enough to stay quiet, large enough to read on a phone. */}
+          {title && <h3 className="text-xs font-semibold tracking-[0.04em] text-muted-foreground">{title}</h3>}
           {/* With a title, the explanation goes behind the "i" so the header stays one line. */}
           {description && (title ? <InfoTip text={description} /> : <p className="text-sm text-muted-foreground">{description}</p>)}
           {aside && <span className="ms-auto">{aside}</span>}

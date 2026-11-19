@@ -15,6 +15,7 @@ import { ManualImport } from "@/components/settings/manual-import";
 import { ScraperDisclaimer } from "@/components/settings/scraper-disclaimer";
 import { DangerZone, ExcludedMerchantsCard, ShowBrowserCard } from "@/components/settings/data-cards";
 import { ExportCard } from "@/components/settings/export-card";
+import { BackupCard } from "@/components/settings/backup-card";
 import { WipeCard } from "@/components/settings/wipe-card";
 import { BankDetailSheet } from "@/components/settings/bank-detail-sheet";
 import { useBankSync } from "@/components/settings/use-bank-sync";
@@ -87,7 +88,7 @@ export default function BankSettingsPage() {
   return (
     <>
       <SectionShell title={t("title")} description={t("description")} icon={<Landmark aria-hidden />}>
-        <div className="px-4">
+        <div className="space-y-2 px-4">
           <Segmented<Mode>
             label={t("modeLabel")}
             value={mode}
@@ -99,6 +100,10 @@ export default function BankSettingsPage() {
               { value: "manual", label: t("modeManual") },
             ]}
           />
+          {/* What the picked way actually does, so the choice is made on facts rather than a label. */}
+          <p aria-live="polite" className="text-footnote leading-5 text-muted-foreground">
+            {t(mode === "openBanking" ? "modeOpenBankingHint" : mode === "auto" ? "modeAutoHint" : "modeManualHint")}
+          </p>
         </div>
 
         {mode === "openBanking" ? (
@@ -227,6 +232,7 @@ export default function BankSettingsPage() {
         <section aria-labelledby="data-heading" className="space-y-7 border-t border-border/60 pt-6">
           <h2 id="data-heading" className="px-4 text-lg font-semibold">{t("groupData")}</h2>
           <ExportCard />
+          <BackupCard />
           <ExcludedMerchantsCard />
           <ShowBrowserCard />
           {/* The one place to delete data; Privacy links here. */}

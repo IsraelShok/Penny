@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { MoreHero } from "@/components/ui/page-hero";
 import { SuggestionsCard } from "@/components/home/suggestions-card";
 import { CalculatorTiles, NavRow, groupedList } from "@/components/more/calculators";
-import { BookOpen, Calculator, CalendarClock, ChevronLeft, ClipboardCheck, LayoutDashboard, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, ShieldCheck, Sparkles } from "lucide-react";
+import { BookOpen, Briefcase, Calculator, CalendarClock, ChevronLeft, ClipboardCheck, LayoutDashboard, Compass, FileHeart, FileUp, HandHeart, HeartPulse, LifeBuoy, MessageCircleQuestion, Route, ShieldCheck, Sparkles } from "lucide-react";
 import { DailyTip } from "@/components/tips/tips";
 
 /** Everything that isn't daily, in one calm place: the menu stays short, nothing gets lost. */
@@ -18,6 +18,7 @@ const GROUPS = [
   { key: "explore", items: [
     { href: "/ask", key: "ask", Icon: MessageCircleQuestion },
     { href: "/planned", key: "planned", Icon: CalendarClock },
+    { href: "/business", key: "business", Icon: Briefcase },
     { href: "/journey", key: "journey", Icon: Route },
     { href: "/life", key: "life", Icon: Compass },
     { href: "/calculators", key: "calculators", Icon: Calculator },

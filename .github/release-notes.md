@@ -1,3 +1,14 @@
+## What's new in 0.2.0
+
+- **A budget that follows your month.** Set the day your household month starts (salary day, not the 1st) and budgets, recaps and the monthly history line up with it. Budgets carry over, moves between categories are part of the plan, and the recap has a period picker.
+- **Money that comes back is not income.** Paybacks, refunds and reimbursements are matched to the expense they belong to, so they lower the real cost instead of inflating the month's income.
+- **A business report.** Mark the business share of a transaction and get a monthly report by category and merchant, with CSV export. Personal screens keep showing only the household share.
+- **Smart sheet import.** Paste a table from anywhere (Excel, Google Sheets, a bank file, a list you typed), fix cells in place, get category suggestions and duplicate detection per account, and undo the whole import.
+- **Encrypted backup and restore.** One password-protected `.pennybak` file holds the database and the bank encryption key. Restore checks the file before touching anything and keeps a copy of the current database. `npm run backup` does the same from the command line.
+- **Longer view.** A lifetime money model to age 90, a coach that turns the month's numbers into ranked advice, and an insurance module with policies, renewals and the payments that match them.
+- **More ways in.** Open banking over the Israeli XS2A API, a pension report import from your agent, and a demo household that lets you try every screen without a bank connection.
+- **A calmer app.** Real error messages instead of blank screens, guided reviews, and a 2026 design pass across home, settings and the money hub.
+
 ## Install
 
 Pick one. Your data stays on your computer in every option.

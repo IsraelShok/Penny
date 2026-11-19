@@ -6,6 +6,7 @@ import { FileUp } from "lucide-react";
 import { SettingCard } from "@/components/settings/section-shell";
 import { StatementImportCard } from "@/components/settings/statement-import-card";
 import { FolderImportCard } from "@/components/settings/folder-import-card";
+import { SheetImportCard } from "@/components/settings/sheet-import-card";
 import { InstitutionGrid, InstitutionTile } from "@/components/settings/institution-grid";
 import { Button } from "@/components/ui/button";
 import { BANK_PROVIDERS } from "@/lib/types";
@@ -105,6 +106,7 @@ export function ManualImport() {
 
       <div id="import" className="scroll-mt-20 space-y-7">
         <StatementImportCard defaultAccount={account} />
+        <SheetImportCard defaultAccount={account} />
         <FolderImportCard />
       </div>
     </>

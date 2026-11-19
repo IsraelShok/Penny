@@ -67,15 +67,27 @@ export function HomePage() {
 
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const { data: insights } = useQuery({ queryKey: ["insights"], queryFn: getInsights });
-  const { plan, loaded } = usePlan();
+  const { plan, loaded, update } = usePlan();
   const detail = searchParams.get("view") === "detail";
-  // ?view=detail shows the advanced home without changing the saved mode (wheel paging lands here from Simple).
-  const simple = plan.simpleMode && !(detail && plan.homeStyle !== "companion");
+  // ?view=detail shows the advanced home without changing the saved mode.
+  const simple = plan.razeMode && !(detail && plan.homeStyle !== "companion");
   const companion = plan.homeStyle === "companion";
   // Pocket Pal sits in the purple card, at its end side (visual left in Hebrew).
-  const petAside = loaded && plan.pet.enabled ? <PetHeroAside /> : undefined;
+  // The intro invite rides with the pet instead of taking a block of its own.
+  const petAside = loaded && plan.pet.enabled ? <PetHeroAside extra={<WelcomePrompt variant="pip" />} /> : undefined;
   const nextStep = <NextStep home={data} homePending={isLoading} homeFailed={isError} />;
   const linkClass = "mx-auto flex min-h-11 w-fit items-center rounded-full px-4 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring";
+  // Two homes: the raze one-pager, or everything Home knows, expanded. Leaving the detail view first.
+  const modeToggle = (
+    <div role="group" aria-label={t("simple.modeLabel")} className="inline-flex rounded-full bg-muted p-0.5 text-sm">
+      {[true, false].map((v) => (
+        <button key={String(v)} type="button" aria-pressed={plan.razeMode === v} onClick={() => { if (!v && detail) router.replace("/", { scroll: false }); if (plan.razeMode !== v) void update({ razeMode: v }); }}
+          className={`relative rounded-full px-3 py-1 after:absolute after:-inset-y-2 after:inset-x-0 ${plan.razeMode === v ? "bg-background font-medium shadow-sm" : "text-muted-foreground"}`}>
+          {t(v ? "simple.simple" : "simple.advanced")}
+        </button>
+      ))}
+    </div>
+  );
   // Until the plan loads, show only what both styles share (greeting and this month's card), so neither style flashes.
   if (!loaded) {
     return (
@@ -95,10 +107,11 @@ export function HomePage() {
   if (companion && !detail) {
     return (
       <>
-        <PageHeader title={t("pageTitle")} largeTitle={false}  />
+        <PageHeader title={t("pageTitle")} largeTitle={false} actions={modeToggle} />
         <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-3 md:px-6 lg:px-8">
           <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
-          <div className="rise-in mb-3"><QuickActions /></div>
+          {/* Simple mode keeps the page quiet: adding and importing live in the card's own menu row. */}
+          {!simple && <div className="rise-in mb-3"><QuickActions /></div>}
           {simple ? (
             <SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} />
           ) : (
@@ -108,7 +121,7 @@ export function HomePage() {
               <MoneyMap />
             </>
           )}
-          <WelcomePrompt />
+          {!petAside && <WelcomePrompt />}
           {!simple && <Link href="/?view=detail" className={linkClass}>{t("detailLink")}</Link>}
         </div>
       </>
@@ -118,10 +131,10 @@ export function HomePage() {
   return (
     <>
       {/* The view is chosen in the sidebar menu, not by a toggle on the page. */}
-      <PageHeader title={t("pageTitle")} largeTitle={false} />
+      <PageHeader title={t("pageTitle")} largeTitle={false} actions={modeToggle} />
       {/* The detail view of the Companion style always offers the way back. */}
       {companion && <div className="mx-auto w-full max-w-6xl px-4 pt-3 md:px-6 lg:px-8"><Link href="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-footnote font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{t("companionLink")}</Link></div>}
-      <div className="rise-in mx-auto w-full max-w-6xl px-4 pb-1 md:px-6 lg:px-8"><QuickActions /></div>
+      {!simple && <div className="rise-in mx-auto w-full max-w-6xl px-4 pb-1 md:px-6 lg:px-8"><QuickActions /></div>}
       {simple ? (
         <div className="px-4 pb-8 pt-3"><SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} /></div>
       ) : (
@@ -137,7 +150,7 @@ export function HomePage() {
         <SuggestionsTipsCard />
         <HealthCard />
         <MonthCelebration />
-        <WelcomePrompt />
+        {!petAside && <WelcomePrompt />}
         <PersonalGrid render={id => {
           if (id === "goals") return <GoalFocus />;
           if (id === "planner") return <ScenarioCard />;

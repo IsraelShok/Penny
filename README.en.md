@@ -41,7 +41,9 @@ Nothing leaves your machine except the calls you choose: to your bank, and to an
 - **Budgets** with pacing, 50/30/20 view, monthly hero card and per-category detail.
 - **Category families.** Groups and subcategories share a colour family; pick categories by colour, A-Z or group, and create your own.
 - **Financial health** score with one warnings button that lists everything that needs care.
-- **What's ahead.** Upcoming charges, recurring bills and a cash-flow forecast.
+- **What's ahead.** Upcoming charges, recurring bills and a cash-flow forecast, including a separate balance per bank account with a range, and a card for every credit card attached to the account that pays it.
+- **Planned expenses.** A purchase you know is coming (a trip, a device, a repair) is written once, joins the forecast, and matches itself to the real charge when it arrives.
+- **Business share and a business report.** A transaction that is partly work is marked with a business percentage; the original amount stays in the cash flow and card charges, and personal reports show only the household share. The business report (More → Business report) groups that share by month, category and merchant, with CSV export.
 
 ### Israeli money tools
 More than 25 calculators and guided tools, ordered by life stage, each marked with the year its figures are valid for:
@@ -59,11 +61,15 @@ Plus a **knowledge center** of short original guides in Hebrew and English, and 
 ### Household
 - **Profiles that share one household,** in a "who's using?" screen. Each person keeps their own home layout and accessibility choices.
 - **Pip,** a small companion whose mood follows the household's finances. Every profile picks its own Pip as its avatar.
-- **Goals,** net worth, investments and pension balances (synced from Clal, Harel, Meitav, Menora and Migdal), and a "family document" for the day someone else needs to find everything.
+- **Goals,** net worth, investments and pension balances (synced from Clal, Harel, Meitav, Menora and Migdal, or imported from your agent's report), and a "family document" for the day someone else needs to find everything.
+- **Insurance** in one place: policies, what they cover and the excess, the renewal date, the agent, the documents, and the payments that match from the bank to the policy.
+- **A lifetime money model** to age 90, and a coach that turns the month's numbers into ranked advice.
+- **Demo mode** with a complete made-up household: see every screen without a bank connection and without touching real data.
 
 ### Getting data in
 - **Automatic:** 18 Israeli banks and card companies via [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), on a daily schedule.
 - **Manual:** drop a CSV, XLSX or XLS statement into the app or into a watched import folder. A transaction that comes from both is stored once.
+- **Smart sheet:** paste a table from any source, from Excel or Google Sheets to a bank file or a list you typed, and fix each cell in the grid itself: date, amount, type, account, category, tags, owner and business percentage. Duplicates are found per account before saving, and the whole import can be undone.
 - **Onboarding** walks a new user through profile and Pip, connecting or importing, a monthly target, budgets, an optional AI provider and a short tour. It can be skipped, resumed and reopened.
 
 ### Language and accessibility
@@ -203,6 +209,16 @@ For accounts Penny can't sync, or months the bank no longer shows:
 
 A transaction that arrives from both sync and a file is stored once (same account and amount, at most a day apart). The synced copy wins and keeps your category, notes and tags.
 
+### Smart sheet import
+
+Settings → Accounts & import → Import files → "Smart sheet import". Paste a table as it is. A header row is detected on its own (date, description, amount, type, account, category, tags, owner, business percentage, memo), and without one Penny asks you to map columns. Every cell is editable in place, Enter moves down, Ctrl+D copies the cell above, and you can download a CSV template or copy the header row.
+
+The account you pick per row decides how it is saved: on cash it becomes a manual transaction you can always edit, and on a real account it enters like a file import so the next sync does not duplicate it. A transaction that already exists on that account (same amount, one day apart) is marked and skipped, but you can include it again. Categories are suggested from merchants you have already taught, and after saving you can undo the whole import at once.
+
+### Pension report import
+
+An agent's or advisor's periodic report (pension, study fund, provident and the insurance in it) can be imported as JSON: Settings → Accounts & import → Pension, study funds and investments → "Import pension report". Each product lands in assets with its value from the report date, its management fees and monthly deposit, and each policy lands in insurance. The report is validated against its own total, and importing the same report again updates instead of duplicating. Penny does not read PDFs; any tool that extracts the data to JSON following [the example](public/pension-report.example.json) works, and the full format is in [docs/pension-report.md](docs/pension-report.md).
+
 ## Everyday commands
 
 | What you want | Run |
@@ -255,10 +271,13 @@ Full threat model and disclosure policy: [SECURITY.md](SECURITY.md).
 
 - `data/penny.db`: transactions, categories, budgets, profiles, settings
 - `data/.encryption-key`: the 32-byte AES key, mode `0600`
-- `data/*.bak`: automatic backups taken before data migrations
+- `data/*.bak` and `data/backups/`: automatic backups taken before migrations, before a restore, and before every schema change
+- `data/backups/*.pennybak`: encrypted backups you create yourself (Settings → Data → Backup and restore, or `npm run backup`)
 - Service logs: `~/Library/Logs/Penny/` (macOS), `~/.local/state/penny/log/` (Linux)
 
 Back up `data/` like any folder. To move to a new machine, copy `data/` over and run `npm run service:install`.
+
+One backup file holds the database and the bank encryption key, encrypted with a password you choose (AES-256-GCM with scrypt). A restore checks the password and the file's contents before touching anything, keeps a copy of the current database in `backups`, and asks for explicit confirmation.
 
 ## Code map
 
@@ -302,8 +321,12 @@ Penny/
 - [x] Custom categories with colour families
 - [x] Household profiles, onboarding and accessibility menu
 - [x] Israeli tax, pension, insurance and mortgage tools
+- [x] Import the agent's pension report (JSON): products, fees, deposits and insurance
 - [ ] Parse the pension clearing-house report automatically
-- [ ] CSV / OFX export
+- [x] CSV export for all transactions
+- [x] Smart sheet import: paste, column mapping, category suggestions and per-account duplicates
+- [x] Backup and restore in one encrypted file, plus `npm run backup`
+- [ ] OFX export
 - [ ] Native mobile companion
 
 ## Contributing

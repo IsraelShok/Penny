@@ -68,12 +68,16 @@ export function runMigrations(db: Database.Database): void {
     db.pragma("foreign_keys = OFF");
     try {
       db.transaction(() => {
+        // BEGIN IMMEDIATE takes the write lock before the re-check, so a second process that opened
+        // the same database while this one was working waits here and then finds the file applied,
+        // instead of re-running an ALTER that would fail with "duplicate column name".
+        if (db.prepare("SELECT 1 FROM _migrations WHERE name = ?").get(file)) return;
         db.exec(sql);
         if (file === CATEGORY_HIERARCHY_MIGRATION) applyCategoryHierarchy(db);
         if (file === "049_goal_details.sql") addGoalDetails(db);
         if (file === FAMILY_COLORS_MIGRATION || file === SATURATED_COLORS_MIGRATION) applyFamilyColors(db);
         db.prepare("INSERT INTO _migrations (name) VALUES (?)").run(file);
-      })();
+      }).immediate();
 
       const violations = db.pragma("foreign_key_check") as unknown[];
       if (violations.length > 0) {

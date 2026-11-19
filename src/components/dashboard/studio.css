@@ -331,7 +331,7 @@ html.app-studio .header-bar { background-color: color-mix(in srgb, var(--backgro
 .month-nav-arrow:hover:not(:disabled) { background: #ffffff29; }
 .month-nav-arrow:disabled { opacity: .3; cursor: default; }
 .month-nav-label { min-width: 7.5em; padding-inline: 6px; text-align: center; font-size: 15px; font-weight: 600; white-space: nowrap; }
-.month-nav-today { position: relative; display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 0 12px; margin-inline-start: 4px; border-radius: 999px; background: #ffffff24; color: inherit; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.month-nav-today { position: relative; display: grid; place-items: center; width: 32px; height: 32px; margin-inline-start: 2px; border-radius: 999px; background: #ffffff24; color: inherit; }
 .month-nav-today::after { content: ""; position: absolute; inset: -7px 0; }
 .month-nav-today:hover { background: #ffffff38; }
 .month-strip { display: flex; gap: 4px; margin-top: 16px; padding: 14px 2px 2px; border-top: 1px solid #ffffff1f; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }

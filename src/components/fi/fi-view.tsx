@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { FiPayload } from "@/lib/types";
 import { FiExtras, PlanSettingsButton } from "./fi-extras";
+import { LifetimeCard } from "./lifetime-card";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const TABS = ["fi", "safety", "tools"] as const;
@@ -231,6 +232,7 @@ function Body({ data }: { data: FiPayload }) {
         <Segmented<Tab> label={t("tabsLabel")} value={tab} onChange={setTab} options={TABS.map((k) => ({ value: k, label: t(`tab_${k}`) }))} />
         <PlanSettingsButton />
       </div>
+      <LifetimeCard data={data} />
       <div className="grid items-start gap-4 lg:grid-cols-3">
         {tab === "fi" && fiTab}
         {tab === "safety" && <FiExtras data={data} tab="safety" />}

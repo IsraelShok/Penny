@@ -468,8 +468,9 @@ function seedGoals(db: Database.Database, ws: number, today: string): void {
   const goal = db.prepare(
     "INSERT INTO goals (workspace_id, name, target_amount, target_date, saved_amount, kind, details) VALUES (?, ?, ?, ?, ?, 'general', ?)"
   );
-  goal.run(ws, "חופשה משפחתית ביפן", 30_000, addMonths(today, 10), 7_500,
+  // A goal date is a month, not a day.
+  goal.run(ws, "חופשה משפחתית ביפן", 30_000, addMonths(today, 10).slice(0, 7), 7_500,
     JSON.stringify({ icon: "plane", color: "indigo", monthly: 1_500, dated: true }));
-  goal.run(ws, "קרן חירום", 60_000, addMonths(today, 18), 24_000,
+  goal.run(ws, "קרן חירום", 60_000, addMonths(today, 18).slice(0, 7), 24_000,
     JSON.stringify({ icon: "shield", color: "green", monthly: 1_000, dated: true }));
 }

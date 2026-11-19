@@ -131,18 +131,25 @@ function ComfortCard() {
   const homeStyle: HomeStyle = picked ?? plan.homeStyle ?? "classic";
   const rows = [
     { key: "simpleMode", label: t("simpleMode"), hint: t("simpleModeHint") },
-    { key: "wheelPaging", label: t("wheelPaging"), hint: t("wheelPagingHint") },
+    // Paging moves between pages; in Simple mode there is no scrolling between pages at all.
+    { key: "wheelPaging", label: t("wheelPaging"), hint: plan.razeMode ? t("wheelPagingAdvancedOnly") : t("wheelPagingHint") },
   ] as const;
   return (
     <SettingCard title={t("comfortTitle")} description={t("comfortDescription")}>
       <SettingList>
+        <SettingRow label={t("homeView")} hint={t("homeViewHint")}>
+          <Segmented label={t("homeView")} value={plan.razeMode ? "simple" : "advanced"}
+            onChange={(next) => { if (!loaded || (next === "simple") === plan.razeMode) return; void update({ razeMode: next === "simple" }).catch(() => {}); }}
+            options={[{ value: "simple", label: t("homeViewSimple") }, { value: "advanced", label: t("homeViewAdvanced") }]} />
+        </SettingRow>
         <SettingRow label={t("homeStyle")} hint={t(`homeStyleHint_${homeStyle}`)}>
           <Segmented label={t("homeStyle")} value={homeStyle} onChange={(next) => { if (!loaded || next === homeStyle) return; setPicked(next); update({ homeStyle: next }).catch(() => setPicked(null)); }}
             options={HOME_STYLES.map((s) => ({ value: s, label: t(`homeStyle_${s}`) }))} />
         </SettingRow>
         {rows.map((r) => (
           <SettingRow key={r.key} label={r.label} hint={r.hint} htmlFor={`comfort-${r.key}`}>
-            <Switch id={`comfort-${r.key}`} checked={plan[r.key]} disabled={!loaded} onCheckedChange={(v) => void update({ [r.key]: v }).catch(() => {})} />
+            <Switch id={`comfort-${r.key}`} checked={plan[r.key]} disabled={!loaded || (r.key === "wheelPaging" && plan.razeMode)}
+              onCheckedChange={(v) => void update({ [r.key]: v }).catch(() => {})} />
           </SettingRow>
         ))}
       </SettingList>

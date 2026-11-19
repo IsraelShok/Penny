@@ -21,6 +21,7 @@ import { usePlan } from "@/hooks/use-plan";
 import { wantsExplanations } from "@/lib/plan";
 import { pagePurposeKey } from "@/lib/orientation";
 import { MobileDock } from "./mobile-dock";
+import { SimpleNavButton } from "./simple-nav-button";
 import { PetMini } from "@/components/home/pet-card";
 import { SectionTabs, sectionOf } from "./section-tabs";
 import { NAV } from "./app-sidebar";
@@ -34,12 +35,15 @@ export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; c
 export function AppShell({ children }: { children: ReactNode }) {
   const t = useTranslations("nav");
   const { isMobile } = useSidebar();
-  // Simple mode drops the side menu on desktop for a top bar; phones keep the menu sheet.
-  const topBar = usePlan().plan.simpleMode && !isMobile;
+  const plan = usePlan().plan;
+  // Simple mode keeps one hamburger at the page corner: no side menu, no bottom dock.
+  const simple = plan.razeMode;
+  // Minimal mode turns the side menu into a quiet icon row on desktop; phones keep the menu sheet.
+  const topBar = plan.simpleMode && !simple && !isMobile;
   return (
     <>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-background focus:px-5 focus:py-3 focus:outline-2">{t("skipToContent")}</a>
-      {!topBar && <AppSidebar />}
+      {!topBar && !simple && <AppSidebar />}
       <SidebarInset id="main-content" tabIndex={-1} className="mobile-dock-content">
         {topBar && <SimpleTopBar />}
         <UpdateBanner />
@@ -49,7 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <BottomBar />
         <PrivacyHotkey />
       </SidebarInset>
-      <MobileDock />
+      {!simple && <MobileDock />}
     </>
   );
 }
@@ -101,12 +105,15 @@ export function PageHeader({
 
   return (
     <header ref={headerRef} className={`sticky top-0 z-20 transition-[box-shadow,background-color] duration-150 ${scrolled ? "header-bar shadow-[0_0.5px_0_var(--border)]" : "bg-transparent"}`}>
-      {/* Nothing to show on desktop (hidden title, no actions): the row folds away there; phones keep it for the menu button. */}
-      <div className={`${!largeTitle && !actions ? "md:sr-only " : ""}mx-auto grid min-h-14 max-w-[76rem] grid-cols-[minmax(auto,1fr)_minmax(0,auto)_minmax(auto,1fr)] items-center gap-x-4 px-4 py-2 md:px-6 lg:px-8`}>
-        {/* Phones: the mini pet docks beside the menu button (desktop has it in the sidebar footer). */}
-        <div className="col-start-1 row-start-1 -ms-1 flex items-center gap-1 self-center justify-self-start md:hidden">
-          <SidebarTrigger />
-          <PetMini />
+      {/* Nothing to show on desktop folds the row away, but the menu keeps its corner: it is the only way around in Simple mode. */}
+      <div className={`${!largeTitle && !actions ? "md:min-h-0 md:gap-x-0 md:px-0 md:py-0 " : ""}mx-auto grid min-h-14 max-w-[76rem] grid-cols-[minmax(auto,1fr)_minmax(0,auto)_minmax(auto,1fr)] items-center gap-x-4 px-4 py-2 md:px-6 lg:px-8`}>
+        {/* The menu sits at the page's top corner: Simple mode's own hamburger, or the side menu's trigger on phones. */}
+        <div className="col-start-1 row-start-1 -ms-1 flex items-center gap-1 self-center justify-self-start">
+          {plan.razeMode && <SimpleNavButton />}
+          <div className="flex items-center gap-1 md:hidden">
+            {!plan.razeMode && <SidebarTrigger />}
+            <PetMini />
+          </div>
         </div>
         {/* self-start: the title sits on the same line on every page, with or without a meta line under it. */}
         <div className={largeTitle ? "col-start-2 row-start-1 flex min-w-0 flex-col items-center self-start text-center" : "sr-only"}>

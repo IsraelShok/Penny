@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import {
   SlidersHorizontal,
@@ -17,9 +17,11 @@ import {
   Lock,
   Accessibility,
   ChevronRight,
+  Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlan } from "@/hooks/use-plan";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 interface NavItem {
   href: string;
@@ -122,53 +124,106 @@ export const SETTINGS_GROUPS: NavGroup[] = [
   },
 ];
 
-const GROUPS = SETTINGS_GROUPS;
+/**
+ * The settings frame: with the app's side menu there is nothing to add, but Simple and Minimal modes hide it,
+ * so the sections get their own menu here, a column on wide screens and a drawer on phones.
+ */
+export function SettingsFrame({ children }: { children: ReactNode }) {
+  const { plan } = usePlan();
+  const withMenu = plan.razeMode || plan.simpleMode;
+  return (
+    <div className="flex min-h-[calc(100vh-4rem)] flex-1">
+      <div className={cn("mx-auto w-full px-4 pb-8 pt-3 md:px-8", withMenu ? "flex max-w-6xl items-start gap-8" : "max-w-[720px]")}>
+        {withMenu && <SettingsSidebar />}
+        <div className="min-w-0 max-w-[720px] flex-1">
+          {withMenu && <SettingsDrawer />}
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-export function SettingsMobileNav() {
+/** The whole map of settings, on one side and without sideways scrolling. */
+function SettingsSidebar() {
+  const t = useTranslations("settings.sidebar");
+  return (
+    <nav aria-label={t("title")} className="sticky top-20 hidden max-h-[calc(100vh-6rem)] w-56 shrink-0 overflow-y-auto lg:block">
+      <SettingsNavList />
+    </nav>
+  );
+}
+
+function SettingsDrawer() {
+  const t = useTranslations("settings.sidebar");
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="lg:hidden">
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger className="mb-4 flex min-h-11 w-full items-center gap-2 rounded-xl border border-border/60 bg-card px-3 text-start text-footnote font-medium transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
+          <Settings2 className="size-4 shrink-0 text-primary" aria-hidden />
+          <span className="flex-1">{t("open")}</span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground ltr:rotate-180" aria-hidden />
+        </SheetTrigger>
+        {/* side="left" sits on the inline start: the right in Hebrew, the left in English. */}
+        <SheetContent side="left" className="w-80 max-w-[85vw]">
+          <SheetHeader>
+            <SheetTitle>{t("title")}</SheetTitle>
+          </SheetHeader>
+          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
+            <SettingsNavList onNavigate={() => setOpen(false)} />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
+function SettingsNavList({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const tSidebar = useTranslations("settings.sidebar");
   const tRoot = useTranslations();
   const tCommon = useTranslations("common");
-  const t = (k: string) => (k.includes(".") ? tRoot(k) : tSidebar(k));
-  const allItems = GROUPS.flatMap((g) => g.items);
-  const navRef = useRef<HTMLElement>(null);
-  const simple = usePlan().plan.simpleMode;
-  // The strip scrolls sideways; keep the current section in view instead of off the edge.
-  useEffect(() => {
-    navRef.current?.querySelector<HTMLElement>('[aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "center" });
-  }, [pathname]);
+  const label = (item: NavItem) => (item.labelKey.includes(".") ? tRoot(item.labelKey) : tSidebar(item.labelKey));
+
   return (
-    // Phones reach these sections from the sidebar sheet; the strip is only for simple mode, which has no side menu.
-    <nav ref={navRef} aria-label={tSidebar("title")} className={cn("no-scrollbar -mx-4 mb-4 overflow-x-auto border-b border-border/40 px-4", simple ? "hidden md:block" : "hidden")}>
-      <div className="flex gap-1.5 pb-3 pt-1">
-        {/* Leaving settings should never need hunting: the way back is the first thing on the strip. */}
-        <Link
-          href="/"
-          className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 text-footnote font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
-        >
-          <ChevronRight className="size-4 ltr:rotate-180" aria-hidden />
-          {tCommon("back")}
-        </Link>
-        {allItems.map((item) => {
-          const active = item.match(pathname);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3.5 text-footnote font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring",
-                active
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border/60 text-foreground/70 hover:border-border hover:text-foreground"
-              )}
-            >
-              <item.Icon className="size-4" aria-hidden />
-              {t(item.labelKey)}
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+    <div className="flex flex-col gap-5">
+      {/* Leaving settings should never need hunting: the way back is the first thing in the menu. */}
+      <Link
+        href="/"
+        onClick={onNavigate}
+        className="flex min-h-10 items-center gap-1.5 rounded-xl bg-primary px-3 text-footnote font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        <ChevronRight className="size-4 ltr:rotate-180" aria-hidden />
+        {tCommon("back")}
+      </Link>
+      {SETTINGS_GROUPS.map((group) => (
+        <div key={group.titleKey}>
+          <p className="mb-1.5 px-2 text-caption font-medium text-muted-foreground">{tSidebar(group.titleKey)}</p>
+          <ul className="flex flex-col gap-0.5">
+            {group.items.map((item) => {
+              const active = item.match(pathname);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={onNavigate}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "flex min-h-9 items-center gap-2.5 rounded-lg px-2 text-footnote font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+                      active ? "bg-primary/10 text-primary" : "text-foreground/70 hover:bg-accent hover:text-foreground"
+                    )}
+                  >
+                    <item.Icon className="size-4 shrink-0" aria-hidden />
+                    {label(item)}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+    </div>
   );
 }

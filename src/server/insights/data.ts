@@ -120,7 +120,8 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
     today
   );
 
-  const spent = (r: Row) => Math.max(0, -r.personal);
+  // Net of refunds, the same rule as v_spend_rows: a refund is negative spending, not income.
+  const spent = (r: Row) => -r.personal;
   const thisMonth = monthKey(today, 0);
   const nextMonth = monthKey(today, 1);
   const prior = [-1, -2, -3].map((s) => monthKey(today, s));

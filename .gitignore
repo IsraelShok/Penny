@@ -69,5 +69,9 @@ next-env.d.ts
 # local Playwright MCP output
 /.playwright-mcp/
 
+# local QA and agent scratch output (screenshots, sweep scripts)
+/.qa-ui/
+/.std/
+
 # Docker statement drop folder
 /imports/
