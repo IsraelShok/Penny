@@ -565,6 +565,27 @@ export function getMarkets() {
   return fetchJSON<MarketsPayload>(`/api/markets`);
 }
 
+/** Symbols the household added to Markets. */
+export function getMarketWatchlist() {
+  return fetchJSON<{ symbols: string[] }>(`/api/markets/watchlist`);
+}
+
+export function addMarketSymbol(symbol: string) {
+  return fetchJSON<{ symbol: string }>(`/api/markets/watchlist`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ symbol }),
+  });
+}
+
+export function removeMarketSymbol(symbol: string) {
+  return fetchJSON<void>(`/api/markets/watchlist`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ symbol }),
+  });
+}
+
 export function getInsurance() {
   return fetchJSON<InsurancePayload>(`/api/insurance`);
 }
