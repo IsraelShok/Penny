@@ -16,7 +16,7 @@ extraResources:
 afterPack: desktop/after-pack.cjs
 npmRebuild: false
 asar: true
-icon: public/icons/icon-512.png
+icon: desktop/icon.png
 win:
   target:
     - target: nsis
