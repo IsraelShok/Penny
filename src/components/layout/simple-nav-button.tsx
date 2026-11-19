@@ -35,7 +35,8 @@ export function SimpleNavButton({ className }: { className?: string }) {
       >
         <Menu className="size-5" aria-hidden />
       </SheetTrigger>
-      <SheetContent side="right" className="w-80 max-w-full">
+      {/* side="left" is the inline start: the same corner as the hamburger, so the panel slides in from the right in Hebrew and the left in English. */}
+      <SheetContent side="left" className="w-80 max-w-full">
         <SheetHeader>
           <SheetTitle>{tHome("menu")}</SheetTitle>
         </SheetHeader>
