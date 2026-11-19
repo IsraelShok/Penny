@@ -69,7 +69,7 @@ export function petSnooze(snooze: Record<string, string>, key: string, until: st
   return Object.fromEntries([...Object.entries(snooze).filter(([, u]) => u > today), [key, until]]);
 }
 
-export const PET_SIZES = { s: 110, m: 140, l: 170 } as const;
+export const PET_SIZES = { s: 120, m: 180, l: 250 } as const;
 export type PetSize = keyof typeof PET_SIZES;
 /** A few BoopFace skins (full build, loaded only when one is picked). */
 export const PET_SKINS = ["301", "401", "901", "1401", "1601"] as const;

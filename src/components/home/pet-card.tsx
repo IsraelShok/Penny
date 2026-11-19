@@ -71,7 +71,7 @@ export function PetHeroAside({ extra }: { extra?: React.ReactNode } = {}) {
   }, [p == null]); // eslint-disable-line react-hooks/exhaustive-deps -- re-measure once the span exists
   if (!p) return null;
   // The aside is about a quarter of the width on phones, so the face shrinks with it.
-  const px = Math.round(PET_SIZES[p.pet.size] * (view.small ? 0.55 : 0.8));
+  const px = Math.round(PET_SIZES[p.pet.size] * (view.small ? 0.6 : 0.9));
   return <span ref={ref} className="flex min-h-px min-w-px flex-col items-center">
     {view.shown && <>
       <PetButton p={p} px={px} onOpen={() => setOpen(true)} />
@@ -139,6 +139,10 @@ function PetSheet({ p, open, onOpenChange }: { p: PetState; open: boolean; onOpe
         </SheetHeader>
         <div className="space-y-5 px-4 pb-6">
           <div className="grid place-items-center"><PetFace mood={p.mood} pet={p.pet} px={PET_SIZES[p.pet.size]} /></div>
+          {/* Bigger is a choice, not a hidden setting: the size lives here, next to the face it changes. */}
+          <Segmented label={t("sizeLabel")} value={p.pet.size}
+            onChange={(size) => { void update({ pet: { ...plan.pet, size } }).catch(() => toast.error(tc("saveFailed"))); }}
+            options={(Object.keys(PET_SIZES) as (keyof typeof PET_SIZES)[]).map((s) => ({ value: s, label: t(`size_${s}`) }))} />
           <PipCoach onNavigate={() => onOpenChange(false)} />
           {todo.length ? (
             <ol className="space-y-3" aria-label={t("todoLabel")}>
