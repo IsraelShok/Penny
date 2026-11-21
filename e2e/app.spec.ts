@@ -23,9 +23,10 @@ test.describe("navigation", () => {
   test("the sidebar reaches the calculators hub through Analytics", async ({ page, isMobile }) => {
     test.skip(isMobile, "the phone layout uses the bottom dock");
     await page.goto("/");
-    // Menu: calculators sit in the Analytics group, which opens in place.
-    await page.getByRole("button", { name: "ניתוח" }).first().click();
-    await page.getByRole("link", { name: /^מחשבונים/ }).first().click();
+    // Analytics is one link in the side menu; its pages have their own menu card.
+    await page.getByRole("link", { name: "ניתוח" }).first().click();
+    await expect(page).toHaveURL(/\/overview$/);
+    await page.getByRole("navigation", { name: "ניתוח" }).getByRole("link", { name: /^מחשבונים/ }).click();
     await expect(page).toHaveURL(/\/calculators$/);
     await expect(page.getByRole("link", { name: /משכנתא/ })).toBeVisible();
   });

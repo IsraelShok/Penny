@@ -190,12 +190,12 @@ export function AppSidebar() {
               </SidebarGroup>
             );
           }
-          // A one-page group (Dashboard) is a plain link, not a folder.
-          if (group.items.length === 1) {
+          // A one-page group (Dashboard) or a hub (Analytics, which has its own menu) is a plain link, not a folder.
+          if (group.items.length === 1 || ("hub" in group && group.hub)) {
             const only = group.items[0];
-            const label = tNavGroups(`pages.${only.key}`);
+            const label = group.items.length === 1 ? tNavGroups(`pages.${only.key}`) : tNavGroups(`groups.${group.key}`);
             return <SidebarGroup key={group.key} className="py-1"><SidebarMenu><SidebarMenuItem><SidebarMenuButton
-              render={<Link href={only.href} onClick={() => setOpenMobile(false)} aria-current={activeGroup ? "page" : undefined}><only.Icon aria-hidden /><span>{label}</span></Link>}
+              render={<Link href={only.href} onClick={() => setOpenMobile(false)} aria-current={activeGroup ? "page" : undefined}><GroupIcon aria-hidden /><span>{label}</span></Link>}
               isActive={activeGroup} tooltip={label}
               className="min-h-11 font-semibold data-[active=true]:bg-primary/10 data-[active=true]:text-primary" /></SidebarMenuItem></SidebarMenu></SidebarGroup>;
           }

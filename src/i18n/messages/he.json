@@ -5563,7 +5563,9 @@
       "ventures": "השקעות פרטיות",
       "recurring": "תשלומים קבועים",
       "groups": "קבוצות ואירועים",
-      "optimizations": "אופטימיזציות"
+      "optimizations": "אופטימיזציות",
+      "pivot": "טבלת ציר",
+      "netWorth": "שווי נקי לאורך זמן"
     },
     "views": {
       "focus": "ממוקד",
@@ -6222,5 +6224,36 @@
     "syncDone": "{bank}: נוספו {count, plural, one {תנועה חדשה} other {# תנועות חדשות}}",
     "syncFailed": "{bank}: הסנכרון נכשל. כדאי לבדוק את החיבור.",
     "goalReached": "הגעתם ליעד \"{name}\" ({amount})"
+  },
+  "analyticsHub": {
+    "reports": "דוחות",
+    "tools": "כלים"
+  },
+  "pivot": {
+    "title": "טבלת ציר",
+    "hint": "הוצאות לפי קבוצה וחודש. לחיצה על תא פותחת את התנועות שלו.",
+    "range": "תקופה",
+    "months": "{n} חודשים",
+    "category": "קטגוריה",
+    "total": "סה\"כ",
+    "average": "ממוצע לחודש",
+    "expand": "פתיחת {name}",
+    "collapse": "סגירת {name}"
+  },
+  "netWorthView": {
+    "title": "שווי נקי לאורך זמן",
+    "today": "שווי נקי היום",
+    "range": "טווח",
+    "range_6m": "חצי שנה",
+    "range_1y": "שנה",
+    "range_all": "הכול",
+    "since_6m": "בחצי השנה האחרונה",
+    "since_1y": "בשנה האחרונה",
+    "since_all": "מאז הנקודה הראשונה",
+    "notEnough": "צריך לפחות שתי נקודות זמן כדי לצייר את הקו.",
+    "chartLabel": "שווי נקי לאורך זמן, מ-{from} עד {to}",
+    "parts": "ממה הוא מורכב",
+    "assets": "נכסים",
+    "debts": "חובות"
   }
 }

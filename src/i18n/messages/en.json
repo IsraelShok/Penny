@@ -5563,7 +5563,9 @@
       "ventures": "Venture",
       "recurring": "Recurring payments",
       "groups": "Groups & events",
-      "optimizations": "Optimizations"
+      "optimizations": "Optimizations",
+      "pivot": "Pivot table",
+      "netWorth": "Net worth history"
     },
     "views": {
       "focus": "Focus",
@@ -6222,5 +6224,36 @@
     "syncDone": "{bank}: {count, plural, one {# new transaction} other {# new transactions}}",
     "syncFailed": "{bank}: the sync failed. Check the connection.",
     "goalReached": "Goal reached: \"{name}\" ({amount})"
+  },
+  "analyticsHub": {
+    "reports": "Reports",
+    "tools": "Tools"
+  },
+  "pivot": {
+    "title": "Pivot table",
+    "hint": "Spending by group and month. Select a cell to see its transactions.",
+    "range": "Period",
+    "months": "{n} months",
+    "category": "Category",
+    "total": "Total",
+    "average": "Monthly average",
+    "expand": "Open {name}",
+    "collapse": "Close {name}"
+  },
+  "netWorthView": {
+    "title": "Net worth history",
+    "today": "Net worth today",
+    "range": "Range",
+    "range_6m": "6 months",
+    "range_1y": "1 year",
+    "range_all": "All",
+    "since_6m": "in the last 6 months",
+    "since_1y": "in the last year",
+    "since_all": "since the first point",
+    "notEnough": "At least two points in time are needed to draw the line.",
+    "chartLabel": "Net worth over time, from {from} to {to}",
+    "parts": "What it is made of",
+    "assets": "Assets",
+    "debts": "Debts"
   }
 }

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Wallet, PieChart, Layers, Flag, CalendarDays, ShieldCheck, Calculator, GraduationCap, Building2, HeartPulse, Flame, Car, MessageCircleQuestion, ScrollText, Zap, ListChecks, Target, Focus, HandCoins, Rocket, Group, Repeat, Wrench, TrendingUp, CreditCard, CalendarClock, ChartColumn, Milestone, SquareFunction } from "lucide-react";
+import { LayoutDashboard, Wallet, PieChart, Layers, Flag, CalendarDays, ShieldCheck, Calculator, GraduationCap, Building2, HeartPulse, Flame, Car, MessageCircleQuestion, ScrollText, Zap, ListChecks, Target, Focus, HandCoins, Rocket, Group, Repeat, Wrench, TrendingUp, CreditCard, CalendarClock, ChartColumn, Milestone, SquareFunction, Table2, LineChart } from "lucide-react";
 
 const item = (href: string, key: string, Icon: typeof Wallet) => ({ href, key, Icon, match: (path: string) => href === "/" ? path === "/" : path === href || path.startsWith(href + "/") });
 
@@ -36,8 +36,11 @@ export const NAVIGATION_GROUPS = [
     item("/life", "life", Milestone),
   ] },
   // Settings sit behind the gear in the sidebar footer; Help closes the settings menu.
-  { key: "analytics", Icon: ChartColumn, items: [
+  // A hub: one link in the side menu; its pages have their own menu card beside them.
+  { key: "analytics", Icon: ChartColumn, hub: true, items: [
     item("/overview", "overview", PieChart),
+    item("/pivot", "pivot", Table2),
+    item("/net-worth", "netWorth", LineChart),
     item("/fi", "fi", Flame),
     item("/recap", "recap", ScrollText),
     item("/wellbeing", "wellbeing", HeartPulse),

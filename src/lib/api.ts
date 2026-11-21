@@ -723,6 +723,10 @@ export function plannedAction(action: "match" | "link" | "reject" | "unlink", id
   });
 }
 
+export function getPivot(months: number) {
+  return fetchJSON<{ months: string[]; rows: import("./pivot").PivotRow[] }>(`/api/pivot?months=${months}`);
+}
+
 export function getAssets() {
   return fetchJSON<AssetsPayload>(`/api/assets`);
 }

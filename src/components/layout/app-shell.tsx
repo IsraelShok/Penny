@@ -26,6 +26,7 @@ import { MobileDock } from "./mobile-dock";
 import { PetMini } from "@/components/home/pet-card";
 import { SectionTabs } from "./section-tabs";
 import { A11yButton } from "@/components/a11y/a11y-menu";
+import { AnalyticsNav } from "@/components/analytics/analytics-nav";
 
 /** Lives in the root layout so the collapsed state survives page changes. */
 export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; children: ReactNode }) {
@@ -34,6 +35,8 @@ export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; c
 
 export function AppShell({ children }: { children: ReactNode }) {
   const t = useTranslations("nav");
+  const pathname = usePathname();
+  const inHub = NAVIGATION_GROUPS.find((g) => g.key === "analytics")!.items.some((i) => i.match(pathname));
   return (
     <>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-background focus:px-5 focus:py-3 focus:outline-2">{t("skipToContent")}</a>
@@ -41,7 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SidebarInset id="main-content" tabIndex={-1} className="mobile-dock-content">
         <UpdateBanner />
         <TopBar />
-        <div className="page-in">{children}</div>
+        <div className="page-in">{inHub ? <div className="flex items-start gap-2 md:ps-6 lg:ps-8"><div className="pt-[4.5rem]"><AnalyticsNav /></div><div className="min-w-0 flex-1">{children}</div></div> : children}</div>
         <Suspense fallback={null}><PageWheelNav /></Suspense>
         <AlertNotifier />
         <BottomBar />
