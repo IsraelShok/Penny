@@ -4411,7 +4411,8 @@
     "r_benefitMax": "Full benefit",
     "dpNote_sal": "Study-fund deposits are usually set by your employment agreement. The benefit uses a marginal tax rate of {rate}%.",
     "dpNote_se": "Uses a marginal tax rate of {rate}%. Study-fund deposits up to {gainsFree} a year keep gains tax-free, even above the deduction ceiling. Deposits must land by the end of the year.",
-    "guideDeposits": "Guide: provident and study funds"
+    "guideDeposits": "Guide: provident and study funds",
+    "donationsDetected": "Filled from your transactions: donations found in {year}. You can change it."
   },
   "retireTools": {
     "f_age": "Age",
@@ -5980,7 +5981,11 @@
     },
     "doneToast": "Marked done. The saving now counts.",
     "undo": "Undo",
-    "partial": "Some data (funds or insurance) didn't load, so the total may be lower than it really is."
+    "partial": "Some data (funds or insurance) didn't load, so the total may be lower than it really is.",
+    "donationCredit": {
+      "title": "Tax credit on your {name} donations",
+      "step": "Ask the charities for section 46 receipts and file for a tax refund. Only donations to recognised charities count."
+    }
   },
   "studioCopy": {
     "eyebrow": "YOUR MONEY. YOUR WAY.",
@@ -6105,5 +6110,23 @@
     },
     "pageTitle": "Money tips",
     "pageMeta": "Short ideas for an Israeli household"
+  },
+  "spendChange": {
+    "title": "Why spending changed",
+    "compareLabel": "Compare with",
+    "vsMonth": "Last month",
+    "vsYear": "Last year",
+    "loading": "Working it out…",
+    "noMonth": "No data from last month to compare with yet.",
+    "noYear": "No data from the same days last year yet.",
+    "up": "You spent {amount} more in {now} than in {before}. Here's what drove it:",
+    "down": "You spent {amount} less in {now} than in {before}. Here's what drove it:",
+    "same": "You spent exactly the same in {now} as in {before}.",
+    "kind_price": "Same merchant, a different price",
+    "kind_more": "More charges",
+    "kind_less": "Fewer charges",
+    "kind_new": "New, not there before",
+    "kind_gone": "Not there this time",
+    "kind_oneOff": "One large one-off charge"
   }
 }

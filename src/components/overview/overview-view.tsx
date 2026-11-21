@@ -16,6 +16,7 @@ import { More } from "@/components/overview/more";
 import { AllocationCard } from "@/components/overview/allocation-card";
 import { MoneyFlowCard } from "@/components/overview/money-flow-card";
 import { NetWorthDriversCard } from "@/components/overview/net-worth-drivers-card";
+import { SpendChangeCard } from "@/components/overview/spend-change-card";
 import { CategoryDonut, CategoryOverTime } from "@/components/overview/category-charts";
 import { PeriodHero } from "@/components/ui/page-hero";
 import { PagerNav } from "@/components/ui/month-nav";
@@ -148,6 +149,7 @@ function Body({ data }: { data: OverviewPayload }) {
       ) : (
         <>
           <MoneyFlowCard data={data} />
+          <SpendChangeCard />
           <div className="grid gap-4 md:gap-6 xl:grid-cols-2 xl:items-start [&>*:only-child]:col-span-full">
             {data.monthly.length > 1 && <FlowChart monthly={data.monthly} />}
             <NetWorthDriversCard data={data} />

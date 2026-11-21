@@ -100,6 +100,11 @@ describe("fake bank, a week of syncs", () => {
     expect(dates.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))).toBe(true);
     expect((db.prepare("SELECT date FROM transactions WHERE description = 'משכורת'").get() as { date: string }).date).toBe("2026-12-01");
     expect((db.prepare("SELECT kind FROM transactions WHERE description = 'מקס איט פיננסים'").get() as { kind: string }).kind).toBe("transfer");
+    // No AI here: the merchant dictionary still categorizes known names.
+    const cat = (d: string) => (db.prepare("SELECT c.name FROM transactions t LEFT JOIN categories c ON c.id = t.category_id WHERE t.description = ?").get(d) as { name: string | null }).name;
+    expect(cat("שופרסל דיל")).toBe("Groceries");
+    expect(cat("שכר דירה")).toBe("Rent");
+    expect(cat("KSP")).toBe("Electronics");
 
     const { cashBetween } = await import("@/server/finance/facts");
     const dec = cashBetween(ws, "2026-12-01", "2026-12-31");

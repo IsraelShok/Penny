@@ -50,4 +50,11 @@ describe("moneyOnTable", () => {
     ];
     expect(moneyOnTable({ suggestions: [], assets: [], policies, done: [] }).items[0].yearly).toBeNull();
   });
+
+  it("offers the 35% donation credit for last tax year, above the minimum", () => {
+    const base = { suggestions: [], assets: [], policies: [], done: [], today: "2026-11-21" };
+    const r = moneyOnTable({ ...base, donations: [{ year: 2025, total: 1_800 }, { year: 2026, total: 900 }] });
+    expect(r.items).toEqual([expect.objectContaining({ key: "donation:2025", kind: "donationCredit", yearly: 630, name: "2025" })]);
+    expect(moneyOnTable({ ...base, donations: [{ year: 2025, total: 150 }] }).items).toEqual([]);
+  });
 });

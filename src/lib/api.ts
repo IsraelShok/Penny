@@ -530,7 +530,7 @@ export function getCashAhead() {
 }
 
 export function getSuggestions() {
-  return fetchJSON<{ suggestions: import("./suggestions").Suggestion[]; dismissed: string[]; stageHints: import("./stage-detect").StageHint[] }>(`/api/suggestions`);
+  return fetchJSON<{ suggestions: import("./suggestions").Suggestion[]; dismissed: string[]; stageHints: import("./stage-detect").StageHint[]; donations?: { year: number; total: number }[] }>(`/api/suggestions`);
 }
 
 export function dismissSuggestion(key: string) {
@@ -1703,4 +1703,17 @@ export function getSavingsDone() {
 
 export function setSavingDone(key: string, yearly: number, done: boolean) {
   return fetchJSON<{ success: boolean }>("/api/savings-done", jsonBody("POST", { key, yearly, done }));
+}
+
+export interface SpendChange {
+  compare: "month" | "year";
+  now: { from: string; to: string; total: number };
+  before: { from: string; to: string; total: number };
+  change: number;
+  hasHistory: boolean;
+  drivers: import("./spend-change").Driver[];
+}
+
+export function getSpendChange(compare: "month" | "year") {
+  return fetchJSON<SpendChange>(`/api/spend-change?compare=${compare}`);
 }

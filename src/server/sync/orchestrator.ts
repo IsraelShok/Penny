@@ -32,6 +32,7 @@ import {
 import { applyMerchantRulesToSyncRun } from "@/server/db/queries/excluded-merchants";
 import { applyRulesToSyncRun } from "@/server/db/queries/rules";
 import { reconcileFlows } from "@/server/finance/pairing";
+import { categorizeLocally } from "./categorize-local";
 import { getAllCategories } from "@/server/db/queries/categories";
 import { getRecentCorrections } from "@/server/db/queries/category-corrections";
 import { scrapeBank } from "@/server/scrapers";
@@ -449,8 +450,9 @@ export async function syncWorkspace(
   const totalAdded = results.reduce((s, r) => s + r.added, 0);
   const totalUpdated = results.reduce((s, r) => s + r.updated, 0);
 
-  let categorized = 0;
   let aiWarning: string | null = null;
+  // Memory and the merchant dictionary first, with or without AI.
+  let categorized = categorizeLocally(workspaceId);
 
   // A key that won't decrypt (say, after restoring someone else's backup) skips categorizing, not the whole sync.
   let aiProvider: ReturnType<typeof createAIProvider> = null;
@@ -459,7 +461,8 @@ export async function syncWorkspace(
   } catch (err) {
     console.error("[sync] AI provider unavailable:", redactError(err));
   }
-  if (!aiProvider) {
+  // Without AI, warn only when memory and the dictionary left something uncategorized.
+  if (!aiProvider && (getUncategorizedIdsByKind(workspaceId, "expense").length > 0 || getUncategorizedIdsByKind(workspaceId, "income").length > 0)) {
     aiWarning =
       "AI provider not connected — new transactions weren't auto-categorized.";
   }

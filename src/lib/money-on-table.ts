@@ -2,12 +2,13 @@ import type { Suggestion } from "./suggestions";
 import { BENCHMARK_FEES } from "./plan";
 import { insuranceOverlaps } from "./insurance";
 import type { InsurancePolicy } from "./types";
+import { IL } from "./il-defaults";
 
 /**
  * "Money on the table": every check that found shekels, as one yearly figure with the step that gets them.
  * Estimates, not advice. Items the user marked done leave the list and count as saved.
  */
-export type TableKind = "fees" | "interest" | "fx" | "fxMarkup" | "leak" | "idle" | "taxRefund" | "fundFee" | "insurance";
+export type TableKind = "fees" | "interest" | "fx" | "fxMarkup" | "leak" | "idle" | "taxRefund" | "fundFee" | "insurance" | "donationCredit";
 
 export interface TableItem {
   key: string;
@@ -50,7 +51,7 @@ function fromSuggestion(s: Suggestion): TableItem | null {
   }
 }
 
-export function moneyOnTable(input: { suggestions: Suggestion[]; assets: FundAsset[]; policies: Policy[]; done: DoneSaving[] }) {
+export function moneyOnTable(input: { suggestions: Suggestion[]; assets: FundAsset[]; policies: Policy[]; done: DoneSaving[]; donations?: { year: number; total: number }[]; today?: string }) {
   const doneKeys = new Set(input.done.map((d) => d.key));
   const items: TableItem[] = [];
   for (const s of input.suggestions) {
@@ -60,6 +61,13 @@ export function moneyOnTable(input: { suggestions: Suggestion[]; assets: FundAss
   for (const a of input.assets) {
     const gap = fundFeeGap(a);
     if (gap >= MIN_FUND_GAP) items.push({ key: `fundFee:${a.id}`, kind: "fundFee", yearly: gap, href: "/investments", name: a.name });
+  }
+  // Donations last tax year: a 35% credit (§46) most employees only get by asking for it. Capped at 30% of income,
+  // which only very large donors reach, so it isn't modelled here.
+  const lastYear = Number((input.today ?? new Date().toISOString()).slice(0, 4)) - 1;
+  const gave = input.donations?.find((d) => d.year === lastYear)?.total ?? 0;
+  if (gave > IL.donationCredit.min) {
+    items.push({ key: `donation:${lastYear}`, kind: "donationCredit", yearly: Math.round(gave * IL.donationCredit.rate), href: "/calculators/credit-points", name: String(lastYear) });
   }
   const active = input.policies.filter((p) => !p.archived);
   for (const o of insuranceOverlaps(active)) {

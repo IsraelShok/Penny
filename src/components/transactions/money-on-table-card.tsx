@@ -27,6 +27,7 @@ export function useMoneyOnTable() {
       assets: (assets.data?.assets ?? []).map((a) => ({ id: a.id, name: a.name, type: a.type, valueIls: a.valueIls, monthlyDeposit: a.monthlyDeposit, feeDeposit: a.feeDeposit, feeBalance: a.feeBalance })),
       policies: ins.data?.policies ?? [],
       done: done.data.done,
+      donations: sug.data.donations,
     }),
     partial: assets.isError || ins.isError,
   };
