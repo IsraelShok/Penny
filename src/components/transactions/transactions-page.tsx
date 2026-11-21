@@ -1,11 +1,13 @@
 "use client";
 import { TransactionsHero } from "@/components/ui/page-hero";
+import { TransactionViews } from "./transaction-views";
+import { UpcomingCharges } from "./upcoming-charges";
 
 import { DataState } from "@/components/ui/data-state";
 import { Segmented } from "@/components/ui/segmented";
 
 import {useSearchParams} from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { PageHeader } from "@/components/layout/app-shell";
@@ -19,7 +21,7 @@ import { OwnerSummary } from "./owner-summary";
 import { SettleLedger } from "./settle-ledger";
 import { KidSummary } from "./kid-summary";
 import { useHousehold } from "@/hooks/use-household";
-import { Plus, X } from "lucide-react";
+import { Plus, X , EyeOff } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { Button } from "@/components/ui/button";
 import { TransactionSheet } from "./transaction-sheet";
@@ -48,9 +50,12 @@ export function TransactionsPage() {
   const params=useSearchParams();
   const t = useTranslations("transactions");
   const tReview = useTranslations("review");
-  const [view, setView] = useState<"review" | "all" | "settle">("all");
+  // ?review=1 is how the budget screen sends people to the transactions that still need a category.
+  const [view, setView] = useState<"review" | "all" | "settle">(() => (params.get("review") === "1" ? "review" : "all"));
   const tSettle = useTranslations("settle");
   const tKids = useTranslations("kids");
+  const tOwner = useTranslations("ownerFilter");
+  const tHidden = useTranslations("hiddenRows");
   const [kidFilter, setKidFilter] = useState<string>("");
   const locale = useLocale() as Locale;
   const [selectedDate, setSelectedDate] = useState(()=>{const month=params.get("month");return month&&/^\d{4}-(0[1-9]|1[0-2])$/.test(month)?new Date(month+"-01T12:00:00"):new Date(new Date().getFullYear(),new Date().getMonth(),1);});
@@ -61,7 +66,11 @@ export function TransactionsPage() {
   const [kind, setKind] = useState<TransactionKindFilter>("all");
   const [sortField, setSortField] = useState<TransactionSortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [tagFilter, setTagFilter] = useState<string | null>(() => params.get("tag"));
+  // "filter by member": whose rows to show (a member id or "shared"); empty is everyone.
+  const [ownerFilter, setOwnerFilter] = useState<string>(() => params.get("owner") ?? "");
+  // Trash: rows hidden from totals, each restorable from its row menu.
+  const [hiddenOnly, setHiddenOnly] = useState(() => params.get("hidden") === "1");
   const tTags = useTranslations("tags");
   const { household } = useHousehold();
   const members = household.members;
@@ -76,6 +85,18 @@ export function TransactionsPage() {
   ];
 
   const { from, to } = getMonthRange(selectedDate);
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("month", from.slice(0, 7));
+    if (search) url.searchParams.set("search", search); else url.searchParams.delete("search");
+    if (categoryFilter.length === 1) url.searchParams.set("category", String(categoryFilter[0]));
+    else url.searchParams.delete("category");
+    if (view === "review") url.searchParams.set("review", "1"); else url.searchParams.delete("review");
+    if (tagFilter) url.searchParams.set("tag", tagFilter); else url.searchParams.delete("tag");
+    if (ownerFilter) url.searchParams.set("owner", ownerFilter); else url.searchParams.delete("owner");
+    if (hiddenOnly) url.searchParams.set("hidden", "1"); else url.searchParams.delete("hidden");
+    window.history.replaceState(null, "", url);
+  }, [from, search, categoryFilter, view, tagFilter, ownerFilter, hiddenOnly]);
 
   const allCategoriesQuery = useQuery({
     queryKey: ["categories"],
@@ -104,6 +125,8 @@ export function TransactionsPage() {
       sortField,
       sortOrder,
       tagFilter,
+      ownerFilter,
+      hiddenOnly,
     ],
     queryFn: () =>
       getTransactions({
@@ -120,6 +143,8 @@ export function TransactionsPage() {
         kind,
         sort: sortField,
         order: sortOrder,
+        owner: ownerFilter || undefined,
+        hidden: hiddenOnly ? "1" : undefined,
       }),
     placeholderData: keepPreviousData,
   });
@@ -194,6 +219,15 @@ export function TransactionsPage() {
         : noData ? <DataState period={integrationsQuery.data?.some((bank) => bank.lastSyncAt)} />
         : <>
         {members.length >= 2 && <OwnerSummary members={members} from={from} to={to} />}
+        {members.length >= 2 && (
+          <label className="flex w-fit items-center gap-2 text-sm">{tOwner("filter")}
+            <select value={ownerFilter} onChange={(e) => { setOwnerFilter(e.target.value); setPage(0); }} className="h-9 rounded-lg border border-border/60 bg-background px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring">
+              <option value="">{tOwner("everyone")}</option>
+              {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              <option value="shared">{tOwner("shared")}</option>
+            </select>
+          </label>
+        )}
         {members.some((m) => m.role === "child") && (
           <label className="flex w-fit items-center gap-2 text-sm">{tKids("filter")}
             <select value={kidFilter} onChange={(e) => setKidFilter(e.target.value)} className="h-9 rounded-lg border border-border/60 bg-background px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring">
@@ -203,6 +237,16 @@ export function TransactionsPage() {
           </label>
         )}
         {kidFilter ? <KidSummary member={kidFilter} month={from.slice(0, 7)} /> : <>
+        {from === getMonthRange(new Date()).from && <UpcomingCharges />}
+        <button type="button" aria-pressed={hiddenOnly} onClick={() => { setHiddenOnly(!hiddenOnly); setPage(0); }}
+          className={`inline-flex min-h-9 w-fit items-center gap-1.5 rounded-full border px-3 text-sm focus-visible:outline-2 focus-visible:outline-ring ${hiddenOnly ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+          <EyeOff className="size-4" aria-hidden />{tHidden("toggle")}
+        </button>
+        {hiddenOnly && <p className="text-sm text-muted-foreground">{tHidden("hint")}</p>}
+        <TransactionViews
+          current={{ search, categoryIds: categoryFilter, tag: tagFilter, kind, review: false }}
+          onApply={(f) => { setSearch(f.search); setCategoryFilter(f.categoryIds); setTagFilter(f.tag); setKind(f.kind); if (f.review) setView("review"); setPage(0); }}
+        />
         {tagFilter && (
           <button
             type="button"

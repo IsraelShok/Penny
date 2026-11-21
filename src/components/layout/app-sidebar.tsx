@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SETTINGS_GROUPS } from "@/components/settings/settings-sidebar";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Lock, PanelLeftIcon, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { PanelLeftIcon, Search, ChevronDown, Plus } from "lucide-react";
 import { getActivity, getHome } from "@/lib/api";
 import { getLockStatus } from "@/components/settings/app-lock-card";
-import { SyncStatusPill } from "@/components/home/sync-status-pill";
+import { useSyncState } from "@/components/home/sync-status-pill";
 import { OPEN_COMMAND_PALETTE } from "./command-palette";
 import { useTranslations } from "next-intl";
+import { NAVIGATION_GROUPS } from "./navigation-groups";
 import {
   LayoutDashboard,
   PieChart,
@@ -38,9 +39,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { IconButton } from "@/components/ui/icon-button";
-import { A11yButton } from "@/components/a11y/a11y-menu";
 import { usePlan } from "@/hooks/use-plan";
 import { WorkspaceSwitcher } from "./workspace-switcher";
+import { SidebarAccounts } from "./sidebar-accounts";
 
 interface NavDef {
   href: string;
@@ -98,24 +99,22 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("nav");
-  const { setOpenMobile, toggleSidebar } = useSidebar();
+  const tShell = useTranslations("shell");
+  const tNavGroups = useTranslations("navGroups");
+  const { setOpenMobile, toggleSidebar, state, isMobile, setOpen } = useSidebar();
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const lock = useQuery({ queryKey: ["lock"], queryFn: getLockStatus });
-  const home = useQuery({ queryKey: ["home"], queryFn: getHome });
-  const queryClient = useQueryClient();
-  const [statusOpen, setStatusOpen] = useState(false);
+  const home = useQuery({ queryKey: ["home"], queryFn: () => getHome() });
   const { data: activity } = useQuery({
     queryKey: ["activity"],
     queryFn: getActivity,
-    refetchInterval: (q) => (statusOpen || q.state.data?.sync.active ? 3000 : 15000),
+    refetchInterval: (q) => (q.state.data?.sync.active ? 3000 : 15000),
     refetchIntervalInBackground: false,
   });
-  const onStatusOpen = useCallback((o: boolean) => {
-    setStatusOpen(o);
-    if (o) queryClient.invalidateQueries({ queryKey: ["activity"] });
-  }, [queryClient]);
+  const sync = useSyncState(home.data?.bankHealth ?? null, activity ?? null);
   const { plan } = usePlan();
   // Settings lives as an icon by the workspace, but the wheel still reaches it last.
-  const pages = [...NAV, ...FOOTER_NAV];
+  const pages = NAVIGATION_GROUPS.flatMap(group => group.items);
   const lastWheel = useRef(0);
   const tc = useTranslations("common");
   const tSet = useTranslations("settings.sidebar");
@@ -144,15 +143,17 @@ export function AppSidebar() {
     const list = settingsMenu ? SETTINGS_GROUPS.flatMap((g) => g.items) : pages;
     const i = list.findIndex((p) => p.match(pathname));
     const next = list[Math.min(list.length - 1, Math.max(0, (i < 0 ? 0 : i) + (e.deltaY > 0 ? 1 : -1)))];
-    if (next && !next.match(pathname)) router.push(next.href);
+    if (next && !next.match(pathname)) { e.preventDefault(); router.push(next.href); }
   }
 
   return (
     <Sidebar collapsible="icon">
       <SidebarContent className="pt-3" onWheel={onWheel}>
-        {/* Sync status first, in words, so it's the first thing read; collapsed it shrinks to its dot. */}
-        <SidebarGroup className="pb-0">
-          <SyncStatusPill labelled items={home.data?.bankHealth ?? null} nextScheduledSync={home.data?.nextScheduledSync ?? null} activity={activity ?? null} onOpenChange={onStatusOpen} />
+        {/* No logo row: the brand lives on the profile picker. Add-transaction leads; the sync status is in the profile menu. */}
+        <SidebarGroup className="pb-1">
+          <div className="flex items-center gap-1.5 group-data-[collapsible=icon]:flex-col">
+            <SidebarMenu className="min-w-0 flex-1"><SidebarMenuItem><SidebarMenuButton tooltip={tShell("addTransaction")} className="min-h-10 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" render={<Link href="/transactions?add=1" onClick={() => setOpenMobile(false)}><Plus aria-hidden /><span>{tShell("addTransaction")}</span></Link>} /></SidebarMenuItem></SidebarMenu>
+          </div>
         </SidebarGroup>
         <SidebarSeparator className="mx-3 w-auto" />
         <SidebarGroup className="pb-0">
@@ -176,8 +177,15 @@ export function AppSidebar() {
           <SidebarGroup className="pb-0">
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => swapMenu(false)} tooltip={tc("back")}>
-                  <ChevronRight className="ltr:rotate-180" aria-hidden />
+                {/* A real button, not a quiet row: leaving settings should be the easiest thing on the menu. */}
+                <SidebarMenuButton
+                  onClick={() => swapMenu(false)}
+                  tooltip={tc("back")}
+                  variant="outline"
+                  size="lg"
+                  className="bg-sidebar-accent/60 font-semibold shadow-sm hover:bg-sidebar-accent focus-visible:ring-2"
+                >
+                  <ChevronRight className="text-primary ltr:rotate-180" aria-hidden />
                   <span>{tc("back")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -206,23 +214,46 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
           ))}
-        </> : [{ label: null, items: NAV }].map((group) => (
-        <SidebarGroup key="main">
-          <SidebarGroupContent>
+        </> : NAVIGATION_GROUPS.map((group, index) => {
+          const activeGroup = group.items.some(item => item.match(pathname));
+          const expanded = expandedGroups[group.key] ?? activeGroup;
+          const compact = state === "collapsed" && !isMobile;
+          const GroupIcon = group.Icon;
+          const panelId = `navigation-group-${index}`;
+          // A one-page group (Dashboard) is a plain link, not a folder.
+          if (group.items.length === 1) {
+            const only = group.items[0];
+            const label = tNavGroups(`pages.${only.key}`);
+            return <SidebarGroup key={group.key} className="py-1"><SidebarMenu><SidebarMenuItem><SidebarMenuButton
+              render={<Link href={only.href} onClick={() => setOpenMobile(false)} aria-current={activeGroup ? "page" : undefined}><only.Icon aria-hidden /><span>{label}</span></Link>}
+              isActive={activeGroup} tooltip={label}
+              className="min-h-11 font-semibold data-[active=true]:bg-primary/10 data-[active=true]:text-primary" /></SidebarMenuItem></SidebarMenu></SidebarGroup>;
+          }
+          return (
+        <SidebarGroup key={group.key} className="py-1">
+          <SidebarMenu><SidebarMenuItem><SidebarMenuButton
+            tooltip={tNavGroups(`groups.${group.key}`)}
+            aria-expanded={expanded && !compact}
+            aria-controls={panelId}
+            className={`min-h-11 font-semibold ${activeGroup ? "text-primary" : ""}`}
+            onClick={() => { if (compact) { setOpen(true); setExpandedGroups(previous => ({...previous, [group.key]: true})); } else setExpandedGroups(previous => ({...previous, [group.key]: !expanded})); }}
+          ><GroupIcon aria-hidden /><span className="flex-1">{tNavGroups(`groups.${group.key}`)}</span><ChevronDown aria-hidden className={`size-4 transition-transform motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} /></SidebarMenuButton></SidebarMenuItem></SidebarMenu>
+          <SidebarGroupContent id={panelId} hidden={!expanded || compact} className="ms-4 mt-1 w-auto border-s border-sidebar-border ps-3">
             <SidebarMenu>
               {group.items.map((item) => {
-                const label = t(item.labelKey);
+                const label = tNavGroups(`pages.${item.key}`);
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       render={
                         <Link href={item.href} onClick={() => setOpenMobile(false)} aria-current={item.match(pathname) ? "page" : undefined}>
-                          <item.Icon />
+                          <item.Icon aria-hidden />
                           <span>{label}</span>
                         </Link>
                       }
                       isActive={item.match(pathname)}
                       tooltip={label}
+                      className="min-h-10 rounded-lg text-sm data-[active=true]:bg-primary/10 data-[active=true]:font-semibold data-[active=true]:text-primary"
                     />
                   </SidebarMenuItem>
                 );
@@ -230,40 +261,26 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        ))}
+        ); })}
         </div>
+        {!settingsMenu && <SidebarAccounts onNavigate={() => setOpenMobile(false)} />}
       </SidebarContent>
 
       <SidebarFooter className="gap-1 border-t border-sidebar-border">
-        <WorkspaceSwitcher />
-        {/* Quick tools: lock, a11y, collapse and settings. One row open, one column collapsed. Privacy mode lives in Settings. */}
-        <div className="flex items-center gap-0.5 group-data-[collapsible=icon]:flex-col">
-          {lock.data?.enabled && (
-            <IconButton
-              label={t("lockNow")}
-              size="icon-sm"
-              variant="ghost"
-              onClick={async () => {
+        {/* The profile opens a menu with accessibility, settings, help and lock; collapse sits beside it. */}
+        <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
+          <div className="min-w-0 flex-1">
+            <WorkspaceSwitcher
+              onSettings={() => swapMenu(!settingsMenu)}
+              sync={{ label: sync.state.label, dot: sync.styles.dot, busy: sync.styles.pulse, alert: sync.state.tone === "error" || sync.state.tone === "warn" }}
+              onLock={lock.data?.enabled ? async () => {
                 await fetch("/api/lock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "lock" }) });
                 router.replace("/lock");
-              }}
-            >
-              <Lock className="size-4" aria-hidden />
-            </IconButton>
-          )}
-          <A11yButton />
+              } : undefined}
+            />
+          </div>
           <IconButton label={t("toggleSidebar")} size="icon-sm" variant="ghost" onClick={toggleSidebar}>
             <PanelLeftIcon className="size-4 rtl:rotate-180" aria-hidden />
-          </IconButton>
-          <IconButton
-            label={t("settings")}
-            variant={pathname.startsWith("/settings") ? "secondary" : "ghost"}
-            size="icon-sm"
-            className="ms-auto group-data-[collapsible=icon]:ms-0"
-            aria-expanded={settingsMenu}
-            onClick={() => swapMenu(!settingsMenu)}
-          >
-            <SettingsIcon className="size-4" aria-hidden />
           </IconButton>
         </div>
       </SidebarFooter>

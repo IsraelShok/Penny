@@ -31,9 +31,11 @@ import {
 } from "@/server/lib/merchant-memory";
 import { applyMerchantRulesToSyncRun } from "@/server/db/queries/excluded-merchants";
 import { applyRulesToSyncRun } from "@/server/db/queries/rules";
+import { reconcileFlows } from "@/server/finance/pairing";
 import { getAllCategories } from "@/server/db/queries/categories";
 import { getRecentCorrections } from "@/server/db/queries/category-corrections";
 import { scrapeBank } from "@/server/scrapers";
+import { connectOpenBanking } from "@/server/open-banking/client";
 import {
   scrapeOneZeroFirstTime,
   scrapeOneZeroWithToken,
@@ -42,6 +44,7 @@ import { createAIProvider } from "@/server/ai/factory";
 import { ensureOllamaRunning } from "@/server/ai/ollama-manager";
 import { toLocalISODate } from "@/server/lib/date-utils";
 import { listAllWorkspaceIds } from "@/server/lib/workspace-context";
+import { SyncBusyError, tryAcquireSync } from "@/server/sync/lock";
 import { getWorkspace } from "@/server/db/queries/workspaces";
 import { BANK_PROVIDERS, type BankProvider, type SyncKind } from "@/lib/types";
 import {
@@ -191,6 +194,11 @@ async function runScrapeForProvider(args: RunScrapeArgs): Promise<ScrapeResult> 
     return result;
   }
 
+  // Open banking is an API, not a browser session: no 2FA popup, no retries.
+  if (provider === "openBanking") {
+    return connectOpenBanking(credentials, startDate);
+  }
+
   if (manualTwoFactor) {
     send("provider-2fa-manual", {
       workspaceId,
@@ -219,73 +227,83 @@ async function syncOneCredential(
     meta.id,
     toLocalISODate(startDate)
   );
-  const manualTwoFactor = getRequiresManualTwoFactor(workspaceId, meta.id);
-
-  let result: ScrapeResult;
+  // Anything that throws after the run exists still closes it as failed, so it never stays "running" and
+  // the next run can tell this connection was already failing.
   try {
-    result = await runScrapeForProvider({
-      workspaceId,
-      workspaceName,
-      credentialId: meta.id,
-      provider,
-      credentials,
-      startDate,
-      syncRunId,
-      manualTwoFactor,
-      send,
-    });
-  } finally {
-    cancelOtpRequest(syncRunId, "Scrape completed");
-  }
+    const manualTwoFactor = getRequiresManualTwoFactor(workspaceId, meta.id);
 
-  if (!result.success) {
-    failSyncRun(syncRunId, result.errorMessage ?? "Scraping failed");
+    let result: ScrapeResult;
+    try {
+      result = await runScrapeForProvider({
+        workspaceId,
+        workspaceName,
+        credentialId: meta.id,
+        provider,
+        credentials,
+        startDate,
+        syncRunId,
+        manualTwoFactor,
+        send,
+      });
+    } finally {
+      cancelOtpRequest(syncRunId, "Scrape completed");
+    }
+
+    if (!result.success) {
+      failSyncRun(syncRunId, result.errorMessage ?? "Scraping failed");
+      return {
+        provider,
+        credentialId: meta.id,
+        label: meta.label,
+        ok: false,
+        added: 0,
+        updated: 0,
+        errorMessage: result.errorMessage ?? "Scraping failed",
+        syncRunId,
+      };
+    }
+
+    const allTransactions = result.accounts.flatMap((account) =>
+      account.transactions.map((txn) => ({
+        accountNumber: account.accountNumber,
+        ...txn,
+        installmentNumber: txn.installments?.number,
+        installmentTotal: txn.installments?.total,
+      }))
+    );
+
+    const { added, updated } = saveSyncTransactions(
+      workspaceId,
+      allTransactions,
+      provider,
+      meta.id,
+      syncRunId,
+      result.accounts.map((a) => a.accountNumber)
+    );
+    // Bank balances feed cash, the emergency fund and net worth without typing them in.
+    if (BANK_PROVIDERS.find((b) => b.id === provider)?.kind === "bank") {
+      saveAccountBalances(workspaceId, provider, result.accounts, toLocalISODate(startDate));
+    }
+    applyMerchantRulesToSyncRun(workspaceId, syncRunId);
+    applyRulesToSyncRun(workspaceId, syncRunId);
+    // Link transfers, refunds and loan repayments before any report reads the new rows.
+    reconcileFlows(workspaceId);
+    completeSyncRun(syncRunId, added, updated);
+
     return {
       provider,
       credentialId: meta.id,
       label: meta.label,
-      ok: false,
-      added: 0,
-      updated: 0,
-      errorMessage: result.errorMessage ?? "Scraping failed",
+      ok: true,
+      added,
+      updated,
       syncRunId,
     };
+  } catch (err) {
+    const message = err instanceof Error ? redactError(err) : "Unknown scrape error";
+    failSyncRun(syncRunId, message);
+    return { provider, credentialId: meta.id, label: meta.label, ok: false, added: 0, updated: 0, errorMessage: message, syncRunId };
   }
-
-  const allTransactions = result.accounts.flatMap((account) =>
-    account.transactions.map((txn) => ({
-      accountNumber: account.accountNumber,
-      ...txn,
-      installmentNumber: txn.installments?.number,
-      installmentTotal: txn.installments?.total,
-    }))
-  );
-
-  const { added, updated } = saveSyncTransactions(
-    workspaceId,
-    allTransactions,
-    provider,
-    meta.id,
-    syncRunId,
-    result.accounts.map((a) => a.accountNumber)
-  );
-  // Bank balances feed cash, the emergency fund and net worth without typing them in.
-  if (BANK_PROVIDERS.find((b) => b.id === provider)?.kind === "bank") {
-    saveAccountBalances(workspaceId, provider, result.accounts);
-  }
-  applyMerchantRulesToSyncRun(workspaceId, syncRunId);
-  applyRulesToSyncRun(workspaceId, syncRunId);
-  completeSyncRun(syncRunId, added, updated);
-
-  return {
-    provider,
-    credentialId: meta.id,
-    label: meta.label,
-    ok: true,
-    added,
-    updated,
-    syncRunId,
-  };
 }
 
 export async function syncWorkspace(
@@ -348,7 +366,13 @@ export async function syncWorkspace(
     markSyncHeartbeat();
 
     const locked = isKeyLocked();
-    const credentials = locked ? null : getBankCredentials(workspaceId, meta.id);
+    let credentials: Record<string, string> | null = null;
+    try {
+      credentials = locked ? null : getBankCredentials(workspaceId, meta.id);
+    } catch (err) {
+      // An unreadable credential fails this connection only; the next ones still sync.
+      console.error("[sync] credentials unreadable:", redactError(err));
+    }
     if (!credentials) {
       send("provider-done", {
         workspaceId,
@@ -428,7 +452,13 @@ export async function syncWorkspace(
   let categorized = 0;
   let aiWarning: string | null = null;
 
-  const aiProvider = createAIProvider();
+  // A key that won't decrypt (say, after restoring someone else's backup) skips categorizing, not the whole sync.
+  let aiProvider: ReturnType<typeof createAIProvider> = null;
+  try {
+    aiProvider = createAIProvider();
+  } catch (err) {
+    console.error("[sync] AI provider unavailable:", redactError(err));
+  }
   if (!aiProvider) {
     aiWarning =
       "AI provider not connected — new transactions weren't auto-categorized.";
@@ -578,8 +608,12 @@ const NOOP_SEND: SyncEventSender = () => {};
 export async function runAllWorkspaces(
   filterCredentialId?: number,
   onEvent?: SyncEventSender,
-  kind: SyncKind = "manual"
+  kind: SyncKind = "manual",
+  /** The caller already holds the sync lock (the SSE route does, so it can answer 409 itself). */
+  options: { lockHeld?: boolean } = {}
 ): Promise<WorkspaceSummary[]> {
+  const release = options.lockHeld ? null : tryAcquireSync(kind);
+  if (!options.lockHeld && !release) throw new SyncBusyError();
   const send = onEvent ?? NOOP_SEND;
   markSyncStart(kind);
   const since = new Date().toISOString().slice(0, 19).replace("T", " ");
@@ -592,10 +626,15 @@ export async function runAllWorkspaces(
     }
     // Telegram feedback must never fail or slow the sync itself.
     void import("../bot/index")
-      .then((m) => m.sendSpendFeedback(since))
+      .then(async (m) => {
+        await m.sendSpendFeedback(since);
+        // A manual sync shows its errors on screen; a scheduled one has nobody watching.
+        if (kind === "scheduled") await m.sendSyncAlerts(summaries.flatMap((w) => w.providers));
+      })
       .catch((err) => console.error("[bot] spend feedback", err instanceof Error ? err.message : err));
     return summaries;
   } finally {
     markSyncEnd();
+    release?.();
   }
 }

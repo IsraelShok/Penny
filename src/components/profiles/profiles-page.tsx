@@ -80,6 +80,8 @@ export function ProfilesPage() {
 
   return (
     <main className="fixed inset-0 z-40 flex flex-col items-center justify-center overflow-y-auto bg-[#0c0b14] bg-[radial-gradient(ellipse_at_top,#2a2160_0%,transparent_60%)] px-4 py-12 text-white">
+      {/* The brand lives here only; inside the app the sidebar stays free of it. */}
+      <p className="absolute top-6 text-lg font-semibold tracking-tight text-white/80" lang="en" dir="ltr">Penny</p>
       <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
         {managing ? t("manageTitle") : t("title")}
       </h1>

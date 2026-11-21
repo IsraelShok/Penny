@@ -39,7 +39,9 @@ export const metadata: Metadata = {
   description: "Personal finance tracker with AI-powered categorization",
   applicationName: "Penny",
   appleWebApp: { capable: true, title: "Penny", statusBarStyle: "default" },
-  icons: { apple: "/icons/apple-touch-icon.png" },
+  // Declaring `icons` replaces the file-based icon.svg link, so name it here too:
+  // without it the tab has no icon and every load asks for /favicon.ico (404).
+  icons: { icon: "/icon.svg", apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

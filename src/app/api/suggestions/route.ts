@@ -5,7 +5,7 @@ import { loadInsights } from "@/server/insights/data";
 import { listPolicies, getPlan } from "@/server/db/queries/plan";
 import { listAssets } from "@/server/db/queries/assets";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
-import { israelDay, toLocalISODate } from "@/server/lib/date-utils";
+import { israelDay, israelToday } from "@/server/lib/date-utils";
 import { listRules } from "@/server/db/queries/rules";
 import { applyRules } from "@/server/rules/engine";
 import { fxMarkup, type FxCharge } from "@/lib/fx-markup";
@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const ws = getWorkspaceIdFromRequest(request);
   const db = getDb();
-  const today = toLocalISODate(new Date());
+  const today = israelToday();
   const since = `${Number(today.slice(0, 4)) - 1}${today.slice(4)}`;
   const txns = db
     .prepare(

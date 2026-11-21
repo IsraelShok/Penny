@@ -4,5 +4,15 @@ export const fmt = (n: number, locale: string, digits = 0) =>
 /** ₪ amount; the LTR isolate keeps the sign in front inside Hebrew text. */
 export const shekels = (n: number, locale: string) => `⁦${n < 0 ? "−" : ""}₪${fmt(Math.abs(n), locale)}⁩`;
 
+/**
+ * Rounds a money value to agorot without float drift: Math.round(1.005 * 100) is 100, not 101,
+ * because 1.005 is really 1.00499999… — so half-up rounding silently loses a cent.
+ */
+export const roundCents = (n: number): number => {
+  if (!Number.isFinite(n)) return 0;
+  const cents = Math.round(Number((Math.abs(n) * 100).toPrecision(12)));
+  return (n < 0 ? -1 : 1) * (cents / 100);
+};
+
 /** Like shekels, with "+" on positive amounts too (income, money left). */
 export const signedShekels = (n: number, locale: string, digits = 0) => `⁦${n > 0 ? "+" : n < 0 ? "−" : ""}₪${fmt(Math.abs(n), locale, digits)}⁩`;

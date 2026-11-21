@@ -261,7 +261,7 @@ function DeleteCategorySection({
                 ))}
               </ul>
             ) : null}
-            <IconButton
+            <IconButton showLabel
               label={t("deleteButton")}
               variant="destructive"
               className="mt-3"
@@ -292,7 +292,7 @@ function DeleteCategorySection({
             >
               <X className="size-4" aria-hidden />
             </IconButton>
-            <IconButton
+            <IconButton showLabel
               label={mutation.isPending ? tCommon("deleting") : t("deleteButton")}
               variant="destructive"
               onClick={() => mutation.mutate()}
@@ -449,7 +449,7 @@ function SpendingTypeSection({ category }: { category: Category }) {
             value={category.needType}
             onValueChange={(v) => v && mutation.mutate({ needType: v as NeedType })}
           >
-            <SelectTrigger>
+            <SelectTrigger aria-label={td("needTypeLabel")}>
               <SelectValue>{(v: string) => td(`needType_${v}`)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -465,7 +465,7 @@ function SpendingTypeSection({ category }: { category: Category }) {
             value={category.costType}
             onValueChange={(v) => v && mutation.mutate({ costType: v as CostType })}
           >
-            <SelectTrigger>
+            <SelectTrigger aria-label={td("costTypeLabel")}>
               <SelectValue>{(v: string) => td(`costType_${v}`)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -528,7 +528,7 @@ function GroupSection({
             mutation.mutate(next);
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label={td("parentGroup")}>
             <SelectValue>
               {(value: string) =>
                 value === NONE_VALUE
