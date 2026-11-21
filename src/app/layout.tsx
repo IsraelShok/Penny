@@ -3,7 +3,7 @@ import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { Inter, Geist_Mono, Rubik } from "next/font/google";
 import { getLocale, getMessages } from "next-intl/server";
 import { cookies } from "next/headers";
-import { SidebarRoot } from "@/components/layout/app-shell";
+import { PersistentShell, SidebarRoot } from "@/components/layout/app-shell";
 import { I18nProvider } from "@/i18n/client-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { StudioProvider } from "@/components/studio-provider";
@@ -89,7 +89,7 @@ export default async function RootLayout({
             <QueryProvider>
               <TooltipProvider>
                 <A11yProvider>
-                <SidebarRoot defaultOpen={sidebarOpen}>{children}</SidebarRoot>
+                <SidebarRoot defaultOpen={sidebarOpen}><PersistentShell>{children}</PersistentShell></SidebarRoot>
                 </A11yProvider>
                 <Toaster />
                 <ServiceWorkerRegister />

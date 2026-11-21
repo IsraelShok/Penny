@@ -31,7 +31,14 @@ export function TopBar() {
 
   return (
     <div className="hidden md:block">
-      <div className="mx-auto flex min-h-14 max-w-[1920px] items-center gap-2 px-6 pt-3 lg:px-8">
+      {/* Every action in one cluster at the end of the bar: search, add, then sync, alerts and settings. */}
+      <div className="mx-auto flex min-h-14 max-w-[1920px] items-center justify-end gap-2 px-6 pt-3 lg:px-8">
+        <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE))} aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K /"
+          className="flex min-h-10 w-56 items-center lg:w-72 gap-2 rounded-xl border border-border bg-card px-3 text-sm text-muted-foreground shadow-[0_1px_2px_rgb(0_0_0/4%)] transition-colors hover:border-foreground/20 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+          <Search className="size-4 shrink-0" aria-hidden />
+          <span className="flex-1 text-start">{t("search")}</span>
+          <kbd dir="ltr" className="rounded-md border border-border bg-muted px-1.5 font-sans text-[11px]">Ctrl K</kbd>
+        </button>
         <div className="inline-flex rounded-xl shadow-sm">
           <Link href="/transactions?add=1" aria-keyshortcuts="N" title={t("addHint")} className={cn(buttonVariants(), "rounded-e-none rounded-s-xl")}>
             <Plus className="size-4" aria-hidden />
@@ -48,21 +55,12 @@ export function TopBar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        {/* Search sits in the middle of the bar, where the eye looks for it, not wedged into the side menu. */}
-        <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE))} aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K /"
-          className="mx-auto flex min-h-10 w-full max-w-md items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm text-muted-foreground shadow-[0_1px_2px_rgb(0_0_0/4%)] transition-colors hover:border-foreground/20 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
-          <Search className="size-4 shrink-0" aria-hidden />
-          <span className="flex-1 text-start">{t("search")}</span>
-          <kbd dir="ltr" className="rounded-md border border-border bg-muted px-1.5 font-sans text-[11px]">Ctrl K</kbd>
-        </button>
-        <div className="flex items-center gap-2">
-          <SyncButton onComplete={() => queryClient.invalidateQueries()} showLabel={false} />
-          {/* The bell is for what happened; advice and alerts live with Pip in the side rail. */}
-          <NotificationsBell />
-          <Link href="/settings" aria-label={t("settings")} title={t("settings")} className={icon}>
-            <SettingsIcon className="size-4" aria-hidden />
-          </Link>
-        </div>
+        <SyncButton onComplete={() => queryClient.invalidateQueries()} showLabel={false} />
+        {/* The bell is for what happened; advice and alerts live with Pip in the side rail. */}
+        <NotificationsBell />
+        <Link href="/settings" aria-label={t("settings")} title={t("settings")} className={icon}>
+          <SettingsIcon className="size-4" aria-hidden />
+        </Link>
       </div>
     </div>
   );

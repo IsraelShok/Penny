@@ -33,10 +33,20 @@ export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; c
   return <SidebarProvider defaultOpen={defaultOpen}>{children}</SidebarProvider>;
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+// Screens without the app's frame: the lock screen, "who's using" and the access sign-in.
+const FRAMELESS = ["/lock", "/profiles", "/access"];
+
+/**
+ * The app's frame (side menu, top bar, side rail, dock), mounted once in the root layout so it stays put
+ * while pages change: only the page content fades in. Settings keep their own menu card mounted the same way.
+ */
+export function PersistentShell({ children }: { children: ReactNode }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
+  if (FRAMELESS.some((p) => pathname === p || pathname.startsWith(p + "/"))) return <>{children}</>;
   const inHub = NAVIGATION_GROUPS.find((g) => g.key === "analytics")!.items.some((i) => i.match(pathname));
+  // Settings animate inside their own frame (see SettingsFrame), so the frame itself is not re-keyed per section.
+  const key = pathname.startsWith("/settings") ? "/settings" : pathname;
   return (
     <>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-background focus:px-5 focus:py-3 focus:outline-2">{t("skipToContent")}</a>
@@ -44,7 +54,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SidebarInset id="main-content" tabIndex={-1} className="mobile-dock-content">
         <UpdateBanner />
         <TopBar />
-        <div className="page-in">{inHub ? <div className="flex items-start gap-2 md:ps-6 lg:ps-8"><div className="pt-[4.5rem]"><AnalyticsNav /></div><div className="min-w-0 flex-1">{children}</div></div> : children}</div>
+        {inHub
+          ? <div className="flex items-start gap-2 md:ps-6 lg:ps-8"><div className="pt-[4.5rem]"><AnalyticsNav /></div><div key={key} className="page-in min-w-0 flex-1">{children}</div></div>
+          : <div key={key} className="page-in">{children}</div>}
         <Suspense fallback={null}><PageWheelNav /></Suspense>
         <AlertNotifier />
         <BottomBar />
@@ -54,6 +66,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <MobileDock />
     </>
   );
+}
+
+/** Pages still wrap themselves in this; the frame itself now lives in the root layout (PersistentShell). */
+export function AppShell({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }
 
 /** One quiet row: the page title (and its context line) on the start, the page's few actions on the end. Sticks on scroll. */

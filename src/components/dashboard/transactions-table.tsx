@@ -606,7 +606,7 @@ export function TransactionsTable({
                     sortAscLabel={t("sortAsc")}
                     sortDescLabel={t("sortDesc")}
                   />
-                  <TableHead className="hidden w-[230px] xl:table-cell">{t("headerTags")}</TableHead>
+                  <TableHead className="hidden w-[200px] xl:table-cell">{t("headerTags")}</TableHead>
                   <SortableTableHead
                     label={t("headerAmount")}
                     field="charged_amount"
@@ -705,7 +705,7 @@ export function TransactionsTable({
                       <TableCell className="hidden whitespace-nowrap text-xs tabular-nums text-muted-foreground lg:table-cell">
                         {dayLabel(txn.date)}
                       </TableCell>
-                      <TableCell className="whitespace-normal [overflow-wrap:anywhere]">
+                      <TableCell className="min-w-[11rem] whitespace-normal [overflow-wrap:anywhere]">
                         {/* Below lg the amount rides on the name line (iOS list style) instead of its own column, so nothing clips at 320px. */}
                         <div className="flex items-start justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-2.5">
@@ -791,7 +791,7 @@ export function TransactionsTable({
                       </TableCell>
                       <TableCell className="hidden whitespace-normal xl:table-cell">
                         {/* One line, like every other cell: a wrapped tags cell doubled the row's height. */}
-                        <div className="flex items-center gap-1 overflow-hidden">
+                        <div className="flex max-w-[200px] items-center gap-1 overflow-hidden">
                           {members.length >= 2 && (
                             <OwnerPicker
                               label={tTags("ownerLabel")}

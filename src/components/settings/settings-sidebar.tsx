@@ -103,7 +103,7 @@ export function SettingsFrame({ children }: { children: ReactNode }) {
             {t("backToSettings")}
           </Link>
         )}
-        {children}
+        <div key={pathname} className="page-in">{children}</div>
       </div>
     </div>
   );
