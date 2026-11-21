@@ -1,4 +1,3 @@
-import { InfoTip } from "@/components/ui/info-tip";
 import type { ReactNode } from "react";
 
 interface SectionShellProps {
@@ -16,8 +15,9 @@ export function SectionShell({
   children,
 }: SectionShellProps) {
   return (
-    <div className="space-y-6">
-      <header className="flex items-start gap-3">
+    // One surface per screen: the title, then each group of settings as a section divided by a hairline.
+    <div className="rounded-[20px] border border-border/60 bg-card shadow-[0_1px_2px_rgb(20_18_43/0.04),0_12px_28px_-24px_rgb(20_18_43/0.45)]">
+      <header className="flex items-start gap-3 px-5 pb-5 pt-5 sm:px-6">
         {icon && (
           <span
             aria-hidden
@@ -28,14 +28,12 @@ export function SectionShell({
         )}
         <div className="min-w-0 flex-1">
           <h2 className="text-[1.75rem] leading-9 font-bold tracking-tight">{title}</h2>
-          {/* The one-line explanation under the title, not hidden behind a dot. */}
           {description && (
             <p className="mt-0.5 text-footnote leading-5 text-pretty text-muted-foreground">{description}</p>
           )}
         </div>
       </header>
-      {/* A hairline between the screen's title and the grouped settings, so the two never read as one block. */}
-      <div className="space-y-7 border-t border-border pt-7">{children}</div>
+      <div className="space-y-6 border-t border-border px-5 py-5 sm:px-6 [&>section+section]:border-t [&>section+section]:border-border [&>section+section]:pt-6">{children}</div>
     </div>
   );
 }
@@ -57,20 +55,18 @@ export function SettingCard({
   children,
 }: SettingCardProps) {
   return (
-    // iOS grouped section: the title sits above the card, the card holds only the controls.
+    // A section of the screen's card: its title and a one-line explanation in plain view, then the controls.
     <section id={id} className="scroll-mt-20">
-      {(title || description) && (
-        <div className="mb-2 flex items-center gap-1 px-4">
-          {/* A section eyebrow, not a heading: small enough to stay quiet, large enough to read on a phone. */}
-          {title && <h3 className="text-xs font-semibold tracking-[0.04em] text-muted-foreground">{title}</h3>}
-          {/* With a title, the explanation goes behind the "i" so the header stays one line. */}
-          {description && (title ? <InfoTip text={description} /> : <p className="text-sm text-muted-foreground">{description}</p>)}
-          {aside && <span className="ms-auto">{aside}</span>}
+      {(title || description || aside) && (
+        <div className="mb-3 flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            {title && <h3 className="text-base font-semibold">{title}</h3>}
+            {description && <p className="mt-0.5 text-footnote leading-5 text-pretty text-muted-foreground">{description}</p>}
+          </div>
+          {aside && <span className="shrink-0">{aside}</span>}
         </div>
       )}
-      <div className="rounded-[20px] border border-border/50 bg-card px-4 py-3 shadow-[0_1px_2px_rgb(20_18_43/0.04),0_12px_28px_-24px_rgb(20_18_43/0.45)]">
-        {children}
-      </div>
+      {children}
     </section>
   );
 }

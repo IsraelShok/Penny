@@ -14,5 +14,9 @@ export const roundCents = (n: number): number => {
   return (n < 0 ? -1 : 1) * (cents / 100);
 };
 
+/** Short ₪ amount (48.7K, 2.7M) in the same shape as `shekels`: sign, ₪, number, kept LTR inside Hebrew text. */
+export const compactShekels = (n: number, locale: string) =>
+  `⁦${n < 0 ? "−" : ""}₪${new Intl.NumberFormat(locale === "he" ? "he-IL" : "en-US", { notation: "compact", maximumFractionDigits: 1 }).format(Math.abs(n)).replace(/[\u200e\u200f]/g, "")}⁩`;
+
 /** Like shekels, with "+" on positive amounts too (income, money left). */
 export const signedShekels = (n: number, locale: string, digits = 0) => `⁦${n > 0 ? "+" : n < 0 ? "−" : ""}₪${fmt(Math.abs(n), locale, digits)}⁩`;

@@ -874,7 +874,14 @@
       "deletedToast": "הקטגוריה נמחקה. {count, plural, =0 {} one {תנועה אחת הוסרה מהקטגוריה.} other {# תנועות הוסרו מהקטגוריה.}}",
       "deleteHasChildren": "מחקו קודם כל תת-קטגוריה שמופיעה ברשימה של הקבוצה.",
       "deleteHasChildrenNamed": "מחקו קודם את תת-הקטגוריות: {names}",
-      "deleteFailed": "הקטגוריה לא נמחקה. רעננו את העמוד ונסו שוב."
+      "deleteFailed": "הקטגוריה לא נמחקה. רעננו את העמוד ונסו שוב.",
+      "treeCount": "{count} קטגוריות",
+      "rowMenu": "פעולות על {name}",
+      "menuEdit": "עריכה",
+      "menuTransactions": "התנועות בקטגוריה",
+      "expandGroup": "פתיחת {name}",
+      "collapseGroup": "סגירת {name}",
+      "budgetChip": "תקציב חודשי"
     },
     "data": {
       "title": "נתונים וייבוא",

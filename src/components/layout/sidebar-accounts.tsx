@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { compactShekels } from "@/lib/money";
 import { useLocale, useTranslations } from "next-intl";
 import { ChevronDown, Plus } from "lucide-react";
 import { getAssets } from "@/lib/api";
@@ -30,7 +31,7 @@ export function SidebarAccounts({ onNavigate }: { onNavigate: () => void }) {
   const t = useTranslations("accountsView");
   const locale = useLocale();
   const { data } = useQuery({ queryKey: ["assets"], queryFn: getAssets });
-  const compact = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "ILS", notation: "compact", maximumFractionDigits: 1 }).format(n);
+  const compact = (n: number) => compactShekels(n, locale);
   const { hidden, moves } = useSidebarAccountsPref();
   const tBanks = useTranslations("banks");
   const groups = groupAccounts((data?.assets ?? []).map((a) => ({ ...a, name: accountLabel(a, tBanks) })), moves).filter((g) => !hidden.includes(g.key));
