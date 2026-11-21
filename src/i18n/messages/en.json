@@ -6207,13 +6207,12 @@
     "kind_oneOff": "One large one-off charge"
   },
   "topBar": {
-    "moreAdd": "More ways to add",
-    "importFile": "Import a file",
+    "importFile": "Import money from a file",
     "connectBank": "Connect a bank",
     "addAccount": "New account or asset",
     "settings": "Settings",
     "search": "Search",
-    "addHint": "Add a transaction (N)"
+    "addMenu": "Add"
   },
   "sideRail": {
     "title": "Alerts",

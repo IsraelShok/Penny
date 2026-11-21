@@ -70,7 +70,7 @@ Plus a **knowledge center** of short original guides in Hebrew and English, and 
 
 ### Household
 - **Profiles that share one household,** in a "who's using?" screen. Each person keeps their own home layout and accessibility choices.
-- **Pip,** a small companion whose mood follows the household's finances. Every profile picks its own Pip as its avatar.
+- **Pip,** a small companion whose mood follows the household's finances. Pip is also the household's coach: alerts, insights and advice in a side rail, with one count on every screen. Each profile has its own picture (or its initial on a colour).
 - **Every account in one place:** an accounts tree with group totals, a page per account, loans with progress, holdings with buys and sells, and your credit score over time.
 - **Goals,** net worth, investments and pension balances (synced from Clal, Harel, Meitav, Menora and Migdal, or imported from your agent's report), and a "family document" for the day someone else needs to find everything.
 - **Insurance** in one place: policies, what they cover and the excess, the renewal date, the agent, the documents, and the payments that match from the bank to the policy.
@@ -81,13 +81,13 @@ Plus a **knowledge center** of short original guides in Hebrew and English, and 
 - **Automatic:** 18 Israeli banks and card companies via [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), on a daily schedule.
 - **Manual:** drop a CSV, XLSX or XLS statement into the app or into a watched import folder. A transaction that comes from both is stored once.
 - **Smart sheet:** paste a table from any source, from Excel or Google Sheets to a bank file or a list you typed, and fix each cell in the grid itself: date, amount, type, account, category, tags, owner and business percentage. Duplicates are found per account before saving, and the whole import can be undone.
-- **Onboarding** walks a new user through profile and Pip, connecting or importing, a monthly target, budgets, an optional AI provider and a short tour. It can be skipped, resumed and reopened.
+- **Onboarding** walks a new user through profile and picture, connecting or importing, a monthly target, budgets, an optional AI provider and a short tour. It can be skipped, resumed and reopened.
 
 ### Language and accessibility
 - **Hebrew first,** with a full right-to-left layout, and English. Bank names, categories, numbers and dates are localized.
 - **Accessibility menu** (Alt+A): text size, contrast, stop animations, readable font, link highlighting and more, saved per profile, with an accessibility statement in line with IS 5568 and WCAG 2.2 AA.
 - **Privacy mode** (Ctrl/⌘+Shift+P) hides amounts on screen.
-- **Themes:** light, dark (midnight) and glass, in four accent colours or your own.
+- **Themes:** light, dark or follow the device, with soft motion for every open and close.
 
 ### Also
 - **Ask your money** in plain language, and a **Telegram bot** for instant spending feedback.

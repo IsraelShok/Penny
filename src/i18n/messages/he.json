@@ -6207,13 +6207,12 @@
     "kind_oneOff": "חיוב חד-פעמי גדול"
   },
   "topBar": {
-    "moreAdd": "עוד דרכים להוסיף",
-    "importFile": "ייבוא קובץ",
+    "importFile": "ייבוא כסף מקובץ",
     "connectBank": "חיבור בנק",
     "addAccount": "חשבון או נכס חדש",
     "settings": "הגדרות",
     "search": "חיפוש",
-    "addHint": "הוספת תנועה (N)"
+    "addMenu": "הוספה"
   },
   "sideRail": {
     "title": "התראות",

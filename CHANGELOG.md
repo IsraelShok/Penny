@@ -4,11 +4,14 @@ All notable changes to Penny. Versions follow [Semantic Versioning](https://semv
 
 ## [0.2.0] - 2026-11-21
 
-Everything since 0.1.0 (14 Nov 2026): 105 commits, 23 database migrations (054–076). Your data is upgraded in
+Everything since 0.1.0 (14 Nov 2026), with 24 database migrations (054–077). Your data is upgraded in
 place on first start, and a copy of the database is saved to `data/backups` before any migration runs.
 
 ### Highlights
 
+- **A new look.** A calm palette in three themes (light, dark, or follow the device), a side menu that stays put
+  while pages change, one top bar with search, a + menu, sync, notifications and settings, and soft motion for every
+  open and close. Settings, transactions, budget and analytics were rebuilt around tables and section menus.
 - **Money on the table.** One yearly figure for everything the checks found: bank and card fees, overdraft
   interest, foreign-currency fees and exchange-rate markup, small charges that keep coming back, cash sitting idle,
   a possible tax refund, pension and study-fund fees above the market, and overlapping insurance. Each item says
@@ -32,13 +35,25 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 
 ### Home and navigation
 
+- The app's frame (side menu, top bar, side rail) stays in place between screens; only the page fades in.
+- Dashboard has two views in one split control: Focus (the calm one-page home) and Detailed (the tile grid).
+- Month arrows on the dashboard: budget, cash flow, spending structure and the watchlist follow the month.
+- Budget, needs attention and goals are tiles in the one grid, packed so no cell is left empty.
+- Top bar: search, a + menu (add a transaction, import money from a file, connect a bank, new account or asset;
+  N adds a transaction directly), sync, notifications and settings, together at the end of the bar. The phone
+  dock's + opens the same menu.
+- The dashboard views carry no title on screen (still named for screen readers and the browser tab).
+- Notifications (the bell) list what happened: syncs that brought transactions or failed, and goals reached,
+  with unread marks and "mark all as read".
+- A side rail with Pip and the alerts: Pip is the household's coach, with one alert count on every screen.
+- Every page title is the name the side menu uses.
 - Dashboard grid with nine tiles plus Money on the table; Customize shows or hides each tile, saved per profile.
 - View the dashboard, budget and transactions as one household member, or "shared".
 - "Who spent this month" tile per household member.
 - Credit utilization tile: card balances against limits you enter once, with an inline editor (Escape or Cancel to close).
 - Quick start beside the dashboard: setup tasks that tick themselves from your real data.
-- New navigation: Focus (the calm one-page home), Dashboard, Accounts, Transactions, Planning, Analytics; one tab
-  strip for every area, a distinct icon per menu item, and the active tab kept in view on phones.
+- New navigation: Dashboard (Focus and Detailed views), Accounts, Transactions, Planning, Analytics, a distinct icon
+  per menu item, and on phones a tab strip per area with the active tab kept in view.
 - Focus replaces Simple mode; duplicate screens removed.
 - Sidebar: accounts tree with one row per group, a header with the profile menu (accessibility, settings, help,
   lock, sync) and Settings behind the gear.
@@ -59,9 +74,10 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 
 ### Budget
 
+- The budget opens on one line (budget, spent, left, overspent) and a table of groups that open and close; each
+  line's budget is edited in place and its bar marks how much of the month has passed. Phones keep the cards.
 - Envelope view: "every shekel has a job" – income, what the budgets claim and what's left to assign.
 - Period overview side panel: totals, pace against time, recent months against the budget, and what's over.
-- Budget table view: lines under their parent with assigned, activity, available and a progress bar.
 - Budget by household member.
 - The household month can start on salary day; budgets carry over, moves between categories are part of the plan,
   and the recap has a period picker.
@@ -69,6 +85,8 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 
 ### Transactions
 
+- The list comes first: one summary line (month, view, income, expenses, net), then the table with every filter
+  in its bar; denser rows on desktop.
 - Split an expense with people: who owes how much, settle one or "paid it all back" per person, all with undo.
   Shares can't exceed the expense and survive a pending charge being replaced.
 - "Who owes me" card on Groups.
@@ -105,6 +123,10 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 
 ### Planning and analytics
 
+- Analytics is one hub with its own section menu (reports, then tools).
+- Pivot table: spending by group and month for 3, 6 or 12 months, with totals, averages and a link from every
+  cell to its transactions.
+- Net worth history: the line over 6 months, a year or all of it, and what it is made of today.
 - Goals show what they need a month against what you actually save.
 - Recurring payments: yearly total, count and share of income.
 - Trackers: chosen categories over a date range against a limit (three examples in the demo).
@@ -152,7 +174,13 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 
 ### Settings and appearance
 
-- Theme first in Appearance, applied at once; the design studio for extra looks.
+- Settings keep the side menu: /settings lists every section (Personal, Workspace, Help), and each section has
+  that list as a card beside it (Back to settings on phones).
+- Three themes only: light, dark and follow the device. The see-through look, accent colours and custom colour
+  are retired; a saved choice of them opens as light.
+- Profile pictures: upload a photo (squared and shrunk in the browser) or keep your initial on a colour.
+- Categories as a compact tree: rename and recolour, add a subcategory from a group's menu, move and delete.
+- Account groups and accounts use line icons instead of emoji.
 - Tags and Payees screens; Language on its own page; Help at the foot of the settings menu.
 - Default account for new manual transactions.
 - Encrypted backup and restore in one `.pennybak` file (also `npm run backup`).

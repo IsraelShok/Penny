@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { ChevronDown, FileUp, Landmark, Plus, Search, Settings as SettingsIcon, WalletCards } from "lucide-react";
+import { FileUp, Landmark, Plus, Search, Settings as SettingsIcon, WalletCards } from "lucide-react";
 import { SyncButton } from "@/components/dashboard/sync-button";
 import { buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -39,22 +39,18 @@ export function TopBar() {
           <span className="flex-1 text-start">{t("search")}</span>
           <kbd dir="ltr" className="rounded-md border border-border bg-muted px-1.5 font-sans text-[11px]">Ctrl K</kbd>
         </button>
-        <div className="inline-flex rounded-xl shadow-sm">
-          <Link href="/transactions?add=1" aria-keyshortcuts="N" title={t("addHint")} className={cn(buttonVariants(), "rounded-e-none rounded-s-xl")}>
-            <Plus className="size-4" aria-hidden />
-            {tShell("addTransaction")}
-          </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger aria-label={t("moreAdd")} className={cn(buttonVariants({ size: "icon" }), "rounded-s-none rounded-e-xl border-s border-primary-foreground/25")}>
-              <ChevronDown className="size-4" aria-hidden />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem onClick={() => router.push("/settings/data")}><FileUp className="size-4" aria-hidden />{t("importFile")}</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/settings/bank")}><Landmark className="size-4" aria-hidden />{t("connectBank")}</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/investments")}><WalletCards className="size-4" aria-hidden />{t("addAccount")}</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {/* One +: add a transaction, or bring money in some other way. N still adds a transaction directly. */}
+        <DropdownMenu>
+          <DropdownMenuTrigger aria-label={t("addMenu")} title={t("addMenu")} aria-keyshortcuts="N" className={cn(buttonVariants({ size: "icon" }), "rounded-xl shadow-sm")}>
+            <Plus className="size-5" aria-hidden />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-56 bg-popover">
+            <DropdownMenuItem onClick={() => router.push("/transactions?add=1")}><Plus className="size-4" aria-hidden /><span className="flex-1">{tShell("addTransaction")}</span><kbd dir="ltr" className="text-[11px] text-muted-foreground">N</kbd></DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/settings/data")}><FileUp className="size-4" aria-hidden />{t("importFile")}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/settings/bank")}><Landmark className="size-4" aria-hidden />{t("connectBank")}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/investments")}><WalletCards className="size-4" aria-hidden />{t("addAccount")}</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <SyncButton onComplete={() => queryClient.invalidateQueries()} showLabel={false} />
         {/* The bell is for what happened; advice and alerts live with Pip in the side rail. */}
         <NotificationsBell />

@@ -100,6 +100,8 @@ export function PageHeader({
     ? (settingsItem.labelKey.includes(".") ? tRoot(settingsItem.labelKey) : tSettings(settingsItem.labelKey))
     : pathname === "/" || pathname === "/focus" ? tNavGroups("groups.dashboard")
     : page ? tNavGroups(`pages.${page.key}`) : title;
+  // The dashboard speaks for itself: its title is kept for screen readers and the tab, not shown.
+  const hideTitle = pathname === "/" || pathname === "/focus";
   const eyebrow = settingsItem ? tSettings("title") : group && group.items.length > 1 ? tNavGroups(`groups.${group.key}`) : null;
   const { plan } = usePlan();
   // One plain line on what this page is for, only for those who asked for more explanations.
@@ -130,7 +132,7 @@ export function PageHeader({
   return (
     <header ref={headerRef} className={`sticky top-0 z-20 transition-[box-shadow,background-color] duration-150 ${scrolled ? "header-bar shadow-[0_0.5px_0_var(--border)]" : "bg-transparent"}`}>
       {/* Nothing to show on desktop folds the row away, but the menu keeps its corner: it is the only way around in Simple mode. */}
-      <div className="mx-auto grid min-h-16 max-w-[1920px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3 md:px-6 lg:px-8">
+      <div className={`mx-auto grid min-h-16 max-w-[1920px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3 md:px-6 lg:px-8 ${hideTitle && !actions ? "md:min-h-0 md:py-0" : ""}`}>
         {/* The menu sits at the page's top corner: Simple mode's own hamburger, or the side menu's trigger on phones. */}
         <div className="col-start-1 row-start-1 -ms-1 flex items-center gap-1 self-center justify-self-start">
           <div className="flex items-center gap-1 md:hidden">
@@ -142,7 +144,7 @@ export function PageHeader({
         <div className="col-start-2 row-start-1 flex min-w-0 flex-col items-start text-start">
           {eyebrow && <p className="mb-0.5 text-xs text-muted-foreground">{eyebrow}</p>}
           <div className="relative min-w-0 max-w-full">
-            <h1 title={heading} className="truncate text-[1.625rem] leading-8 font-bold tracking-tight">{heading}</h1>
+            <h1 title={heading} className={hideTitle ? "sr-only" : "truncate text-[1.625rem] leading-8 font-bold tracking-tight"}>{heading}</h1>
             {/* The "i" hangs off the title's end so the title itself stays on the center line. */}
             <span className="absolute start-full top-1/2 flex -translate-y-1/2 items-center">
               {meta && meta.length > 24 && <InfoTip text={meta} />}
