@@ -1,5 +1,4 @@
 import "server-only";
-import { pennyEnv } from "@/lib/legacy-names";
 
 import { Bot } from "grammy";
 import { handleCommand, splitMessage, menuMarkup, MENU_LABEL, MENU_PREFIX, BOT_COMMANDS, type BotConfig } from "./commands";
