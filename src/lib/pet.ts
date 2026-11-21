@@ -97,7 +97,7 @@ export function skinFor(skin: string, color: string): string {
 }
 
 /** color "" = the theme accent; skin "" = flat color; snooze = issue key → hidden until (YYYY-MM-DD). */
-export interface PetSettings { enabled: boolean; name: string; color: string; size: PetSize; skin: string; snooze: Record<string, string> }
+export interface PetSettings { enabled: boolean; name: string; color: string; size: PetSize; skin: string; snooze: Record<string, string>; /** Head shape, 0 (square) to 100 (round); null keeps the face's own. */ roundness: number | null }
 
 /** On unless the household turned it off. */
 export function parsePet(raw: unknown): PetSettings {
@@ -108,6 +108,7 @@ export function parsePet(raw: unknown): PetSettings {
     color: typeof r.color === "string" && /^#[0-9a-f]{6}$/i.test(r.color) ? r.color.toLowerCase() : "",
     size: typeof r.size === "string" && Object.hasOwn(PET_SIZES, r.size) ? (r.size as PetSize) : "m",
     skin: (PET_SKINS as readonly unknown[]).includes(r.skin) ? String(r.skin) : "",
+    roundness: typeof r.roundness === "number" && Number.isFinite(r.roundness) ? Math.min(100, Math.max(0, Math.round(r.roundness))) : null,
     snooze: Object.fromEntries(Object.entries(r.snooze && typeof r.snooze === "object" ? r.snooze : {})
       .filter(([k, v]) => /^[a-z]+:[a-zA-Z]+$/.test(k) && typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)).slice(0, 20)),
   };

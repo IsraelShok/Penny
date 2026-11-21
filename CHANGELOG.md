@@ -45,6 +45,11 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 - The dashboard views carry no title on screen (still named for screen readers and the browser tab).
 - Notifications (the bell) list what happened: syncs that brought transactions or failed, and goals reached,
   with unread marks and "mark all as read".
+- Search is an icon in the top bar that widens in place into the live search (Ctrl K or / too).
+- Pip comes alive: it waits while something saves or syncs, nods when it lands and droops when it fails, shows a
+  text cursor while you type, looks surprised at news, gets bored when nothing happens, sends a heart when clicked
+  and spins its eyes on a double click. Its eyes always follow the pointer (it no longer dozes off), it can be
+  squeezed and its antenna pulled, and its head shape is a setting.
 - A side rail with Pip and the alerts: Pip is the household's coach, with one alert count on every screen.
 - Every page title is the name the side menu uses.
 - Dashboard grid with nine tiles plus Money on the table; Customize shows or hides each tile, saved per profile.

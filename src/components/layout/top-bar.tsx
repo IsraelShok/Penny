@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { FileUp, Landmark, Plus, Search, Settings as SettingsIcon, WalletCards } from "lucide-react";
 import { SyncButton } from "@/components/dashboard/sync-button";
 import { buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { OPEN_COMMAND_PALETTE } from "./command-palette";
+import { CommandPalette, OPEN_INLINE_SEARCH } from "./command-palette";
 import { NotificationsBell } from "./notifications-bell";
 import { cn } from "@/lib/utils";
 
@@ -27,18 +27,27 @@ export function TopBar() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [router]);
+  const [searching, setSearching] = useState(false);
+  useEffect(() => {
+    const open = () => setSearching(true);
+    window.addEventListener(OPEN_INLINE_SEARCH, open);
+    return () => window.removeEventListener(OPEN_INLINE_SEARCH, open);
+  }, []);
   const icon = cn(buttonVariants({ variant: "outline", size: "icon" }), "rounded-xl");
 
   return (
     <div className="hidden md:block">
       {/* Every action in one cluster at the end of the bar: search, add, then sync, alerts and settings. */}
       <div className="mx-auto flex min-h-14 max-w-[1920px] items-center justify-end gap-2 px-6 pt-3 lg:px-8">
-        <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE))} aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K /"
-          className="flex min-h-10 w-56 items-center lg:w-72 gap-2 rounded-xl border border-border bg-card px-3 text-sm text-muted-foreground shadow-[0_1px_2px_rgb(0_0_0/4%)] transition-colors hover:border-foreground/20 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
-          <Search className="size-4 shrink-0" aria-hidden />
-          <span className="flex-1 text-start">{t("search")}</span>
-          <kbd dir="ltr" className="rounded-md border border-border bg-muted px-1.5 font-sans text-[11px]">Ctrl K</kbd>
-        </button>
+        {/* Search: an icon that widens in place into the live search (Ctrl K or / too); its results open below. */}
+        <div data-search-root className={cn("relative flex h-10 items-center rounded-xl border bg-card transition-[width,border-color] duration-300 ease-[var(--ease-soft)] motion-reduce:transition-none", searching ? "w-[26rem] border-primary/50 px-1.5" : "w-10 border-border")}>
+          {searching ? <CommandPalette placeholder={t("search")} onClose={() => setSearching(false)} dropDown /> : (
+            <button type="button" onClick={() => setSearching(true)} aria-label={t("search")} title={`${t("search")} (Ctrl K)`} aria-keyshortcuts="Control+K Meta+K /"
+              className="grid size-10 place-items-center rounded-xl text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+              <Search className="size-4" aria-hidden />
+            </button>
+          )}
+        </div>
         {/* One +: add a transaction, or bring money in some other way. N still adds a transaction directly. */}
         <DropdownMenu>
           <DropdownMenuTrigger aria-label={t("addMenu")} title={t("addMenu")} aria-keyshortcuts="N" className={cn(buttonVariants({ size: "icon" }), "rounded-xl shadow-sm")}>

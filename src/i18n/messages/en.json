@@ -5324,7 +5324,11 @@
       "uncategorized": "Uncategorised spending this month: {amount}.",
       "openInsights": "All insights",
       "nextBill": "Next charge: {amount} in {days} days."
-    }
+    },
+    "roundnessLabel": "Head shape",
+    "roundnessSquare": "Square",
+    "roundnessRound": "Round",
+    "playHint": "Click Pip for a heart, double-click to spin its eyes, press and hold its middle to squeeze it, and pull its antenna."
   },
   "a11y": {
     "nav": "Accessibility",

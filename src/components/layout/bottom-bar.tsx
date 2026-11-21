@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { getHome } from "@/lib/api";
 import { formatLastSync } from "@/lib/formatters";
 import { useFormatterLabels } from "@/lib/i18n-data";
-import { CommandPalette, OPEN_COMMAND_PALETTE } from "./command-palette";
+import { CommandPalette, OPEN_COMMAND_PALETTE, OPEN_INLINE_SEARCH } from "./command-palette";
 
 const NUDGED_KEY = "penny-stale-nudged";
 
@@ -25,22 +25,24 @@ export function BottomBar() {
   const hide = useCallback(() => setShown(false), []);
   const home = useQuery({ queryKey: ["home"], queryFn: () => getHome() });
 
+  // Wide screens search in place in the top bar; phones keep the floating bar.
+  const openSearch = useCallback(() => { if (matchMedia("(min-width: 768px)").matches) window.dispatchEvent(new Event(OPEN_INLINE_SEARCH)); else setShown(true); }, []);
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName));
       if ((e.key === "/" && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k")) {
         e.preventDefault();
-        setShown(true);
+        openSearch();
       }
     }
-    const open = () => setShown(true);
+    const open = () => openSearch();
     window.addEventListener("keydown", onKey);
     window.addEventListener(OPEN_COMMAND_PALETTE, open);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(OPEN_COMMAND_PALETTE, open);
     };
-  }, []);
+  }, [openSearch]);
 
   // Once per browser session: if any bank is stale, failed or never synced, suggest updating.
   const health = home.data?.bankHealth;

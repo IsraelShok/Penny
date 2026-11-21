@@ -13,6 +13,7 @@ import { usePlan } from "@/hooks/use-plan";
 import { useA11y } from "@/components/a11y/a11y-menu";
 import { useGentle } from "@/hooks/use-gentle";
 import { shekels } from "@/lib/money";
+import { PIP_EVENT, pip, type PipReaction } from "@/lib/pip-bus";
 import { PET_ACTION, PET_COLORS, skinFor, PET_SIZES, PET_SKINS, petKey, petLines, petMood, petSnooze, petSnoozeUntil, petToday, petTodo, type PetLine, type PetMood, type PetSettings, type PetStat } from "@/lib/pet";
 import { Segmented } from "@/components/ui/segmented";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -93,7 +94,7 @@ function PetButton({ p, px, onOpen, mini }: { p: PetState; px: number; onOpen: (
   const n = p.count;
   const label = `${t("artLabel", { name, mood: t(`mood_${p.mood}`) })}${n ? `. ${t("badge", { n })}` : ""}`;
   return (
-    <button type="button" onClick={onOpen} aria-haspopup="dialog" aria-label={label}
+    <button type="button" onClick={() => { pip({ kind: "play", action: "love" }); onOpen(); }} onDoubleClick={() => pip({ kind: "play", action: "random" })} aria-haspopup="dialog" aria-label={label}
       className={`relative grid place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${mini === "lg" ? "size-14 bg-card/90 shadow-lg ring-1 ring-border backdrop-blur" : mini ? "size-11" : ""}`}>
       <PetFace mood={p.mood} pet={p.pet} px={px} />
       {n > 0 && (
@@ -311,6 +312,15 @@ export function PetCustomizer() {
               options={["", ...PET_SKINS].map((s) => ({ value: s, label: t(`skin_${s || "none"}`) }))} />
             <p className="text-caption text-muted-foreground">{t("skinHint")}</p>
           </div>
+          <label className="block space-y-2">
+            <span className="flex justify-between font-medium">{t("roundnessLabel")}<span className="tabular-nums text-muted-foreground">{draft.roundness ?? 50}</span></span>
+            {/* Live while dragging; saved once the hand lets go. */}
+            <input type="range" min={0} max={100} step={5} value={draft.roundness ?? 50} className="w-full accent-[var(--primary)]"
+              onChange={(e) => setDraft({ ...draft, roundness: Number(e.target.value) })}
+              onPointerUp={() => save(draft)} onKeyUp={() => save(draft)} />
+            <span className="flex justify-between text-caption text-muted-foreground"><span>{t("roundnessSquare")}</span><span>{t("roundnessRound")}</span></span>
+          </label>
+          <p className="text-caption text-muted-foreground">{t("playHint")}</p>
         </div>
   );
 }
@@ -354,13 +364,13 @@ declare module "react" {
 }
 
 const FALLBACK: Record<PetMood, string> = { happy: "😊", ok: "🙂", hungry: "😋", caring: "🤗" };
-type Face = HTMLElement & { play?: (a: string) => unknown; setPointerFollow?: (on: boolean) => unknown };
+type Face = HTMLElement & { play?: (a: string) => unknown; setPointerFollow?: (on: boolean) => unknown; startWaiting?: (o?: { variant?: "spin" | "wrap" | "wave" }) => unknown; stopWaiting?: () => unknown; input?: (on?: boolean) => unknown; setHeadRoundness?: (n: number) => unknown; setPressSqueeze?: (on: boolean) => unknown; setAntennaDrag?: (on: boolean) => unknown };
 
 /**
  * The face is BoopFace (CX ArtLab, MIT): a client-only web component, loaded on demand (the lite build; the full one with its skin painters only once a skin is picked).
  * Until it is ready the box stays empty: no emoji underneath and no flat face before the skin, so a refresh never shows layers. The emoji is only for a failed load.
  */
-export function PetFace({ mood, pet, px }: { mood: PetMood; pet: Pick<PetSettings, "color" | "skin">; px: number }) {
+export function PetFace({ mood, pet, px }: { mood: PetMood; pet: Pick<PetSettings, "color" | "skin"> & { roundness?: number | null }; px: number }) {
   const ref = useRef<Face>(null);
   const still = useA11y().prefs.stopMotion; // the menu's "Stop animations" (BoopFace already honors the OS setting under motion="auto")
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
@@ -375,13 +385,34 @@ export function PetFace({ mood, pet, px }: { mood: PetMood; pet: Pick<PetSetting
   }, [pet.skin]);
   useEffect(() => {
     if (state !== "ready") return;
-    ref.current?.setPointerFollow?.(true); // eyes follow the pointer anywhere on the page (BoopFace listens on window)
-    void ref.current?.play?.(PET_ACTION[mood]);
-  }, [state, mood, pet.skin]);
+    const face = ref.current;
+    face?.setPointerFollow?.(true); // eyes follow the pointer anywhere on the page (BoopFace listens on window)
+    face?.setPressSqueeze?.(true); // press and hold its middle to squeeze it
+    face?.setAntennaDrag?.(true); // pull its antenna: it springs back, a little cross
+    if (pet.roundness != null) face?.setHeadRoundness?.(pet.roundness);
+    void face?.play?.(PET_ACTION[mood]);
+  }, [state, mood, pet.skin, pet.roundness]);
+  // Reactions from anywhere in the app (lib/pip-bus): play one, then settle back into the money mood.
+  useEffect(() => {
+    if (state !== "ready") return;
+    let settle: ReturnType<typeof setTimeout> | undefined;
+    const back = (ms: number) => { clearTimeout(settle); settle = setTimeout(() => void ref.current?.play?.(PET_ACTION[mood]), ms); };
+    const on = (e: Event) => {
+      const r = (e as CustomEvent<PipReaction>).detail;
+      const face = ref.current;
+      if (!face) return;
+      if (r.kind === "waiting") { if (r.on) { clearTimeout(settle); void face.startWaiting?.({ variant: "spin" }); } else face.stopWaiting?.(); return; }
+      if (r.kind === "typing") { void face.input?.(r.on); if (!r.on) back(400); return; }
+      void face.play?.(r.action);
+      back(r.action === "bored" ? 6000 : 2600);
+    };
+    window.addEventListener(PIP_EVENT, on);
+    return () => { clearTimeout(settle); window.removeEventListener(PIP_EVENT, on); };
+  }, [state, mood]);
   const skin = pet.skin ? skinFor(pet.skin, pet.color || theme || "") : undefined;
   return (
     <span aria-hidden className="grid place-items-center" style={{ width: px, height: px }}>
-      {state === "ready" ? <boop-face key={skin} ref={ref} size={String(px)} color={pet.color || theme} skin={skin} motion={still ? "reduce" : "auto"} />
+      {state === "ready" ? <boop-face key={skin} ref={ref} size={String(px)} color={pet.color || theme} skin={skin} motion={still ? "reduce" : "auto"} auto-sleep="0" wake-on="activity" press-squeeze="true" antenna-drag="true" />
         : state === "failed" ? <span style={{ fontSize: px * 0.45 }}>{FALLBACK[mood]}</span> : null}
     </span>
   );

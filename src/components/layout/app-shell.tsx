@@ -24,6 +24,7 @@ import { wantsExplanations } from "@/lib/plan";
 import { pagePurposeKey } from "@/lib/orientation";
 import { MobileDock } from "./mobile-dock";
 import { PetMini } from "@/components/home/pet-card";
+import { PipLife } from "@/components/home/pip-life";
 import { SectionTabs } from "./section-tabs";
 import { A11yButton } from "@/components/a11y/a11y-menu";
 import { AnalyticsNav } from "@/components/analytics/analytics-nav";
@@ -61,6 +62,7 @@ export function PersistentShell({ children }: { children: ReactNode }) {
         <AlertNotifier />
         <BottomBar />
         <PrivacyHotkey />
+        <PipLife />
       </SidebarInset>
       <SideRail />
       <MobileDock />

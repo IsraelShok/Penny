@@ -24,11 +24,13 @@ interface Command {
 }
 
 export const OPEN_COMMAND_PALETTE = "penny:open-command-palette";
+/** Desktop: the search grows in place in the top bar instead of floating at the bottom. */
+export const OPEN_INLINE_SEARCH = "penny:open-inline-search";
 
 const SETTINGS = ["general", "appearance", "bank", "ai", "categories", "rules"] as const;
 
 /** The search field: type to jump to a page, setting or action, or ask a question. Results open right above it. */
-export function CommandPalette({ placeholder, onClose }: { placeholder: string; onClose: () => void }) {
+export function CommandPalette({ placeholder, onClose, dropDown = false }: { placeholder: string; onClose: () => void; dropDown?: boolean }) {
   const t = useTranslations("palette");
   const tNavGroups = useTranslations("navGroups");
   const tSettings = useTranslations("settings.sidebar");
@@ -157,7 +159,7 @@ export function CommandPalette({ placeholder, onClose }: { placeholder: string; 
       <kbd dir="ltr" className="hidden rounded border border-border px-1.5 text-[0.6875rem] text-muted-foreground md:inline">/</kbd>
       {open && (
         // Opens upward from the bar and spans its full width (the bar is the positioned parent).
-        <div className="absolute inset-x-0 bottom-full z-50 mb-2 flex max-h-[60dvh] flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl">
+        <div className={`absolute z-50 flex ${dropDown ? "top-full mt-2 inset-x-0 min-w-[26rem]" : "inset-x-0 bottom-full mb-2"} max-h-[60dvh] flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl`}>
         {asked ? (
           <div className="min-h-0 max-h-[min(28rem,60dvh)] overflow-y-auto overscroll-contain p-5">
             {asked.answer ? <AskAnswerView answer={asked.answer} onExample={(e) => { setQ(e); ask(e); }} onNavigate={close} />
