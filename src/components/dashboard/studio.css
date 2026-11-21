@@ -1,48 +1,41 @@
 /* Neutral graphite canvas, one violet accent, cards that separate by shadow rather than tint:
    the calm surface language a figures-first money app needs. Every text pair here clears 4.5:1. */
+/* Light: a near-white canvas, white cards that separate by a hairline and a soft shadow, one violet.
+   Every text pair clears 4.5:1 (muted text on the canvas, violet text and white-on-violet). */
 :is(html.app-studio, .budget-studio) {
-  --background: #f6f5f8; --foreground: #17151f; --card: #fff; --card-foreground: #17151f;
-  --popover: #fff; --popover-foreground: #17151f; --muted: #efedf3; --muted-foreground: #5f5c70;
-  --border: #e5e3ec; --secondary: #efedf3; --secondary-foreground: #17151f;
-  --accent: #efedf3; --accent-foreground: #17151f; --primary: #6a4bb5; --primary-foreground: #fff;
-  --ring: #6a4bb5; --action: #5c3fa8; --studio-ring-start: #b3a0ee; --studio-ring-end: #6a4bb5;
-  --input: #827e93; --destructive: #b42e41;
-  --sidebar: var(--background); --sidebar-foreground: var(--foreground); --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: var(--primary-foreground); --sidebar-accent: var(--studio-accent-soft);
-  --sidebar-accent-foreground: var(--primary); --sidebar-border: var(--border); --sidebar-ring: var(--ring);
-  --chart-1: var(--primary); --chart-2: #2c6e8f; --chart-3: #2f7d5c; --chart-4: #b03a6a; --chart-5: #a8651a;
-  --studio-hero: #201e2a; --studio-glow: #8b74e0; --studio-accent-soft: #edeafb;
-  --status-on-track: #14663b; --status-over: #b3261e; --status-heads-up: #8a4b00;
-  --status-plenty-left: #5a41a8; --expense: #a63a4f; --segmented: #eae8f0; --segmented-thumb: #fff;
-  /* Simple-mode tones (dark hero and light cards alike): income green, spending rose like --expense, savings blue. */
+  --background: #fbfbfd; --foreground: #17151f; --card: #fff; --card-foreground: #17151f;
+  --popover: #fff; --popover-foreground: #17151f; --muted: #efeff2; --muted-foreground: #615e74;
+  --border: #e6e5ee; --secondary: #efeff2; --secondary-foreground: #17151f;
+  --accent: #efeff3; --accent-foreground: #17151f; --primary: #7355be; --primary-foreground: #fff;
+  --ring: #7355be; --action: #6a4bb5; --studio-ring-start: #b9a6f0; --studio-ring-end: #7355be;
+  --input: #827e93; --destructive: #c0392b;
+  --sidebar: #fbfbfd; --sidebar-foreground: var(--foreground); --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground); --sidebar-accent: #efeff3;
+  --sidebar-accent-foreground: var(--foreground); --sidebar-border: var(--border); --sidebar-ring: var(--ring);
+  --chart-1: var(--primary); --chart-2: #2d7fb8; --chart-3: #2a8d52; --chart-4: #c2457a; --chart-5: #d9822b;
+  --studio-hero: #1f1b2e; --studio-glow: #8b6fe0; --studio-accent-soft: #f0ecfb;
+  --status-on-track: #1f7a46; --status-over: #b3261e; --status-heads-up: #8a4b00;
+  --status-plenty-left: #6a4bb5; --expense: #c0392b; --segmented: #efeff2; --segmented-thumb: #fff;
   --ring-income: #6fdc8c; --ring-spending: #ff8fa3; --ring-savings: #5aa9ff;
-  /* One elevation for every content card: a hairline of contact plus a deep, soft drop. */
-  --card-elevation: 0 1px 2px rgb(23 21 31 / 4%), 0 14px 34px -20px rgb(40 30 80 / 20%);
+  --card-elevation: 0 1px 2px rgb(23 21 31 / 4%), 0 8px 24px -16px rgb(40 30 80 / 14%);
   color: var(--foreground); color-scheme: light;
 }
-/* In midnight the accent has to be a light tint: it is link and label text on a near-black card. */
-:is(html.app-studio, .budget-studio)[data-studio-theme="midnight"][data-studio-accent="violet"] { --primary: #b9a6ff; --primary-foreground: #15121e; --ring: #b9a6ff; --action: #b9a6ff; --studio-accent-soft: #262336; }
-:is(html.app-studio, .budget-studio)[data-studio-theme="midnight"][data-studio-accent="ocean"] { --primary: #8cc9ee; --primary-foreground: #0d1620; --ring: #8cc9ee; --action: #8cc9ee; --studio-accent-soft: #1b2a33; }
-:is(html.app-studio, .budget-studio)[data-studio-theme="midnight"][data-studio-accent="jade"] { --primary: #8fdcb6; --primary-foreground: #0e1a15; --ring: #8fdcb6; --action: #8fdcb6; --studio-accent-soft: #182b23; }
-:is(html.app-studio, .budget-studio)[data-studio-theme="midnight"][data-studio-accent="rose"] { --primary: #f2aacb; --primary-foreground: #1e1218; --ring: #f2aacb; --action: #f2aacb; --studio-accent-soft: #2c1a23; }
-
-/* An accent recolours actions, chips and charts; the summary card stays graphite, so no accent turns the page into a colour block. */
-:is(html.app-studio, .budget-studio)[data-studio-accent="ocean"] { --primary: #135f95; --ring: #135f95; --action: #135f95; --studio-ring-start: #9ed4f2; --studio-ring-end: #2d7fb8; --studio-glow: #6ebfef; --studio-accent-soft: #e3f0f9; }
-:is(html.app-studio, .budget-studio)[data-studio-accent="jade"] { --primary: #15704e; --ring: #15704e; --action: #15704e; --studio-ring-start: #a7e9c6; --studio-ring-end: #3d9c76; --studio-glow: #7cdcb1; --studio-accent-soft: #e2f2e9; }
-:is(html.app-studio, .budget-studio)[data-studio-accent="rose"] { --primary: #a33365; --ring: #a33365; --action: #a33365; --studio-ring-start: #f5b5d0; --studio-ring-end: #c05b8b; --studio-glow: #e28ab4; --studio-accent-soft: #f8e8f0; }
-/* Midnight: warm near-black ground, cards a step above it, one bright violet for actions and links. */
+/* Dark: a warm, almost-black canvas (a screening room, not a grey office), cards one step up, a lighter violet
+   so links and labels stay readable on it. */
 :is(html.app-studio, .budget-studio)[data-studio-theme="midnight"] {
-  --background: #0c0b0f; --foreground: #f3f1f6; --card: #17161d; --card-foreground: #f3f1f6;
-  --popover: #1c1b23; --popover-foreground: #f3f1f6; --muted: #24232c; --muted-foreground: #a8a4b8;
-  --border: #2a2834; --secondary: #24232c; --secondary-foreground: #f3f1f6; --accent: #26242f; --accent-foreground: #f3f1f6;
-  --primary: var(--studio-ring-start); --primary-foreground: #15121e; --ring: var(--studio-ring-start);
-  --studio-hero: #191822; --studio-glow: #8b74e0; --studio-accent-soft: #262336; --status-on-track: #79d9a2; --status-over: #ff9aa8; --status-heads-up: #efc18c; --expense: #f29aa6;
-  --input: #7d7a8d; --destructive: #ff9aa8; --destructive-foreground: #15121e; --action: var(--studio-ring-start); --status-plenty-left: var(--studio-ring-start);
-  --segmented: #26242f; --segmented-thumb: #3a3746; color-scheme: dark;
+  --background: #0b0908; --foreground: #f5f3f0; --card: #1b1917; --card-foreground: #f5f3f0;
+  --popover: #201d1b; --popover-foreground: #f5f3f0; --muted: #282624; --muted-foreground: #a9a6a1;
+  --border: #2e2b28; --secondary: #282624; --secondary-foreground: #f5f3f0; --accent: #2a2725; --accent-foreground: #f5f3f0;
+  --primary: #a58cf0; --primary-foreground: #120e1f; --ring: #a58cf0; --action: #a58cf0; --studio-ring-start: #a58cf0;
+  --sidebar: #0b0908; --sidebar-accent: #221f1d;
+  --studio-hero: #1b1917; --studio-glow: #8264cd; --studio-accent-soft: #241f30;
+  --status-on-track: #79d9a2; --status-over: #ff9aa8; --status-heads-up: #efc18c; --expense: #f2938a;
+  --input: #7d7a75; --destructive: #f2938a; --destructive-foreground: #1b0f0d; --status-plenty-left: #a58cf0;
+  --chart-2: #6fb3d1; --chart-3: #6fca9a; --chart-4: #ea8fb8; --chart-5: #f0b26b;
+  --segmented: #282624; --segmented-thumb: #3a3633; color-scheme: dark;
   --card-elevation: 0 1px 0 rgb(255 255 255 / 3%) inset, 0 14px 30px -22px rgb(0 0 0 / 80%);
 }
 .studio-page { min-height: 100vh; background: var(--background); }
-.studio-page[data-studio-theme="glass"] { background: radial-gradient(ellipse at 5% 10%, #e3dff8 0, transparent 45%), radial-gradient(ellipse at 90% 55%, #e1eef4 0, transparent 50%), #f5f5fa; }
 .studio-content { max-width: 1920px; margin: auto; padding: 30px 40px 64px; display: flex; flex-direction: column; gap: 26px; }
 .studio-welcome { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 5px 0 8px; }
 .studio-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em; display: inline-flex; align-items: center; gap: 8px; color: var(--muted-foreground); }
@@ -169,10 +162,8 @@
 .studio-theme-sample i { display: block; height: 30px; flex: 1; background: white; border-radius: 3px; }
 .studio-theme-sample i:first-child { flex: 2; background: #201e2a; }
 .sample-midnight { background: #0c0b0f; }.sample-midnight i { background: #1c1b23; }.sample-midnight i:first-child { background: #2c2939; }
-.sample-glass { background: linear-gradient(135deg, #d9ccf7, #b9d9e2); }.sample-glass i { background: #ffffff88; }.sample-glass i:first-child { background: #ffffffb0; }
 .studio-options-accent button { flex-wrap: wrap; }
 .studio-swatch { display: block; border-radius: 50%; width: 17px; height: 17px; }
-.swatch-violet { background: #6a4bb5; }.swatch-ocean { background: #135f95; }.swatch-jade { background: #15704e; }.swatch-rose { background: #a33365; }
 .studio-toggle { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
 .studio-toggle input[type="checkbox"] { appearance: none; width: 38px; height: 22px; border-radius: 20px; background: var(--input); position: relative; cursor: pointer; flex-shrink: 0; }
 .studio-toggle input[type="checkbox"]::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; inset-inline-start: 3px; top: 3px; transition: transform .2s; }
@@ -194,7 +185,6 @@
 [data-studio-density="compact"] .studio-category-card > button { padding: 14px 18px; }
 [data-studio-density="compact"] .studio-category-card > button > .mt-4 { margin-top: 10px; }
 [data-studio-density="compact"] .studio-category-card .text-3xl { font-size: 20px; }
-@supports (backdrop-filter: blur(20px)) { [data-studio-theme="glass"] .studio-panel, [data-studio-theme="glass"] .studio-customize, [data-studio-theme="glass"] .studio-category-card { background: #ffffffa8; backdrop-filter: blur(20px); border-color: #ffffffdc; box-shadow: 0 8px 25px #42326606; } }
 @media (min-width: 1400px) { .studio-orbit { flex-basis: 190px; width: 190px; height: 190px; } }
 @media (max-width: 1100px) { .studio-content { padding: 24px; }.studio-top-grid { grid-template-columns: minmax(0, 1fr); }.studio-bars { gap: 18px; } }
 @media (max-width: 600px) {
@@ -239,20 +229,11 @@ html.app-studio .wallet::before { background: radial-gradient(ellipse at 0% 100%
 .sample-system { background: linear-gradient(90deg, #f6f5f8 50%, #17161d 50%); }
 .studio-motion-setting { margin-bottom: 26px; }
 .studio-section-label { border-top: 1px solid var(--border); padding-top: 22px; margin-bottom: 20px; font-size: 12px; font-weight: 600; color: var(--primary); }
-html.app-studio[data-studio-theme="glass"] body { background: radial-gradient(ellipse at 5% 10%, #e3dff8 0, transparent 45%), radial-gradient(ellipse at 90% 55%, #e1eef4 0, transparent 50%), #f5f5fa; background-attachment: fixed; }
-html.app-studio[data-studio-theme="glass"] .studio-page { background: transparent; }
-@supports (backdrop-filter: blur(20px)) {
-  html.app-studio[data-studio-theme="glass"] :is([data-slot="sidebar-inner"], [data-slot="sidebar"][data-mobile="true"], .studio-settings-nav) { background: #f5f5faad; backdrop-filter: blur(24px) saturate(1.3); }
-  html.app-studio[data-studio-theme="glass"] .bg-card:not(.wallet) { background-color: #ffffffbf; backdrop-filter: blur(18px); }
-}
 html.app-studio[data-studio-density="compact"] [data-slot="sidebar-menu-button"] { min-height: 36px; }
 html.app-studio[data-studio-density="compact"] .studio-settings-nav a { min-height: 36px; padding-block: 7px; }
 html.app-studio[data-studio-density="compact"] :is([data-slot="dropdown-menu-item"], [data-slot="select-item"]) { padding-block: 5px; }
 @media (pointer: coarse) {
   html.app-studio[data-studio-density="compact"] :is([data-slot="sidebar-menu-button"], .studio-settings-nav a, [data-slot="dropdown-menu-item"], [data-slot="select-item"]) { min-height: 44px; }
-}
-@media (prefers-reduced-transparency: reduce) {
-  html.app-studio[data-studio-theme="glass"] :is([data-slot="sidebar-inner"], [data-slot="sidebar"][data-mobile="true"], .studio-settings-nav, .glass, .glass-popover, .bg-card:not(.wallet)) { background-color: var(--card); backdrop-filter: none; }
 }
 
 .mobile-dock { display: none; }
@@ -271,13 +252,6 @@ html.app-studio[data-studio-density="compact"] :is([data-slot="dropdown-menu-ite
   .mobile-dock a[aria-current="page"] svg { stroke-width: 2.4; }
 }
 
-html.app-studio[data-studio-custom="true"], html.app-studio[data-studio-custom="true"] .budget-studio {
-  --primary: var(--custom-primary); --ring: var(--custom-primary); --action: var(--custom-primary);
-  --studio-ring-start: color-mix(in srgb, var(--custom-primary) 45%, white);
-  --studio-ring-end: var(--custom-primary); --studio-glow: var(--custom-primary);
-  --studio-hero: color-mix(in srgb, var(--custom-primary) 60%, #120c2a);
-  --studio-accent-soft: color-mix(in srgb, var(--custom-primary) 12%, var(--card));
-}
 
 /* Glassmorphism in every theme: translucent, blurred surfaces over a soft tinted backdrop. */
 /* A whisper of tint behind the page, not a wash: the canvas has to read as paper. */

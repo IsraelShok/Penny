@@ -76,7 +76,7 @@ export default async function RootLayout({
         {/* Applies the saved studio theme before first paint, so a refresh never flashes another theme. Mirrors StudioProvider. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var p=JSON.parse(localStorage.getItem("shekel.budget-studio.v1")||"null");if(p){var r=document.documentElement,t=p.theme==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"midnight":"pearl"):p.theme;localStorage.setItem("theme",p.theme==="system"?"system":t==="midnight"?"dark":"light");r.classList.add("app-studio");r.classList.toggle("dark",t==="midnight");r.style.colorScheme=t==="midnight"?"dark":"light";r.dataset.studioTheme=t;r.dataset.studioAccent=p.accent;r.dataset.studioDensity=p.density;r.dataset.studioMotion=String(p.motion);r.dataset.studioCustom=String(!!p.customColor);if(p.customColor)r.style.setProperty("--custom-primary",p.customColor)}}catch(e){}`,
+            __html: `try{var p=JSON.parse(localStorage.getItem("shekel.budget-studio.v1")||"null");if(p){var r=document.documentElement,t=p.theme==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"midnight":"pearl"):(p.theme==="midnight"?"midnight":"pearl");localStorage.setItem("theme",p.theme==="system"?"system":t==="midnight"?"dark":"light");r.classList.add("app-studio");r.classList.toggle("dark",t==="midnight");r.style.colorScheme=t==="midnight"?"dark":"light";r.dataset.studioTheme=t;r.dataset.studioAccent="violet";r.dataset.studioDensity=p.density;r.dataset.studioMotion=String(p.motion);r.dataset.studioCustom="false"}}catch(e){}`,
           }}
         />
         {/* Accessibility menu choices, before first paint (mirrors A11yProvider). */}

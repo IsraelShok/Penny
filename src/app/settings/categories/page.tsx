@@ -38,7 +38,8 @@ export default function CategoriesSettingsPage() {
   const [search, setSearch] = useState("");
   const [activeKind, setActiveKind] = useState<CategoryKind>("expense");
   const [openId, setOpenId] = useState<number | null>(null);
-  const [creating, setCreating] = useState(false);
+  // Closed, or open (optionally inside a group, from that group's menu).
+  const [creating, setCreating] = useState<false | { group?: number }>(false);
 
   const dataByCategoryId = useMemo(() => {
     const m = new Map<number, CategoryWithData>();
@@ -107,10 +108,10 @@ export default function CategoriesSettingsPage() {
               className="ps-8"
             />
           </div>
-          <IconButton label={t("newCategoryButton")} variant="outline" onClick={() => setCreating(true)}>
+          <IconButton label={t("newCategoryButton")} variant="outline" onClick={() => setCreating({})}>
             <Plus aria-hidden className="size-4" />
           </IconButton>
-          <NewCategoryDialog open={creating} onOpenChange={setCreating} kind={activeKind} />
+          <NewCategoryDialog key={creating ? (creating.group ?? "new") : "closed"} open={!!creating} onOpenChange={(o) => { if (!o) setCreating(false); }} kind={activeKind} defaultGroup={creating ? creating.group : undefined} />
         </div>
 
         {!categories ? (
@@ -131,6 +132,7 @@ export default function CategoriesSettingsPage() {
                 color={parent.color}
                 parent={parent}
                 onSelect={setOpenId}
+                onAddSub={() => setCreating({ group: parent.id })}
                 dataById={dataByCategoryId}
                 startOpen={search.trim() !== ""}
               >
@@ -176,7 +178,7 @@ export default function CategoriesSettingsPage() {
 }
 
 /** Edit, and see the transactions: the same two things a row click and a link would do, in one place. */
-function RowMenu({ id, name, onEdit }: { id: number; name: string; onEdit: () => void }) {
+function RowMenu({ id, name, onEdit, onAddSub }: { id: number; name: string; onEdit: () => void; onAddSub?: () => void }) {
   const t = useTranslations("settings.categories");
   const router = useRouter();
   return (
@@ -187,6 +189,7 @@ function RowMenu({ id, name, onEdit }: { id: number; name: string; onEdit: () =>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onEdit}><Pencil className="size-4" aria-hidden />{t("menuEdit")}</DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push(`/transactions?category=${id}`)}><ListChecks className="size-4" aria-hidden />{t("menuTransactions")}</DropdownMenuItem>
+        {onAddSub && <DropdownMenuItem onClick={onAddSub}><Plus className="size-4" aria-hidden />{t("menuAddSub")}</DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -199,6 +202,7 @@ function GroupBlock({
   parent,
   children,
   onSelect,
+  onAddSub,
   dataById,
   startOpen = false,
 }: {
@@ -208,6 +212,7 @@ function GroupBlock({
   dataById: Map<number, CategoryWithData>;
   children: React.ReactNode;
   onSelect: (id: number) => void;
+  onAddSub?: () => void;
   startOpen?: boolean;
 }) {
   const tp = useTranslations("categoryPicker");
@@ -246,7 +251,7 @@ function GroupBlock({
           <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{tp("subcount", { count: kids.length })}</span>
         </button>
         {spent > 0 && <span className="hidden shrink-0 text-xs tabular-nums text-muted-foreground sm:inline" data-money>{t("spentLabel", { amount: shekels(Math.round(spent), locale) })}</span>}
-        {parent && <RowMenu id={parent.id} name={title} onEdit={() => onSelect(parent.id)} />}
+        {parent && <RowMenu id={parent.id} name={title} onEdit={() => onSelect(parent.id)} onAddSub={onAddSub} />}
       </div>
       <ul id={listId} hidden={!open} className="pb-1">{children}</ul>
     </div>

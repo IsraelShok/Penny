@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { Check, Palette, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
@@ -15,7 +15,7 @@ export function StudioEditor({ compact = false, inline = false }: { compact?: bo
   // Inline (Settings › Appearance) saves every choice at once; the sheet previews until Save.
   // shortcut: the color picker saves on every drag tick; debounce if server writes get noisy.
   const onChange = inline ? persist : preview;
-  const locale = useLocale(); const t = useTranslations("studio");
+  const locale = useLocale();
   const c = useStudioCopy();
   const [open, setOpen] = useState(false);
   const [original, setOriginal] = useState(value);
@@ -37,9 +37,6 @@ export function StudioEditor({ compact = false, inline = false }: { compact?: bo
   const body = (
       <div className="studio-editor-scroll">
       <div className="studio-group bg-card">
-      {options("theme", ["pearl", "midnight", "glass", "system"])}
-      {options("accent", ["violet", "ocean", "jade", "rose"])}
-      <label className="studio-toggle"><span>{t("customColor")}<small className="block text-xs text-muted-foreground">{t("adjustedForReadableContrast")}</small></span><input type="color" aria-label={t("customColor")} value={value.customColor ?? "#5541cc"} onChange={e => change("customColor", e.target.value)} /></label>
       {options("density", ["comfortable", "compact"])}
       <label className="studio-toggle studio-motion-setting"><span>{c.motion}</span><input type="checkbox" role="switch" checked={value.motion} onChange={(e) => change("motion", e.target.checked)} /></label>
       </div>

@@ -419,7 +419,7 @@ export function DashboardBoard({ data, isLoading, isError, owner = "", onOwnerCh
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/transactions?add=1" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-ring"><Plus className="size-4" aria-hidden />{t("addTransaction")}</Link>
+        <Link href="/transactions?add=1" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary md:hidden px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-ring"><Plus className="size-4" aria-hidden />{t("addTransaction")}</Link>
         <span className="rounded-lg border border-border px-3 py-2 text-sm font-medium">{month}</span>
         <div className="flex flex-wrap gap-2">
           {onOwnerChange && household.members.length >= 2 && (

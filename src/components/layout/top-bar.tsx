@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Bell, ChevronDown, FileUp, Landmark, Plus, Settings as SettingsIcon, WalletCards } from "lucide-react";
-import { getSuggestions } from "@/lib/api";
+import { Bell, ChevronDown, FileUp, Landmark, Plus, Search, Settings as SettingsIcon, WalletCards } from "lucide-react";
 import { SyncButton } from "@/components/dashboard/sync-button";
-import { SuggestionsCard } from "@/components/home/suggestions-card";
 import { buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { OPEN_COMMAND_PALETTE } from "./command-palette";
+import { setSideRail, useAlertCount, useSideRail } from "./side-rail";
 import { cn } from "@/lib/utils";
 
 /** The row above every page on wide screens: add a transaction (and its siblings) on the start; sync, alerts and settings on the end. */
@@ -19,8 +18,8 @@ export function TopBar() {
   const tShell = useTranslations("shell");
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data } = useQuery({ queryKey: ["suggestions"], queryFn: getSuggestions });
-  const count = data?.suggestions.length ?? 0;
+  const count = useAlertCount();
+  const railOpen = useSideRail();
   const icon = cn(buttonVariants({ variant: "outline", size: "icon" }), "rounded-xl");
 
   return (
@@ -42,18 +41,19 @@ export function TopBar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="ms-auto flex items-center gap-2">
+        {/* Search sits in the middle of the bar, where the eye looks for it, not wedged into the side menu. */}
+        <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE))} aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K /"
+          className="mx-auto flex min-h-10 w-full max-w-md items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm text-muted-foreground shadow-[0_1px_2px_rgb(0_0_0/4%)] transition-colors hover:border-foreground/20 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+          <Search className="size-4 shrink-0" aria-hidden />
+          <span className="flex-1 text-start">{t("search")}</span>
+          <kbd dir="ltr" className="rounded-md border border-border bg-muted px-1.5 font-sans text-[11px]">Ctrl K</kbd>
+        </button>
+        <div className="flex items-center gap-2">
           <SyncButton onComplete={() => queryClient.invalidateQueries()} showLabel={false} />
-          <Popover>
-            <PopoverTrigger aria-label={count ? t("alertsCount", { count }) : t("alerts")} className={cn(icon, "relative")}>
-              <Bell className="size-4" aria-hidden />
-              {count > 0 && <span aria-hidden className="absolute -end-1 -top-1 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-primary-foreground">{count > 9 ? "9+" : count}</span>}
-            </PopoverTrigger>
-            <PopoverContent className="w-96 bg-popover">
-              <p className="mb-2 text-sm font-semibold">{t("alerts")}</p>
-              <SuggestionsCard bare limit={5} href="/more" empty={<p className="py-4 text-center text-footnote text-muted-foreground">{t("noAlerts")}</p>} />
-            </PopoverContent>
-          </Popover>
+          <button type="button" onClick={() => setSideRail(!railOpen)} aria-expanded={railOpen} aria-label={count ? t("alertsCount", { count }) : t("alerts")} title={t("alerts")} className={cn(icon, "relative")}>
+            <Bell className="size-4" aria-hidden />
+            {count > 0 && <span aria-hidden className="absolute -end-1 -top-1 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-primary-foreground tabular-nums">{count > 9 ? "9+" : count}</span>}
+          </button>
           <Link href="/settings" aria-label={t("settings")} title={t("settings")} className={icon}>
             <SettingsIcon className="size-4" aria-hidden />
           </Link>

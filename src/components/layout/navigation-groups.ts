@@ -1,4 +1,4 @@
-import { LayoutDashboard, ArrowLeftRight, Wallet, WalletCards, PieChart, Landmark, Flag, CalendarDays, ShieldCheck, Calculator, GraduationCap, Building2, HeartPulse, Flame, Car, MessageCircleQuestion, ScrollText, Workflow, ListChecks, Gauge, Focus, HandCoins, Rocket, Tags, Repeat, Wand2, TrendingUp, ReceiptText, Compass, ChartColumn, Milestone } from "lucide-react";
+import { LayoutDashboard, Wallet, PieChart, Layers, Flag, CalendarDays, ShieldCheck, Calculator, GraduationCap, Building2, HeartPulse, Flame, Car, MessageCircleQuestion, ScrollText, Zap, ListChecks, Target, Focus, HandCoins, Rocket, Group, Repeat, Wrench, TrendingUp, CreditCard, CalendarClock, ChartColumn, Milestone, SquareFunction } from "lucide-react";
 
 const item = (href: string, key: string, Icon: typeof Wallet) => ({ href, key, Icon, match: (path: string) => href === "/" ? path === "/" : path === href || path.startsWith(href + "/") });
 
@@ -11,8 +11,8 @@ export const NAVIGATION_GROUPS = [
   { key: "focus", Icon: Focus, items: [item("/focus", "focus", Focus)] },
   { key: "dashboard", Icon: LayoutDashboard, items: [item("/", "home", LayoutDashboard)] },
   // The core pages first; Penny's own pages follow at the end of each group.
-  { key: "accounts", Icon: Landmark, items: [
-    item("/accounts", "accounts", WalletCards),
+  { key: "accounts", Icon: Layers, items: [
+    item("/accounts", "accounts", Wallet),
     item("/loans", "loans", HandCoins),
     item("/investments", "investments", TrendingUp),
     item("/ventures", "ventures", Rocket),
@@ -20,17 +20,17 @@ export const NAVIGATION_GROUPS = [
     item("/insurance", "insurance", ShieldCheck),
     item("/business", "business", Building2),
   ] },
-  { key: "transactions", Icon: ArrowLeftRight, items: [
-    item("/transactions", "transactions", ReceiptText),
-    item("/groups", "groups", Tags),
-    item("/optimizations", "optimizations", Wand2),
-    item("/settings/rules", "rules", Workflow),
+  { key: "transactions", Icon: CreditCard, items: [
+    item("/transactions", "transactions", CreditCard),
+    item("/groups", "groups", Group),
+    item("/optimizations", "optimizations", Wrench),
+    item("/settings/rules", "rules", Zap),
     item("/reviews", "reviews", ListChecks),
   ] },
-  { key: "planning", Icon: Compass, items: [
-    item("/budget", "budget", Wallet),
+  { key: "planning", Icon: CalendarClock, items: [
+    item("/budget", "budget", Calculator),
     item("/journey", "journey", Flag),
-    item("/trackers", "trackers", Gauge),
+    item("/trackers", "trackers", Target),
     item("/recurring", "recurring", Repeat),
     item("/planned", "planned", CalendarDays),
     item("/life", "life", Milestone),
@@ -42,7 +42,7 @@ export const NAVIGATION_GROUPS = [
     item("/recap", "recap", ScrollText),
     item("/wellbeing", "wellbeing", HeartPulse),
     item("/ask", "ask", MessageCircleQuestion),
-    item("/calculators", "calculators", Calculator),
+    item("/calculators", "calculators", SquareFunction),
     item("/learn", "learn", GraduationCap),
   ] },
 ];

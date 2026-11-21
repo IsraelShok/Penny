@@ -882,11 +882,12 @@
       "deleteFailed": "Category was not deleted. Refresh the page and try again.",
       "treeCount": "{count} categories",
       "rowMenu": "Actions for {name}",
-      "menuEdit": "Edit",
+      "menuEdit": "Edit or delete",
       "menuTransactions": "Transactions in this category",
       "expandGroup": "Open {name}",
       "collapseGroup": "Close {name}",
-      "budgetChip": "Monthly budget"
+      "budgetChip": "Monthly budget",
+      "menuAddSub": "Add subcategory"
     },
     "data": {
       "title": "Data & import",
@@ -1013,7 +1014,12 @@
       "costType_variable": "Variable",
       "costType_unplanned": "Unplanned",
       "spendingTypeSaved": "Spending type saved",
-      "spendingTypeSaveFailed": "Spending type was not saved. Try saving again."
+      "spendingTypeSaveFailed": "Spending type was not saved. Try saving again.",
+      "nameLabel": "Name",
+      "colorLabel": "Color",
+      "lookSaved": "Saved",
+      "lookFailed": "The change was not saved. Try again.",
+      "nameTaken": "A category with this name already exists."
     },
     "bankDetail": {
       "connectDescription": "Connect this bank to sync transactions.",
@@ -5551,6 +5557,10 @@
       "recurring": "Recurring payments",
       "groups": "Groups & events",
       "optimizations": "Optimizations"
+    },
+    "views": {
+      "focus": "Focus",
+      "full": "Detailed"
     }
   },
   "shell": {
@@ -6177,7 +6187,15 @@
     "addAccount": "New account or asset",
     "alerts": "Notifications",
     "alertsCount": "Notifications ({count})",
-    "noAlerts": "Nothing to handle right now.",
-    "settings": "Settings"
+    "settings": "Settings",
+    "search": "Search"
+  },
+  "sideRail": {
+    "title": "Alerts",
+    "open": "Open the alerts panel",
+    "openCount": "Open the alerts panel ({count})",
+    "close": "Close the panel",
+    "alerts": "Worth a look",
+    "empty": "Nothing to handle right now."
   }
 }

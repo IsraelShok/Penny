@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { NAVIGATION_GROUPS } from "./navigation-groups";
 import {
   LayoutDashboard,
+  Focus,
   PieChart,
   Landmark,
   Flag,
@@ -135,7 +136,7 @@ export function AppSidebar() {
           </div>
         </SidebarGroup>
         <SidebarSeparator className="mx-3 w-auto md:hidden" />
-        <SidebarGroup className="pb-0">
+        <SidebarGroup className="pb-0 md:hidden">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -157,6 +158,38 @@ export function AppSidebar() {
           const compact = state === "collapsed" && !isMobile;
           const GroupIcon = group.Icon;
           const panelId = `navigation-group-${index}`;
+          // Focus and the full dashboard are two views of one home: a single split control, not two menu rows.
+          if (group.key === "focus") return null;
+          if (group.key === "dashboard") {
+            const views = [
+              { href: "/focus", label: tNavGroups("views.focus"), Icon: Focus },
+              { href: "/", label: tNavGroups("views.full"), Icon: LayoutDashboard },
+            ];
+            const current = views.find((v) => v.href === pathname);
+            if (compact) {
+              const v = current ?? views[1];
+              return <SidebarGroup key={group.key} className="py-1"><SidebarMenu><SidebarMenuItem><SidebarMenuButton
+                render={<Link href={v.href} aria-current={current ? "page" : undefined}><v.Icon aria-hidden /><span>{tNavGroups("groups.dashboard")}</span></Link>}
+                isActive={!!current} tooltip={tNavGroups("groups.dashboard")} /></SidebarMenuItem></SidebarMenu></SidebarGroup>;
+            }
+            return (
+              <SidebarGroup key={group.key} className="py-1">
+                <p id="home-views" className="sr-only">{tNavGroups("groups.dashboard")}</p>
+                <div role="group" aria-labelledby="home-views" className="grid grid-cols-2 gap-1 rounded-xl bg-sidebar-accent p-1">
+                  {views.map((v) => {
+                    const on = v.href === pathname;
+                    return (
+                      <Link key={v.href} href={v.href} onClick={() => setOpenMobile(false)} aria-current={on ? "page" : undefined}
+                        className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-2 focus-visible:outline-ring motion-reduce:transition-none ${on ? "bg-card text-foreground shadow-[0_1px_2px_rgb(0_0_0/8%),0_1px_6px_-2px_rgb(0_0_0/10%)]" : "text-muted-foreground hover:text-foreground"}`}>
+                        <v.Icon className="size-4 shrink-0" aria-hidden />
+                        <span className="truncate">{v.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </SidebarGroup>
+            );
+          }
           // A one-page group (Dashboard) is a plain link, not a folder.
           if (group.items.length === 1) {
             const only = group.items[0];

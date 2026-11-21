@@ -12,6 +12,7 @@ import { AlertNotifier } from "./alert-notifier";
 import { UpdateBanner } from "./update-banner";
 import { BottomBar } from "./bottom-bar";
 import { TopBar } from "./top-bar";
+import { SideRail } from "./side-rail";
 import { PrivacyHotkey } from "@/components/settings/privacy-mode-switch";
 import { useTranslations } from "next-intl";
 import { NAVIGATION_GROUPS } from "./navigation-groups";
@@ -45,6 +46,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <BottomBar />
         <PrivacyHotkey />
       </SidebarInset>
+      <SideRail />
       <MobileDock />
     </>
   );

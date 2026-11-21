@@ -882,11 +882,12 @@
       "deleteFailed": "הקטגוריה לא נמחקה. רעננו את העמוד ונסו שוב.",
       "treeCount": "{count} קטגוריות",
       "rowMenu": "פעולות על {name}",
-      "menuEdit": "עריכה",
+      "menuEdit": "עריכה ומחיקה",
       "menuTransactions": "התנועות בקטגוריה",
       "expandGroup": "פתיחת {name}",
       "collapseGroup": "סגירת {name}",
-      "budgetChip": "תקציב חודשי"
+      "budgetChip": "תקציב חודשי",
+      "menuAddSub": "הוספת תת־קטגוריה"
     },
     "data": {
       "title": "נתונים וייבוא",
@@ -1013,7 +1014,12 @@
       "costType_variable": "משתנה",
       "costType_unplanned": "בלתי מתוכננת",
       "spendingTypeSaved": "סוג ההוצאה נשמר",
-      "spendingTypeSaveFailed": "סוג ההוצאה לא נשמר. נסו לשמור שוב."
+      "spendingTypeSaveFailed": "סוג ההוצאה לא נשמר. נסו לשמור שוב.",
+      "nameLabel": "שם",
+      "colorLabel": "צבע",
+      "lookSaved": "נשמר",
+      "lookFailed": "השינוי לא נשמר. נסו שוב.",
+      "nameTaken": "כבר יש קטגוריה בשם הזה."
     },
     "bankDetail": {
       "connectDescription": "חברו את הבנק הזה כדי לסנכרן תנועות.",
@@ -5551,6 +5557,10 @@
       "recurring": "תשלומים קבועים",
       "groups": "קבוצות ואירועים",
       "optimizations": "אופטימיזציות"
+    },
+    "views": {
+      "focus": "ממוקד",
+      "full": "מפורט"
     }
   },
   "shell": {
@@ -6177,7 +6187,15 @@
     "addAccount": "חשבון או נכס חדש",
     "alerts": "התראות",
     "alertsCount": "התראות ({count})",
-    "noAlerts": "אין כרגע מה לטפל בו.",
-    "settings": "הגדרות"
+    "settings": "הגדרות",
+    "search": "חיפוש"
+  },
+  "sideRail": {
+    "title": "התראות",
+    "open": "פתיחת לוח ההתראות",
+    "openCount": "פתיחת לוח ההתראות ({count})",
+    "close": "סגירת הלוח",
+    "alerts": "שווה הצצה",
+    "empty": "אין כרגע מה לטפל בו."
   }
 }

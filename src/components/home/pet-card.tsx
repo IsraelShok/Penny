@@ -110,7 +110,7 @@ function PetButton({ p, px, onOpen, mini }: { p: PetState; px: number; onOpen: (
 }
 
 /** What needs care, most important first; each item can be snoozed (tomorrow, a week) or hidden until next month, for the whole household. */
-function PetSheet({ p, open, onOpenChange }: { p: PetState; open: boolean; onOpenChange: (v: boolean) => void }) {
+function PipBody({ p, onNavigate }: { p: PetState; onNavigate: () => void }) {
   const t = useTranslations("pet");
   const tc = useTranslations("common");
   const locale = useLocale();
@@ -131,43 +131,65 @@ function PetSheet({ p, open, onOpenChange }: { p: PetState; open: boolean; onOpe
     void update({ pet: { ...plan.pet, snooze: snooze.current } }).catch(() => toast.error(tc("saveFailed")));
   };
   return (
+    <div className="space-y-5">
+      <div className="grid place-items-center"><PetFace mood={p.mood} pet={p.pet} px={PET_SIZES[p.pet.size]} /></div>
+      {/* Bigger is a choice, not a hidden setting: the size lives here, next to the face it changes. */}
+      <Segmented label={t("sizeLabel")} value={p.pet.size}
+        onChange={(size) => { void update({ pet: { ...plan.pet, size } }).catch(() => toast.error(tc("saveFailed"))); }}
+        options={(Object.keys(PET_SIZES) as (keyof typeof PET_SIZES)[]).map((s) => ({ value: s, label: t(`size_${s}`) }))} />
+      <PipCoach onNavigate={() => onNavigate()} />
+      {todo.length ? (
+        <ol className="space-y-3" aria-label={t("todoLabel")}>
+          {todo.map((l) => (
+            <li key={petKey(l)} className="rounded-2xl bg-muted/60 p-3">
+              <div className="flex items-start gap-1">
+                <p className="min-w-0 flex-1 pt-2.5 text-footnote">{t(reason(`reason_${l.reason}`), vars(l))}</p>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className={iconBtn} aria-label={t("snoozeMenu")}><Clock className="size-4" aria-hidden /></DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => hide(l, "day")}>{t("snoozeDay")}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => hide(l, "week")}>{t("snoozeWeek")}</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <button type="button" onClick={() => hide(l, "dismiss")} aria-label={t("dismiss")} title={t("dismiss")} className={iconBtn}><X className="size-4" aria-hidden /></button>
+              </div>
+              <Link href={NEXT[l.stat]} onClick={() => onNavigate()} className={`${pill} mt-1 bg-primary text-primary-foreground`}>{t(`next_${l.stat}`)}</Link>
+            </li>
+          ))}
+        </ol>
+      ) : <p className="text-footnote">{t("allGood", { name })}</p>}
+    </div>
+  );
+}
+
+function PetSheet({ p, open, onOpenChange }: { p: PetState; open: boolean; onOpenChange: (v: boolean) => void }) {
+  const t = useTranslations("pet");
+  const name = p.pet.name || t("defaultName");
+  return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
           <SheetTitle>{name}</SheetTitle>
           <SheetDescription>{t(`mood_${p.mood}`)}</SheetDescription>
         </SheetHeader>
-        <div className="space-y-5 px-4 pb-6">
-          <div className="grid place-items-center"><PetFace mood={p.mood} pet={p.pet} px={PET_SIZES[p.pet.size]} /></div>
-          {/* Bigger is a choice, not a hidden setting: the size lives here, next to the face it changes. */}
-          <Segmented label={t("sizeLabel")} value={p.pet.size}
-            onChange={(size) => { void update({ pet: { ...plan.pet, size } }).catch(() => toast.error(tc("saveFailed"))); }}
-            options={(Object.keys(PET_SIZES) as (keyof typeof PET_SIZES)[]).map((s) => ({ value: s, label: t(`size_${s}`) }))} />
-          <PipCoach onNavigate={() => onOpenChange(false)} />
-          {todo.length ? (
-            <ol className="space-y-3" aria-label={t("todoLabel")}>
-              {todo.map((l) => (
-                <li key={petKey(l)} className="rounded-2xl bg-muted/60 p-3">
-                  <div className="flex items-start gap-1">
-                    <p className="min-w-0 flex-1 pt-2.5 text-footnote">{t(reason(`reason_${l.reason}`), vars(l))}</p>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className={iconBtn} aria-label={t("snoozeMenu")}><Clock className="size-4" aria-hidden /></DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => hide(l, "day")}>{t("snoozeDay")}</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => hide(l, "week")}>{t("snoozeWeek")}</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <button type="button" onClick={() => hide(l, "dismiss")} aria-label={t("dismiss")} title={t("dismiss")} className={iconBtn}><X className="size-4" aria-hidden /></button>
-                  </div>
-                  <Link href={NEXT[l.stat]} onClick={() => onOpenChange(false)} className={`${pill} mt-1 bg-primary text-primary-foreground`}>{t(`next_${l.stat}`)}</Link>
-                </li>
-              ))}
-            </ol>
-          ) : <p className="text-footnote">{t("allGood", { name })}</p>}
-        </div>
+        <div className="px-4 pb-6"><PipBody p={p} onNavigate={() => onOpenChange(false)} /></div>
       </SheetContent>
     </Sheet>
   );
+}
+
+/** Pip for the side rail: its face and count when the rail is closed, its whole panel when open. Null when the pet is off. */
+export function usePip() {
+  const p = usePet();
+  const t = useTranslations("pet");
+  if (!p) return null;
+  return {
+    name: p.pet.name || t("defaultName"),
+    mood: t(`mood_${p.mood}`),
+    count: p.todo.length,
+    face: (px: number) => <PetFace mood={p.mood} pet={p.pet} px={px} />,
+    body: (onNavigate: () => void) => <PipBody p={p} onNavigate={onNavigate} />,
+  };
 }
 
 const TONE_DOT: Record<PipTone, string> = { act: "bg-destructive", watch: "bg-status-heads-up", good: "bg-status-on-track" };

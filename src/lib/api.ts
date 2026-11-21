@@ -876,6 +876,14 @@ export function updateCategoryDescription(
   });
 }
 
+export function updateCategoryLook(categoryId: number, fields: { name?: string; color?: string }) {
+  return fetchJSON<{ success: boolean }>(`/api/categories/${categoryId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(fields),
+  });
+}
+
 export function setCategoryParent(
   categoryId: number,
   parentId: number | null

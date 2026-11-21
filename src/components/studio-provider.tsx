@@ -20,7 +20,7 @@ type StudioContextValue = {
   preferences: StudioPreferences;
   preview: (value: StudioPreferences) => void;
   save: (value: StudioPreferences) => boolean;
-  resolvedStudioTheme: "pearl" | "midnight" | "glass";
+  resolvedStudioTheme: "pearl" | "midnight";
 };
 const StudioContext = createContext<StudioContextValue | null>(null);
 
