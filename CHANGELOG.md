@@ -24,6 +24,9 @@ place on first start, and a copy of the database is saved to `data/backups` befo
   to ask for the free report.
 - **Windows updates itself.** The desktop app downloads a new release, checks it against the published checksum
   and asks to restart (or installs when you close it).
+- **Smart without AI.** New transactions are categorized from what the household taught and a built-in dictionary
+  of about 200 Israeli merchants; "why spending changed" explains each month merchant by merchant; donations are
+  found and their tax credit shown.
 - **Correct numbers.** Charges on the 1st of the month land in their month, Max card bills are no longer counted
   twice, installment plans and card forecasts are right, and a balance check flags missing transactions.
 
@@ -42,6 +45,17 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 - Pages use the full screen width (capped at 1920px).
 - Search dims the whole screen and no longer swallows clicks.
 - Simple mode's menu opens from the corner that holds its button.
+
+### Smart without AI
+
+- Categorizing runs on every sync without AI: merchant memory (which used to run only with AI connected), then a
+  dictionary of about 200 unambiguous Israeli merchants and payees (supermarkets, fuel, utilities, municipalities,
+  health funds, telecom, streaming, transport). AI, when connected, only sees what is left.
+- "Why spending changed" on Overview: this month so far against the same days last month or last year, per
+  merchant: price, more or fewer charges, new, gone, or a one-off charge.
+- Electricity, water and gas bills (every two months) join the periodic set-aside suggestions.
+- Donations are found in the transactions: last tax year's 35% credit (section 46) shows in Money on the table,
+  and the credit-points tool fills the amount in.
 
 ### Budget
 

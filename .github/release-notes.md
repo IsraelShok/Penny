@@ -4,6 +4,7 @@
 - **A full dashboard.** Tiles you can show or hide: balance trend, cash flow, spending structure, recurring payments, credit utilization, progress to financial independence and who spent what.
 - **Every account in one place.** An accounts tree, a page for every account, loan cards, holdings with their buys and sells, and private deals.
 - **Split expenses, envelope budgeting and credit score tracking.** Who owes you what, how much of the month's income every budget claims, and your credit score over time.
+- **Smart without AI.** New transactions get a category from a built-in dictionary of Israeli merchants and from what you taught it, "why spending changed" explains each month, and donations show their tax credit.
 - **Correct to the shekel.** Charges on the 1st land in their month, Max card bills are no longer counted twice, installment plans and card forecasts are right, and a balance check flags missing transactions.
 - **Telegram that keeps you posted.** A summary three mornings a week, and a message when a bank stops syncing and when it's back.
 - **Windows updates itself.** New releases download in the background, are checked against `SHA256SUMS.txt`, and install when you restart.
