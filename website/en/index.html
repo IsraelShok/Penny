@@ -11,8 +11,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../styles.css?v=0.2.0">
-<meta property="og:image" content="https://sergey-bar.github.io/Penny/demo/en/home.webp">
+<link rel="stylesheet" href="../styles.css?v=0.2.1">
+<meta property="og:image" content="https://sergey-bar.github.io/Penny/assets/og-en.jpg">
 <link rel="canonical" href="https://sergey-bar.github.io/Penny/en/">
 <link rel="alternate" hreflang="en" href="https://sergey-bar.github.io/Penny/en/">
 <link rel="alternate" hreflang="he" href="https://sergey-bar.github.io/Penny/">
@@ -21,11 +21,12 @@
 <meta property="og:url" content="https://sergey-bar.github.io/Penny/en/">
 <meta property="og:site_name" content="Penny">
 <meta property="og:locale" content="en_US">
-<meta property="og:image:width" content="1440">
-<meta property="og:image:height" content="900">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#5541cc">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Penny", "applicationCategory": "FinanceApplication", "operatingSystem": "Windows, macOS, Linux", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "ILS"}, "license": "https://opensource.org/licenses/MIT", "url": "https://sergey-bar.github.io/Penny/en/", "image": "https://sergey-bar.github.io/Penny/demo/en/home.webp", "description": "A local-first money app for Israeli households: banks and cards, budgets and money on the table, tax and pension tools, family profiles. Open source, no cloud.", "inLanguage": "en", "softwareVersion": "0.2.0", "downloadUrl": "https://github.com/Sergey-Bar/Penny/releases/latest"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Penny", "applicationCategory": "FinanceApplication", "operatingSystem": "Windows, macOS, Linux", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "ILS"}, "license": "https://opensource.org/licenses/MIT", "url": "https://sergey-bar.github.io/Penny/en/", "image": "https://sergey-bar.github.io/Penny/assets/og-en.jpg", "description": "A local-first money app for Israeli households: banks and cards, budgets and money on the table, tax and pension tools, family profiles. Open source, no cloud.", "inLanguage": "en", "softwareVersion": "0.2.0", "downloadUrl": "https://github.com/Sergey-Bar/Penny/releases/latest"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is it safe to give the app my bank password?", "acceptedAnswer": {"@type": "Answer", "text": "The password stays on your computer only, encrypted with AES-256-GCM, and is sent only to your bank's own site during a sync. There is no Penny server it passes through. You can also turn on an app lock, and then the encryption key itself isn't stored on disk without your passphrase. The code is open, so anyone can check what it does."}}, {"@type": "Question", "name": "Where does my data go?", "acceptedAnswer": {"@type": "Answer", "text": "Nowhere. The app runs on your computer, listens only on 127.0.0.1, and blocks requests from other sites. Data leaves only if you choose: to a cloud AI provider if you pick one (or none at all, with Ollama or no AI), and to Telegram if you connect a bot."}}, {"@type": "Question", "name": "What if my computer dies?", "acceptedAnswer": {"@type": "Answer", "text": "Set up the automatic encrypted backup to a folder Google Drive, OneDrive, Dropbox or iCloud syncs. The file opens only with your backup passphrase, and a restore brings everything back, including access to your accounts."}}, {"@type": "Question", "name": "How much does it cost?", "acceptedAnswer": {"@type": "Answer", "text": "Nothing. Penny is open source under the MIT license: no subscription, no ads and no paid tier. Cloud AI, if you choose it, costs a fraction of a shekel per sync, paid directly to the provider."}}, {"@type": "Question", "name": "Does it work with my bank?", "acceptedAnswer": {"@type": "Answer", "text": "Automatic sync works with 18 Israeli banks and card companies, plus open banking. Anything else comes in from a CSV or Excel file, or by pasting a table."}}, {"@type": "Question", "name": "Is this allowed?", "acceptedAnswer": {"@type": "Answer", "text": "Scraping a bank's website may break the bank's terms of service. Penny is for personal use with your own accounts, on your own computer. Don't run it as a service for others."}}, {"@type": "Question", "name": "Is there a phone app?", "acceptedAnswer": {"@type": "Answer", "text": "Not in the app stores, but you can open Penny from your phone on your home network (turned on explicitly, behind the app lock) and install it to the home screen. There's also a Telegram bot with a summary three times a week."}}, {"@type": "Question", "name": "Do I need to be technical?", "acceptedAnswer": {"@type": "Answer", "text": "No. On Windows and Mac you download an installer and run it, no terminal. On Windows the app also updates itself."}}]}</script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -35,7 +36,7 @@
     <a class="brand" href="./" aria-label="Penny, home"><span class="brand-mark" aria-hidden="true"><span></span><span></span></span>Penny</a>
     <nav class="nav-links" aria-label="Main">
       <a href="demo/">Demo</a><a class="hide-sm" href="#tour">Product tour</a><a class="hide-sm" href="#mobile">On your phone</a><a class="hide-sm" href="#tools">Tools</a><a class="hide-sm" href="#privacy">Privacy</a>
-      <a href="#install">Install</a>
+      <a class="hide-sm" href="#faq">FAQ</a><a href="#install">Install</a>
       <a class="lang" href="../" hreflang="he" lang="he">עברית</a>
     </nav>
   </div>
@@ -77,6 +78,7 @@
         <h2>Smarter, even without AI.</h2>
         <p>The biggest release yet: 105 changes, smart layers that work with no AI and no network, and end-to-end tests on a simulated bank.</p>
       </div>
+      <figure class="tour-video"><video src="../assets/tour-en.webm" poster="../assets/shots/en/home.webp" width="1280" height="800" controls muted loop playsinline preload="none" aria-label="A 30-second walk through the app with a sample household"></video></figure>
       <div class="grid"><div class="card"><div class="icon c1" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5"/><path d="M18.1 10.4a5 5 0 1 1-6.7 6.7"/><path d="M8 6v4h2"/></svg></div><h3>Money on the table</h3><p>One yearly figure for everything you could save: high fund fees, overlapping insurance, fees, overdraft interest and idle cash. Each with its next step.</p></div><div class="card"><div class="icon c2" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 10l-5.1 3.3L16.5 20 12 16.3 7.5 20l1.6-6.7L4 10l6.1-1.2z"/></svg></div><h3>Categorizes itself, no AI</h3><p>A dictionary of about 200 Israeli merchants and a memory of what you taught it. AI only for what is left, if at all.</p></div><div class="card"><div class="icon c3" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div><h3>Why spending changed</h3><p>This month against the same days last month or last year, per merchant: price, volume, new or one-off.</p></div><div class="card"><div class="icon c4" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14a6 6 0 0 1 3.5 6"/></svg></div><h3>Splits, envelopes, credit score</h3><p>Who owes you what, how much of your income already has a job, and your credit score over time.</p></div><div class="card"><div class="icon c5" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></div><h3>Tax without the hunt</h3><p>Donations found for the 35% section 46 credit, credit points, and a nudge when a refund is likely.</p></div><div class="card"><div class="icon c6" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div><h3>Updates itself</h3><p>On Windows the new version downloads and is verified by itself, and installs when you restart. Plus a Telegram summary three times a week.</p></div></div>
       <p class="new-links"><a class="btn btn-primary" href="demo/">Try the demo</a> <a class="btn btn-ghost" href="https://github.com/Sergey-Bar/Penny/blob/main/CHANGELOG.md">Everything that changed</a></p>
     </div>
@@ -190,6 +192,16 @@
     </div>
   </section>
 
+  <section id="faq">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">FAQ</span>
+        <h2>What everyone asks before installing.</h2>
+      </div>
+      <div class="faq"><details class="faq-item"><summary>Is it safe to give the app my bank password?</summary><p>The password stays on your computer only, encrypted with AES-256-GCM, and is sent only to your bank&#x27;s own site during a sync. There is no Penny server it passes through. You can also turn on an app lock, and then the encryption key itself isn&#x27;t stored on disk without your passphrase. The code is open, so anyone can check what it does.</p></details><details class="faq-item"><summary>Where does my data go?</summary><p>Nowhere. The app runs on your computer, listens only on 127.0.0.1, and blocks requests from other sites. Data leaves only if you choose: to a cloud AI provider if you pick one (or none at all, with Ollama or no AI), and to Telegram if you connect a bot.</p></details><details class="faq-item"><summary>What if my computer dies?</summary><p>Set up the automatic encrypted backup to a folder Google Drive, OneDrive, Dropbox or iCloud syncs. The file opens only with your backup passphrase, and a restore brings everything back, including access to your accounts.</p></details><details class="faq-item"><summary>How much does it cost?</summary><p>Nothing. Penny is open source under the MIT license: no subscription, no ads and no paid tier. Cloud AI, if you choose it, costs a fraction of a shekel per sync, paid directly to the provider.</p></details><details class="faq-item"><summary>Does it work with my bank?</summary><p>Automatic sync works with 18 Israeli banks and card companies, plus open banking. Anything else comes in from a CSV or Excel file, or by pasting a table.</p></details><details class="faq-item"><summary>Is this allowed?</summary><p>Scraping a bank&#x27;s website may break the bank&#x27;s terms of service. Penny is for personal use with your own accounts, on your own computer. Don&#x27;t run it as a service for others.</p></details><details class="faq-item"><summary>Is there a phone app?</summary><p>Not in the app stores, but you can open Penny from your phone on your home network (turned on explicitly, behind the app lock) and install it to the home screen. There&#x27;s also a Telegram bot with a summary three times a week.</p></details><details class="faq-item"><summary>Do I need to be technical?</summary><p>No. On Windows and Mac you download an installer and run it, no terminal. On Windows the app also updates itself.</p></details></div>
+    </div>
+  </section>
+
   <section id="install" class="band">
     <div class="wrap">
       <div class="section-head">
@@ -208,7 +220,7 @@ npm run setup</pre></div></div>
 <footer>
   <div class="wrap">
     <span>Penny · Open source under the MIT license</span>
-    <span><a href="https://github.com/Sergey-Bar/Penny">GitHub</a> · <a href="https://github.com/Sergey-Bar/Penny/blob/main/SECURITY.md">Security</a> · <a href="../" hreflang="he" lang="he">עברית</a></span>
+    <span><a href="https://github.com/Sergey-Bar/Penny">GitHub</a> · <a href="https://github.com/Sergey-Bar/Penny/blob/main/SECURITY.md">Security</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="../" hreflang="he" lang="he">עברית</a></span>
   </div>
 </footer>
 
@@ -216,6 +228,11 @@ npm run setup</pre></div></div>
 <script type="module">
   import './../assets/boopface/boopface-lite.js';
   import '../os-lead.js';
+  // The tour video loads and plays only once it is on screen, and never by itself when motion is reduced.
+  const tv = document.querySelector('.tour-video video');
+  if (tv && !matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+    new IntersectionObserver((entries, o) => { if (entries[0].isIntersecting) { tv.play().catch(() => {}); o.disconnect(); } }, { threshold: 0.4 }).observe(tv);
+  }
   import '../gh-stats.js';
   const pip = document.querySelector('boop-face'), say = document.getElementById('pip-say'), moods = [...document.querySelectorAll('[data-pip]')];
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) pip.setAttribute('motion', 'reduce');

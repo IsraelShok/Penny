@@ -1717,3 +1717,17 @@ export interface SpendChange {
 export function getSpendChange(compare: "month" | "year") {
   return fetchJSON<SpendChange>(`/api/spend-change?compare=${compare}`);
 }
+
+export type AutoBackupConfig = import("@/server/lib/auto-backup").AutoBackupConfig;
+
+export function getAutoBackup() {
+  return fetchJSON<AutoBackupConfig>("/api/backup/auto");
+}
+
+export function updateAutoBackup(patch: { enabled?: boolean; frequency?: "daily" | "weekly"; dir?: string; passphrase?: string }) {
+  return fetchJSON<AutoBackupConfig>("/api/backup/auto", jsonBody("PATCH", patch));
+}
+
+export function autoBackupAction(action: "run" | "open") {
+  return fetchJSON<AutoBackupConfig>("/api/backup/auto", jsonBody("POST", { action }));
+}

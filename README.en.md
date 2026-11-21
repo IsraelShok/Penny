@@ -362,7 +362,8 @@ Penny/
 - [x] Categorizing without AI: merchant memory and a built-in dictionary
 - [x] Splitting expenses, envelope budgeting and credit score tracking
 - [x] Windows self-update, and a clickable demo on the website
-- [ ] OFX export
+- [x] OFX export
+- [x] Automatic encrypted backup to a cloud folder, and a support file for bug reports
 - [ ] Native mobile companion
 
 ## Contributing

@@ -15,6 +15,8 @@ import { ManualImport } from "@/components/settings/manual-import";
 import { ScraperDisclaimer } from "@/components/settings/scraper-disclaimer";
 import { DangerZone, ExcludedMerchantsCard, ShowBrowserCard } from "@/components/settings/data-cards";
 import { ExportCard } from "@/components/settings/export-card";
+import { DiagnosticsCard } from "@/components/settings/diagnostics-card";
+import { AutoBackupCard } from "@/components/settings/auto-backup-card";
 import { BackupCard } from "@/components/settings/backup-card";
 import { WipeCard } from "@/components/settings/wipe-card";
 import { BankDetailSheet } from "@/components/settings/bank-detail-sheet";
@@ -233,7 +235,9 @@ export default function BankSettingsPage() {
         <section aria-labelledby="data-heading" className="space-y-7 border-t border-border/60 pt-6">
           <h2 id="data-heading" className="px-4 text-lg font-semibold">{t("groupData")}</h2>
           <ExportCard />
+          <DiagnosticsCard />
           <BackupCard />
+          <AutoBackupCard />
           <ExcludedMerchantsCard />
           <ShowBrowserCard />
           {/* The one place to delete data; Privacy links here. */}

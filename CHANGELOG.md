@@ -137,8 +137,18 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 - Pip is the app and installer icon; profiles' avatars are Pips that grow.
 - The installer file name is pinned so release links stay stable.
 - Download-first README, website Mac download that leads with the visitor's operating system.
+- Website: a security-first FAQ, privacy and terms pages, a 30-second video, live GitHub stars and downloads,
+  a designed share image, and current screenshots throughout.
 - A clickable demo on the website (`/demo`, Hebrew and English): the real screens of the demo household, with the
   app's own links clickable. `scripts/capture-demo-tour.mjs` refreshes it from `npm run demo`.
+
+### Safety net and support
+
+- Automatic encrypted backup into a folder you choose (daily or weekly, newest 7 kept): pick one that Google
+  Drive, OneDrive, Dropbox or iCloud syncs and your data has an off-computer copy only your passphrase opens.
+- A support file (Settings → Data) to attach to a bug report: setup, counts and redacted sync errors, never
+  amounts, descriptions, account numbers, names or passwords.
+- OFX export next to CSV, for other money apps.
 
 ### Settings and appearance
 
@@ -210,6 +220,7 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 - A golden month with hand-worked totals pins the money facts (`tests/golden-month.test.ts`).
 - Opt-in performance test with five years of data: `PENNY_PERF=1 npx vitest run tests/perf-large.test.ts`.
 - Playwright covers Money on the table, credit score undo, splits, English titles and sideways scroll on 16 pages.
+- Dependabot: weekly dependency updates, with the bank scrapers in their own group.
 - CI on every pull request, route types generated before the typecheck, issue and PR templates, CONTRIBUTING.
 - 23 new migrations (054–076); tests: 955 unit and integration, 20 end-to-end.
 
