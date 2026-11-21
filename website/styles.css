@@ -163,3 +163,12 @@ pre { margin: 0; direction: ltr; text-align: left; background: #14131f; color: #
 footer { padding: 40px 0 56px; color: var(--muted); font-size: 0.92rem; border-top: 1px solid var(--line); }
 footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; }
 footer a { color: var(--muted); }
+
+/* Live GitHub numbers under the hero buttons. */
+.gh-stats { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 18px 0 0; padding: 0; color: var(--muted); font-size: 0.95rem; }
+.gh-stats b { color: var(--text); font-variant-numeric: tabular-nums; }
+.gh-stats[hidden] { display: none; }
+.new-links { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 0; }
+
+/* Pip can bounce past the edge of the hero art; never let that scroll the page sideways. */
+.hero { overflow-x: clip; }

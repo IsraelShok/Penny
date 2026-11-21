@@ -7,24 +7,32 @@
 **אפליקציית כסף רגועה למשקי בית בישראל, שרצה אצלכם במחשב.**
 הבנקים, התקציב והעתיד שלכם במקום אחד, בלי שהנתונים יוצאים מהבית.
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs&logoColor=white&style=flat-square)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white&style=flat-square)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
-[![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white&style=flat-square)](https://sqlite.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](#רישיון)
+[![Downloads](https://img.shields.io/github/downloads/Sergey-Bar/Penny/total?style=flat-square&color=2ea44f&label=downloads)](https://github.com/Sergey-Bar/Penny/releases)
+[![Stars](https://img.shields.io/github/stars/Sergey-Bar/Penny?style=flat-square&color=f5b301)](https://github.com/Sergey-Bar/Penny/stargazers)
 [![Release](https://img.shields.io/github/v/release/Sergey-Bar/Penny?style=flat-square&color=5541cc)](https://github.com/Sergey-Bar/Penny/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/Sergey-Bar/Penny/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/Sergey-Bar/Penny/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](#רישיון)
 
-[הורדה](#התקנה) · [יכולות](#יכולות) · [איך זה עובד](#איך-זה-עובד) · [אבטחה](#אבטחה-במבט-אחד) · [תרומה לפרויקט](#תרומה-לפרויקט) · [אתר](https://sergey-bar.github.io/Penny/) · [English](README.en.md)
+[הורדה](#התקנה) · [דמו לחיץ](https://sergey-bar.github.io/Penny/demo/) · [מה חדש](#מה-חדש-ב-020) · [יכולות](#יכולות) · [איך זה עובד](#איך-זה-עובד) · [אבטחה](#אבטחה-במבט-אחד) · [תרומה לפרויקט](#תרומה-לפרויקט) · [אתר](https://sergey-bar.github.io/Penny/) · [English](README.en.md)
 
 **הורדה:** [![Windows](https://img.shields.io/badge/Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![macOS](https://img.shields.io/badge/macOS-111111?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#docker)
 
-![מסך הבית](public/screenshots/home-light.png)
+![לוח הבקרה של Penny עם משק בית לדוגמה](website/demo/he/home.webp)
 
 </div>
 
 > [!WARNING]
 > זה כלי אישי שרץ רק על המחשב שלכם. משיכת נתונים אוטומטית מבנקים עלולה להפר את תנאי השימוש שלהם. השתמשו בו רק לחשבונות שלכם ועל המחשב שלכם. **אל תפעילו אותו כשירות באינטרנט.**
+
+## מה חדש ב-0.2.0
+
+- **כסף על השולחן:** סכום אחד בשנה לכל מה שאפשר לחסוך (דמי ניהול גבוהים, ביטוחים כפולים, עמלות, ריבית, כסף שיושב בעו"ש), עם הצעד הבא לכל סעיף.
+- **חכמה גם בלי AI:** סיווג אוטומטי ממילון של כ-200 בתי עסק ישראליים ומהזיכרון של מה שלימדתם; "למה ההוצאות השתנו" לפי בית עסק; זיהוי תרומות וזיכוי מס לפי סעיף 46.
+- **לוח בקרה מלא** עם אריחים, עץ חשבונות, הלוואות, השקעות עם קניות ומכירות, חלוקת הוצאות עם אנשים, תקציב מעטפות ודירוג אשראי.
+- **מספרים נכונים:** חיובים ב-1 לחודש נספרים בחודש שלהם, חשבון מקס לא נספר פעמיים, בדיקת יתרה מול התנועות.
+- **Windows מתעדכנת לבד**, וסיכום בטלגרם שלוש פעמים בשבוע.
+
+הרשימה המלאה ב-[CHANGELOG.md](CHANGELOG.md). אפשר גם [לנסות את הדמו באתר](https://sergey-bar.github.io/Penny/demo/) בלי להתקין.
 
 ## למה?
 
@@ -37,9 +45,12 @@
 ## יכולות
 
 ### הכסף של היום-יום
-- **שני מצבים.** *פשוט* מציג מספר אחד ברור, את החודש לפי שורות, וכל קטגוריה לפי שבועות (תקציב לשבוע, הוצאה, נשאר). *מתקדם* מוסיף לוח מלא, תובנות ומסך בית שאפשר לסדר.
+- **לוח בקרה** עם אריחים שאפשר להסתיר ולהחזיר (יתרה צפויה, כסף על השולחן, תזרים, מבנה ההוצאות, מי הוציא מה), ומסך **פוקוס** רגוע עם השורה התחתונה בלבד.
 - **תנועות** לפי שבועות, עם צבעי קטגוריות, חיפוש, סינון, עריכה מרובה, פיצול ותגיות. הוספת מזומן או תנועה ידנית בטופס מהיר שמתחיל מהסכום.
-- **תקציבים** עם קצב הוצאה, תצוגת 50/30/20, כרטיס חודשי ופירוט לכל קטגוריה.
+- **תקציבים** עם קצב הוצאה, תצוגת 50/30/20, טבלה, מבט מעטפות (כמה מההכנסה כבר קיבל תפקיד) ופירוט לכל קטגוריה.
+- **כסף על השולחן.** סכום אחד בשנה לכל מה שאפשר לחסוך: עמלות, ריבית על מינוס, תוספת על שער המט"ח, דמי ניהול מעל השוק, ביטוחים חופפים, כסף שיושב בעו"ש וזיכוי על תרומות. ליד כל סעיף הצעד הבא, ומה שסימנתם כבוצע נספר כחיסכון.
+- **למה ההוצאות השתנו.** החודש מול אותם ימים בחודש הקודם או בשנה שעברה, לפי בית עסק: מחיר, כמות, חדש, נעלם או חד-פעמי.
+- **חלוקה עם אנשים.** מסמנים מי חייב לכם חלק מהוצאה, ורואים לכל אדם כמה הוא חייב, עם "החזיר/ה הכל" בלחיצה.
 - **משפחות קטגוריות.** קבוצות ותתי-קטגוריות חולקות משפחת צבע. בוחרים קטגוריה לפי צבע, א-ב או קבוצה, ויוצרים קטגוריות משלכם.
 - **בריאות פיננסית** עם ציון, וכפתור אזהרות אחד שמרכז את כל מה שדורש תשומת לב.
 - **מה צפוי.** חיובים קרובים, חיובים קבועים ותחזית תזרים, כולל יתרה נפרדת לכל חשבון בנק עם רצועת טווח, וכרטיס לכל כרטיס אשראי שמחובר לחשבון שמשלם אותו.
@@ -62,6 +73,7 @@
 ### משק הבית
 - **פרופילים שחולקים משק בית אחד**, עם מסך "מי משתמש?". כל אחד שומר סידור בית והגדרות נגישות משלו.
 - **פיפ**, חבר קטן שמצב הרוח שלו משקף את מצב הכסף של הבית. כל פרופיל בוחר לעצמו פיפ, והוא גם תמונת הפרופיל.
+- **חשבונות במקום אחד:** עץ חשבונות עם סכום לכל קבוצה, דף לכל חשבון, הלוואות עם התקדמות, אחזקות עם קניות ומכירות, ודירוג אשראי לאורך זמן.
 - **יעדים**, שווי נקי, השקעות ויתרות פנסיה (מסונכרנות מכלל, הראל, מיטב, מנורה ומגדל, או מיובאות מדוח של הסוכן), ו"מסמך למשפחה" ליום שמישהו אחר יצטרך למצוא הכול.
 - **ביטוחים** במקום אחד: פוליסות, מה מכוסה ומה ההשתתפות העצמית, המועד לחידוש, הסוכן, המסמכים, והתשלומים שמתחברים מהבנק לפוליסה.
 - **מצב דמו** עם משק בית מלא ומדומה: אפשר להתרשם מכל המסכים בלי להתחבר לבנק ובלי לגעת בנתונים האמיתיים.
@@ -87,16 +99,16 @@
 
 <table>
 <tr>
-<td width="50%"><img src="public/screenshots/dashboard-light.png" alt="לוח התקציב, ערכה בהירה"></td>
-<td width="50%"><img src="public/screenshots/dashboard-dark.png" alt="לוח התקציב, ערכה כהה"></td>
+<td width="50%"><img src="website/demo/he/budget.webp" alt="תקציב עם קצב ומבט מעטפות"></td>
+<td width="50%"><img src="website/demo/he/savings.webp" alt="כסף על השולחן"></td>
 </tr>
 <tr>
-<td><img src="public/screenshots/transactions-light.png" alt="תנועות לפי שבועות"></td>
-<td><img src="public/screenshots/settings-bank-light.png" alt="הגדרות חשבונות וייבוא"></td>
+<td width="50%"><img src="website/demo/he/transactions.webp" alt="תנועות לפי שבועות"></td>
+<td width="50%"><img src="website/demo/he/accounts.webp" alt="כל החשבונות במקום אחד"></td>
 </tr>
 </table>
 
-ליצירה מחדש: `npm run docs:screenshots`.
+צילומי מסך של משק הבית לדוגמה. ליצירה מחדש: `npm run demo` ואז `node scripts/capture-demo-tour.mjs`.
 
 ## מוסדות נתמכים
 
@@ -118,7 +130,7 @@
 | עלות | שבריר שקל לסנכרון | חינם | המנוי הקיים שלכם | חינם |
 | הגדרה | מפתח API | התקנת Ollama והורדת מודל | Claude Code, Codex, Gemini CLI, OpenCode או Kilo, במצב קריאה בלבד | כלום |
 
-אפשר להחליף ספק בכל רגע ב**הגדרות ← AI**. קטגוריות שתיקנתם נזכרות לכל בית עסק בכל מקרה.
+אפשר להחליף ספק בכל רגע ב**הגדרות ← AI**. גם בלי AI תנועות חדשות מקבלות קטגוריה: קודם לפי מה שתיקנתם בעבר לאותו בית עסק, ואז לפי מילון מובנה של כ-200 בתי עסק ישראליים (סופרים, דלק, חשמל ומים, עיריות, קופות חולים, תקשורת ועוד). ה-AI, אם בחרתם בו, מקבל רק את מה שנשאר.
 
 ## איך זה עובד
 
@@ -376,6 +388,10 @@ Penny/
 - [x] ייצוא CSV לכל התנועות
 - [x] ייבוא חכם בגיליון: הדבקה, שיוך עמודות, הצעות קטגוריה וכפילויות לפי חשבון
 - [x] גיבוי ושחזור בקובץ מוצפן אחד, וגם `npm run backup`
+- [x] כסף על השולחן, למה ההוצאות השתנו וזיכוי על תרומות
+- [x] סיווג בלי AI: זיכרון בתי עסק ומילון מובנה
+- [x] חלוקת הוצאות, תקציב מעטפות ודירוג אשראי
+- [x] עדכון אוטומטי ב-Windows, ודמו לחיץ באתר
 - [ ] ייצוא OFX
 - [ ] אפליקציה ייעודית לטלפון
 
