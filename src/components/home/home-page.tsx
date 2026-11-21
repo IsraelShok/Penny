@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { getHome, getInsights, getSettings } from "@/lib/api";
@@ -64,9 +64,12 @@ export function HomePage({ focus = false }: { focus?: boolean } = {}) {
 
   // "view as member" on the dashboard; the unscoped key stays ["home"], shared with the sidebar.
   const [owner, setOwner] = useState("");
+  // The month the board shows; "" is this month (and keeps the shared ["home"] key).
+  const [boardMonth, setBoardMonth] = useState("");
   const { data, isLoading, isError } = useQuery({
-    queryKey: owner ? ["home", owner] : ["home"],
-    queryFn: () => getHome(owner || undefined),
+    queryKey: owner || boardMonth ? ["home", owner, boardMonth] : ["home"],
+    queryFn: () => getHome(owner || undefined, boardMonth || undefined),
+    placeholderData: keepPreviousData,
   });
 
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: getSettings });
@@ -106,7 +109,7 @@ export function HomePage({ focus = false }: { focus?: boolean } = {}) {
         {/* The board, with Quick start beside it on wide screens and above it on narrow ones. */}
         <div className="flex flex-col gap-4 xl:flex-row-reverse xl:items-start">
           <QuickStartRail />
-          <div className="min-w-0 flex-1"><DashboardBoard data={data} isLoading={isLoading} isError={isError} owner={owner} onOwnerChange={setOwner} /></div>
+          <div className="min-w-0 flex-1"><DashboardBoard data={data} isLoading={isLoading} isError={isError} owner={owner} onOwnerChange={setOwner} month={boardMonth} onMonthChange={setBoardMonth} /></div>
         </div>
       </div>
     </>;

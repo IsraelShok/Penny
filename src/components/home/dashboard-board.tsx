@@ -20,6 +20,7 @@ import { Sparkline } from "@/components/ui/sparkline";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { accountLabel } from "@/lib/i18n-data";
 import { CardError, CardSkeleton } from "./card-shell";
+import { MonthNav, monthKey } from "@/components/ui/month-nav";
 import { useMoneyOnTable } from "@/components/transactions/money-on-table-card";
 import type { HomePayload } from "@/lib/types";
 
@@ -465,7 +466,7 @@ const TILES = ["balance", "savings", "budget", "latest", "cashFlow", "structure"
 type TileId = typeof TILES[number];
 
 /** The home dashboard: one grid of tiles. "Customize" hides or shows tiles, saved per profile. */
-export function DashboardBoard({ data, isLoading, isError, owner = "", onOwnerChange }: { data: HomePayload | undefined; isLoading: boolean; isError: boolean; owner?: string; onOwnerChange?: (owner: string) => void }) {
+export function DashboardBoard({ data, isLoading, isError, owner = "", onOwnerChange, month: shownMonth = "", onMonthChange }: { data: HomePayload | undefined; isLoading: boolean; isError: boolean; owner?: string; onOwnerChange?: (owner: string) => void; month?: string; onMonthChange?: (month: string) => void }) {
   const tOwner = useTranslations("ownerFilter");
   const tMot = useTranslations("moneyOnTable");
   const t = useTranslations("board");
@@ -502,7 +503,9 @@ export function DashboardBoard({ data, isLoading, isError, owner = "", onOwnerCh
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link href="/transactions?add=1" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary md:hidden px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-ring"><Plus className="size-4" aria-hidden />{t("addTransaction")}</Link>
-        <span className="rounded-lg border border-border px-3 py-2 text-sm font-medium">{month}</span>
+        {/* Month arrows: the month's figures (budget, cash flow, structure, watchlist) follow; balance, goals and FIRE stay today's. */}
+        {onMonthChange ? <MonthNav value={shownMonth || monthKey(new Date())} onChange={(m) => onMonthChange(m === monthKey(new Date()) ? "" : m)} />
+          : <span className="rounded-lg border border-border px-3 py-2 text-sm font-medium">{month}</span>}
         <div className="flex flex-wrap gap-2">
           {onOwnerChange && household.members.length >= 2 && (
             <label className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border px-3 text-sm">{tOwner("filter")}

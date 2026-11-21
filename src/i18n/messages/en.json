@@ -5639,7 +5639,7 @@
     "editLimit": "Edit {name}'s limit",
     "setLimit": "Set limit",
     "limitsHint": "Banks don't share card limits. Enter each once and the percentage keeps itself up to date.",
-    "budgetTile": "Budget this month",
+    "budgetTile": "Budget",
     "ofBudget": "of {amount}",
     "budgetOver": "{amount} over",
     "budgetPace": "{used}% of the budget used, {month}% of the month gone",

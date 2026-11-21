@@ -25,6 +25,7 @@ import {
   pacePhrase,
 } from "@/server/lib/pace";
 import { israelToday, toLocalISODate } from "@/server/lib/date-utils";
+import { homeMonthDate } from "@/lib/home-month";
 import type {
   HomeBankHealthItem,
   HomeCashFlow,
@@ -73,7 +74,8 @@ async function home(request: Request) {
 
   // Israel's calendar day as a local date, so the month is right on a host in another time zone (Docker runs UTC).
   const [ty, tm, td] = israelToday().split("-").map(Number);
-  const now = new Date(ty, tm - 1, td, 12);
+  const today = new Date(ty, tm - 1, td, 12);
+  const now = homeMonthDate(new URL(request.url).searchParams.get("month"), today);
   const year = now.getFullYear();
   const month = now.getMonth();
 

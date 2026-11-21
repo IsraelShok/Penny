@@ -5639,7 +5639,7 @@
     "editLimit": "עריכת המסגרת של {name}",
     "setLimit": "הזנת מסגרת",
     "limitsHint": "הבנקים לא מוסרים את מסגרת הכרטיס. מזינים אותה פעם אחת והאחוז מתעדכן לבד.",
-    "budgetTile": "התקציב החודש",
+    "budgetTile": "תקציב",
     "ofBudget": "מתוך {amount}",
     "budgetOver": "חריגה של {amount}",
     "budgetPace": "נוצל {used}% מהתקציב, עברו {month}% מהחודש",

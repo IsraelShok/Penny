@@ -752,8 +752,11 @@ export function deleteAsset(id: number) {
 }
 
 /** `owner` (a household member id or "shared") scopes the spend and cash figures to that member. */
-export function getHome(owner?: string) {
-  return fetchJSON<HomePayload>(`/api/home${owner ? `?owner=${encodeURIComponent(owner)}` : ""}`);
+export function getHome(owner?: string, month?: string) {
+  const sp = new URLSearchParams();
+  if (owner) sp.set("owner", owner);
+  if (month) sp.set("month", month);
+  return fetchJSON<HomePayload>(`/api/home${sp.size ? `?${sp}` : ""}`);
 }
 
 export function getNotifications() {
