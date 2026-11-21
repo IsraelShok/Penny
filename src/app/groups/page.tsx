@@ -11,7 +11,7 @@ export default async function Page() {
   return (
     <AppShell>
       <PageHeader title={t("groups")} largeTitle={false} />
-      <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-4 px-4 pb-8 pt-3 md:px-6 lg:px-8"><GroupsTable /><SharesCard /></div>
+      <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-4 px-4 pb-8 pt-3 md:px-6 lg:px-8 [&>*]:min-w-0"><GroupsTable /><SharesCard /></div>
     </AppShell>
   );
 }

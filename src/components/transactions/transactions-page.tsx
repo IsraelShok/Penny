@@ -46,6 +46,14 @@ import {
 } from "@/lib/formatters";
 import type { Locale } from "@/i18n/routing";
 
+/** ?add=1 opens the add form once (from a link or shortcut); dropped on close so a reload doesn't reopen it. */
+function dropAddParam() {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("add")) return;
+  url.searchParams.delete("add");
+  window.history.replaceState(window.history.state, "", url);
+}
+
 export function TransactionsPage() {
   const params=useSearchParams();
   const t = useTranslations("transactions");
@@ -193,7 +201,7 @@ export function TransactionsPage() {
         }
       />
 
-      <TransactionSheet open={sheet !== null} onOpenChange={(o) => !o && setSheet(null)} txn={sheet === "new" ? null : sheet} members={members} />
+      <TransactionSheet open={sheet !== null} onOpenChange={(o) => { if (!o) { setSheet(null); dropAddParam(); } }} txn={sheet === "new" ? null : sheet} members={members} />
       {/* Mobile add button floats above the dock (dock is ~76px + safe area). */}
       <Button aria-label={tManual("addTitle")} onClick={() => setSheet("new")}
         className="fixed bottom-[calc(88px+env(safe-area-inset-bottom))] end-4 z-40 h-14 rounded-full px-5 shadow-lg md:hidden">

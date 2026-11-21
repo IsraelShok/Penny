@@ -63,14 +63,16 @@ export function SharesField({ transactionId, total }: { transactionId: number; t
         </ul>
       )}
       {open ? (
-        <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (valid) add.mutate(); }}>
+        // Not a <form>: this sits inside the transaction sheet's form, and a nested form's Enter submitted the outer one.
+        <div role="group" aria-label={t("title")} className="flex flex-wrap items-end gap-2"
+          onKeyDown={(e) => { if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") { e.preventDefault(); e.stopPropagation(); if (valid && !add.isPending) add.mutate(); } }}>
           <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-muted-foreground">{t("person")}
-            <input className={field} value={person} maxLength={80} required autoFocus onChange={(e) => setPerson(e.target.value)} placeholder={t("personPlaceholder")} /></label>
+            <input className={field} value={person} maxLength={80} autoFocus onChange={(e) => setPerson(e.target.value)} placeholder={t("personPlaceholder")} /></label>
           <label className="flex w-28 flex-col gap-1 text-xs text-muted-foreground">{t("amount")}
-            <input className={field} inputMode="decimal" value={amount} required aria-invalid={tooMuch} aria-describedby={tooMuch ? "share-too-much" : undefined} onChange={(e) => setAmount(e.target.value)} /></label>
-          <button type="submit" disabled={!valid || add.isPending} className="h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-ring">{t("save")}</button>
+            <input className={field} inputMode="decimal" value={amount} aria-invalid={tooMuch} aria-describedby={tooMuch ? "share-too-much" : undefined} onChange={(e) => setAmount(e.target.value)} /></label>
+          <button type="button" onClick={() => add.mutate()} disabled={!valid || add.isPending} className="h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-ring">{t("save")}</button>
           {tooMuch && <p id="share-too-much" role="alert" className="w-full text-sm text-expense">{t("tooMuch", { left: shekels(Math.max(0, left), locale) })}</p>}
-        </form>
+        </div>
       ) : (
         <button type="button" onClick={() => setOpen(true)}
           className="inline-flex min-h-11 items-center gap-2 self-start rounded-lg border border-dashed border-border px-3 text-sm text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">

@@ -115,6 +115,31 @@ test.describe("money features", () => {
     await expect(card.getByText("דנה")).toBeVisible();
   });
 
+  test("a split added from the transaction sheet saves with Enter, without submitting the sheet", async ({ page, request, baseURL }) => {
+    const headers = { origin: baseURL! };
+    const day = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jerusalem" });
+    await request.post("/api/transactions/manual", { headers, data: { kind: "expense", amount: 200, date: day, description: "פיצה QA", tags: ["חופשה"] } });
+    await page.goto("/transactions?search=QA");
+    await page.getByRole("button", { name: "עריכת פיצה QA" }).click();
+    const sheet = page.getByRole("dialog");
+    const more = sheet.locator("details").first();
+    if (!(await more.evaluate((d) => (d as HTMLDetailsElement).open))) await more.locator("summary").click();
+    await sheet.getByRole("button", { name: "מישהו חייב לי חלק" }).click();
+    await sheet.getByPlaceholder("למשל: דנה").fill("רון");
+    await sheet.getByPlaceholder("למשל: דנה").press("Enter");
+    await expect(sheet.getByText("רון חייב/ת")).toBeVisible();
+    await expect(sheet).toBeVisible();
+  });
+
+  test("Groups with data fit a phone", async ({ browser, baseURL }) => {
+    const phone = await browser.newContext({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true, locale: "he-IL", baseURL });
+    const page = await phone.newPage();
+    await page.goto("/groups");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);
+    await phone.close();
+  });
+
   test("English pages show English titles", async ({ page, context, baseURL }) => {
     await context.addCookies([{ name: "NEXT_LOCALE", value: "en", url: baseURL! }]);
     await page.goto("/control");

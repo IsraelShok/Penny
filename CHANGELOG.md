@@ -155,6 +155,16 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 - Only real card companies count as cards in forecasts.
 - "Yesterday" in transactions is computed once instead of on every render.
 
+### Fixed – found in QA
+
+- Adding who owes part of an expense with Enter submitted the whole transaction form instead and nothing was saved
+  (a form inside a form); the split is now its own field group.
+- On phones the Groups page was wider than the screen and shifted sideways.
+- Closing the add-transaction form left `?add=1` in the address, so a reload opened it again.
+- Switching the language showed a "saved" message in the old language.
+- The sidebar said "no accounts yet" while the accounts were still loading.
+- Transaction row checkboxes have a 36px tap area; a checklist step reused another element's id.
+
 ### Security and privacy
 
 - Turning the app lock off now turns phone access off too and moves the server back to this computer only; the

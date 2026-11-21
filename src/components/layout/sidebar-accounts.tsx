@@ -40,7 +40,8 @@ export function SidebarAccounts({ onNavigate }: { onNavigate: () => void }) {
         <h2 id="sidebar-accounts" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("title")}</h2>
         <Link href="/investments" onClick={onNavigate} aria-label={t("add")} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent focus-visible:outline-2 focus-visible:outline-ring"><Plus className="size-4" aria-hidden /></Link>
       </div>
-      {groups.length === 0 ? <Link href="/accounts" onClick={onNavigate} className="block rounded-md px-2 py-2 text-xs text-muted-foreground hover:bg-sidebar-accent">{t("empty")}</Link> :
+      {/* "No accounts yet" only once the list has loaded: while loading or after a failed fetch it would be untrue. */}
+      {!data ? null : groups.length === 0 ? <Link href="/accounts" onClick={onNavigate} className="block rounded-md px-2 py-2 text-xs text-muted-foreground hover:bg-sidebar-accent">{t("empty")}</Link> :
         groups.map((g) => (
           // Minimal by default: one closed row per group, an emoji for its name (full name on hover and for screen readers).
           <details key={g.key} className="group/acc">

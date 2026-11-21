@@ -30,7 +30,7 @@ export function LanguageCard() {
       updateSettings({ language: next } as Partial<AppSettings>),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
-      toast.success(tCommon("saved"));
+      // No "saved" toast: it would show in the old language, and the whole app switching is the confirmation.
       router.refresh();
     },
     onError: (err) => {

@@ -562,7 +562,7 @@ export function TransactionsTable({
             <Table className="lg:[&_td:first-child]:ps-4 lg:[&_th:first-child]:ps-4 lg:[&_td:last-child]:pe-4 lg:[&_th:last-child]:pe-4">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-9 lg:w-[52px]"><input className="size-4" type="checkbox" aria-label={t("selectThisPage")} disabled={editing || isFetching} checked={transactions.length > 0 && selected.length === transactions.length} onChange={e => setSelected(e.target.checked ? transactions.map(t => t.id) : [])} /></TableHead>
+                  <TableHead className="w-9 lg:w-[52px]"><label className="inline-grid size-9 cursor-pointer place-items-center"><input className="size-4" type="checkbox" aria-label={t("selectThisPage")} disabled={editing || isFetching} checked={transactions.length > 0 && selected.length === transactions.length} onChange={e => setSelected(e.target.checked ? transactions.map(t => t.id) : [])} /></label></TableHead>
                   <SortableTableHead
                     label={t("headerDate")}
                     field="date"
@@ -695,7 +695,8 @@ export function TransactionsTable({
                       onClick={onEdit ? (e) => { if (!(e.target as HTMLElement).closest("button,input,select,a,label,[role=button],[role=menu],[role=menuitem],[role=dialog],[role=listbox]")) onEdit(txn); } : undefined}
                     >
                       <TableCell className="max-lg:pt-3.5 max-lg:align-top">
-                        <input className="size-4" type="checkbox" aria-label={t("selectRow", { name: txn.description })} disabled={editing || isFetching} checked={isSelected} onChange={e => setSelected(e.target.checked ? [...selected, txn.id] : selected.filter(id => id !== txn.id))} />
+                        {/* A 36px tap area around the 16px box. */}
+                        <label className="inline-grid size-9 cursor-pointer place-items-center"><input className="size-4" type="checkbox" aria-label={t("selectRow", { name: txn.description })} disabled={editing || isFetching} checked={isSelected} onChange={e => setSelected(e.target.checked ? [...selected, txn.id] : selected.filter(id => id !== txn.id))} /></label>
                       </TableCell>
                       <TableCell className="hidden whitespace-nowrap text-xs tabular-nums text-muted-foreground lg:table-cell">
                         {dayLabel(txn.date)}
