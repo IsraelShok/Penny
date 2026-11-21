@@ -208,7 +208,8 @@ export function AppSidebar() {
             className={`min-h-11 font-semibold ${activeGroup ? "text-primary" : ""}`}
             onClick={() => { if (compact) { setOpen(true); setExpandedGroups(previous => ({...previous, [group.key]: true})); } else setExpandedGroups(previous => ({...previous, [group.key]: !expanded})); }}
           ><GroupIcon aria-hidden /><span className="flex-1">{tNavGroups(`groups.${group.key}`)}</span><ChevronDown aria-hidden className={`size-4 transition-transform motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} /></SidebarMenuButton></SidebarMenuItem></SidebarMenu>
-          <SidebarGroupContent id={panelId} hidden={!expanded || compact} className="ms-4 mt-1 w-auto border-s border-sidebar-border ps-3">
+          <div className="reveal" data-open={expanded && !compact} inert={!expanded || compact}><div>
+          <SidebarGroupContent id={panelId} className="ms-4 mt-1 w-auto border-s border-sidebar-border ps-3">
             <SidebarMenu>
               {group.items.map((item) => {
                 const label = tNavGroups(`pages.${item.key}`);
@@ -230,6 +231,7 @@ export function AppSidebar() {
               })}
             </SidebarMenu>
           </SidebarGroupContent>
+          </div></div>
         </SidebarGroup>
         ); })}
         <SidebarAccounts onNavigate={() => setOpenMobile(false)} />

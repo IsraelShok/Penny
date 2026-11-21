@@ -253,7 +253,7 @@ function GroupBlock({
         {spent > 0 && <span className="hidden shrink-0 text-xs tabular-nums text-muted-foreground sm:inline" data-money>{t("spentLabel", { amount: shekels(Math.round(spent), locale) })}</span>}
         {parent && <RowMenu id={parent.id} name={title} onEdit={() => onSelect(parent.id)} onAddSub={onAddSub} />}
       </div>
-      <ul id={listId} hidden={!open} className="pb-1">{children}</ul>
+      <div className="reveal" data-open={open} inert={!open}><div><ul id={listId} className="pb-1">{children}</ul></div></div>
     </div>
   );
 }

@@ -12,7 +12,10 @@ import { usePip } from "@/components/home/pet-card";
 const KEY = "penny.sideRail";
 const listeners = new Set<() => void>();
 const read = () => { try { return localStorage.getItem(KEY) === "open"; } catch { return false; } };
+// Only a toggle animates: a page that loads with the rail open shows it open at once.
+let toggled = false;
 export function setSideRail(open: boolean) {
+  toggled = true;
   try { localStorage.setItem(KEY, open ? "open" : "closed"); } catch {}
   listeners.forEach((l) => l());
 }
@@ -38,9 +41,11 @@ export function SideRail() {
   // Pip's count already includes the alerts; without Pip, the alerts alone.
   const total = pip ? pip.count : count;
 
-  if (!open) {
-    return (
-      <aside aria-label={t("title")} className="sticky top-0 hidden h-svh w-12 shrink-0 flex-col items-center gap-3 border-s border-border bg-background py-3 md:flex">
+  return (
+    // One panel that grows and shrinks in width, pushing the page, with its content fading in once there is room.
+    <aside aria-label={t("title")} className={`sticky top-0 hidden h-svh shrink-0 overflow-hidden border-s border-border md:flex ${open ? "w-[22rem] bg-card" : "w-12 bg-background"} ${toggled ? "transition-[width,background-color] duration-300 ease-[var(--ease-soft)] motion-reduce:transition-none" : ""}`}>
+      {!open ? (
+      <div className="flex w-12 flex-col items-center gap-3 py-3">
         <button type="button" onClick={() => setSideRail(true)} aria-expanded={false} aria-label={total ? t("openCount", { count: total }) : t("open")} title={t("open")}
           className="flex flex-col items-center gap-3 rounded-xl px-1 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
           <ChevronsLeft className="size-4 ltr:rotate-0 rtl:rotate-180" aria-hidden />
@@ -51,12 +56,9 @@ export function SideRail() {
           </span>
           <span className="text-[11px] font-medium [writing-mode:vertical-rl]">{t("title")}</span>
         </button>
-      </aside>
-    );
-  }
-
-  return (
-    <aside aria-label={t("title")} className="sticky top-0 hidden h-svh w-[22rem] shrink-0 flex-col border-s border-border bg-card md:flex">
+      </div>
+      ) : (
+      <div className="flex w-[22rem] shrink-0 flex-col motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300">
       <div className="flex min-h-14 items-center gap-2 border-b border-border px-4">
         <h2 className="flex-1 text-sm font-semibold">{t("title")}</h2>
         <button type="button" onClick={() => setSideRail(false)} aria-expanded aria-label={t("close")} title={t("close")}
@@ -82,6 +84,8 @@ export function SideRail() {
           <SuggestionsCard bare limit={8} href="/more" empty={<p className="py-4 text-center text-footnote text-muted-foreground">{t("empty")}</p>} />
         </section>
       </div>
+      </div>
+      )}
     </aside>
   );
 }

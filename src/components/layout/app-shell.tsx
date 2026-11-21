@@ -16,6 +16,7 @@ import { SideRail } from "./side-rail";
 import { PrivacyHotkey } from "@/components/settings/privacy-mode-switch";
 import { useTranslations } from "next-intl";
 import { NAVIGATION_GROUPS } from "./navigation-groups";
+import { SETTINGS_GROUPS, SETTINGS_HELP } from "@/components/settings/settings-sidebar";
 import { InfoTip } from "@/components/ui/info-tip";
 import { usePathname } from "next/navigation";
 import { usePlan } from "@/hooks/use-plan";
@@ -40,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SidebarInset id="main-content" tabIndex={-1} className="mobile-dock-content">
         <UpdateBanner />
         <TopBar />
-        {children}
+        <div className="page-in">{children}</div>
         <Suspense fallback={null}><PageWheelNav /></Suspense>
         <AlertNotifier />
         <BottomBar />
@@ -69,9 +70,17 @@ export function PageHeader({
   const tNavGroups = useTranslations("navGroups");
   const pathname = usePathname();
   // Pages that share an area with tabs show the area's name, so the title never disagrees with the menu.
-  const group = NAVIGATION_GROUPS.find(g => g.items.some(item => item.match(pathname)));
+  const tRoot = useTranslations();
+  const tSettings = useTranslations("settings.sidebar");
+  // The title is always the name the menu uses: a settings section's own name, the dashboard for both of its views.
+  const settingsItem = pathname.startsWith("/settings/") ? [...SETTINGS_GROUPS.flatMap((g) => g.items), SETTINGS_HELP].find((i) => i.match(pathname)) : undefined;
+  const group = settingsItem ? undefined : NAVIGATION_GROUPS.find(g => g.items.some(item => item.match(pathname)));
   const page = group?.items.find(item => item.href === pathname);
-  const heading = page ? (tNavGroups(`pages.${page.key}`)) : title;
+  const heading = settingsItem
+    ? (settingsItem.labelKey.includes(".") ? tRoot(settingsItem.labelKey) : tSettings(settingsItem.labelKey))
+    : pathname === "/" || pathname === "/focus" ? tNavGroups("groups.dashboard")
+    : page ? tNavGroups(`pages.${page.key}`) : title;
+  const eyebrow = settingsItem ? tSettings("title") : group && group.items.length > 1 ? tNavGroups(`groups.${group.key}`) : null;
   const { plan } = usePlan();
   // One plain line on what this page is for, only for those who asked for more explanations.
   const key = wantsExplanations(plan) ? pagePurposeKey(pathname) : null;
@@ -111,7 +120,7 @@ export function PageHeader({
         </div>
         {/* self-start: the title sits on the same line on every page, with or without a meta line under it. */}
         <div className="col-start-2 row-start-1 flex min-w-0 flex-col items-start text-start">
-          {group && group.items.length > 1 && <p className="mb-0.5 text-xs text-muted-foreground">{tNavGroups(`groups.${group.key}`)}</p>}
+          {eyebrow && <p className="mb-0.5 text-xs text-muted-foreground">{eyebrow}</p>}
           <div className="relative min-w-0 max-w-full">
             <h1 title={heading} className="truncate text-[1.625rem] leading-8 font-bold tracking-tight">{heading}</h1>
             {/* The "i" hangs off the title's end so the title itself stays on the center line. */}

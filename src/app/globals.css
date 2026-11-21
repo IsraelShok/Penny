@@ -526,6 +526,24 @@ html.dark .lift:hover { box-shadow: 0 14px 30px -18px rgb(0 0 0 / 70%); }
   .press:active, .lift:hover { transform: none; }
 }
 
+/* ---- Open and close: one soft curve for the whole app ----------------------------- */
+:root { --ease-soft: cubic-bezier(0.22, 1, 0.36, 1); --dur-open: 300ms; interpolate-size: allow-keywords; }
+/* Every <details> (account groups, lists) opens and closes by height instead of jumping. */
+details::details-content { block-size: 0; overflow: clip; opacity: 0; transition: block-size var(--dur-open) var(--ease-soft), opacity 220ms ease, content-visibility var(--dur-open) allow-discrete; }
+details[open]::details-content { block-size: auto; opacity: 1; }
+/* A region that expands and folds (menu groups, category groups): its row grows from 0 to its height.
+   Pair with `inert` when closed so its links leave the tab order. */
+.reveal { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--dur-open) var(--ease-soft), opacity 220ms ease; }
+.reveal[data-open="true"] { grid-template-rows: 1fr; opacity: 1; }
+.reveal > * { min-height: 0; overflow: hidden; } /* keep padding and margins on its child, or they show when closed */
+/* Each page settles in: a short fade and lift, never a slide across. */
+@keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.page-in { animation: pageIn 380ms var(--ease-soft) both; }
+@media (prefers-reduced-motion: reduce) {
+  details::details-content, .reveal { transition: none; }
+  .page-in { animation: none; }
+}
+
 /* The four things people do on Home: four tiles on a phone, four pills from 40rem up. */
 .quick-chip {
   display: inline-flex;
