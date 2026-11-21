@@ -65,7 +65,7 @@ describe("demo household", () => {
 
     expect(count(db, "SELECT COUNT(*) AS n FROM budgets")).toBeGreaterThan(10);
     expect(count(db, "SELECT COUNT(*) AS n FROM planned_items")).toBe(3);
-    expect(count(db, "SELECT COUNT(*) AS n FROM insurance_policies")).toBe(3);
+    expect(count(db, "SELECT COUNT(*) AS n FROM insurance_policies")).toBe(5); // home, life, car and two overlapping health policies
     expect(count(db, "SELECT COUNT(*) AS n FROM goals")).toBe(2);
     expect(count(db, "SELECT COUNT(*) AS n FROM assets")).toBe(7);
     expect(count(db, "SELECT COUNT(*) AS n FROM asset_snapshots")).toBeGreaterThan(30);

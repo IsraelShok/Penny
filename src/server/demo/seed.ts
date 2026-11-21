@@ -494,6 +494,11 @@ function seedInsurance(db: Database.Database, ws: number): void {
     YOAV_BANK.account, "מנורה", "2021-01-15", 1_500_000, null, "אבי לוי", "03-5559876", null);
   policy.run(ws, "ביטוח רכב", "car", "כלל", 210, "2027-06", "יואב", "CAR-55201",
     DANA_BANK.account, "כלל", "2025-06-01", 900_000, 1_800, "דנה אזולאי", "03-5554321", "מקיף וצד ג'");
+  // Two private health policies for the same person: the overlap "money on the table" points out.
+  policy.run(ws, "ביטוח בריאות - הראל", "health", "הראל", 95, "2027-02", "דנה", "HLT-30117",
+    YOAV_BANK.account, "הראל", "2020-02-01", null, null, null, null, null);
+  policy.run(ws, "ביטוח בריאות - הפניקס", "health", "הפניקס", 70, "2027-05", "דנה", "HLT-77450",
+    YOAV_BANK.account, "הפניקס בריאות", "2023-05-01", null, null, null, null, "נקנה עם הקופה");
 }
 
 function seedAssets(db: Database.Database, ws: number, today: string): void {
@@ -527,8 +532,8 @@ function seedAssets(db: Database.Database, ws: number, today: string): void {
   };
 
   addAsset({ name: "חיסכון לחופשה", type: "deposit", value: 24_000, note: "קרן נזילה ליעד משפחתי" }, 0.002);
-  addAsset({ name: "קרן השתלמות", type: "study_fund", value: 86_500, feeDeposit: 1.5, feeBalance: 0.5, monthlyDeposit: 500, liquid: false, purchaseMonth: "2021-09" }, 0.008);
-  addAsset({ name: "פנסיה - מיטב", type: "pension", value: 240_000, feeDeposit: 1, feeBalance: 0.22, monthlyDeposit: 1_800, liquid: false }, 0.007);
+  addAsset({ name: "קרן השתלמות", type: "study_fund", value: 86_500, feeDeposit: 1.5, feeBalance: 1.05, monthlyDeposit: 500, liquid: false, purchaseMonth: "2021-09" }, 0.008);
+  addAsset({ name: "פנסיה - מיטב", type: "pension", value: 240_000, feeDeposit: 1.8, feeBalance: 0.4, monthlyDeposit: 1_800, liquid: false }, 0.007);
   addAsset({ name: "תיק השקעות", type: "fund", value: 120_000, cost: 100_000, note: "קרנות סל עולמיות" }, 0.01);
   addAsset({
     name: "דירת מגורים", type: "real_estate", value: 2_650_000, liquid: false, city: "תל אביב", street: "הרצל 12",

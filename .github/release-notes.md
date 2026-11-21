@@ -7,6 +7,7 @@
 - **Correct to the shekel.** Charges on the 1st land in their month, Max card bills are no longer counted twice, installment plans and card forecasts are right, and a balance check flags missing transactions.
 - **Telegram that keeps you posted.** A summary three mornings a week, and a message when a bank stops syncing and when it's back.
 - **Windows updates itself.** New releases download in the background, are checked against `SHA256SUMS.txt`, and install when you restart.
+- **Try it in the browser.** A clickable demo on the website walks through every screen with a sample household.
 - **Safer.** Turning the app lock off also closes phone access, and a restored backup keeps your saved bank logins readable.
 
 The full list is in [CHANGELOG.md](https://github.com/Sergey-Bar/Penny/blob/main/CHANGELOG.md).

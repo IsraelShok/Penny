@@ -8,12 +8,14 @@
 // so it uses the same migrations and category tree as a real install.
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 // Only this exact folder is ever deleted; the guard below protects a mistyped path.
-const DEMO_DATA = path.join(ROOT, "demo-data");
+// Outside the project: inside it, the dev server saw every database write as a file change and reloaded the page in a loop.
+const DEMO_DATA = path.join(os.tmpdir(), "penny-demo-data");
 // Some launchers export PORT=0 ("pick any port"), which would move the demo off the URL it prints.
 // PENNY_DEMO_PORT or a real PORT can still change it.
 const requestedPort = process.env.PENNY_DEMO_PORT || process.env.PORT;
@@ -23,7 +25,7 @@ const resetOnly = process.argv.includes("--reset-only");
 
 function clearDemoData() {
   if (!fs.existsSync(DEMO_DATA)) return;
-  if (path.basename(DEMO_DATA) !== "demo-data" || path.dirname(DEMO_DATA) !== ROOT) {
+  if (path.basename(DEMO_DATA) !== "penny-demo-data" || path.dirname(DEMO_DATA) !== os.tmpdir()) {
     console.error(`demo: refusing to delete ${DEMO_DATA}`);
     process.exit(1);
   }

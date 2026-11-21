@@ -123,6 +123,8 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 - Pip is the app and installer icon; profiles' avatars are Pips that grow.
 - The installer file name is pinned so release links stay stable.
 - Download-first README, website Mac download that leads with the visitor's operating system.
+- A clickable demo on the website (`/demo`, Hebrew and English): the real screens of the demo household, with the
+  app's own links clickable. `scripts/capture-demo-tour.mjs` refreshes it from `npm run demo`.
 
 ### Settings and appearance
 
@@ -130,7 +132,8 @@ place on first start, and a copy of the database is saved to `data/backups` befo
 - Tags and Payees screens; Language on its own page; Help at the foot of the settings menu.
 - Default account for new manual transactions.
 - Encrypted backup and restore in one `.pennybak` file (also `npm run backup`).
-- A demo household to try every screen without a bank.
+- A demo household to try every screen without a bank, now with fund fees and overlapping health policies for
+  Money on the table to find. Its data lives in the system temp folder, which stops a reload loop in `npm run demo`.
 
 ### Fixed – money and data
 
