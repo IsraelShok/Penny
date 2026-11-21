@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Bell, ChevronDown, FileUp, Landmark, Plus, Search, Settings as SettingsIcon, WalletCards } from "lucide-react";
+import { ChevronDown, FileUp, Landmark, Plus, Search, Settings as SettingsIcon, WalletCards } from "lucide-react";
 import { SyncButton } from "@/components/dashboard/sync-button";
 import { buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { OPEN_COMMAND_PALETTE } from "./command-palette";
-import { setSideRail, useAlertCount, useSideRail } from "./side-rail";
+import { NotificationsBell } from "./notifications-bell";
 import { cn } from "@/lib/utils";
 
 /** The row above every page on wide screens: add a transaction (and its siblings) on the start; sync, alerts and settings on the end. */
@@ -18,15 +19,21 @@ export function TopBar() {
   const tShell = useTranslations("shell");
   const router = useRouter();
   const queryClient = useQueryClient();
-  const count = useAlertCount();
-  const railOpen = useSideRail();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName));
+      if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "n") { e.preventDefault(); router.push("/transactions?add=1"); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router]);
   const icon = cn(buttonVariants({ variant: "outline", size: "icon" }), "rounded-xl");
 
   return (
     <div className="hidden md:block">
       <div className="mx-auto flex min-h-14 max-w-[1920px] items-center gap-2 px-6 pt-3 lg:px-8">
         <div className="inline-flex rounded-xl shadow-sm">
-          <Link href="/transactions?add=1" className={cn(buttonVariants(), "rounded-e-none rounded-s-xl")}>
+          <Link href="/transactions?add=1" aria-keyshortcuts="N" title={t("addHint")} className={cn(buttonVariants(), "rounded-e-none rounded-s-xl")}>
             <Plus className="size-4" aria-hidden />
             {tShell("addTransaction")}
           </Link>
@@ -50,10 +57,8 @@ export function TopBar() {
         </button>
         <div className="flex items-center gap-2">
           <SyncButton onComplete={() => queryClient.invalidateQueries()} showLabel={false} />
-          <button type="button" onClick={() => setSideRail(!railOpen)} aria-expanded={railOpen} aria-label={count ? t("alertsCount", { count }) : t("alerts")} title={t("alerts")} className={cn(icon, "relative")}>
-            <Bell className="size-4" aria-hidden />
-            {count > 0 && <span aria-hidden className="absolute -end-1 -top-1 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-primary-foreground tabular-nums">{count > 9 ? "9+" : count}</span>}
-          </button>
+          {/* The bell is for what happened; advice and alerts live with Pip in the side rail. */}
+          <NotificationsBell />
           <Link href="/settings" aria-label={t("settings")} title={t("settings")} className={icon}>
             <SettingsIcon className="size-4" aria-hidden />
           </Link>

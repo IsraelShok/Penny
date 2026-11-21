@@ -20,7 +20,7 @@ export function groupAccounts(assets: Asset[], moves: Record<number, AccountGrou
   return ACCOUNT_GROUPS.map((key) => {
     const items = assets
       .filter((a) => (a.isLiability ? "liabilities" : (moves[a.id] !== "liabilities" && moves[a.id]) || accountGroupOf(a)) === key)
-      .map((a) => ({ id: a.id, name: a.name, value: (key === "liabilities" ? -1 : 1) * Math.abs(a.valueIls ?? 0) }))
+      .map((a) => ({ id: a.id, name: a.name, type: a.type, value: (key === "liabilities" ? -1 : 1) * Math.abs(a.valueIls ?? 0) }))
       .sort((x, y) => Math.abs(y.value) - Math.abs(x.value));
     return { key, items, total: items.reduce((s, x) => s + x.value, 0) };
   }).filter((g) => g.items.length > 0);

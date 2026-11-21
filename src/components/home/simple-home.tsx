@@ -89,7 +89,7 @@ export function SimpleHome({ name, cardOnly, extra, heroAside }: { name?: string
     <div className={cardOnly ? "" : "mx-auto w-full max-w-md md:max-w-2xl lg:max-w-6xl"}>
       {/* One quick-add line; the menu itself lives in the page's top corner, so nothing more sits above the card. */}
       {!cardOnly && (
-        <div className="mb-1 flex items-center justify-end">
+        <div className="mb-1 flex items-center justify-end md:hidden">
           <Link href="/transactions?add=1" className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"><Plus className="size-4" aria-hidden />{tManual("addTitle")}</Link>
         </div>
       )}

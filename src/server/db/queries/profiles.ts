@@ -6,9 +6,9 @@ import { getDb } from "../index";
 import type { Profile } from "@/lib/types";
 import { parsePip, type AvatarInput, type ProfilePip } from "@/lib/profile-avatar";
 
-type Row = { id: number; workspace_id: number; name: string; avatar_emoji: string | null; avatar_color: string | null; avatar_pet: string | null; created_at: string };
-const COLS = "id, workspace_id, name, avatar_emoji, avatar_color, avatar_pet, created_at";
-const map = (r: Row): Profile => ({ id: r.id, workspaceId: r.workspace_id, name: r.name, avatarEmoji: r.avatar_emoji, avatarColor: r.avatar_color, avatarPet: readPip(r.avatar_pet), createdAt: r.created_at });
+type Row = { id: number; workspace_id: number; name: string; avatar_emoji: string | null; avatar_color: string | null; avatar_pet: string | null; avatar_photo: string | null; created_at: string };
+const COLS = "id, workspace_id, name, avatar_emoji, avatar_color, avatar_pet, avatar_photo, created_at";
+const map = (r: Row): Profile => ({ id: r.id, workspaceId: r.workspace_id, name: r.name, avatarEmoji: r.avatar_emoji, avatarColor: r.avatar_color, avatarPet: readPip(r.avatar_pet), avatarPhoto: r.avatar_photo, createdAt: r.created_at });
 
 /** Stored JSON; anything unreadable is treated as no Pip. */
 function readPip(json: string | null): ProfilePip | null {
@@ -41,8 +41,8 @@ export function householdId(): number {
 
 export function createProfile(name: string, avatar: AvatarInput = {}): Profile {
   const result = getDb()
-    .prepare("INSERT INTO profiles (workspace_id, name, avatar_emoji, avatar_color, avatar_pet) VALUES (?, ?, ?, ?, ?)")
-    .run(householdId(), cleanName(name), avatar.avatarEmoji ?? null, avatar.avatarColor ?? null, pipJson(avatar.avatarPet));
+    .prepare("INSERT INTO profiles (workspace_id, name, avatar_emoji, avatar_color, avatar_pet, avatar_photo) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(householdId(), cleanName(name), avatar.avatarEmoji ?? null, avatar.avatarColor ?? null, pipJson(avatar.avatarPet), avatar.avatarPhoto ?? null);
   return getProfile(Number(result.lastInsertRowid))!;
 }
 
@@ -50,12 +50,13 @@ export function updateProfile(id: number, name: string, avatar: AvatarInput = {}
   const existing = getProfile(id);
   if (!existing) throw new ApiError("Profile not found", 404);
   getDb()
-    .prepare("UPDATE profiles SET name = ?, avatar_emoji = ?, avatar_color = ?, avatar_pet = ? WHERE id = ?")
+    .prepare("UPDATE profiles SET name = ?, avatar_emoji = ?, avatar_color = ?, avatar_pet = ?, avatar_photo = ? WHERE id = ?")
     .run(
       cleanName(name),
       avatar.avatarEmoji !== undefined ? avatar.avatarEmoji : existing.avatarEmoji,
       avatar.avatarColor !== undefined ? avatar.avatarColor : existing.avatarColor,
       pipJson(avatar.avatarPet !== undefined ? avatar.avatarPet : existing.avatarPet),
+      avatar.avatarPhoto !== undefined ? avatar.avatarPhoto : existing.avatarPhoto,
       id
     );
   return getProfile(id)!;

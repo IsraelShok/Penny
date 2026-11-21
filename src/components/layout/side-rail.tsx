@@ -35,7 +35,8 @@ export function SideRail() {
   const open = useSideRail();
   const pip = usePip();
   const count = useAlertCount();
-  const total = count + (pip?.count ?? 0);
+  // Pip's count already includes the alerts; without Pip, the alerts alone.
+  const total = pip ? pip.count : count;
 
   if (!open) {
     return (
@@ -66,9 +67,12 @@ export function SideRail() {
       <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-4">
         {pip && (
           <section aria-labelledby="rail-pip">
-            <div className="mb-3 flex items-baseline justify-between gap-2">
-              <h3 id="rail-pip" className="text-sm font-semibold">{pip.name}</h3>
-              <span className="text-xs text-muted-foreground">{pip.mood}</span>
+            <div className="mb-3 flex items-center gap-3">
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-muted">{pip.face(40)}</span>
+              <div className="min-w-0">
+                <h3 id="rail-pip" className="text-sm font-semibold">{pip.name}</h3>
+                <p className="text-xs text-muted-foreground">{pip.mood}</p>
+              </div>
             </div>
             {pip.body(() => {})}
           </section>

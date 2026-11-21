@@ -18,6 +18,8 @@ export interface Profile {
   avatarColor: string | null;
   /** The profile's own Pip; null = not picked yet (the legacy art avatar shows). */
   avatarPet: import("./profile-avatar").ProfilePip | null;
+  /** An uploaded picture (small JPEG data URL); null = the initial on avatarColor. */
+  avatarPhoto: string | null;
   createdAt: string;
 }
 

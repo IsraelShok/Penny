@@ -250,6 +250,9 @@ html.app-studio[data-studio-density="compact"] :is([data-slot="dropdown-menu-ite
   .mobile-dock :is(a, button):focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
   .mobile-dock a[aria-current="page"] { color: var(--primary); background: color-mix(in oklab, var(--primary) 12%, transparent); font-weight: 600; }
   .mobile-dock a[aria-current="page"] svg { stroke-width: 2.4; }
+  /* The add button: a raised circle in the middle of the dock, the one action that is always a thumb away. */
+  .mobile-dock .mobile-dock-add { background: none; }
+  .mobile-dock .mobile-dock-add > span { display: grid; place-items: center; width: 48px; height: 48px; margin-top: -18px; border-radius: 999px; background: var(--primary); color: var(--primary-foreground); box-shadow: 0 10px 24px -10px color-mix(in srgb, var(--primary) 70%, transparent), 0 0 0 4px var(--background); }
 }
 
 

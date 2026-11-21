@@ -176,7 +176,7 @@ export function listProfiles() {
   return fetchJSON<Profile[]>("/api/profiles");
 }
 
-export function saveProfile(id: number | null, name: string, avatar: { avatarEmoji?: string | null; avatarColor?: string | null; avatarPet?: import("./profile-avatar").ProfilePip | null } = {}) {
+export function saveProfile(id: number | null, name: string, avatar: { avatarEmoji?: string | null; avatarColor?: string | null; avatarPet?: import("./profile-avatar").ProfilePip | null; avatarPhoto?: string | null } = {}) {
   return fetchJSON<Profile>(id == null ? "/api/profiles" : `/api/profiles/${id}`, {
     method: id == null ? "POST" : "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -750,6 +750,10 @@ export function deleteAsset(id: number) {
 /** `owner` (a household member id or "shared") scopes the spend and cash figures to that member. */
 export function getHome(owner?: string) {
   return fetchJSON<HomePayload>(`/api/home${owner ? `?owner=${encodeURIComponent(owner)}` : ""}`);
+}
+
+export function getNotifications() {
+  return fetchJSON<{ items: import("./notifications").AppNotification[] }>(`/api/notifications`);
 }
 
 export function getActivity() {

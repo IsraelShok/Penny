@@ -3973,7 +3973,11 @@
       "alien": "Alien",
       "penguin": "Penguin"
     },
-    "error": "Couldn't finish that. Check that the app is still running, then try again. If it keeps failing, restart it."
+    "error": "Couldn't finish that. Check that the app is still running, then try again. If it keeps failing, restart it.",
+    "addPhoto": "Add a photo",
+    "changePhoto": "Change photo",
+    "removePhoto": "Remove photo",
+    "photoFailed": "We couldn't read that picture. Try another file."
   },
   "concepts": {
     "whatIs": "What is {term}?",
@@ -5625,7 +5629,16 @@
     "saveLimit": "Save",
     "editLimit": "Edit {name}'s limit",
     "setLimit": "Set limit",
-    "limitsHint": "Banks don't share card limits. Enter each once and the percentage keeps itself up to date."
+    "limitsHint": "Banks don't share card limits. Enter each once and the percentage keeps itself up to date.",
+    "budgetTile": "Budget this month",
+    "ofBudget": "of {amount}",
+    "budgetOver": "{amount} over",
+    "budgetPace": "{used}% of the budget used, {month}% of the month gone",
+    "noBudget": "No budget for this month yet.",
+    "attention": "Needs attention",
+    "allReviewed": "Everything is categorized and checked.",
+    "goals": "Goals",
+    "noGoals": "Set a first goal"
   },
   "accountsView": {
     "manualAccounts": "My accounts",
@@ -6185,10 +6198,9 @@
     "importFile": "Import a file",
     "connectBank": "Connect a bank",
     "addAccount": "New account or asset",
-    "alerts": "Notifications",
-    "alertsCount": "Notifications ({count})",
     "settings": "Settings",
-    "search": "Search"
+    "search": "Search",
+    "addHint": "Add a transaction (N)"
   },
   "sideRail": {
     "title": "Alerts",
@@ -6197,5 +6209,15 @@
     "close": "Close the panel",
     "alerts": "Worth a look",
     "empty": "Nothing to handle right now."
+  },
+  "notifications": {
+    "label": "Notifications",
+    "labelCount": "Notifications ({count} new)",
+    "markAll": "Mark all as read",
+    "empty": "Nothing new.",
+    "new": "New",
+    "syncDone": "{bank}: {count, plural, one {# new transaction} other {# new transactions}}",
+    "syncFailed": "{bank}: the sync failed. Check the connection.",
+    "goalReached": "Goal reached: \"{name}\" ({amount})"
   }
 }

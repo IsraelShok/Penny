@@ -7,10 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Clock, X } from "lucide-react";
-import { getCashAhead, getHome, getInsights, getOverview, getResilience, listProfiles } from "@/lib/api";
+import { getCashAhead, getHome, getInsights, getOverview, getResilience, getSuggestions } from "@/lib/api";
 import { pipGuru, pipInsights, type PipInput, type PipTone } from "@/lib/pip-coach";
-import { useActiveProfileId } from "@/lib/workspace-store";
-import type { Profile } from "@/lib/types";
 import { usePlan } from "@/hooks/use-plan";
 import { useA11y } from "@/components/a11y/a11y-menu";
 import { useGentle } from "@/hooks/use-gentle";
@@ -31,10 +29,8 @@ function usePet() {
   const home = useQuery({ queryKey: ["home"], queryFn: () => getHome(), enabled: on });
   const res = useQuery({ queryKey: ["resilience"], queryFn: getResilience, enabled: on });
   const cash = useQuery({ queryKey: ["cash-ahead"], queryFn: getCashAhead, enabled: on });
-  // The pet wears the active person's own Pip (their profile picture), so Home matches who's using it.
-  const profiles = useQuery<Profile[]>({ queryKey: ["profiles"], queryFn: listProfiles, staleTime: 60_000, enabled: on });
-  const activeId = useActiveProfileId();
-  const own = profiles.data?.find((p) => p.id === activeId)?.avatarPet;
+  // Pip speaks for every alert: its own care list plus what the checks noticed, one number on every screen.
+  const sug = useQuery({ queryKey: ["suggestions"], queryFn: getSuggestions, enabled: on });
   const lines = useMemo(() => {
     if (!home.data || !res.data) return null;
     const m = home.data.thisMonth, f = (k: string) => res.data.factors.find((x) => x.key === k);
@@ -51,8 +47,8 @@ function usePet() {
   const today = petToday();
   const todo = petTodo(lines, plan.pet.snooze, today);
   // Snoozed items don't weigh on its mood either: it shouldn't keep fretting over what you asked it to set aside.
-  const pet = own ? { ...plan.pet, color: own.color, skin: own.skin, name: own.name || plan.pet.name } : plan.pet;
-  return { pet, mood: petMood(lines.filter((l) => l.ok || todo.includes(l))), todo, today };
+  const pet = plan.pet;
+  return { pet, mood: petMood(lines.filter((l) => l.ok || todo.includes(l))), todo, today, count: todo.length + (sug.data?.suggestions.length ?? 0) };
 }
 type PetState = NonNullable<ReturnType<typeof usePet>>;
 
@@ -94,7 +90,7 @@ export function PetMini({ inSidebar }: { inSidebar?: boolean }) {
 function PetButton({ p, px, onOpen, mini }: { p: PetState; px: number; onOpen: () => void; mini?: "lg" | "sm" }) {
   const t = useTranslations("pet");
   const name = p.pet.name || t("defaultName");
-  const n = p.todo.length;
+  const n = p.count;
   const label = `${t("artLabel", { name, mood: t(`mood_${p.mood}`) })}${n ? `. ${t("badge", { n })}` : ""}`;
   return (
     <button type="button" onClick={onOpen} aria-haspopup="dialog" aria-label={label}
@@ -110,7 +106,7 @@ function PetButton({ p, px, onOpen, mini }: { p: PetState; px: number; onOpen: (
 }
 
 /** What needs care, most important first; each item can be snoozed (tomorrow, a week) or hidden until next month, for the whole household. */
-function PipBody({ p, onNavigate }: { p: PetState; onNavigate: () => void }) {
+function PipBody({ p, onNavigate, compact = false }: { p: PetState; onNavigate: () => void; compact?: boolean }) {
   const t = useTranslations("pet");
   const tc = useTranslations("common");
   const locale = useLocale();
@@ -132,11 +128,12 @@ function PipBody({ p, onNavigate }: { p: PetState; onNavigate: () => void }) {
   };
   return (
     <div className="space-y-5">
-      <div className="grid place-items-center"><PetFace mood={p.mood} pet={p.pet} px={PET_SIZES[p.pet.size]} /></div>
+      {/* The side rail is narrow: there Pip stays small, with no size choice. */}
+      {!compact && <div className="grid place-items-center"><PetFace mood={p.mood} pet={p.pet} px={PET_SIZES[p.pet.size]} /></div>}
       {/* Bigger is a choice, not a hidden setting: the size lives here, next to the face it changes. */}
-      <Segmented label={t("sizeLabel")} value={p.pet.size}
+      {!compact && <Segmented label={t("sizeLabel")} value={p.pet.size}
         onChange={(size) => { void update({ pet: { ...plan.pet, size } }).catch(() => toast.error(tc("saveFailed"))); }}
-        options={(Object.keys(PET_SIZES) as (keyof typeof PET_SIZES)[]).map((s) => ({ value: s, label: t(`size_${s}`) }))} />
+        options={(Object.keys(PET_SIZES) as (keyof typeof PET_SIZES)[]).map((s) => ({ value: s, label: t(`size_${s}`) }))} />}
       <PipCoach onNavigate={() => onNavigate()} />
       {todo.length ? (
         <ol className="space-y-3" aria-label={t("todoLabel")}>
@@ -186,9 +183,9 @@ export function usePip() {
   return {
     name: p.pet.name || t("defaultName"),
     mood: t(`mood_${p.mood}`),
-    count: p.todo.length,
+    count: p.count,
     face: (px: number) => <PetFace mood={p.mood} pet={p.pet} px={px} />,
-    body: (onNavigate: () => void) => <PipBody p={p} onNavigate={onNavigate} />,
+    body: (onNavigate: () => void) => <PipBody p={p} onNavigate={onNavigate} compact />,
   };
 }
 

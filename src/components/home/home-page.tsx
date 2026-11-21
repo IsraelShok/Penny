@@ -108,13 +108,6 @@ export function HomePage({ focus = false }: { focus?: boolean } = {}) {
           <QuickStartRail />
           <div className="min-w-0 flex-1"><DashboardBoard data={data} isLoading={isLoading} isError={isError} owner={owner} onOwnerChange={setOwner} /></div>
         </div>
-        {/* The board already shows cash flow, trends, categories, recent activity, recurring bills and sources. */}
-        <PersonalGrid exclude={["cashFlow", "historicalTrend", "categories", "recentTransactions", "bills", "bankHealth"]} render={id => {
-          if (id === "goals") return <GoalFocus />;
-          if (id === "planner") return <ScenarioCard />;
-          if (id === "bills") return insights ? <div className="space-y-4"><NextBillCard data={insights} /><SubscriptionsCard data={insights} /></div> : <CardSkeleton label={t("nextBill")} />;
-          return renderSection(id, data, isLoading, isError, "min-w-0 h-full", skeletonLabels);
-        }} />
       </div>
     </>;
   }

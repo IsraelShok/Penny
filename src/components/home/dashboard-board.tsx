@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Area, AreaChart, Bar, ComposedChart, Line, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowUpLeft, ArrowUpRight, Flame, Plus, Repeat, SlidersHorizontal } from "lucide-react";
-import { getAssets, getBalanceForecast, getFi, getInsights, getOwners } from "@/lib/api";
+import { getAssets, getBalanceForecast, getFi, getInsights, getOwners, getPlan } from "@/lib/api";
 import { creditUtilization, parseLimits } from "@/lib/credit-utilization";
 import { useHousehold } from "@/hooks/use-household";
 import { SHARED } from "@/lib/tags";
@@ -382,7 +382,86 @@ function MoneyOnTableTile() {
   );
 }
 
-const TILES = ["balance", "savings", "latest", "cashFlow", "structure", "fire", "watchlist", "recurring", "credit", "members"] as const;
+
+/** This month's spending against the budget, with the month's pace marked on the bar. */
+function BudgetTile({ data }: { data: HomePayload }) {
+  const t = useTranslations("board");
+  const locale = useLocale();
+  const m = data.thisMonth;
+  if (!m) return null;
+  const used = m.budget > 0 ? m.spent / m.budget : null;
+  const over = used != null && used > 1;
+  return (
+    <Tile title={t("budgetTile")} href="/budget">
+      <p className="flex items-baseline gap-2"><bdi className="text-2xl font-semibold tabular-nums" data-money>{shekels(Math.round(m.spent), locale)}</bdi>
+        {m.budget > 0 && <span className="text-xs text-muted-foreground" data-money>{t("ofBudget", { amount: shekels(Math.round(m.budget), locale) })}</span>}</p>
+      {used != null ? <>
+        <div className="relative mt-3 h-2 rounded-full bg-muted" aria-hidden>
+          <div className={`h-full rounded-full ${over ? "bg-expense" : "bg-primary"}`} style={{ width: `${Math.min(100, used * 100)}%` }} />
+          <span className="absolute -top-1 h-4 w-0.5 rounded bg-foreground/60" style={{ insetInlineStart: `${Math.min(100, m.timeElapsedPercent)}%` }} />
+        </div>
+        <p className={`mt-2 text-xs ${over ? "text-expense" : "text-muted-foreground"}`}>{over ? t("budgetOver", { amount: shekels(Math.round(m.spent - m.budget), locale) }) : t("budgetPace", { used: Math.round(used * 100), month: Math.round(m.timeElapsedPercent) })}</p>
+      </> : <p className="mt-2 text-sm text-muted-foreground">{t("noBudget")}</p>}
+    </Tile>
+  );
+}
+
+/** What waits for a look: uncategorized, unsure and flagged transactions, each a link to the review list. */
+function AttentionTile({ data }: { data: HomePayload }) {
+  const t = useTranslations("board");
+  const th = useTranslations("home");
+  const a = data.needsAttention;
+  if (!a) return null;
+  const rows = [
+    { label: th("needsAttentionUncategorized"), n: a.uncategorized },
+    { label: th("needsAttentionLowConfidence"), n: a.lowConfidence },
+    { label: th("needsAttentionFlagged"), n: a.flagged },
+  ];
+  const total = a.uncategorized + a.lowConfidence + a.flagged;
+  return (
+    <Tile title={th("needsAttention")} href="/transactions?review=1">
+      {total === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">{t("allReviewed")}</p> : (
+        <ul className="divide-y divide-border">
+          {rows.map((r) => (
+            <li key={r.label}><Link href="/transactions?review=1" className="flex min-h-11 items-center gap-3 text-sm hover:text-primary focus-visible:outline-2 focus-visible:outline-ring">
+              <span className="flex-1">{r.label}</span>
+              <span className={`min-w-7 rounded-full px-2 py-0.5 text-center text-xs font-semibold tabular-nums ${r.n ? "bg-primary/12 text-primary" : "bg-muted text-muted-foreground"}`}>{r.n}</span>
+            </Link></li>
+          ))}
+        </ul>
+      )}
+    </Tile>
+  );
+}
+
+/** Savings goals, closest to done first, each with its bar. */
+function GoalsTile() {
+  const t = useTranslations("board");
+  const locale = useLocale();
+  const { data } = useQuery({ queryKey: ["plan"], queryFn: getPlan });
+  if (!data) return <CardSkeleton label={t("goals")} height={200} />;
+  const goals = [...data.goals].sort((a, b) => b.savedAmount / b.targetAmount - a.savedAmount / a.targetAmount).slice(0, 4);
+  return (
+    <Tile title={t("goals")} href="/journey">
+      {goals.length === 0 ? <Link href="/journey" className="block py-6 text-center text-sm text-primary hover:underline">{t("noGoals")}</Link> : (
+        <ul className="space-y-3">
+          {goals.map((g) => {
+            const p = Math.min(1, g.savedAmount / g.targetAmount);
+            return (
+              <li key={g.id}>
+                <div className="flex items-baseline gap-2 text-sm"><span className="min-w-0 flex-1 truncate font-medium" title={g.name}>{g.name}</span><span className="text-xs tabular-nums text-muted-foreground">{Math.round(p * 100)}%</span></div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden><div className={`h-full rounded-full ${p >= 1 ? "bg-status-on-track" : "bg-primary"}`} style={{ width: `${p * 100}%` }} /></div>
+                <p className="mt-1 text-xs tabular-nums text-muted-foreground" data-money>{shekels(Math.round(g.savedAmount), locale)} / {shekels(Math.round(g.targetAmount), locale)}</p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Tile>
+  );
+}
+
+const TILES = ["balance", "savings", "budget", "latest", "cashFlow", "structure", "fire", "watchlist", "recurring", "attention", "goals", "credit", "members"] as const;
 type TileId = typeof TILES[number];
 
 /** The home dashboard: one grid of tiles. "Customize" hides or shows tiles, saved per profile. */
@@ -407,12 +486,15 @@ export function DashboardBoard({ data, isLoading, isError, owner = "", onOwnerCh
   const tiles: Record<TileId, { label: string; node: React.ReactNode }> = {
     balance: { label: t("balance"), node: <BalanceTrend /> },
     savings: { label: tMot("title"), node: <MoneyOnTableTile /> },
+    budget: { label: t("budgetTile"), node: homeTile((d) => <BudgetTile data={d} />, t("budgetTile")) },
     latest: { label: t("latest"), node: homeTile((d) => <LatestTransactions data={d} />, t("latest")) },
     cashFlow: { label: t("cashFlow"), node: homeTile((d) => <CashFlow data={d} />, t("cashFlow")) },
     structure: { label: t("structure"), node: homeTile((d) => <ExpensesStructure data={d} />, t("structure")) },
     fire: { label: t("fire"), node: <FireProgress /> },
     watchlist: { label: t("watchlist"), node: homeTile((d) => <CategoriesWatchlist data={d} />, t("watchlist")) },
     recurring: { label: t("recurring"), node: <RecurringPayments /> },
+    attention: { label: t("attention"), node: homeTile((d) => <AttentionTile data={d} />, t("attention")) },
+    goals: { label: t("goals"), node: <GoalsTile /> },
     credit: { label: t("credit"), node: <CreditUtilization /> },
     members: { label: t("whoSpent"), node: <WhoSpent /> },
   };
@@ -447,7 +529,8 @@ export function DashboardBoard({ data, isLoading, isError, owner = "", onOwnerCh
           </div>
         </fieldset>
       )}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* Dense packing: a wide tile never leaves a hole beside it. */}
+      <div className="grid grid-flow-row-dense gap-4 md:grid-cols-2 lg:grid-cols-3">
         {TILES.filter((id) => !hidden.includes(id) && (id !== "members" || household.members.length >= 2)).map((id) => <Fragment key={id}>{tiles[id].node}</Fragment>)}
       </div>
     </div>

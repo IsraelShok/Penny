@@ -11,7 +11,7 @@ import { useSidebarAccountsPref } from "@/components/layout/sidebar-accounts";
 import { shekels } from "@/lib/money";
 import { CardError, CardSkeleton } from "@/components/home/card-shell";
 
-const GROUP_EMOJI = { bank: "🏦", investments: "📈", property: "🏠", vehicles: "🚗", other: "💼", liabilities: "💳" } as const;
+import { GROUP_ICON, TYPE_ICON } from "./account-icons";
 
 /** All accounts on one page: net total, the bank connections, then every group with its accounts. */
 export function AccountsOverview() {
@@ -55,7 +55,7 @@ export function AccountsOverview() {
               <details key={g.key} open className="group/acc border-b border-border last:border-b-0">
                 <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 px-4 hover:bg-accent/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
                   <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open/acc:rotate-0 ltr:-rotate-90 rtl:rotate-90 motion-reduce:transition-none" aria-hidden />
-                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-sm" aria-hidden>{GROUP_EMOJI[g.key]}</span>
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary" aria-hidden>{(() => { const Icon = GROUP_ICON[g.key]; return <Icon className="size-4" />; })()}</span>
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold">{t(`groups.${g.key}`)}</span>
                   <span className="text-xs text-muted-foreground">{t("accountsCount", { count: g.items.length })}</span>
                   <bdi data-money className={`text-sm font-semibold tabular-nums ${g.total < 0 ? "text-expense" : ""}`}>{money(g.total)}</bdi>
@@ -66,7 +66,7 @@ export function AccountsOverview() {
                     return (
                       <li key={a.id}>
                         <Link href={`/accounts/${a.id}`} className="flex min-h-14 items-center gap-3 ps-12 pe-4 hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
-                          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/15 text-xs font-semibold text-primary" aria-hidden>{a.name.slice(0, 2)}</span>
+                          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground" aria-hidden>{(() => { const Icon = TYPE_ICON[a.type]; return <Icon className="size-4" />; })()}</span>
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-medium" title={a.name}>{a.name}</span>
                             {full && <span className="block truncate text-xs text-muted-foreground">{tInv(`type_${full.type}`)} · {full.currency}</span>}

@@ -1,5 +1,7 @@
 "use client";
 
+import { TYPE_ICON } from "./account-icons";
+
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -73,7 +75,7 @@ export function LoansView() {
             <li key={l.id} className="overflow-hidden rounded-2xl border border-border bg-card">
               <Link href={`/accounts/${l.id}`} className="block px-5 py-4 hover:bg-accent/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
                 <div className="flex items-start gap-3">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-lg text-sm" style={{ background: `color-mix(in oklab, ${l.color} 20%, transparent)` }} aria-hidden>{l.type === "mortgage" ? "🏠" : "💳"}</span>
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg text-sm" style={{ background: `color-mix(in oklab, ${l.color} 20%, transparent)` }} aria-hidden>{(() => { const Icon = TYPE_ICON[l.type === "mortgage" ? "mortgage" : "loan"]; return <Icon className="size-4" />; })()}</span>
                   <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{l.name}</span><span className="block truncate text-xs text-muted-foreground">{t(`type_${l.type}`)}{l.note ? ` · ${l.note}` : ""}</span></span>
                   <span className="text-end"><bdi data-money className="block font-semibold tabular-nums">{money(l.balance)}</bdi>{l.original && <span className="block text-xs text-muted-foreground">{t("ofOriginal", { amount: money(l.original) })}</span>}</span>
                 </div>
