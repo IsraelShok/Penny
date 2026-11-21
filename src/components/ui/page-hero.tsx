@@ -5,9 +5,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { InfoTip } from "@/components/ui/info-tip";
-import { ArrowDown, ArrowUp, ArrowLeftRight, CalendarClock, Flag, Landmark, LayoutGrid, PieChart, Repeat, RotateCw, Sprout, Target } from "lucide-react";
-import { getAssets, getCashflowHealth, getPlan, getSuggestions, type TransactionsSummary } from "@/lib/api";
-import { shekels, signedShekels } from "@/lib/money";
+import { CalendarClock, Flag, Landmark, LayoutGrid, PieChart, Repeat, RotateCw, Sprout, Target } from "lucide-react";
+import { getAssets, getCashflowHealth, getPlan, getSuggestions } from "@/lib/api";
+import { shekels } from "@/lib/money";
 import { Sparkline } from "@/components/ui/sparkline";
 import { StatStrip, type StatStripItem } from "@/components/ui/stat-strip";
 import { MonthNav, MonthStrip } from "@/components/ui/month-nav";
@@ -46,20 +46,6 @@ export function PageHero({ title, icon, meta, month, aside, label, value, senten
     {stats && stats.length > 0 && <StatStrip tone="hero" items={stats} className="mt-5" />}
     {month && !compact && <MonthStrip value={month.value} onChange={month.onChange} />}
   </section>;
-}
-
-export function TransactionsHero({ summary, loading, error, onRetry, meta, month }: { summary?: TransactionsSummary; loading: boolean; error: boolean; onRetry: () => void; meta: string; month?: { value: string; onChange: (m: string) => void } }) {
-  const t = useTranslations("pageHero");
-  const tn = useTranslations("nav");
-  const locale = useLocale();
-  const s = summary;
-  const over = (s?.net ?? 0) < 0;
-  const Arrow = over ? ArrowDown : ArrowUp;
-  // "Left over" / "Overspent" instead of "income minus expenses"; the (i) keeps the formula. Light tints match .studio-status on the purple card.
-  return <PageHero compact title={tn("transactions")} icon={<ArrowLeftRight size={15} aria-hidden="true" />} meta={meta} month={month} loading={loading} error={error} onRetry={onRetry}
-    label={s && <span className="inline-flex items-center gap-1"><Arrow size={15} aria-hidden="true" />{t(over ? "txOver" : "txLeft", { month: meta })}<InfoTip text={t("txNetInfo")} className="-my-3 text-current hover:bg-white/10" /></span>}
-    value={s && <span className={over ? "text-[#ffbac6]" : "text-[#b5e7c8]"}>{signedShekels(s.net, locale)}</span>}
-    sentence={s && <>{t("txSentence", { income: signedShekels(Math.abs(s.income.total), locale), expense: signedShekels(-Math.abs(s.expense.total), locale) })}{s.pendingReviewCount > 0 && <> · {t("txReview", { count: s.pendingReviewCount })}</>}</>} />;
 }
 
 export function FutureHero() {
