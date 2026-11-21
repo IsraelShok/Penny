@@ -189,3 +189,14 @@ footer a { color: var(--muted); }
 
 .tour-video { margin: 0 0 28px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); background: var(--card); }
 .tour-video video { display: block; width: 100%; height: auto; }
+
+/* Download buttons: icon, then the action over its version and size; one row, equal heights. */
+.btn-dl { min-height: 60px; padding: 0 22px; gap: 12px; text-align: start; }
+.btn-dl svg { width: 22px; height: 22px; flex: none; }
+.btn-dl span { display: flex; flex-direction: column; line-height: 1.2; }
+.btn-dl b { font-weight: 700; unicode-bidi: plaintext; }
+.btn-dl small { font-size: .78rem; font-weight: 500; opacity: .75; }
+.cta-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin-top: 16px; font-size: .92rem; color: var(--muted, inherit); }
+.cta-links a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
+.cta-links a:hover { text-decoration-color: currentColor; }
+@media (max-width: 560px) { .cta .btn-dl { flex: 1 1 100%; justify-content: flex-start; } }
