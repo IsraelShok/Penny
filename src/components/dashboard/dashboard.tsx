@@ -6,13 +6,14 @@ import { BudgetTable } from "./budget-table";
 import { useState, useCallback, useSyncExternalStore } from "react";
 import { readStored } from "@/lib/legacy-names";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { MonthNav, monthKey } from "@/components/ui/month-nav";
+import { shekels } from "@/lib/money";
 import { DataState } from "@/components/ui/data-state";
 import { getSummary, getTransactions, listIntegrations, getBudgetMoves } from "@/lib/api";
 import { IncomeSmoothingCard } from "./income-smoothing-card";
 import { getMonthRange } from "@/lib/formatters";
 import { PageHeader } from "@/components/layout/app-shell";
-import { StudioOverview } from "./studio-overview";
 import { StudioDistribution } from "./studio-distribution";
 import { StudioJourney } from "./studio-journey";
 import { StudioTransactions } from "./studio-transactions";
@@ -32,9 +33,11 @@ function readViewMode(): CategoryViewMode {
   if (typeof window === "undefined") return "collapsed";
   try {
     const raw = readStored(VIEW_MODE_KEY, LEGACY_VIEW_MODE_KEY);
-    return raw === "expanded" || raw === "table" ? raw : "collapsed";
+    if (raw === "expanded" || raw === "collapsed" || raw === "table") return raw;
+    // Not chosen yet: the table on wide screens, the cards on phones (a table scrolls sideways there).
+    return matchMedia("(max-width: 767px)").matches ? "collapsed" : "table";
   } catch {
-    return "collapsed";
+    return "table";
   }
 }
 
@@ -42,12 +45,13 @@ const noSubscribe = () => () => {}; // read once per render; this component's ow
 
 export function Dashboard() {
   const t = useTranslations("dashboard");
+  const locale = useLocale();
   const [selectedDate, setSelectedDate] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [chosenViewMode, setViewMode] = useState<CategoryViewMode | null>(null);
-  const storedViewMode = useSyncExternalStore(noSubscribe, readViewMode, (): CategoryViewMode => "collapsed");
+  const storedViewMode = useSyncExternalStore(noSubscribe, readViewMode, (): CategoryViewMode => "table");
   const viewMode = chosenViewMode ?? storedViewMode;
   const { preferences, save, resolvedStudioTheme } = useStudio();
 
@@ -92,17 +96,27 @@ export function Dashboard() {
         : summaryQuery.isPending || period.isPending || banks.isPending ? <DataState loading />
         : <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
         <div className="flex min-w-0 flex-col gap-[26px]">
-        {/* The overview carries the month picker, so it stays up on an empty month too. */}
-        {summary && <div className={`studio-top-grid ${!preferences.showChart || period.data?.total === 0 ? "studio-single" : ""}`}>
-          <StudioOverview data={summary} selectedDate={selectedDate} preferences={preferences} onMonthChange={(m) => setSelectedDate(new Date(`${m}-01T12:00:00`))} />
-          {preferences.showChart && period.data?.total !== 0 && <StudioDistribution categories={summary.categoriesWithData} uncategorized={summary.uncategorized} chart={preferences.chart} onChartChange={(chart) => {
-            save({ ...preferences, chart });
-          }} />}
-        </div>}
+        {/* One slim line: the month, then the budget in four numbers. The table follows at once. */}
+        {summary && (() => {
+          const lines = summary.categoriesWithData.filter((c) => !c.isParent);
+          const over = lines.reduce((sum, c) => sum + Math.max(0, c.budget > 0 ? c.spent - c.budget : 0), 0);
+          const spent = lines.reduce((sum, c) => sum + c.spent, 0);
+          const left = summary.totalBudget - spent;
+          const stat = (key: string, value: number, tone = "") => <div className="min-w-0"><dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t(key)}</dt><dd className={`text-lg font-semibold tabular-nums ${tone}`}><bdi data-money>{shekels(Math.round(value), locale)}</bdi></dd></div>;
+          return (
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-border bg-card px-4 py-3">
+              <MonthNav value={month} max={monthKey(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1))} onChange={(m) => setSelectedDate(new Date(`${m}-01T12:00:00`))} />
+              <dl className="flex flex-1 flex-wrap items-center justify-end gap-x-8 gap-y-2">
+                {stat("stripBudget", summary.totalBudget)}
+                {stat("stripSpent", -spent)}
+                {stat("stripLeft", left, left < 0 ? "text-expense" : "text-status-on-track")}
+                {over > 0 && stat("stripOver", -over, "text-expense")}
+              </dl>
+            </div>
+          );
+        })()}
         {period.data?.total === 0 ? <DataState period={banks.data?.some((bank) => bank.lastSyncAt)} /> : <>
 
-        {recent.isError ? <DataState error onRetry={() => void recent.refetch()} /> : recent.isPending ? <DataState loading /> : <StudioTransactions transactions={recent.data.transactions} from={from} to={to} />}
-        <VacationPlans compact />
 
         {household.members.length >= 2 && (
           <label className="flex w-fit items-center gap-2 text-sm">{tOwner("filter")}
@@ -129,7 +143,7 @@ export function Dashboard() {
           </Tabs>
         </div>
 
-        {viewMode === "table" ? <BudgetTable categories={summary?.categoriesWithData ?? []} frame={summary?.totalBudget ?? 0} /> : <div className="studio-category-section"><CategoryGrid
+        {viewMode === "table" ? <BudgetTable categories={summary?.categoriesWithData ?? []} frame={summary?.totalBudget ?? 0} elapsed={summary?.timeElapsedPercent ?? 0} /> : <div className="studio-category-section"><CategoryGrid
           categories={summary?.categoriesWithData ?? []}
           loading={summaryQuery.isLoading}
           periodTotal={summary?.periodTotal ?? 0}
@@ -139,6 +153,9 @@ export function Dashboard() {
           month={month}
           moves={moves.data ?? []}
         /></div>}
+        {summary && preferences.showChart && <StudioDistribution categories={summary.categoriesWithData} uncategorized={summary.uncategorized} chart={preferences.chart} onChartChange={(chart) => save({ ...preferences, chart })} />}
+        {recent.isError ? <DataState error onRetry={() => void recent.refetch()} /> : recent.isPending ? <DataState loading /> : <StudioTransactions transactions={recent.data.transactions} from={from} to={to} />}
+        <VacationPlans compact />
         {summary && preferences.showJourney && <StudioJourney data={summary} month={month} />}
         {from === getMonthRange(new Date()).from && <IncomeSmoothingCard />}
         <PeriodicCard />

@@ -565,7 +565,11 @@
     "heroOver": "Over by",
     "heroPerDay": "Per day",
     "heroForecast": "Month-end forecast",
-    "viewModeTable": "Table"
+    "viewModeTable": "Table",
+    "stripBudget": "Budget",
+    "stripSpent": "Spent",
+    "stripLeft": "Left",
+    "stripOver": "Overspent"
   },
   "settings": {
     "pageTitle": "Settings",
@@ -5810,7 +5814,11 @@
     "used": "{pct}% used",
     "total": "Total · {n} lines",
     "onlyFrame": "No category budgets yet, just a monthly frame of {frame}. Build budgets from your average with the button above.",
-    "noBudgets": "No budget yet. Build one from your average with the button above."
+    "noBudgets": "No budget yet. Build one from your average with the button above.",
+    "editAssigned": "Edit the budget for {name}",
+    "saveFailed": "The budget was not saved. Try again.",
+    "lines": "{n, plural, one {# line} other {# lines}}",
+    "paceHint": "The thin mark on each bar is {pct}% of the month gone. A bar past it is spending faster than the month."
   },
   "ownerFilter": {
     "filter": "Whose:",
