@@ -579,7 +579,7 @@
       "bank": "חשבונות וייבוא",
       "ai": "ספק AI",
       "categories": "קטגוריות",
-      "data": "נתונים וייבוא",
+      "data": "ייבוא וייצוא",
       "rules": "אוטומציות",
       "household": "משק הבית",
       "telegram": "טלגרם",
@@ -588,7 +588,12 @@
       "payees": "בתי עסק",
       "currencies": "מטבעות",
       "accountGroups": "קבוצות חשבונות",
-      "language": "שפה"
+      "language": "שפה",
+      "groupPersonal": "אישי",
+      "groupWorkspace": "סביבת עבודה",
+      "collapse": "כיווץ",
+      "expand": "הרחבת התפריט",
+      "backToSettings": "חזרה להגדרות"
     },
     "workspace": {
       "nameTitle": "שם סביבת העבודה",
@@ -5632,7 +5637,8 @@
     "liabilities": "התחייבויות",
     "connections": "חיבורי בנקים",
     "connect": "חיבור בנק",
-    "noConnections": "עוד לא חוברו בנקים. חברו בנק כדי לסנכרן יתרות אוטומטית."
+    "noConnections": "עוד לא חוברו בנקים. חברו בנק כדי לסנכרן יתרות אוטומטית.",
+    "manageGroups": "ניהול קבוצות החשבונות"
   },
   "budgetPanel": {
     "title": "סקירת התקופה",
@@ -6163,5 +6169,15 @@
     "kind_new": "חדש, לא היה בתקופה הקודמת",
     "kind_gone": "לא היה החודש",
     "kind_oneOff": "חיוב חד-פעמי גדול"
+  },
+  "topBar": {
+    "moreAdd": "עוד דרכים להוסיף",
+    "importFile": "ייבוא קובץ",
+    "connectBank": "חיבור בנק",
+    "addAccount": "חשבון או נכס חדש",
+    "alerts": "התראות",
+    "alertsCount": "התראות ({count})",
+    "noAlerts": "אין כרגע מה לטפל בו.",
+    "settings": "הגדרות"
   }
 }

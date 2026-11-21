@@ -579,7 +579,7 @@
       "bank": "Accounts & import",
       "ai": "AI provider",
       "categories": "Categories",
-      "data": "Data & import",
+      "data": "Import/Export",
       "rules": "Automations",
       "household": "Household",
       "telegram": "Telegram",
@@ -588,7 +588,12 @@
       "payees": "Payees",
       "currencies": "Currencies",
       "accountGroups": "Account groups",
-      "language": "Language"
+      "language": "Language",
+      "groupPersonal": "Personal",
+      "groupWorkspace": "Workspace",
+      "collapse": "Collapse",
+      "expand": "Expand menu",
+      "backToSettings": "Back to settings"
     },
     "workspace": {
       "nameTitle": "Workspace name",
@@ -5632,7 +5637,8 @@
     "liabilities": "Liabilities",
     "connections": "Bank connections",
     "connect": "Connect bank",
-    "noConnections": "No banks connected yet. Connect one to sync balances automatically."
+    "noConnections": "No banks connected yet. Connect one to sync balances automatically.",
+    "manageGroups": "Manage account groups"
   },
   "budgetPanel": {
     "title": "Period overview",
@@ -6163,5 +6169,15 @@
     "kind_new": "New, not there before",
     "kind_gone": "Not there this time",
     "kind_oneOff": "One large one-off charge"
+  },
+  "topBar": {
+    "moreAdd": "More ways to add",
+    "importFile": "Import a file",
+    "connectBank": "Connect a bank",
+    "addAccount": "New account or asset",
+    "alerts": "Notifications",
+    "alertsCount": "Notifications ({count})",
+    "noAlerts": "Nothing to handle right now.",
+    "settings": "Settings"
   }
 }

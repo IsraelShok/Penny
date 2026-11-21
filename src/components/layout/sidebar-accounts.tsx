@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { compactShekels } from "@/lib/money";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, Plus, Settings2 } from "lucide-react";
 import { getAssets } from "@/lib/api";
 import { accountLabel } from "@/lib/i18n-data";
 import { ACCOUNT_GROUPS, groupAccounts, type AccountGroupKey } from "@/lib/account-groups";
@@ -39,19 +39,21 @@ export function SidebarAccounts({ onNavigate }: { onNavigate: () => void }) {
     <section aria-labelledby="sidebar-accounts" className="mt-3 border-t border-sidebar-border px-2 pt-3 group-data-[collapsible=icon]:hidden">
       <div className="mb-1 flex items-center justify-between px-2">
         <h2 id="sidebar-accounts" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("title")}</h2>
+        <div className="flex items-center">
+        <Link href="/settings/account-groups" onClick={onNavigate} aria-label={t("manageGroups")} title={t("manageGroups")} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent focus-visible:outline-2 focus-visible:outline-ring"><Settings2 className="size-4" aria-hidden /></Link>
         <Link href="/investments" onClick={onNavigate} aria-label={t("add")} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent focus-visible:outline-2 focus-visible:outline-ring"><Plus className="size-4" aria-hidden /></Link>
+        </div>
       </div>
       {/* "No accounts yet" only once the list has loaded: while loading or after a failed fetch it would be untrue. */}
       {!data ? null : groups.length === 0 ? <Link href="/accounts" onClick={onNavigate} className="block rounded-md px-2 py-2 text-xs text-muted-foreground hover:bg-sidebar-accent">{t("empty")}</Link> :
         groups.map((g) => (
-          // Minimal by default: one closed row per group, an emoji for its name (full name on hover and for screen readers).
-          <details key={g.key} className="group/acc">
-            <summary title={t(`groups.${g.key}`)} className="flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-md px-2 text-sm hover:bg-sidebar-accent focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
-              <span className="text-base leading-none" aria-hidden>{GROUP_EMOJI[g.key]}</span>
-              <span className="sr-only">{t(`groups.${g.key}`)}</span>
-              <bdi data-money className={`flex-1 text-xs font-medium tabular-nums ${g.total < 0 ? "text-expense" : ""}`}>{compact(g.total)}</bdi>
-              <span className="text-[11px] text-muted-foreground tabular-nums" aria-hidden>{g.items.length}</span>
-              <ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform group-open/acc:rotate-180 motion-reduce:transition-none" aria-hidden />
+          // Open by default: each group's name and total, then its accounts.
+          <details key={g.key} open className="group/acc">
+            <summary className="flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-md px-2 text-sm hover:bg-sidebar-accent focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+              <ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform -rotate-90 rtl:rotate-90 group-open/acc:rotate-0 motion-reduce:transition-none" aria-hidden />
+              <span className="text-sm leading-none" aria-hidden>{GROUP_EMOJI[g.key]}</span>
+              <span className="min-w-0 flex-1 truncate font-medium">{t(`groups.${g.key}`)}</span>
+              <bdi data-money className={`shrink-0 text-xs font-medium tabular-nums ${g.total < 0 ? "text-expense" : ""}`}>{compact(g.total)}</bdi>
             </summary>
             <ul className="mb-1">
               {g.items.map((a) => (

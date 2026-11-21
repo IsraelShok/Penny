@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { SETTINGS_GROUPS } from "@/components/settings/settings-sidebar";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PanelLeftIcon, Search, ChevronDown, Plus } from "lucide-react";
 import { getActivity, getHome } from "@/lib/api";
@@ -23,7 +22,6 @@ import {
   Calculator,
   BookOpen,
   Settings as SettingsIcon,
-  ChevronRight,
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,7 +29,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -116,31 +113,13 @@ export function AppSidebar() {
   // Settings lives as an icon by the workspace, but the wheel still reaches it last.
   const pages = NAVIGATION_GROUPS.flatMap(group => group.items);
   const lastWheel = useRef(0);
-  const tc = useTranslations("common");
-  const tSet = useTranslations("settings.sidebar");
-  const tRoot = useTranslations();
-  // The gear swaps the menu to the settings sections; settings routes always show them.
-  const onSettings = pathname.startsWith("/settings");
-  const [settingsMenu, setSettingsMenu] = useState(onSettings);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const focusAfterSwap = useRef(false);
-  const [prevOnSettings, setPrevOnSettings] = useState(onSettings);
-  if (onSettings !== prevOnSettings) { setPrevOnSettings(onSettings); if (onSettings) setSettingsMenu(true); }
-  useEffect(() => {
-    if (!focusAfterSwap.current) return;
-    focusAfterSwap.current = false;
-    menuRef.current?.querySelector<HTMLElement>("a, button")?.focus();
-  }, [settingsMenu]);
-  const swapMenu = (to: boolean) => { focusAfterSwap.current = true; setSettingsMenu(to); };
-
   // Wheel over the menu steps through the pages, top to bottom.
   function onWheel(e: React.WheelEvent) {
     if (!plan.wheelPaging || Math.abs(e.deltaY) < 4) return;
     const now = e.timeStamp;
     if (now - lastWheel.current < WHEEL_COOLDOWN_MS) return;
     lastWheel.current = now;
-    // On the settings menu the wheel steps through its sections instead.
-    const list = settingsMenu ? SETTINGS_GROUPS.flatMap((g) => g.items) : pages;
+    const list = pages;
     const i = list.findIndex((p) => p.match(pathname));
     const next = list[Math.min(list.length - 1, Math.max(0, (i < 0 ? 0 : i) + (e.deltaY > 0 ? 1 : -1)))];
     if (next && !next.match(pathname)) { e.preventDefault(); router.push(next.href); }
@@ -150,12 +129,12 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent className="pt-3" onWheel={onWheel}>
         {/* No logo row: the brand lives on the profile picker. Add-transaction leads; the sync status is in the profile menu. */}
-        <SidebarGroup className="pb-1">
+        <SidebarGroup className="pb-1 md:hidden">
           <div className="flex items-center gap-1.5 group-data-[collapsible=icon]:flex-col">
             <SidebarMenu className="min-w-0 flex-1"><SidebarMenuItem><SidebarMenuButton tooltip={tShell("addTransaction")} className="min-h-10 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" render={<Link href="/transactions?add=1" onClick={() => setOpenMobile(false)}><Plus aria-hidden /><span>{tShell("addTransaction")}</span></Link>} /></SidebarMenuItem></SidebarMenu>
           </div>
         </SidebarGroup>
-        <SidebarSeparator className="mx-3 w-auto" />
+        <SidebarSeparator className="mx-3 w-auto md:hidden" />
         <SidebarGroup className="pb-0">
           <SidebarMenu>
             <SidebarMenuItem>
@@ -172,49 +151,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        <div ref={menuRef} className="contents">
-        {settingsMenu ? <>
-          <SidebarGroup className="pb-0">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                {/* A real button, not a quiet row: leaving settings should be the easiest thing on the menu. */}
-                <SidebarMenuButton
-                  onClick={() => swapMenu(false)}
-                  tooltip={tc("back")}
-                  variant="outline"
-                  size="lg"
-                  className="bg-sidebar-accent/60 font-semibold shadow-sm hover:bg-sidebar-accent focus-visible:ring-2"
-                >
-                  <ChevronRight className="text-primary ltr:rotate-180" aria-hidden />
-                  <span>{tc("back")}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-          <h2 className="sr-only">{t("settings")}</h2>
-          {SETTINGS_GROUPS.map((group) => (
-            <SidebarGroup key={group.titleKey} className="py-0">
-              <SidebarGroupLabel>{tSet(group.titleKey)}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {group.items.map((item) => {
-                    const label = item.labelKey.includes(".") ? tRoot(item.labelKey) : tSet(item.labelKey);
-                    const active = onSettings && item.match(pathname);
-                    return (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          render={<Link href={item.href} onClick={() => setOpenMobile(false)} aria-current={active ? "page" : undefined}><item.Icon /><span>{label}</span></Link>}
-                          isActive={active}
-                          tooltip={label}
-                        />
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
-        </> : NAVIGATION_GROUPS.map((group, index) => {
+        {NAVIGATION_GROUPS.map((group, index) => {
           const activeGroup = group.items.some(item => item.match(pathname));
           const expanded = expandedGroups[group.key] ?? activeGroup;
           const compact = state === "collapsed" && !isMobile;
@@ -262,8 +199,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         ); })}
-        </div>
-        {!settingsMenu && <SidebarAccounts onNavigate={() => setOpenMobile(false)} />}
+        <SidebarAccounts onNavigate={() => setOpenMobile(false)} />
       </SidebarContent>
 
       <SidebarFooter className="gap-1 border-t border-sidebar-border">
@@ -271,7 +207,7 @@ export function AppSidebar() {
         <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
           <div className="min-w-0 flex-1">
             <WorkspaceSwitcher
-              onSettings={() => swapMenu(!settingsMenu)}
+              onSettings={() => { setOpenMobile(false); router.push("/settings"); }}
               sync={{ label: sync.state.label, dot: sync.styles.dot, busy: sync.styles.pulse, alert: sync.state.tone === "error" || sync.state.tone === "warn" }}
               onLock={lock.data?.enabled ? async () => {
                 await fetch("/api/lock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "lock" }) });
