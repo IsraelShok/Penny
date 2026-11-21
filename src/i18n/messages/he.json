@@ -480,7 +480,10 @@
     "splitCount": "מפוצל · {count}",
     "saveFailedHe": "לא ניתן לשמור. בדקו שהקטגוריות תואמות ושהתנועות לא השתנו, ונסו שוב.",
     "headerTags": "תגיות ובעלות",
-    "countChip": "תנועות"
+    "countChip": "תנועות",
+    "sumIncome": "הכנסות",
+    "sumExpenses": "הוצאות",
+    "sumNet": "נטו"
   },
   "dashboard": {
     "syncing": "בסנכרון…",

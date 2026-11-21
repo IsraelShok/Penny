@@ -126,6 +126,8 @@ interface TransactionsTableProps {
   onAdd?: () => void;
   /** Leads the filter bar (the income/expense switch), so the list's filters read as one group. */
   kindFilter?: ReactNode;
+  /** More of the page's filters (people, trash, saved views), after the category filter in the same bar. */
+  toolbarExtra?: ReactNode;
 }
 
 const PAGE_SIZE = 50;
@@ -155,6 +157,7 @@ export function TransactionsTable({
   onEdit,
   onAdd,
   kindFilter,
+  toolbarExtra,
 }: TransactionsTableProps) {
   const catBrowser = useCategoryBrowser(categories);
   const catListId = useId();
@@ -505,6 +508,7 @@ export function TransactionsTable({
                 }}
               />
             </TransactionMultiFilter>
+            {toolbarExtra}
             {onAdd ? (
               <IconButton label={tManual("addTitle")} type="button" variant="outline" size="icon-sm" className="hidden shrink-0 md:inline-flex" onClick={onAdd}>
                 <Plus className="size-4" aria-hidden />
@@ -602,7 +606,7 @@ export function TransactionsTable({
                     sortAscLabel={t("sortAsc")}
                     sortDescLabel={t("sortDesc")}
                   />
-                  <TableHead className="hidden w-[190px] xl:table-cell">{t("headerTags")}</TableHead>
+                  <TableHead className="hidden w-[230px] xl:table-cell">{t("headerTags")}</TableHead>
                   <SortableTableHead
                     label={t("headerAmount")}
                     field="charged_amount"
@@ -696,7 +700,7 @@ export function TransactionsTable({
                     >
                       <TableCell className="max-lg:pt-3.5 max-lg:align-top">
                         {/* A 36px tap area around the 16px box. */}
-                        <label className="inline-grid size-9 cursor-pointer place-items-center"><input className="size-4" type="checkbox" aria-label={t("selectRow", { name: txn.description })} disabled={editing || isFetching} checked={isSelected} onChange={e => setSelected(e.target.checked ? [...selected, txn.id] : selected.filter(id => id !== txn.id))} /></label>
+                        <label className="inline-grid size-9 cursor-pointer place-items-center lg:size-7"><input className="size-4" type="checkbox" aria-label={t("selectRow", { name: txn.description })} disabled={editing || isFetching} checked={isSelected} onChange={e => setSelected(e.target.checked ? [...selected, txn.id] : selected.filter(id => id !== txn.id))} /></label>
                       </TableCell>
                       <TableCell className="hidden whitespace-nowrap text-xs tabular-nums text-muted-foreground lg:table-cell">
                         {dayLabel(txn.date)}
@@ -786,7 +790,8 @@ export function TransactionsTable({
                         />
                       </TableCell>
                       <TableCell className="hidden whitespace-normal xl:table-cell">
-                        <div className="flex flex-wrap items-center gap-1">
+                        {/* One line, like every other cell: a wrapped tags cell doubled the row's height. */}
+                        <div className="flex items-center gap-1 overflow-hidden">
                           {members.length >= 2 && (
                             <OwnerPicker
                               label={tTags("ownerLabel")}
@@ -797,7 +802,7 @@ export function TransactionsTable({
                             />
                           )}
                           {onTagClick && (
-                            <TagChips id={txn.id} tags={txn.tags ?? []} allTags={allTags} onFilter={onTagClick} className="mt-0"
+                            <TagChips id={txn.id} tags={txn.tags ?? []} allTags={allTags} onFilter={onTagClick} className="mt-0 flex-nowrap"
                               addClassName="[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/row:opacity-100 group-focus-within/row:opacity-100 focus-visible:opacity-100" />
                           )}
                         </div>
