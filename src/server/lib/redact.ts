@@ -4,7 +4,7 @@ const KEYS = "password|pass|otp|token|apiKey|api_key|id|userCode|card6Digits|car
 const RULES: [RegExp, string][] = [
   [/\bsk-[A-Za-z0-9_-]{16,}/g, "[key]"], // Anthropic / OpenAI style API keys
   [/\b\d{6,}:[A-Za-z0-9_-]{30,}/g, "[token]"], // Telegram bot tokens
-  [/\b(bearer|authorization)\b\s*[:=]?\s*\S+/gi, "$1 [redacted]"],
+  [/\b(bearer|authorization)\b\s*[:=]?\s*(?:bearer\s+)?\S+/gi, "$1 [redacted]"], // "Authorization: Bearer x" too
   [new RegExp(`"(${KEYS})"\\s*:\\s*"[^"]*"`, "gi"), '"$1":"[redacted]"'],
   [new RegExp(`\\b(${KEYS})\\s*=\\s*[^\\s&]+`, "gi"), "$1=[redacted]"],
   [/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[email]"],
