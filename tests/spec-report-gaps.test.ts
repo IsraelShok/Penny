@@ -56,3 +56,15 @@ it("PM-32/PM-17: a wrong current passphrase gets 401 and counts toward the back-
   expect((await call("correct horse")).status).toBe(429);
   expect(lock.isLockEnabled()).toBe(true);
 });
+
+it("open banking sends its token only over https (plain http only to this machine)", async () => {
+  const { connectOpenBanking } = await import("@/server/open-banking/client");
+  const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}"));
+  const run = (baseUrl: string) => connectOpenBanking({ baseUrl, token: "t" }, new Date());
+  for (const bad of ["http://bank.example", "ftp://bank.example", "https://u:p@bank.example"])
+    expect((await run(bad)).errorMessage).toMatch(/https:\/\/|user name/);
+  expect(fetchSpy).not.toHaveBeenCalled();
+  await run("http://127.0.0.1:9");
+  expect(fetchSpy).toHaveBeenCalledTimes(1);
+  fetchSpy.mockRestore();
+});

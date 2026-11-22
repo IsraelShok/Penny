@@ -173,6 +173,10 @@ export function getFolderImportConfig(): FolderImportConfig {
   };
 }
 
+/** After a restore: a folder path from someone else's backup is not trusted, so go back to the default. */
+export const resetFolderImportDir = () =>
+  save({ ...getFolderImportConfig(), dir: defaultImportDir() });
+
 function save(c: FolderImportConfig) {
   const { defaultDir: _d, ...rest } = c;
   setGlobalSetting(KEY, JSON.stringify(rest));

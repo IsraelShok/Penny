@@ -11,6 +11,7 @@ import { dataDir, dbPath } from "@/server/lib/data-dir";
 import { getKey, keyPath, setKeyInMemory } from "@/server/lib/encryption";
 import { isLockEnabled } from "@/server/lib/app-lock";
 import { requireRelink } from "@/server/bot/config";
+import { resetFolderImportDir } from "@/server/lib/folder-import";
 
 /**
  * One portable, passphrase-encrypted file holding the database and the key that decrypts the
@@ -285,6 +286,7 @@ export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
   const check = fresh.pragma("quick_check") as { quick_check: string }[];
   if (!check.every((row) => row.quick_check === "ok")) throw new Error("corruptRestore");
   requireRelink();
+  resetFolderImportDir();
   return { counts: countsOf(fresh), preRestoreBackup, createdAt: payload.createdAt };
 }
 

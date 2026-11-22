@@ -32,6 +32,7 @@ export function AccessPanel() {
       await qc.invalidateQueries();
       if (reload) {
         setActiveWorkspaceId(null);
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- a full reload drops the old workspace's cached data
         window.location.assign("/");
       } else toast.success(tr("saved"));
     } catch {

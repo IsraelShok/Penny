@@ -61,9 +61,19 @@ interface BgTransactionsResponse {
 function baseUrlOf(credentials: OpenBankingCredentials): string {
   const raw = credentials.baseUrl?.trim();
   if (!raw) throw new Error("Open banking API base URL is missing.");
-  if (!/^https?:\/\//i.test(raw)) {
-    throw new Error("Open banking API base URL must start with http:// or https://.");
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error("Open banking API base URL must start with https://.");
   }
+  // The bearer token goes to this address: plain http only to this machine (a local test server).
+  const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  if (url.protocol !== "https:" && !(url.protocol === "http:" && loopback)) {
+    throw new Error("Open banking API base URL must start with https://.");
+  }
+  if (url.username || url.password)
+    throw new Error("Open banking API base URL must not hold a user name or password.");
   return raw.replace(/\/+$/, "");
 }
 

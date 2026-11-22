@@ -21,6 +21,7 @@ export function WipeCard() {
   const wipe = useMutation({
     mutationFn: () => postLock("/api/data/wipe", { confirm: confirm.trim(), secret }),
     // A full reload, so no cached data survives in the page.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- deliberate full reload
     onSuccess: () => window.location.assign("/"),
   });
   const error = wipe.error?.message;

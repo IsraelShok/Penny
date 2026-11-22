@@ -57,6 +57,7 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
         }}
         className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/15"
       >
+        {/* eslint-disable-next-line @next/next/no-img-element -- a fixed 48px local icon, nothing to optimise */}
         <img
           src="/icons/icon-192.png"
           alt="Penny"
