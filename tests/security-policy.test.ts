@@ -127,7 +127,14 @@ describe("access policy: household member", () => {
     for (const apiPath of API_PATHS) {
       // Session, health probe, the unlock endpoint and the workspace list itself are
       // workspace-free by design: they either ignore the header or list what you may see.
-      const workspaceFree = ["/api/access", "/api/health", "/api/lock/unlock", "/api/workspaces"];
+      // Quick-add ignores cookie and header alike: its device token names the workspace (401 without one).
+      const workspaceFree = [
+        "/api/access",
+        "/api/health",
+        "/api/lock/unlock",
+        "/api/workspaces",
+        "/api/quick-add",
+      ];
       if (workspaceFree.includes(apiPath)) continue;
       const res = await call(apiPath, "GET", memberCookie, String(other));
       expect(res.status, apiPath).toBe(403);

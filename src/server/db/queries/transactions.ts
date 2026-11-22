@@ -6,6 +6,7 @@ import { getDb } from "../index";
 import { computeDedupHash } from "../../lib/dedup";
 import { detectKind } from "../../lib/transfers";
 import { BANK_PROVIDERS } from "@/lib/types";
+import { CAPTURED_PREFIX, matchCapturedCharges } from "./manual-transactions";
 import type {
   TransactionWithCategory,
   MonthlySummary,
@@ -976,6 +977,8 @@ export function saveSyncTransactions(
   const db = getDb();
   return db.transaction(() => {
     const result = insertTransactions(workspaceId, transactions, provider, credentialId, syncRunId);
+    // A charge captured from a bank text folds into its bank twin here, so it never counts twice.
+    matchCapturedCharges(db, workspaceId);
     const accounts = [...new Set(scrapedAccounts)];
     if (accounts.length === 0) return { ...result, prunedPending: 0 };
     const keep = [...new Set(transactions.filter((t) => t.status === "pending").map(dedupHashFor))];
@@ -987,6 +990,7 @@ export function saveSyncTransactions(
       .prepare(
         `DELETE FROM transactions
          WHERE workspace_id = ? AND credential_id = ? AND status = 'pending'
+           AND dedup_hash NOT LIKE '${CAPTURED_PREFIX}%'
            AND account_number IN (${accountList}) ${keepClause}`,
       )
       .run(workspaceId, credentialId, ...accounts, ...keep).changes;

@@ -317,3 +317,94 @@ export function deleteManualTransaction(db: Database.Database, ws: number, id: n
   db.prepare("DELETE FROM transactions WHERE workspace_id=? AND id=?").run(ws, id);
   return { ...rest, excluded: !!excluded, tags };
 }
+
+/** Charges captured from a bank text message wait, as pending manual rows, for the bank sync to bring the real one. */
+export const CAPTURED_PREFIX = "sms:";
+
+/** Saves a texted card charge on the card it names (cash wallet when the card is unknown) as a pending manual expense. */
+export function createCapturedCharge(
+  db: Database.Database,
+  ws: number,
+  c: { amount: number; description: string; date: string; last4?: string },
+): number {
+  const account = c.last4
+    ? (
+        db
+          .prepare(
+            "SELECT account_number AS a FROM transactions WHERE workspace_id=? AND provider NOT IN ('cash','manual') AND account_number LIKE ? LIMIT 1",
+          )
+          .get(ws, `%${c.last4}`) as { a: string } | undefined
+      )?.a
+    : undefined;
+  return db.transaction(() => {
+    const id = createManualTransaction(
+      db,
+      ws,
+      { kind: "expense", amount: c.amount, description: c.description, date: c.date, account },
+      [],
+    );
+    db.prepare(
+      "UPDATE transactions SET status='pending', dedup_hash=? || dedup_hash WHERE id=?",
+    ).run(CAPTURED_PREFIX, id);
+    return id;
+  })();
+}
+
+/**
+ * After a sync: each captured charge that now has its bank twin (same amount, same card when known,
+ * dated up to a week later) is folded into it, so the expense counts once. The bank row keeps the
+ * captured category and note when it has none of its own.
+ */
+export function matchCapturedCharges(db: Database.Database, ws: number): number {
+  const captured = db
+    .prepare(
+      `SELECT id, provider, account_number AS account, date, ABS(charged_amount) AS amount, category_id AS categoryId, category_source AS categorySource, memo
+       FROM transactions WHERE workspace_id=? AND dedup_hash LIKE '${CAPTURED_PREFIX}%' ORDER BY date, id`,
+    )
+    .all(ws) as {
+    id: number;
+    provider: string;
+    account: string;
+    date: string;
+    amount: number;
+    categoryId: number | null;
+    categorySource: string | null;
+    memo: string | null;
+  }[];
+  if (captured.length === 0) return 0;
+  const twin = db.prepare(
+    `SELECT id FROM transactions
+     WHERE workspace_id=? AND provider NOT IN ('cash','manual') AND kind='expense'
+       AND ABS(ABS(charged_amount) - ?) < 0.005
+       AND substr(date,1,10) BETWEEN date(?, '-1 day') AND date(?, '+7 day')
+       AND (? OR account_number = ?)
+       AND id NOT IN (SELECT value FROM json_each(?))
+     ORDER BY ABS(julianday(substr(date,1,10)) - julianday(?)), id LIMIT 1`,
+  );
+  const used: number[] = [];
+  let merged = 0;
+  for (const c of captured) {
+    const bank = twin.get(
+      ws,
+      c.amount,
+      c.date,
+      c.date,
+      c.provider === "cash" ? 1 : 0, // card unknown: any account
+      c.account,
+      JSON.stringify(used),
+      c.date,
+    ) as { id: number } | undefined;
+    if (!bank) continue;
+    used.push(bank.id);
+    db.prepare(
+      `UPDATE transactions SET
+         category_id = COALESCE(category_id, ?),
+         category_source = CASE WHEN category_id IS NULL THEN ? ELSE category_source END,
+         memo = COALESCE(memo, ?)
+       WHERE id=?`,
+    ).run(c.categoryId, c.categoryId == null ? null : c.categorySource, c.memo, bank.id);
+    db.prepare("DELETE FROM transactions WHERE id=?").run(c.id);
+    merged++;
+  }
+  return merged;
+}
