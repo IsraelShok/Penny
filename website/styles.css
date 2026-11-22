@@ -200,3 +200,30 @@ footer a { color: var(--muted); }
 .cta-links a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
 .cta-links a:hover { text-decoration-color: currentColor; }
 @media (max-width: 560px) { .cta .btn-dl { flex: 1 1 100%; justify-content: flex-start; } }
+
+/* Facts under the hero: a number and what it counts. */
+.proof { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 22px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 0.95rem; }
+.proof b { color: var(--text); font-weight: 700; }
+.jobs .card h3 { font-size: 1.15rem; }
+/* The comparison: Penny's column is tinted, the first column stays put while the rest scrolls on a phone. */
+.compare { overflow-x: auto; margin-top: 36px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); }
+.compare:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.compare table { border-collapse: collapse; min-width: 1180px; width: 100%; font-size: 0.92rem; }
+.compare th, .compare td { padding: 12px 14px; text-align: start; vertical-align: top; border-bottom: 1px solid var(--line); }
+.compare thead th { font-weight: 700; background: var(--card); position: sticky; top: 0; }
+.compare tbody th { font-weight: 600; width: 170px; }
+.compare tr > :first-child { position: sticky; inset-inline-start: 0; background: var(--card); z-index: 1; }
+.compare tr > :nth-child(2) { background: var(--soft); }
+.compare tbody tr:last-child > * { border-bottom: 0; }
+.compare .y, .compare .n { display: inline-block; font-weight: 700; margin-inline-end: 4px; }
+.compare .y { color: #2b8a4e; }
+.compare .n { color: #b3263e; }
+@media (prefers-color-scheme: dark) { .compare .y { color: #6fd39a; } .compare .n { color: #ff8a9b; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Switching: a real sequence, so it is numbered. */
+.steps { display: grid; gap: 14px; margin: 32px 0 0; padding: 0; list-style: none; counter-reset: step; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; padding: 18px 22px; background: var(--bg); border: 1px solid var(--line); border-radius: 18px; }
+.steps li::before { content: counter(step); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+@media (max-width: 640px) { .compare tbody th { width: 112px; } .compare th, .compare td { padding: 10px; } }
+.pip-row { display: flex; justify-content: center; margin-top: 40px; }
+.pip-row .pip { max-width: 420px; width: 100%; }

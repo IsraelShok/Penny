@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Penny · כסף רגוע למשק הבית</title>
+<title>Penny · כל הכסף של הבית, במחשב שלכם</title>
 <meta name="description" content="אפליקציית כסף למשקי בית בישראל שרצה אצלכם במחשב: בנקים ואשראי, תקציב וכסף על השולחן, כלי מס ופנסיה, פרופילים למשפחה. קוד פתוח, בלי ענן.">
-<meta property="og:title" content="Penny · כסף רגוע למשק הבית">
+<meta property="og:title" content="Penny · כל הכסף של הבית, במחשב שלכם">
 <meta property="og:description" content="הבנקים, התקציב והעתיד שלכם במקום אחד, על המחשב שלכם.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%235541cc'/%3E%3Crect x='10' y='12' width='4' height='8' rx='2' fill='white'/%3E%3Crect x='18' y='12' width='4' height='8' rx='2' fill='white'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=0.2.2">
+<link rel="stylesheet" href="styles.css?v=0.3.1">
 <meta property="og:image" content="https://sergey-bar.github.io/Penny/assets/og-he.jpg">
 <link rel="canonical" href="https://sergey-bar.github.io/Penny/">
 <link rel="alternate" hreflang="he" href="https://sergey-bar.github.io/Penny/">
@@ -35,7 +35,7 @@
   <div class="wrap">
     <a class="brand" href="./" aria-label="Penny, לדף הבית"><span class="brand-mark" aria-hidden="true"><span></span><span></span></span>Penny</a>
     <nav class="nav-links" aria-label="ניווט ראשי">
-      <a href="demo/">דמו לחיץ</a><a class="hide-sm" href="#tour">סיור במוצר</a><a class="hide-sm" href="#mobile">בטלפון</a><a class="hide-sm" href="#tools">כלים</a><a class="hide-sm" href="#privacy">פרטיות</a>
+      <a href="https://penny-finance-demo.vercel.app">דמו חי</a><a class="hide-sm" href="#what">מה זה עושה</a><a class="hide-sm" href="#compare">השוואה</a><a class="hide-sm" href="#everything">כל היכולות</a><a class="hide-sm" href="#privacy">פרטיות</a>
       <a class="hide-sm" href="#faq">שאלות</a><a href="#install">התקנה</a>
       <a class="lang" href="en/" hreflang="en" lang="en">English</a>
     </nav>
@@ -46,47 +46,59 @@
   <div class="hero">
     <div class="wrap">
       <div>
-        <span class="eyebrow">קוד פתוח · רץ אצלכם במחשב · חינם</span>
-        <h1><em>כסף רגוע</em><br>למשק הבית.</h1>
-        <p class="lead">הבנקים, התקציב והעתיד שלכם במקום אחד. תקציב שמראה את הקצב, כלים לכל החלטה גדולה, וכל הנתונים נשארים אצלכם בבית.</p>
+        <span class="eyebrow">חינם, קוד פתוח, בעברית</span>
+        <h1>כל הכסף של הבית.<br>במחשב שלכם.</h1>
+        <p class="lead">Penny מחברת את חשבונות הבנק, כרטיסי האשראי, הפנסיה וההשקעות לתמונה אחת. היא מראה לאן הולך הכסף, כמה יישאר בסוף החודש, מה צפוי בחודשים הקרובים, ואיפה אתם משאירים כסף על השולחן. בלי מנוי ובלי ענן: הכול רץ על המחשב שלכם.</p>
         <div class="cta">
           <a class="btn btn-primary btn-dl" data-os="win" href="https://github.com/Sergey-Bar/Penny/releases/download/v0.3.0/Penny-Setup-0.3.0.exe"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.5 10.5 4.4v7.1H3zm8.5-1.2L21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zm8.5 0H21V21l-9.5-1.3z"/></svg><span><b>הורדה ל-Windows</b><small>גרסה <bdi dir="ltr">0.3.0</bdi> · <bdi dir="ltr">171 MB</bdi></small></span></a>
           <a class="btn btn-ghost btn-dl" data-os="mac" href="https://github.com/Sergey-Bar/Penny/releases/download/v0.3.0/Penny-0.3.0-arm64.dmg"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.5 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9s-2-.9-3.3-.8a4.9 4.9 0 0 0-4.1 2.5c-1.8 3-.5 7.5 1.2 10 .8 1.2 1.8 2.6 3.1 2.5 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4a10 10 0 0 0 1.3-2.8 4.3 4.3 0 0 1-2.3-4.2zM14 5.1A4.4 4.4 0 0 0 15 2a4.5 4.5 0 0 0-2.9 1.5 4.2 4.2 0 0 0-1.1 3c1.1.1 2.2-.6 3-1.4z"/></svg><span><b>הורדה ל-Mac</b><small>Apple Silicon · <bdi dir="ltr">188 MB</bdi></small></span></a>
         </div>
+        <ul class="proof"><li><b>18</b> בנקים וחברות אשראי</li><li><b>5</b> גופי פנסיה</li><li><b>25+</b> מחשבונים לכסף בישראל</li><li><b>1,200+</b> בדיקות אוטומטיות</li></ul>
         <p class="cta-links"><a data-os="linux" href="#install">Docker לשרת או לנאס</a><a href="https://github.com/Sergey-Bar/Penny/releases/download/v0.3.0/Penny-0.3.0-x64.dmg">מעבד Intel? הורדה לגרסת Intel</a><a href="https://github.com/Sergey-Bar/Penny/releases">כל ההורדות והגרסאות</a><a href="https://penny-finance-demo.vercel.app">דמו חי</a><a href="demo/">סיור מודרך</a><a href="https://github.com/Sergey-Bar/Penny">הקוד בגיטהאב</a></p>
         <ul class="gh-stats" data-gh-stats hidden><li><span aria-hidden="true">★</span> <b data-gh="stars"></b> כוכבים בגיטהאב</li><li><span aria-hidden="true">⬇</span> <b data-gh="downloads"></b> הורדות</li><li>גרסה <b data-gh="version"></b></li></ul>
       </div>
       <div class="hero-art">
         <div class="phone"><img src="assets/shots/he/m-home.webp" width="563" height="1218" alt="מסך הבית של Penny בטלפון: כמה צפוי להישאר בסוף החודש"></div>
-        <div class="pip">
-          <div class="pip-stage" role="img" aria-label="פיפ, החבר הקטן של Penny"><boop-face size="170" color="#30d158"></boop-face></div>
-          <h2>זה פיפ</h2>
-          <p id="pip-say" aria-live="polite">נסו אותו: גררו, לחצו, או בחרו מצב רוח.</p>
-          <div class="pip-moods"><button type="button" data-pip="success" data-say="החודש בתוך התקציב ואין משימות פתוחות. פיפ שמח." aria-pressed="false">שמח</button><button type="button" data-pip="idle" data-say="הכול מתנהל כרגיל. פיפ פשוט כאן איתכם." aria-pressed="false">בסדר גמור</button><button type="button" data-pip="wary" data-say="קטגוריה חרגה מהתקציב, או שעבר זמן מאז הסנכרון האחרון." aria-pressed="false">קצת רעב</button><button type="button" data-pip="inspect" data-say="יש משהו שכדאי לבדוק, למשל תנועות חדשות שמחכות לסיווג." aria-pressed="false">שם עין</button></div>
-          <small>באפליקציה מצב הרוח נקבע לפי הכסף של הבית, לא לפי כפתורים.</small>
-        </div>
       </div>
     </div>
   </div>
 
-  <section id="new">
+  <section id="replaces">
     <div class="wrap">
       <div class="section-head">
-        <span class="kicker">חדש בגרסה 0.2.0</span>
-        <h2>מראה חדש, וחכמה יותר גם בלי AI.</h2>
-        <p>הגרסה הגדולה עד היום: עיצוב חדש מקצה לקצה, שכבות חכמות שעובדות בלי AI ובלי רשת, ובדיקות על בנק מדומה מקצה לקצה.</p>
+        <h2>היום הכסף של הבית מפוזר בחמישה מקומות.</h2>
+        <p>אפליקציית הבנק רואה רק את הבנק. אפליקציית האשראי רואה רק את הכרטיס. האקסל הפסיק להתעדכן לפני חצי שנה, ודוח הפנסיה מגיע פעם בשנה ונשאר במגירה. אף אחד מהם לא עונה על השאלה הפשוטה: כמה יישאר לנו בסוף החודש, ומה עושים עם זה.</p>
       </div>
-      <figure class="tour-video"><video src="assets/tour-he.webm" poster="assets/shots/he/home.webp" width="1280" height="800" controls muted loop playsinline preload="none" aria-label="סיור של 30 שניות באפליקציה עם משק בית לדוגמה"></video></figure>
-      <div class="grid"><div class="card"><div class="icon c1" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/><path d="M13 9h5M13 13h5"/></svg></div><h3>מראה חדש</h3><p>בהיר, כהה או לפי המכשיר. תפריט צד שנשאר במקום, סרגל עליון אחד עם חיפוש והוספה, ותנועה רכה בכל פתיחה וסגירה.</p></div><div class="card"><div class="icon c2" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg></div><h3>טבלאות במקום כרטיסים</h3><p>תנועות ותקציב נפתחים ישר בטבלה: כל המסננים בשורה אחת, ותקציב שעורכים במקום עם סימון של קצב החודש.</p></div><div class="card"><div class="icon c3" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg></div><h3>מרכז ניתוח</h3><p>תפריט דוחות אחד, טבלת ציר של הוצאות לפי קבוצה וחודש, ושווי נקי לאורך זמן.</p></div><div class="card"><div class="icon c4" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="5"/><path d="M12 6V3"/><path d="M9 12v2M15 12v2"/></svg></div><h3>פיפ חי</h3><p>מחכה כשמשהו נשמר, מהנהן כשזה הצליח, מקליד איתכם ועוקב אחרי העכבר. לכל פרופיל תמונה משלו.</p></div><div class="card"><div class="icon c1" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5"/><path d="M18.1 10.4a5 5 0 1 1-6.7 6.7"/><path d="M8 6v4h2"/></svg></div><h3>כסף על השולחן</h3><p>סכום אחד בשנה לכל מה שאפשר לחסוך: דמי ניהול גבוהים, ביטוחים כפולים, עמלות, ריבית על מינוס וכסף שיושב בעו"ש. ליד כל סעיף הצעד הבא.</p></div><div class="card"><div class="icon c2" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 10l-5.1 3.3L16.5 20 12 16.3 7.5 20l1.6-6.7L4 10l6.1-1.2z"/></svg></div><h3>מסווג לבד, בלי AI</h3><p>מילון של כ-200 בתי עסק ישראליים וזיכרון של מה שלימדתם. AI רק למה שנשאר, אם בכלל.</p></div><div class="card"><div class="icon c3" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div><h3>למה ההוצאות השתנו</h3><p>החודש מול אותם ימים בחודש הקודם או בשנה שעברה, לפי בית עסק: מחיר, כמות, חדש או חד-פעמי.</p></div><div class="card"><div class="icon c4" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14a6 6 0 0 1 3.5 6"/></svg></div><h3>חלוקה, מעטפות ודירוג אשראי</h3><p>מי חייב לכם מה, כמה מההכנסה כבר קיבל תפקיד, ודירוג האשראי שלכם לאורך זמן.</p></div><div class="card"><div class="icon c5" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></div><h3>מס בלי לחפש</h3><p>זיהוי תרומות וזיכוי של 35% לפי סעיף 46, נקודות זיכוי ורמז להחזר מס.</p></div><div class="card"><div class="icon c6" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div><h3>מתעדכנת לבד</h3><p>ב-Windows הגרסה החדשה יורדת ונבדקת לבד, ומותקנת כשמפעילים מחדש. וגם סיכום בטלגרם שלוש פעמים בשבוע.</p></div></div>
-      <p class="new-links"><a class="btn btn-primary" href="demo/">לנסות את הדמו</a> <a class="btn btn-ghost" href="https://github.com/Sergey-Bar/Penny/blob/main/CHANGELOG.md">כל השינויים</a></p>
+      <div class="grid"><div class="card"><h3>במקום אפליקציה לכל בנק</h3><p>כל החשבונות והכרטיסים ברשימה אחת, מסונכרנת כל יום או מיובאת מקובץ.</p></div><div class="card"><h3>במקום האקסל</h3><p>סיווג לבד לפי מה שלימדתם ומילון של בתי עסק ישראליים, תקציב שנבנה מהממוצע שלכם בלחיצה, וסיכומים לכל תקופה.</p></div><div class="card"><h3>במקום דוח פנסיה במגירה</h3><p>יתרות מחמישה גופי פנסיה, דמי הניהול שלכם מול השוק, ושווי נקי של כל הבית לאורך זמן.</p></div><div class="card"><h3>במקום מנוי חודשי</h3><p>חינם, בלי פרסומות ובלי גרסת פרימיום. הקוד פתוח ברישיון MIT.</p></div></div>
+    </div>
+  </section>
+
+  <section id="what" class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>מה עושים עם Penny ביום-יום.</h2>
+        <p>ארבע שאלות שכל בית שואל, ומה Penny עונה עליהן. הצילומים אמיתיים, מהאפליקציה עם משק בית לדוגמה.</p>
+      </div>
+      <div class="grid jobs"><div class="card"><h3>לאן הלך הכסף?</h3><p>כל התנועות מכל הבנקים והכרטיסים, מסווגות. למה ההוצאות השתנו החודש לעומת החודש שעבר, לפי בית עסק: מחיר, כמות, משהו חדש או חד-פעמי.</p></div><div class="card"><h3>כמה יישאר בסוף החודש?</h3><p>תקציב לכל קטגוריה שמראה את הקצב ולא רק את הסכום, תחזית יתרה לכל חשבון, ולוח שנה של החיובים הקבועים שעוד בדרך.</p></div><div class="card"><h3>איפה אנחנו מפסידים כסף?</h3><p>סכום שנתי אחד לכל מה שאפשר לחסוך: דמי ניהול גבוהים בפנסיה, ביטוח כפול, עמלות בנק, ריבית על מינוס, מנויים שנשכחו, והחזר מס שאולי מגיע לכם.</p></div><div class="card"><h3>איך מגיעים ליעד?</h3><p>יעדי חיסכון עם בדיקה אם כולם מסתדרים, מחשבון עצמאות כלכלית, משכנתא עם מגבלות בנק ישראל, ושווי נקי לאורך זמן.</p></div></div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Penny מול מה שיש בישראל.</h2>
+        <p>בדקנו מה כל מוצר אומר על עצמו באתר שלו או בחנות האפליקציות. איפה שלא מצאנו מידע כתבנו "לא צוין", וזה לא אומר שהיכולת לא קיימת. איפה שאחרים טובים מאיתנו כתבנו את זה. "אפליקציית הבנק" נבדקה בהפועלים, לאומי ופפר.</p>
+      </div>
+      <div class="compare" tabindex="0" role="region" aria-label="טבלת השוואה"><table><thead><tr><th scope="col"><span class="sr">יכולת</span></th><th scope="col">Penny</th><th scope="col">RiseUp</th><th scope="col">Shavve</th><th scope="col">Moneytor</th><th scope="col">FamilyBiz</th><th scope="col">Cover</th><th scope="col">MyFinanda</th><th scope="col">אפליקציית הבנק</th><th scope="col">Excel</th></tr></thead><tbody><tr><th scope="row">מחיר</th><td>חינם</td><td>55 ₪ בחודש אחרי חודש חינם</td><td>30 יום חינם, ואז 199 ₪ לשנה או 29 ₪ חד-פעמי</td><td>בסיסי חינם (ידני). פרימיום 49 ₪ בחודש או 490 ₪ לשנה</td><td>חינם, פרימיום 349.90 ₪ לשנה</td><td>חינם</td><td>חינם, פרימיום 49.90 ₪ ל-3 חודשים</td><td>חלק מאפליקציית הבנק</td><td>חינם או חלק מ-Office</td></tr><tr><th scope="row">כל הבנקים והכרטיסים במקום אחד</th><td><b class="y">כן</b> 18 גופים, בבטא</td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td><b class="y">כן</b> בפרימיום</td><td><b class="y">כן</b></td><td>לא מוזכר באתר</td><td><b class="y">כן</b> 15 גופים</td><td><b class="n">לא</b> רק הבנק שלו</td><td>ידני</td></tr><tr><th scope="row">איך מתחברים לבנק</th><td>סיסמת הבנק, מוצפנת במחשב שלכם. או קובץ</td><td>בנקאות פתוחה מורשית, בלי סיסמה</td><td>בנקאות פתוחה מורשית, בלי סיסמה</td><td>בנקאות פתוחה מורשית, בלי סיסמה</td><td>בנקאות פתוחה מורשית, בלי סיסמה</td><td>מסלקה פנסיונית ומשרד האוצר</td><td>בנקאות פתוחה מורשית, קריאה בלבד</td><td>מובנה</td><td>הקלדה או העתקה</td></tr><tr><th scope="row">איפה הנתונים שלכם</th><td>במחשב שלכם</td><td>אצל החברה</td><td>אצל החברה</td><td>אצל החברה</td><td>אצל החברה</td><td>אצל החברה</td><td>אצל החברה</td><td>אצל הבנק</td><td>בקובץ שלכם</td></tr><tr><th scope="row">מפוקח כנותן שירות מידע פיננסי</th><td><b class="n">לא</b> תוכנה שרצה אצלכם, לא שירות</td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td>לא צוין</td><td><b class="y">כן</b></td><td>מפוקח בבנק ישראל</td><td>—</td></tr><tr><th scope="row">תקציב ותזרים</th><td><b class="y">כן</b> תקציב, מעטפות, תחזית יתרה</td><td><b class="y">כן</b> תזרים חודשי</td><td><b class="y">כן</b> תקציבים</td><td><b class="y">כן</b> תזרים חודשי</td><td><b class="y">כן</b> יעדי הוצאה והכנסה</td><td>לא צוין</td><td><b class="y">כן</b> יעדי תקציב</td><td>בחלק מהבנקים</td><td>ידני</td></tr><tr><th scope="row">פנסיה וביטוחים</th><td><b class="y">כן</b> פנסיה מ-5 גופים, רשימת ביטוחים</td><td>לא צוין</td><td><b class="y">כן</b> בחבילות בתשלום</td><td>פנסיה כן, ביטוח לא צוין</td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td>חיסכון והשקעות. פנסיה לא צוין</td><td>רק בבנק</td><td>ידני</td></tr><tr><th scope="row">איפה אפשר לחסוך</th><td><b class="y">כן</b> דמי ניהול, ביטוח כפול, עמלות, החזר מס</td><td>לא צוין</td><td><b class="y">כן</b> השוואת דמי ניהול ושירותים בתשלום</td><td><b class="y">כן</b> דמי ניהול בפנסיה</td><td><b class="y">כן</b> השוואת מוצרים והוזלת ביטוחים</td><td><b class="y">כן</b> המלצות לפנסיה וביטוח</td><td>לא צוין</td><td>לא צוין</td><td><b class="n">לא</b></td></tr><tr><th scope="row">בני זוג ומשפחה</th><td><b class="y">כן</b> פרופילים לכל אחד</td><td><b class="y">כן</b> בן או בת זוג בחינם</td><td><b class="y">כן</b> משק בית משותף</td><td><b class="y">כן</b> מנוי משפחתי</td><td><b class="y">כן</b></td><td>לא צוין</td><td>לא צוין</td><td>חשבון משותף</td><td>קובץ משותף</td></tr><tr><th scope="row">ליווי של אדם</th><td><b class="n">לא</b></td><td><b class="y">כן</b> מומחי תזרים, בוואטסאפ</td><td>הפניה למומחים בתשלום</td><td>לא צוין</td><td>ביטוח ופנסיה דרך סוכנות מורשית</td><td>סוכן AI, גם בוואטסאפ</td><td>לא צוין</td><td>בנקאי</td><td><b class="n">לא</b></td></tr><tr><th scope="row">AI</th><td><b class="y">כן</b> לבחירתכם, גם מקומי</td><td>לא צוין</td><td><b class="y">כן</b> חיבור ה-AI שלכם</td><td><b class="y">כן</b> API ו-MCP בפרימיום</td><td>לא צוין</td><td><b class="y">כן</b> סוכן AI</td><td>לא צוין</td><td>"ניתוח חכם" בהפועלים</td><td><b class="n">לא</b></td></tr><tr><th scope="row">אפליקציה לטלפון</th><td><b class="n">לא</b> אתר ברשת הביתית וקיצורים</td><td><b class="y">כן</b> iOS, אנדרואיד ודפדפן</td><td><b class="y">כן</b> iOS, Android</td><td><b class="y">כן</b> iOS ודפדפן</td><td><b class="y">כן</b> iOS, Android</td><td><b class="y">כן</b> אפליקציה ווואטסאפ</td><td><b class="y">כן</b> iOS</td><td><b class="y">כן</b></td><td><b class="y">כן</b></td></tr><tr><th scope="row">עובד גם כשהמחשב כבוי</th><td><b class="n">לא</b></td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td><b class="y">כן</b></td><td><b class="y">כן</b></td></tr><tr><th scope="row">קוד פתוח</th><td><b class="y">כן</b></td><td><b class="n">לא</b></td><td><b class="n">לא</b></td><td><b class="n">לא</b></td><td><b class="n">לא</b></td><td><b class="n">לא</b></td><td><b class="n">לא</b></td><td><b class="n">לא</b></td><td><b class="n">לא</b></td></tr></tbody></table></div>
+      <p class="note">נבדק ב-22 בנובמבר 2026. מחירים ויכולות משתנים, אז כדאי לבדוק שוב באתרים עצמם. מקורות: <a href="https://www.riseup.co.il/subscription/">RiseUp</a>, <a href="https://www.riseup.co.il/questions/">RiseUp FAQ</a>, <a href="https://www.shavve.io/he">Shavve</a>, <a href="https://moneytor.ai/">Moneytor</a>, <a href="https://www.familybiz.co.il/">FamilyBiz</a>, <a href="https://www.cover.co.il/">Cover</a>, <a href="https://apps.apple.com/il/app/id785487890">MyFinanda</a>, <a href="https://apps.apple.com/il/app/id362123205">Hapoalim</a>, <a href="https://www.leumi.co.il/leumi-digital/new-app">Leumi</a>, <a href="https://apps.apple.com/app/id1138799805">Pepper</a>. מצאתם טעות? <a href="https://github.com/Sergey-Bar/Penny/issues">ספרו לנו</a> ונתקן.</p>
+      <div class="grid c2"><div class="card"><h3>מתי לבחור ב-Penny</h3><p>אתם רוצים את כל התמונה, כולל פנסיה, ביטוחים, מס ותחזית, בלי מנוי ובלי שהנתונים יישבו אצל חברה. יש לכם מחשב בבית, ואתם מוכנים להתקנה של כמה דקות.</p></div><div class="card"><h3>מתי לבחור במשהו אחר</h3><p>אתם רוצים חיבור לבנק דרך בנקאות פתוחה מורשית, בלי למסור סיסמה, ואפליקציה בחנות שעובדת גם כשהמחשב כבוי. RiseUp, Shavve, Moneytor, FamilyBiz ו-MyFinanda עושות את זה. מי שרוצה ליווי אנושי ימצא אותו ב-RiseUp, ומי שרוצה רק לראות פנסיה וביטוחים בחינם ימצא את זה ב-Cover.</p></div></div>
     </div>
   </section>
 
   <section id="tour">
     <div class="wrap">
       <div class="section-head">
-        <span class="kicker">סיור במוצר</span>
-        <h2>כל מה שיש ב-Penny, מסך אחרי מסך.</h2>
+        <h2>מסך אחרי מסך.</h2>
         <p>אלה צילומי מסך אמיתיים מהאפליקציה עם נתוני דוגמה. לחיצה על צילום פותחת אותו בגודל מלא.</p>
       </div>
       <div class="split">
@@ -161,6 +173,13 @@
         </div>
         <img class="photo" src="assets/people-home.webp" width="1400" height="788" alt="אבא ובן יושבים על הספה מול מחשב נייד" loading="lazy">
       </div>
+      <div class="pip-row"><div class="pip">
+          <div class="pip-stage" role="img" aria-label="פיפ, החבר הקטן של Penny"><boop-face size="170" color="#30d158"></boop-face></div>
+          <h2>זה פיפ</h2>
+          <p id="pip-say" aria-live="polite">נסו אותו: גררו, לחצו, או בחרו מצב רוח.</p>
+          <div class="pip-moods"><button type="button" data-pip="success" data-say="החודש בתוך התקציב ואין משימות פתוחות. פיפ שמח." aria-pressed="false">שמח</button><button type="button" data-pip="idle" data-say="הכול מתנהל כרגיל. פיפ פשוט כאן איתכם." aria-pressed="false">בסדר גמור</button><button type="button" data-pip="wary" data-say="קטגוריה חרגה מהתקציב, או שעבר זמן מאז הסנכרון האחרון." aria-pressed="false">קצת רעב</button><button type="button" data-pip="inspect" data-say="יש משהו שכדאי לבדוק, למשל תנועות חדשות שמחכות לסיווג." aria-pressed="false">שם עין</button></div>
+          <small>באפליקציה מצב הרוח נקבע לפי הכסף של הבית, לא לפי כפתורים.</small>
+        </div></div>
       <div class="grid" style="margin-top:40px"><div class="card"><div class="icon c5" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16 14.6a5 5 0 0 1 6 4.9"/></svg></div><h3>פרופילים למשפחה</h3><p>מסך "מי משתמש?", משק בית אחד משותף, וכל אחד עם הסידור והנגישות שלו.</p></div><div class="card"><div class="icon c4" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div><h3>לשאול את הכסף</h3><p>"כמה הוצאתי על אוכל בחודש שעבר?" בשפה רגילה, וגם בוט טלגרם עם משוב מיידי.</p></div><div class="card"><div class="icon c6" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="1.5"/><path d="M5 8l7 1.5L19 8M12 9.5V14m0 0l-3.5 6.5M12 14l3.5 6.5"/></svg></div><h3>נגישות מלאה</h3><p>תפריט נגישות (Alt+A) והצהרת נגישות לפי ת"י 5568 ו-WCAG 2.2 AA.</p></div><div class="card"><div class="icon c2" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div><h3>מצב פרטיות</h3><p>לחיצה אחת מסתירה את כל הסכומים, למשל כשמישהו מציץ במסך.</p></div></div>
     </div>
   </section>
@@ -177,14 +196,43 @@
     </div>
   </section>
 
-  <section id="features">
+  <section id="everything">
     <div class="wrap">
       <div class="section-head">
-        <span class="kicker">למי ומה יש</span>
-        <h2>למי זה, וכל מה שיש בפנים.</h2>
-        <p>רשימה מלאה של היכולות, לפי מה שהן נותנות לכם.</p>
+        <h2>כל מה שיש בפנים.</h2>
+        <p>זו הרשימה המלאה, לפי מה שכל חלק נותן לכם. כל סעיף כאן קיים באפליקציה היום, ואפשר לראות אותו בדמו החי.</p>
       </div>
       <div class="tools"><div class="tool-row"><strong><i style="background:#5541cc"></i>למי זה</strong><span>משקי בית בישראל שרוצים לראות את כל הכסף במקום אחד, בלי למסור את סיסמת הבנק לשירות בענן. זוגות ומשפחות עם פרופיל לכל אחד, עברית קודם כול וגם אנגלית. פחות מתאים למי שמחפש שירות ענן או הנהלת חשבונות לעסק.</span></div><div class="tool-row"><strong><i style="background:#0b63c4"></i>נתונים נכנסים</strong><span>סנכרון יומי מ-18 בנקים וחברות אשראי עם קוד חד-פעמי באפליקציה או בטלגרם, 5 גופי פנסיה, ייבוא CSV/XLSX, תיקיית ייבוא, גיליון חכם וייבוא מכל טקסט</span></div><div class="tool-row"><strong><i style="background:#2b8a4e"></i>היום-יום</strong><span>לוח בקרה ומסך פוקוס, תנועות עם פיצול ותגיות, כללים אוטומטיים, תקציב עם קצב ומעטפות, מעקבים לתקופה, חלוקה עם אנשים, חלק עסקי ודוח עסקי</span></div><div class="tool-row"><strong><i style="background:#b86e00"></i>מה צפוי</strong><span>תחזית יתרה לכל חשבון, חיובים קבועים ומנויים, תשלומים שנותרו, חריגות בהוצאות, הוצאות מתוכננות, כסף על השולחן ולמה ההוצאות השתנו</span></div><div class="tool-row"><strong><i style="background:#c8384f"></i>עתיד ועושר</strong><span>שווי נקי, השקעות עם קניות ומכירות, השקעות פרטיות, שווקים ושערי מט"ח, פנסיה, הלוואות, דירוג אשראי, יעדים ועצמאות כלכלית</span></div><div class="tool-row"><strong><i style="background:#5541cc"></i>הרגלים</strong><span>סקירות מודרכות, סיכום חודשי, בדיקת רווחה, המסע שלכם, טיפ יומי ומרכז ידע</span></div><div class="tool-row"><strong><i style="background:#0b63c4"></i>AI לבחירתכם</strong><span>Claude, Ollama מקומי, סוכני CLI או בלי AI. לשאול את הכסף בשפה רגילה, בוט טלגרם ושרת MCP</span></div><div class="tool-row"><strong><i style="background:#2b8a4e"></i>פרטיות ושליטה</strong><span>רץ רק על 127.0.0.1, נעילה בסיסמה או PIN, מצב פרטיות, גיבוי אוטומטי ושחזור, ייצוא ומחיקה מלאה, מרחבי עבודה עם גישה לכמה משתמשים</span></div><div class="tool-row"><strong><i style="background:#b86e00"></i>איפה זה רץ</strong><span>אפליקציה ל-Windows ול-macOS עם עדכון אוטומטי ב-Windows, שירות מערכת שמתחיל עם המחשב, Docker, וגישה מהטלפון ברשת הביתית בהפעלה מפורשת</span></div></div>
+    </div>
+  </section>
+
+  <section id="limits" class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>מה עוד לא טוב מספיק.</h2>
+        <p>כדי שתחליטו על בסיס עובדות.</p>
+      </div>
+      <div class="tools"><div class="tool-row"><strong><i style="background:#b86e00"></i>סנכרון בנקים בבטא</strong><span>החיבור האוטומטי נכנס לאתר הבנק עם הסיסמה שלכם. כשבנק משנה את האתר, החיבור יכול להישבר עד שהוא מתוקן. ייבוא מקובץ עובד תמיד. משיכה אוטומטית מאתר הבנק עלולה להפר את תנאי השימוש שלו.</span></div><div class="tool-row"><strong><i style="background:#b86e00"></i>אין אפליקציה בחנות</strong><span>בטלפון פותחים את Penny ברשת הביתית, אפשר להתקין אותה למסך הבית ולהוסיף הוצאה מקיצור. מחוץ לבית אין גישה, וזה בכוונה.</span></div><div class="tool-row"><strong><i style="background:#b86e00"></i>המחשב צריך להיות דלוק</strong><span>הסנכרון רץ כשהמחשב פועל. את הגיבוי אתם מגדירים, לתיקייה שמסונכרנת לענן שלכם.</span></div><div class="tool-row"><strong><i style="background:#b86e00"></i>קבצי ההתקנה לא חתומים</strong><span>ב-Windows ו-Mac תופיע אזהרה בהתקנה הראשונה. העדכונים עצמם חתומים ונבדקים לפני התקנה.</span></div><div class="tool-row"><strong><i style="background:#b86e00"></i>AI דורש הגדרה</strong><span>בלי AI הכול עובד, והסיווג נעשה לפי מילון וזיכרון. מי שרוצה AI מתקין Ollama או מכניס מפתח של ספק.</span></div></div>
+    </div>
+  </section>
+
+  <section id="trust">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>איך יודעים שזה מוצר רציני.</h2>
+        <p>מה שמבדיל מוצר מניסוי הוא מה שבודקים לפני כל גרסה, ואת זה אפשר לראות בעצמכם.</p>
+      </div>
+      <div class="grid"><div class="card"><h3>הקוד פתוח</h3><p>כל שורה בגיטהאב, ברישיון MIT, וכל אחד יכול לקרוא, לבדוק ולהציע שינוי.</p></div><div class="card"><h3>נבדק לפני כל גרסה</h3><p>יותר מ-1,200 בדיקות אוטומטיות, בדיקות דפדפן על מחשב ועל טלפון, ובדיקות מוטציה על קוד האבטחה. בנק מדומה מריץ שבוע שלם של סנכרונים מקצה לקצה.</p></div><div class="card"><h3>אבטחה שאפשר לבדוק</h3><p>הצפנת AES-256-GCM לסיסמאות, נעילה עם סיסמה או מפתח גישה, עדכונים חתומים, ומסמך אבטחה פתוח שמפרט גם מה עוד לא סגור.</p></div><div class="card"><h3>נבנה בפומבי</h3><p>כל שינוי מתועד ביומן הגרסאות, כל באג שנמצא כתוב בו, ואפשר לפתוח בקשה או דיווח בגיטהאב.</p></div></div>
+    </div>
+  </section>
+
+  <section id="switch" class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>לעבור ל-Penny לוקח ערב אחד.</h2>
+      </div>
+      <ol class="steps"><li><b>מתקינים.</b> קובץ התקנה ל-Windows או Mac, או פקודה אחת ל-Docker.</li><li><b>מכניסים את הנתונים.</b> מחברים בנק וכרטיס, או מייבאים קובץ Excel או CSV מהבנק או מהאפליקציה הקודמת. ההיסטוריה נכנסת יחד.</li><li><b>מלמדים פעם אחת.</b> מסווגים כמה בתי עסק, ו-Penny זוכרת. תקציב נבנה מהממוצע שלכם בלחיצה.</li><li><b>מבטלים את המנוי.</b> מה שנשאר זה סיכום חודשי, תזכורות לפני חיובים, ומקום אחד לכל הכסף.</li></ol>
+      <p class="new-links"><a class="btn btn-primary" href="https://penny-finance-demo.vercel.app">לנסות קודם בדמו החי</a> <a class="btn btn-ghost" href="#install">להתקנה</a></p>
     </div>
   </section>
 
