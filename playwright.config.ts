@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // PENNY_E2E_PORT: run beside another checkout's test server.
+const SHARED_STATE = /(profiles|passkey)\.spec\.ts$/;
 const PORT = Number(process.env.PENNY_E2E_PORT ?? 3100);
 
 // Runs against a production server with its own empty data folder, so tests never touch your real database.
@@ -18,9 +19,31 @@ export default defineConfig({
     locale: "he-IL",
     trace: "retain-on-failure",
   },
+  // Tests that change shared data (a second profile, the app lock) run last and alone, so they
+  // can't send the other tests to the profile picker or the lock screen.
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"], channel: process.env.CI ? undefined : "chrome" } },
-    { name: "mobile", use: { ...devices["Pixel 7"], channel: process.env.CI ? undefined : "chrome" } },
+    {
+      name: "desktop",
+      testIgnore: SHARED_STATE,
+      use: { ...devices["Desktop Chrome"], channel: process.env.CI ? undefined : "chrome" },
+    },
+    {
+      name: "mobile",
+      testIgnore: SHARED_STATE,
+      use: { ...devices["Pixel 7"], channel: process.env.CI ? undefined : "chrome" },
+    },
+    {
+      name: "lock",
+      testMatch: /passkey\.spec\.ts$/,
+      dependencies: ["desktop", "mobile"],
+      use: { ...devices["Desktop Chrome"], channel: process.env.CI ? undefined : "chrome" },
+    },
+    {
+      name: "profiles",
+      testMatch: /profiles\.spec\.ts$/,
+      dependencies: ["lock"],
+      use: { ...devices["Desktop Chrome"], channel: process.env.CI ? undefined : "chrome" },
+    },
   ],
   webServer: {
     // A production build: dev mode recompiles and reloads pages mid-test.

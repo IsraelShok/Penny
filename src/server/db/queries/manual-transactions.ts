@@ -356,6 +356,17 @@ export function createCapturedCharge(
  * captured category and note when it has none of its own. Only rows this sync run added can be a
  * twin: an older row is another charge, or a twin that already absorbed its own text.
  */
+/** Rows that point at a transaction and must follow it when a texted charge merges into the bank's row. */
+const CHILD_TABLES = [
+  "transaction_tags",
+  "goal_links",
+  "transaction_tasks",
+  "transaction_receipts",
+  "expense_shares",
+  "manual_recurring_txns",
+  "sheet_import_rows",
+];
+
 export function matchCapturedCharges(db: Database.Database, ws: number, syncRunId: number): number {
   const captured = db
     .prepare(
@@ -402,9 +413,22 @@ export function matchCapturedCharges(db: Database.Database, ws: number, syncRunI
       `UPDATE transactions SET
          category_id = COALESCE(category_id, ?),
          category_source = CASE WHEN category_id IS NULL THEN ? ELSE category_source END,
-         memo = COALESCE(memo, ?)
+         memo = COALESCE(memo, ?),
+         owner = COALESCE(owner, (SELECT owner FROM transactions WHERE id=?))
        WHERE id=?`,
-    ).run(c.categoryId, c.categoryId == null ? null : c.categorySource, c.memo, bank.id);
+    ).run(c.categoryId, c.categoryId == null ? null : c.categorySource, c.memo, c.id, bank.id);
+    // Everything the user attached to the texted charge moves to the bank's row before it goes.
+    for (const table of CHILD_TABLES)
+      db.prepare(`UPDATE OR IGNORE ${table} SET transaction_id=? WHERE transaction_id=?`).run(
+        bank.id,
+        c.id,
+      );
+    // A split moves only when the bank row has none: its parts are numbered from 0 per row.
+    if (!db.prepare("SELECT 1 FROM transaction_allocations WHERE transaction_id=?").get(bank.id))
+      db.prepare("UPDATE transaction_allocations SET transaction_id=? WHERE transaction_id=?").run(
+        bank.id,
+        c.id,
+      );
     db.prepare("DELETE FROM transactions WHERE id=?").run(c.id);
     merged++;
   }
