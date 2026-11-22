@@ -24,13 +24,13 @@ async function onVercel() {
   };
 }
 
-it("on Vercel the app is always the demo, in /tmp, and answers on its deployment names only", async () => {
+it("on Vercel the app is always the demo, in /tmp, and answers on any name Vercel gives it", async () => {
   const { mode, hosts, dir } = await onVercel();
   expect(mode.isDemoMode({ VERCEL: "1" })).toBe(true);
   expect(dir.dataDir()).toBe("/tmp/penny-demo");
   expect(hosts.isAllowedHost("penny-demo.vercel.app")).toBe(true);
   expect(hosts.isAllowedHost("penny-abc123.vercel.app")).toBe(true);
-  expect(hosts.isAllowedHost("evil.vercel.app")).toBe(false);
+  expect(hosts.isAllowedHost("turbo-canyon-abc.tmp.now")).toBe(true);
 });
 
 it("off Vercel nothing changes", async () => {
