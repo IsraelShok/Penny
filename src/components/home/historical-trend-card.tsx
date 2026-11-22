@@ -44,12 +44,7 @@ export function HistoricalTrendCard({ data }: Props) {
           </div>
         </div>
 
-        <BarChart
-          data={data}
-          max={max}
-          hoverIdx={hoverIdx}
-          onHover={setHoverIdx}
-        />
+        <BarChart data={data} max={max} hoverIdx={hoverIdx} onHover={setHoverIdx} />
       </div>
     </CardShell>
   );
@@ -75,19 +70,13 @@ function BarChart({
 
   return (
     <div className="flex flex-col gap-2" onMouseLeave={() => onHover(null)}>
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="none"
-        className="h-24 w-full"
-      >
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="h-24 w-full">
         {data.map((d, i) => {
           const h = max > 0 ? (d.total / max) * (height - 2) : 0;
           const x = i * barWidth + barGap;
           const y = height - h;
           const isHovered = hoverIdx === i;
-          const opacity = hoverIdx == null
-            ? d.isCurrent ? 1 : 0.55
-            : isHovered ? 1 : 0.3;
+          const opacity = hoverIdx == null ? (d.isCurrent ? 1 : 0.55) : isHovered ? 1 : 0.3;
           return (
             <rect
               key={d.month}
@@ -107,10 +96,7 @@ function BarChart({
       {/* The SVG ignores dir, so the labels run left to right with it. */}
       <div dir="ltr" className="flex justify-between text-xs text-muted-foreground tabular-nums">
         {data.map((d) => (
-          <span
-            key={d.month}
-            className={d.isCurrent ? "font-medium text-foreground" : ""}
-          >
+          <span key={d.month} className={d.isCurrent ? "font-medium text-foreground" : ""}>
             {monthName(d.month, labelLocale)}
           </span>
         ))}
@@ -121,5 +107,7 @@ function BarChart({
 
 /** "2026-04" as a short month name in the reader's language (the API label is English). */
 function monthName(month: string, locale: string) {
-  return new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(`${month}-01T12:00:00`));
+  return new Intl.DateTimeFormat(locale, { month: "short" }).format(
+    new Date(`${month}-01T12:00:00`),
+  );
 }

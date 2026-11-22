@@ -12,7 +12,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const file = r && receiptFile(ws, r);
   if (!r || !file) return NextResponse.json({ error: "not found" }, { status: 404 });
   return new NextResponse(new Uint8Array(fs.readFileSync(file)), {
-    headers: { "content-type": r.mime, "content-disposition": `inline; filename*=UTF-8''${encodeURIComponent(r.originalName)}`, "cache-control": "private, no-store" },
+    headers: {
+      "content-type": r.mime,
+      "content-disposition": `inline; filename*=UTF-8''${encodeURIComponent(r.originalName)}`,
+      "cache-control": "private, no-store",
+    },
   });
 }
 

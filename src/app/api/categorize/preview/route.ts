@@ -24,10 +24,9 @@ export async function POST(request: Request) {
   if (!aiProvider) {
     return NextResponse.json(
       {
-        error:
-          "AI provider isn't configured. Set it up in Settings → AI & automation.",
+        error: "AI provider isn't configured. Set it up in Settings → AI & automation.",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -36,7 +35,7 @@ export async function POST(request: Request) {
     if (!status.ok) {
       return NextResponse.json(
         { error: status.error ?? "Ollama isn't reachable." },
-        { status: 503 }
+        { status: 503 },
       );
     }
   }
@@ -75,7 +74,7 @@ export async function POST(request: Request) {
       .map((c) => ({
         name: c.name,
         description: c.description,
-        parentName: c.parentId != null ? parentNameById.get(c.parentId) ?? null : null,
+        parentName: c.parentId != null ? (parentNameById.get(c.parentId) ?? null) : null,
       }));
     const pastCorrections = getRecentCorrections(workspaceId, kind);
 
@@ -92,7 +91,7 @@ export async function POST(request: Request) {
             memo: t.memo,
           })),
           categoryInput,
-          { allowProposals: true, pastCorrections }
+          { allowProposals: true, pastCorrections },
         );
 
         for (const m of mappings) {
@@ -138,10 +137,7 @@ export async function POST(request: Request) {
       }
       proposalMap.set(key, entry);
     } else {
-      existingUsage.set(
-        m.categoryName,
-        (existingUsage.get(m.categoryName) ?? 0) + 1
-      );
+      existingUsage.set(m.categoryName, (existingUsage.get(m.categoryName) ?? 0) + 1);
     }
   }
 
@@ -149,7 +145,7 @@ export async function POST(request: Request) {
     uncategorizedCount: totalUncategorized,
     assignments: allMappings,
     proposedCategories: Array.from(proposalMap.values()).sort(
-      (a, b) => b.transactionIds.length - a.transactionIds.length
+      (a, b) => b.transactionIds.length - a.transactionIds.length,
     ),
     existingCategoryUsage: Object.fromEntries(existingUsage),
     errors,

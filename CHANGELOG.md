@@ -2,6 +2,45 @@
 
 All notable changes to Penny. Versions follow [Semantic Versioning](https://semver.org/); dates are Israel time.
 
+## [0.2.1] - 2026-11-22
+
+Security, privacy and install fixes. No database migrations.
+
+### Security
+
+- **Desktop links.** The app compares a link's real origin before opening it inside the window, and hands only web
+  and mail links to the system, so a crafted link can neither load another site in the app nor start a program.
+- **Signed updates.** Windows installs an update only when the release's checksum list carries a valid signature
+  from the release key, so a release published without that key is never installed.
+- **Workspaces.** A transaction can only be given a category from its own workspace.
+- **Exports.** Text that starts like a spreadsheet formula is neutralised in CSV exports.
+- **Restore.** A restored backup no longer keeps the Telegram link or the import-folder path it came with.
+- **Open banking** sends its access token over https only.
+- **Logs.** An `Authorization: Bearer …` header in an error is now hidden completely (the token itself used to stay).
+- **Encryption.** Decryption requires the full 16-byte authentication tag, and a key file readable by others stops
+  the server at startup.
+
+### Privacy
+
+- Turning on a cloud AI provider asks for consent and lists exactly what is sent.
+- Cloud AI no longer sees the names in bank transfers, only that it is a transfer.
+- Exports warn that the file is not encrypted.
+- A switch in Settings > Privacy stops the check for new versions.
+
+### Fixes
+
+- Household members can open the notifications and the pivot table.
+- The pivot table and the dashboard include the last day of the month for synced transactions.
+- The health check answers even when the database cannot be opened.
+- Bank sync (the automatic connection) is marked **Beta**; file import and open banking are not.
+
+### Install
+
+- **Docker in one command** on Windows, macOS and Linux: checks that Docker is installed and running, downloads
+  the newest release, starts it, and offers to update when a newer one is out (with a backup and automatic rollback).
+- The Linux service works from a folder with spaces in its path, and the Windows and macOS service from one with `&`.
+- Requires Node 22 or newer when running from source.
+
 ## [0.2.0] - 2026-11-21
 
 Everything since 0.1.0 (14 Nov 2026), with 24 database migrations (054–077). Your data is upgraded in

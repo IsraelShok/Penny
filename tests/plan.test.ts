@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { debtPayoff, defaultHomeStyle, feeCost, goalMonthly, keepHomeStyle, parsePlan, projectBalance } from "@/lib/plan";
+import {
+  debtPayoff,
+  defaultHomeStyle,
+  feeCost,
+  goalMonthly,
+  keepHomeStyle,
+  parsePlan,
+  projectBalance,
+} from "@/lib/plan";
 
 describe("fees", () => {
   it("grows a balance without fees at the gross return", () => {
@@ -36,15 +44,30 @@ describe("goalMonthly", () => {
 
 describe("parsePlan", () => {
   it("keeps good values and drops bad ones", () => {
-    const p = parsePlan({ monthStartDay: 10, birthYear: "1988", emergencyMonths: 99, allocation: { equity: 80 }, taxDone: { study_fund: 2026, "<bad>": 1 } });
-    expect(p).toMatchObject({ monthStartDay: 10, birthYear: 1988, emergencyMonths: 6, taxDone: { study_fund: 2026 } });
+    const p = parsePlan({
+      monthStartDay: 10,
+      birthYear: "1988",
+      emergencyMonths: 99,
+      allocation: { equity: 80 },
+      taxDone: { study_fund: 2026, "<bad>": 1 },
+    });
+    expect(p).toMatchObject({
+      monthStartDay: 10,
+      birthYear: 1988,
+      emergencyMonths: 6,
+      taxDone: { study_fund: 2026 },
+    });
     expect(p.allocation).toEqual({ equity: 80, bonds: 20, cash: 10 });
   });
 });
 
 describe("plan view defaults", () => {
   it("defaults wheel paging and simple mode off", () => {
-    expect(parsePlan({})).toMatchObject({ simpleMode: false, wheelPaging: false, checkin: { lastWeek: null, streak: 0 } });
+    expect(parsePlan({})).toMatchObject({
+      simpleMode: false,
+      wheelPaging: false,
+      checkin: { lastWeek: null, streak: 0 },
+    });
   });
 });
 

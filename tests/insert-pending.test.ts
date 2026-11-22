@@ -30,12 +30,16 @@ describe("insertTransactions pending upgrade", () => {
     const db = getDb();
     const ws = (db.prepare("SELECT id FROM workspaces LIMIT 1").get() as { id: number }).id;
     const cred = db
-      .prepare("INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, 'isracard', 'T', x'00', x'00', x'00')")
+      .prepare(
+        "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, 'isracard', 'T', x'00', x'00', x'00')",
+      )
       .run(ws).lastInsertRowid as number;
     const run = createSyncRun(ws, "isracard", cred, "2026-10-01");
     insertTransactions(ws, [{ ...base, status: "pending" }], "isracard", cred, run);
     insertTransactions(ws, [{ ...base, status: "completed" }], "isracard", cred, run);
-    const rows = db.prepare("SELECT status FROM transactions WHERE workspace_id = ?").all(ws) as { status: string }[];
+    const rows = db.prepare("SELECT status FROM transactions WHERE workspace_id = ?").all(ws) as {
+      status: string;
+    }[];
     expect(rows).toEqual([{ status: "completed" }]);
   });
 });

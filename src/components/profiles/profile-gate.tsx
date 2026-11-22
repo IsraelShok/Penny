@@ -2,7 +2,11 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { markProfileChosen, profileChosen, useProfiles } from "@/components/layout/workspace-switcher";
+import {
+  markProfileChosen,
+  profileChosen,
+  useProfiles,
+} from "@/components/layout/workspace-switcher";
 
 /** With 2+ profiles, sends the first visit of a browser session to "who's using?". */
 export function ProfileGate() {

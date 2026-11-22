@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { MORTGAGE_DEFAULTS as D, mortgage, prepayFee, prepayVsInvest, simulateTrack } from "@/lib/mortgage";
+import {
+  MORTGAGE_DEFAULTS as D,
+  mortgage,
+  prepayFee,
+  prepayVsInvest,
+  simulateTrack,
+} from "@/lib/mortgage";
 
 const env = { inflationPct: 0, primePct: 5, primeShock: 0 };
 
@@ -18,13 +24,19 @@ describe("simulateTrack", () => {
 
   it("raises the payment when prime rises", () => {
     const base = simulateTrack({ kind: "prime", share: 1, ratePct: 0, years: 20 }, 100_000, env);
-    const shock = simulateTrack({ kind: "prime", share: 1, ratePct: 0, years: 20 }, 100_000, { ...env, primeShock: 2 });
+    const shock = simulateTrack({ kind: "prime", share: 1, ratePct: 0, years: 20 }, 100_000, {
+      ...env,
+      primeShock: 2,
+    });
     expect(shock.maxPayment).toBeGreaterThan(base.maxPayment);
     expect(shock.firstPayment).toBeCloseTo(base.firstPayment);
   });
 
   it("grows a linked track's payment with inflation", () => {
-    const r = simulateTrack({ kind: "fixedLinked", share: 1, ratePct: 3, years: 20 }, 100_000, { ...env, inflationPct: 3 });
+    const r = simulateTrack({ kind: "fixedLinked", share: 1, ratePct: 3, years: 20 }, 100_000, {
+      ...env,
+      inflationPct: 3,
+    });
     expect(r.maxPayment).toBeGreaterThan(r.firstPayment * 1.5);
   });
 });
@@ -37,7 +49,12 @@ describe("mortgage", () => {
   });
 
   it("flags too much prime, high LTV and a heavy payment", () => {
-    const m = mortgage({ ...D, tracks: [{ kind: "prime", share: 1, ratePct: 0, years: 25 }], propertyValue: 1_400_000, income: 15_000 });
+    const m = mortgage({
+      ...D,
+      tracks: [{ kind: "prime", share: 1, ratePct: 0, years: 25 }],
+      propertyValue: 1_400_000,
+      income: 15_000,
+    });
     expect(m.warnings.fixed).toBe(true);
     expect(m.warnings.ltv).toBe(true);
     expect(m.warnings.pti).toBe("high");
@@ -51,18 +68,30 @@ describe("mortgage", () => {
 describe("var5 tracks and the BoI checks", () => {
   it("keeps the rate for 5 years, then moves it by the shock", () => {
     const flat = simulateTrack({ kind: "var5", share: 1, ratePct: 5, years: 20 }, 100_000, env);
-    const up = simulateTrack({ kind: "var5", share: 1, ratePct: 5, years: 20 }, 100_000, { ...env, primeShock: 2 });
+    const up = simulateTrack({ kind: "var5", share: 1, ratePct: 5, years: 20 }, 100_000, {
+      ...env,
+      primeShock: 2,
+    });
     expect(up.firstPayment).toBeCloseTo(flat.firstPayment);
     expect(up.maxPayment).toBeGreaterThan(flat.maxPayment);
   });
 
   it("indexes a linked var5 track", () => {
-    const r = simulateTrack({ kind: "var5Linked", share: 1, ratePct: 3, years: 20 }, 100_000, { ...env, inflationPct: 3 });
+    const r = simulateTrack({ kind: "var5Linked", share: 1, ratePct: 3, years: 20 }, 100_000, {
+      ...env,
+      inflationPct: 3,
+    });
     expect(r.maxPayment).toBeGreaterThan(r.firstPayment * 1.5);
   });
 
   it("counts var5 as variable for the one-third fixed rule", () => {
-    const m = mortgage({ ...D, tracks: [{ kind: "prime", share: 0.5, ratePct: -0.5, years: 25 }, { kind: "var5", share: 0.5, ratePct: 4.5, years: 25 }] });
+    const m = mortgage({
+      ...D,
+      tracks: [
+        { kind: "prime", share: 0.5, ratePct: -0.5, years: 25 },
+        { kind: "var5", share: 0.5, ratePct: 4.5, years: 25 },
+      ],
+    });
     expect(m.fixedShare).toBe(0);
     expect(m.warnings.fixed).toBe(true);
   });
@@ -94,7 +123,13 @@ describe("prepayFee", () => {
 
   it("stops at the next reset on a var5 track", () => {
     const full = prepayFee({ amount: 100_000, ratePct: 5, marketRatePct: 3, monthsLeft: 240 });
-    const toReset = prepayFee({ amount: 100_000, ratePct: 5, marketRatePct: 3, monthsLeft: 240, horizonMonths: 24 });
+    const toReset = prepayFee({
+      amount: 100_000,
+      ratePct: 5,
+      marketRatePct: 3,
+      monthsLeft: 240,
+      horizonMonths: 24,
+    });
     expect(toReset).toBeGreaterThan(0);
     expect(toReset).toBeLessThan(full);
   });
@@ -109,6 +144,8 @@ describe("prepayVsInvest", () => {
     expect(prepayVsInvest({ ...base, returnPct: 3 }).better).toBe("prepay");
   });
   it("a fee lowers the prepay side", () => {
-    expect(prepayVsInvest({ ...base, fee: 5_000, returnPct: 5 }).prepay).toBeLessThan(prepayVsInvest({ ...base, returnPct: 5 }).prepay);
+    expect(prepayVsInvest({ ...base, fee: 5_000, returnPct: 5 }).prepay).toBeLessThan(
+      prepayVsInvest({ ...base, returnPct: 5 }).prepay,
+    );
   });
 });

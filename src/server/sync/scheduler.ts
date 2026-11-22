@@ -49,7 +49,7 @@ function intlParts(d: Date) {
     fmt
       .formatToParts(d)
       .filter((p) => p.type !== "literal")
-      .map((p) => [p.type, p.value])
+      .map((p) => [p.type, p.value]),
   );
   return {
     year: Number(parts.year),
@@ -68,14 +68,7 @@ function computeNextDelay(targetHHMM: string): number {
   const jlm = intlParts(now);
 
   let candidateMs = Date.UTC(jlm.year, jlm.month - 1, jlm.day, tHour, tMin, 0);
-  const nowMs = Date.UTC(
-    jlm.year,
-    jlm.month - 1,
-    jlm.day,
-    jlm.hour,
-    jlm.minute,
-    jlm.second
-  );
+  const nowMs = Date.UTC(jlm.year, jlm.month - 1, jlm.day, jlm.hour, jlm.minute, jlm.second);
 
   if (candidateMs <= nowMs) {
     candidateMs += 24 * 3600 * 1000;
@@ -115,8 +108,8 @@ function armNext(): void {
   state.nextRunAt = Date.now() + delayMs;
   console.log(
     `[scheduler] armed for ${new Date(state.nextRunAt).toISOString()} (in ${Math.round(
-      delayMs / 1000
-    )}s)`
+      delayMs / 1000,
+    )}s)`,
   );
 }
 
@@ -143,7 +136,8 @@ async function fire(): Promise<void> {
     await runAllWorkspaces(undefined, undefined, "scheduled");
     console.log("[scheduler] done");
   } catch (err) {
-    if (err instanceof SyncBusyError) console.warn("[scheduler] skip fire — a sync is already running");
+    if (err instanceof SyncBusyError)
+      console.warn("[scheduler] skip fire — a sync is already running");
     else console.error("[scheduler] run failed:", redactError(err));
   } finally {
     state.running = false;

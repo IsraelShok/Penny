@@ -7,8 +7,22 @@ export interface Fees {
 }
 
 /** Fund switch: end balance with current vs alternative fees (positive diff = the alternative ends higher). */
-export function fundSwitch(balance: number, monthly: number, years: number, grossReturn: number, current: Fees, alt: Fees) {
-  const a = projectBalance(balance, monthly, years, grossReturn, current.depositPct, current.balancePct);
+export function fundSwitch(
+  balance: number,
+  monthly: number,
+  years: number,
+  grossReturn: number,
+  current: Fees,
+  alt: Fees,
+) {
+  const a = projectBalance(
+    balance,
+    monthly,
+    years,
+    grossReturn,
+    current.depositPct,
+    current.balancePct,
+  );
   const b = projectBalance(balance, monthly, years, grossReturn, alt.depositPct, alt.balancePct);
   return { current: a, alternative: b, diff: b - a };
 }
@@ -58,11 +72,18 @@ export interface Broker {
 }
 
 /** Value after `years` of buying `monthly` in `tradesPerMonth` trades through a broker, and the fees paid along the way. */
-export function brokerOutcome(b: Broker, monthly: number, tradesPerMonth: number, years: number, grossReturn: number) {
+export function brokerOutcome(
+  b: Broker,
+  monthly: number,
+  tradesPerMonth: number,
+  years: number,
+  grossReturn: number,
+) {
   const r = Math.pow(1 + grossReturn, 1 / 12) - 1;
   let value = 0;
   let fees = 0;
-  for (let m = 0; m < Math.min(1200, Math.round(years * 12)); m++) { // 100-year cap, as above
+  for (let m = 0; m < Math.min(1200, Math.round(years * 12)); m++) {
+    // 100-year cap, as above
     const fee = tradesPerMonth * b.perTrade + (monthly * b.pct) / 100 + b.custodyMonthly;
     fees += fee;
     value = Math.max(0, value * (1 + r) + monthly - fee);
@@ -72,7 +93,8 @@ export function brokerOutcome(b: Broker, monthly: number, tradesPerMonth: number
 
 /** Progressive tax from [upTo, rate] brackets. */
 export function bracketTax(amount: number, brackets: readonly (readonly [number, number])[]) {
-  let tax = 0, from = 0;
+  let tax = 0,
+    from = 0;
   for (const [upTo, rate] of brackets) {
     if (amount <= from) break;
     tax += (Math.min(amount, upTo) - from) * rate;
@@ -83,7 +105,8 @@ export function bracketTax(amount: number, brackets: readonly (readonly [number,
 
 /** Monthly Spitzer (annuity) payment. */
 export function spitzer(principal: number, annualRate: number, years: number) {
-  const n = Math.max(1, Math.round(years * 12)), r = annualRate / 12;
+  const n = Math.max(1, Math.round(years * 12)),
+    r = annualRate / 12;
   return principal <= 0 ? 0 : r === 0 ? principal / n : (principal * r) / (1 - (1 + r) ** -n);
 }
 
@@ -111,9 +134,14 @@ export interface RentBuyInputs {
 export function rentVsBuy(i: RentBuyInputs) {
   const loan = Math.max(0, i.price - i.down);
   const payment = spitzer(loan, i.mortgageRate, i.mortgageYears);
-  const mr = i.mortgageRate / 12, ir = (1 + i.investReturn) ** (1 / 12) - 1;
-  let balance = loan, home = i.price, buyPf = 0, rentPf = i.down + i.purchaseTax + i.oneOffs;
-  let rent = i.rent, owner = i.ownerMonthly;
+  const mr = i.mortgageRate / 12,
+    ir = (1 + i.investReturn) ** (1 / 12) - 1;
+  let balance = loan,
+    home = i.price,
+    buyPf = 0,
+    rentPf = i.down + i.purchaseTax + i.oneOffs;
+  let rent = i.rent,
+    owner = i.ownerMonthly;
   const yearly: { year: number; buy: number; rent: number }[] = [];
   let breakEven: number | null = null;
   const firstMonth = { buy: payment + owner, rent };
@@ -133,7 +161,15 @@ export function rentVsBuy(i: RentBuyInputs) {
     }
   }
   const last = yearly.at(-1) ?? { year: 0, buy: i.price - loan, rent: rentPf };
-  return { payment, firstMonth, yearly, breakEven, buy: last.buy, rent: last.rent, diff: last.buy - last.rent };
+  return {
+    payment,
+    firstMonth,
+    yearly,
+    breakEven,
+    buy: last.buy,
+    rent: last.rent,
+    diff: last.buy - last.rent,
+  };
 }
 
 export interface Amendment190Inputs {
@@ -153,24 +189,46 @@ export interface Amendment190Inputs {
 /** Amendment 190: tax-free monthly annuity vs lump sum taxed on the real gain. */
 export function amendment190(i: Amendment190Inputs) {
   const monthly = i.annuityFactor > 0 ? i.balance / i.annuityFactor : 0;
-  const taxSaved = Math.max(0, i.balance * Math.min(1, Math.max(0, i.realGainShare)) * i.lumpRealGainTax);
+  const taxSaved = Math.max(
+    0,
+    i.balance * Math.min(1, Math.max(0, i.realGainShare)) * i.lumpRealGainTax,
+  );
   const ageOk = i.age >= i.minAge;
   const pensionOk = i.qualifyingPension >= i.minQualifyingPension;
-  return { monthly, taxSaved, lumpNet: i.balance - taxSaved, ageOk, pensionOk, eligible: ageOk && pensionOk };
+  return {
+    monthly,
+    taxSaved,
+    lumpNet: i.balance - taxSaved,
+    ageOk,
+    pensionOk,
+    eligible: ageOk && pensionOk,
+  };
 }
 
 /**
  * A lump sum: prepay a loan or invest it, after `years`. Prepaying saves compound interest, tax-free;
  * investing earns the return, less 25% tax on nominal gains. Ignores prepayment fees (עמלת פירעון מוקדם).
  */
-export function payoffVsInvest(lump: number, loanRate: number, investReturn: number, years: number) {
+export function payoffVsInvest(
+  lump: number,
+  loanRate: number,
+  investReturn: number,
+  years: number,
+) {
   const saved = lump * ((1 + loanRate) ** years - 1);
   const earned = lump * ((1 + investReturn) ** years - 1) * (1 - CAPITAL_GAINS_TAX);
   return { saved, earned, diff: earned - saved };
 }
 
 /** Rental property yields: gross, net of costs, and the cash return on your own money after the mortgage. */
-export function rentalYield(i: { price: number; equity: number; rent: number; costs: number; rate: number; years: number }) {
+export function rentalYield(i: {
+  price: number;
+  equity: number;
+  rent: number;
+  costs: number;
+  rate: number;
+  years: number;
+}) {
   const payment = spitzer(Math.max(0, i.price - i.equity), i.rate, i.years);
   const cashflow = i.rent - i.costs - payment;
   return {
@@ -183,7 +241,13 @@ export function rentalYield(i: { price: number; equity: number; rent: number; co
 }
 
 /** Money left in checking vs a money-market fund: fund value after fee and 25% tax on real gains. */
-export function moneyMarket(amount: number, years: number, yieldPct: number, feePct: number, inflation: number) {
+export function moneyMarket(
+  amount: number,
+  years: number,
+  yieldPct: number,
+  feePct: number,
+  inflation: number,
+) {
   const gross = amount * (1 + (yieldPct - feePct) / 100) ** years;
   const realBasis = amount * (1 + inflation / 100) ** years;
   const net = gross - CAPITAL_GAINS_TAX * Math.max(0, gross - realBasis);

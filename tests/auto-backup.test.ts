@@ -20,8 +20,17 @@ describe("automatic backup", () => {
   });
 
   it("prunes only its own files beyond the newest few", () => {
-    const names = ["notes.txt", ...Array.from({ length: 9 }, (_, i) => `penny-backup-2026-11-${String(10 + i).padStart(2, "0")}-08-00.pennybak`)];
-    expect(lib.backupsToPrune(names, 7)).toEqual(["penny-backup-2026-11-10-08-00.pennybak", "penny-backup-2026-11-11-08-00.pennybak"]);
+    const names = [
+      "notes.txt",
+      ...Array.from(
+        { length: 9 },
+        (_, i) => `penny-backup-2026-11-${String(10 + i).padStart(2, "0")}-08-00.pennybak`,
+      ),
+    ];
+    expect(lib.backupsToPrune(names, 7)).toEqual([
+      "penny-backup-2026-11-10-08-00.pennybak",
+      "penny-backup-2026-11-11-08-00.pennybak",
+    ]);
   });
 
   it("needs a passphrase, then writes an encrypted backup that restores", async () => {

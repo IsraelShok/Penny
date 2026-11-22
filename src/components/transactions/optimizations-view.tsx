@@ -21,8 +21,27 @@ export function OptimizationsView() {
   const flowCount = flows.data ? flows.data.length : null;
 
   const tools = [
-    { id: "transfers", Icon: ArrowLeftRight, badge: flowCount, body: flowCount ? <FlowMatchesCard /> : <p className="text-sm text-muted-foreground">{t("transfersNone")}</p> },
-    { id: "ai", Icon: Sparkles, badge: review?.uncategorized ?? null, body: <div className="flex flex-wrap items-center gap-3"><CategorizeButton /><p className="text-sm text-muted-foreground">{t("aiHint")}</p></div> },
+    {
+      id: "transfers",
+      Icon: ArrowLeftRight,
+      badge: flowCount,
+      body: flowCount ? (
+        <FlowMatchesCard />
+      ) : (
+        <p className="text-sm text-muted-foreground">{t("transfersNone")}</p>
+      ),
+    },
+    {
+      id: "ai",
+      Icon: Sparkles,
+      badge: review?.uncategorized ?? null,
+      body: (
+        <div className="flex flex-wrap items-center gap-3">
+          <CategorizeButton />
+          <p className="text-sm text-muted-foreground">{t("aiHint")}</p>
+        </div>
+      ),
+    },
     { id: "review", Icon: ListChecks, badge: toReview, href: "/transactions?review=1" },
     { id: "rules", Icon: History, badge: null, href: "/settings/rules" },
   ] as const;
@@ -35,27 +54,68 @@ export function OptimizationsView() {
         {tools.map((tool) => {
           const inline = "body" in tool;
           const isOpen = open === tool.id;
-          const inner = <>
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary"><tool.Icon className="size-4" aria-hidden /></span>
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-2 font-semibold">{t(`${tool.id}Title`)}{tool.badge ? <span className="rounded-full bg-primary/15 px-2 text-xs tabular-nums text-primary">{tool.badge}</span> : null}</span>
-              <span className="mt-1 block text-sm text-muted-foreground">{t(`${tool.id}Desc`)}</span>
-            </span>
-            {inline && <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none ${isOpen ? "rotate-180" : ""}`} aria-hidden />}
-          </>;
+          const inner = (
+            <>
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary">
+                <tool.Icon className="size-4" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2 font-semibold">
+                  {t(`${tool.id}Title`)}
+                  {tool.badge ? (
+                    <span className="rounded-full bg-primary/15 px-2 text-xs tabular-nums text-primary">
+                      {tool.badge}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="mt-1 block text-sm text-muted-foreground">
+                  {t(`${tool.id}Desc`)}
+                </span>
+              </span>
+              {inline && (
+                <ChevronDown
+                  className={`size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none ${isOpen ? "rotate-180" : ""}`}
+                  aria-hidden
+                />
+              )}
+            </>
+          );
           const cls = `flex h-full w-full items-start gap-3 rounded-2xl border bg-card p-4 text-start hover:bg-accent/40 focus-visible:outline-2 focus-visible:outline-ring ${isOpen ? "border-primary" : "border-border"}`;
           return (
             <li key={tool.id}>
-              {inline
-                ? <button type="button" aria-expanded={isOpen} aria-controls={`tool-${tool.id}`} onClick={() => setOpen(isOpen ? null : tool.id)} className={cls}>{inner}</button>
-                : <Link href={tool.href} className={cls}>{inner}</Link>}
+              {inline ? (
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-controls={`tool-${tool.id}`}
+                  onClick={() => setOpen(isOpen ? null : tool.id)}
+                  className={cls}
+                >
+                  {inner}
+                </button>
+              ) : (
+                <Link href={tool.href} className={cls}>
+                  {inner}
+                </Link>
+              )}
             </li>
           );
         })}
       </ul>
-      {tools.map((tool) => "body" in tool && open === tool.id && (
-        <section key={tool.id} id={`tool-${tool.id}`} aria-label={t(`${tool.id}Title`)} className="rounded-2xl border border-border bg-card p-4">{tool.body}</section>
-      ))}
+      {tools.map(
+        (tool) =>
+          "body" in tool &&
+          open === tool.id && (
+            <section
+              key={tool.id}
+              id={`tool-${tool.id}`}
+              aria-label={t(`${tool.id}Title`)}
+              className="rounded-2xl border border-border bg-card p-4"
+            >
+              {tool.body}
+            </section>
+          ),
+      )}
     </div>
   );
 }

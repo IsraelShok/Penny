@@ -118,11 +118,7 @@ export interface CategoryBreakdown {
   count: number;
 }
 
-export type BudgetStatus =
-  | "plenty-left"
-  | "on-track"
-  | "heads-up"
-  | "over";
+export type BudgetStatus = "plenty-left" | "on-track" | "heads-up" | "over";
 
 export interface CategoryWithData {
   categoryId: number;
@@ -831,7 +827,14 @@ export interface OverviewCategoryRow {
 }
 
 export interface OverviewPayload {
-  period: { kind: "month" | "quarter" | "half" | "year"; year: number; startMonth: number; from: string; to: string; months: string[] };
+  period: {
+    kind: "month" | "quarter" | "half" | "year";
+    year: number;
+    startMonth: number;
+    from: string;
+    to: string;
+    months: string[];
+  };
   totals: OverviewTotals;
   previous: OverviewTotals;
   lastYear: OverviewTotals;
@@ -864,8 +867,20 @@ export interface MarketsPayload {
 }
 
 export const ASSET_TYPES = [
-  "cash", "deposit", "bond", "stock", "fund", "study_fund", "provident", "pension",
-  "real_estate", "business", "metal", "crypto", "vehicle", "other",
+  "cash",
+  "deposit",
+  "bond",
+  "stock",
+  "fund",
+  "study_fund",
+  "provident",
+  "pension",
+  "real_estate",
+  "business",
+  "metal",
+  "crypto",
+  "vehicle",
+  "other",
 ] as const;
 export const LIABILITY_TYPES = ["mortgage", "loan", "credit", "other_liability"] as const;
 export type AssetType = (typeof ASSET_TYPES)[number] | (typeof LIABILITY_TYPES)[number];
@@ -947,7 +962,15 @@ export interface FiPayload {
   /** Spending per category, last 12 complete months vs the 12 before. */
   inflation: {
     rate: number | null;
-    categories: { categoryId: number; name: string; color: string; previous: number; current: number; change: number; weight: number }[];
+    categories: {
+      categoryId: number;
+      name: string;
+      color: string;
+      previous: number;
+      current: number;
+      change: number;
+      weight: number;
+    }[];
   };
 }
 
@@ -973,7 +996,18 @@ export interface Goal {
   dated?: boolean;
 }
 
-export const POLICY_KINDS = ["health", "shaban", "life", "mortgage_life", "disability", "long_term_care", "home", "car", "travel", "other"] as const;
+export const POLICY_KINDS = [
+  "health",
+  "shaban",
+  "life",
+  "mortgage_life",
+  "disability",
+  "long_term_care",
+  "home",
+  "car",
+  "travel",
+  "other",
+] as const;
 
 export const INSURANCE_DOC_KINDS = ["policy", "appendix", "renewal", "claim", "other"] as const;
 
@@ -1088,7 +1122,13 @@ export interface Fund {
 export interface FundComparison {
   fund: Fund;
   /** Medians across funds of the same kind (and track, for provident/study funds). */
-  peers: { count: number; feeBalance: number | null; feeDeposit: number | null; avg5y: number | null; avg3y: number | null };
+  peers: {
+    count: number;
+    feeBalance: number | null;
+    feeDeposit: number | null;
+    avg5y: number | null;
+    avg3y: number | null;
+  };
   /** 1 = best 5-year return among peers. */
   rank5y: number | null;
 }
@@ -1122,5 +1162,10 @@ export interface PropertyEstimate {
 export interface Asset {
   estimate?: PropertyEstimate | null;
   /** When the ILS value last changed (snapshot date, null = today) and by how much. */
-  change?: { since: string | null; prevIls: number | null; changeIls: number | null; changePct: number | null } | null;
+  change?: {
+    since: string | null;
+    prevIls: number | null;
+    changeIls: number | null;
+    changePct: number | null;
+  } | null;
 }

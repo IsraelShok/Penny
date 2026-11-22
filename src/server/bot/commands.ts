@@ -27,12 +27,23 @@ export const HIDDEN_AMOUNT = "•••";
 export const SHORT_LABEL = "תמונת מצב מצומצמת";
 export const FULL_LABEL = "תמונת מצב מלאה";
 export const MENU_LABEL = "☰ תפריט";
-const ALIASES: Record<string, string> = { [MENU_LABEL]: "/short", [SHORT_LABEL]: "/short", [FULL_LABEL]: "/full", "קצר": "/short", "מלא": "/full" };
+const ALIASES: Record<string, string> = {
+  [MENU_LABEL]: "/short",
+  [SHORT_LABEL]: "/short",
+  [FULL_LABEL]: "/full",
+  קצר: "/short",
+  מלא: "/full",
+};
 
 /** Inline tabs under every card; tapping one edits the same message instead of sending a new one. */
 export const MENU_TABS: [label: string, cmd: string][] = [
-  ["💰 מצב", "/short"], ["📊 החודש", "/month"], ["📅 חיובים", "/forecast"], ["🔁 מנויים", "/subs"],
-  ["🏷 סיווג", "/categorize"], ["📋 הכל", "/full"], ["⟳ סנכרון", "/sync"],
+  ["💰 מצב", "/short"],
+  ["📊 החודש", "/month"],
+  ["📅 חיובים", "/forecast"],
+  ["🔁 מנויים", "/subs"],
+  ["🏷 סיווג", "/categorize"],
+  ["📋 הכל", "/full"],
+  ["⟳ סנכרון", "/sync"],
 ];
 export const MENU_PREFIX = "m:";
 
@@ -40,7 +51,10 @@ export const MENU_PREFIX = "m:";
 export function menuMarkup(active?: string) {
   // Categorize opens its own card flow (bot/categorize.ts), not a text reply.
   const data = (cmd: string) => (cmd === "/categorize" ? "c:s:0" : MENU_PREFIX + cmd);
-  const btn = ([label, cmd]: [string, string]) => ({ text: cmd === active ? `· ${label} ·` : label, callback_data: data(cmd) });
+  const btn = ([label, cmd]: [string, string]) => ({
+    text: cmd === active ? `· ${label} ·` : label,
+    callback_data: data(cmd),
+  });
   return { inline_keyboard: [MENU_TABS.slice(0, 4).map(btn), MENU_TABS.slice(4).map(btn)] };
 }
 
@@ -99,7 +113,7 @@ export async function handleCommand(
   text: string,
   fromChatId: number,
   cfg: BotConfig,
-  deps: BotDeps
+  deps: BotDeps,
 ): Promise<string | null> {
   if (fromChatId !== cfg.chatId) return null;
   const cmd = ALIASES[text.trim()] ?? text.trim().split(/\s+/)[0].toLowerCase().replace(/@.*$/, "");
@@ -125,25 +139,34 @@ export async function handleCommand(
       if (i.series.length === 0) return "עוד לא זוהו מנויים.";
       return i.series
         .map((s) => {
-          const change = s.priceChange ? ` (המחיר עלה מ־${money(s.priceChange.from)} ל־${money(s.priceChange.to)})` : "";
+          const change = s.priceChange
+            ? ` (המחיר עלה מ־${money(s.priceChange.from)} ל־${money(s.priceChange.to)})`
+            : "";
           return `${s.merchant} ${money(s.expectedAmount)} ${CADENCE_HE[s.cadence] ?? s.cadence}${s.status === "candidate" ? " (אולי)" : ""}${change}`;
         })
         .join("\n");
     }
     case "/forecast": {
       const i = loadInsights(workspaceId, deps.today, cfg.billingDay);
-      const forecast = forecastCards({ today: deps.today, cards: i.cards, series: i.series, installments: i.installments });
+      const forecast = forecastCards({
+        today: deps.today,
+        cards: i.cards,
+        series: i.series,
+        installments: i.installments,
+      });
       if (forecast.length === 0) return "עוד אין פעילות בכרטיסים.";
       return forecast
         .map(
           (f) =>
-            `${f.date} כרטיס ${f.account?.slice(-4)}: ${money(f.total)} (נקלט ${money(f.parts.posted)}, קבועות ${money(f.parts.recurring)}, תשלומים ${money(f.parts.installments)}, אחר ${money(f.parts.discretionary)})`
+            `${f.date} כרטיס ${f.account?.slice(-4)}: ${money(f.total)} (נקלט ${money(f.parts.posted)}, קבועות ${money(f.parts.recurring)}, תשלומים ${money(f.parts.installments)}, אחר ${money(f.parts.discretionary)})`,
         )
         .join("\n");
     }
     case "/status": {
       const run = getLastSyncRun(workspaceId);
-      return run ? `סנכרון אחרון: ${run.status === "completed" ? "הצליח" : run.status === "failed" ? "נכשל" : "רץ"} ב־${run.startedAt}` : "עוד לא היה סנכרון.";
+      return run
+        ? `סנכרון אחרון: ${run.status === "completed" ? "הצליח" : run.status === "failed" ? "נכשל" : "רץ"} ב־${run.startedAt}`
+        : "עוד לא היה סנכרון.";
     }
     case "/sync":
       // Two syncs at once hit the bank twice and race on the same rows.

@@ -16,7 +16,10 @@ export async function GET(request: Request) {
   const accounts = buildAccountsForecast(ws, today);
   if (!accounts) return NextResponse.json({ forecast: null, accounts: null, cardBanks: [] });
 
-  const paydays = accounts.events.filter((e) => e.kind === "income").map((e) => e.date).sort();
+  const paydays = accounts.events
+    .filter((e) => e.kind === "income")
+    .map((e) => e.date)
+    .sort((a, b) => a.localeCompare(b));
   const low = accounts.total.lowest;
   return NextResponse.json({
     forecast: {
@@ -32,7 +35,10 @@ export async function GET(request: Request) {
 /** Body: { card, bank } — pins a card's statement to a bank account; bank null clears the choice. */
 export async function POST(request: Request) {
   const ws = getWorkspaceIdFromRequest(request);
-  const body = (await request.json().catch(() => null)) as { card?: unknown; bank?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as {
+    card?: unknown;
+    bank?: unknown;
+  } | null;
   if (typeof body?.card !== "string" || !(body.bank === null || typeof body.bank === "string")) {
     return NextResponse.json({ error: "card and bank are required" }, { status: 400 });
   }

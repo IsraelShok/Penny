@@ -7,10 +7,13 @@ import { isDemoMode } from "@/server/demo/mode";
 const cache = new Map<string, { day: string; closes: DailyRates[string] }>();
 
 async function fetchDaily(currency: string) {
-  const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${currency}ILS=X?range=1y&interval=1d`, {
-    headers: { "User-Agent": "Mozilla/5.0" },
-    signal: AbortSignal.timeout(5000),
-  });
+  const res = await fetch(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${currency}ILS=X?range=1y&interval=1d`,
+    {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      signal: AbortSignal.timeout(5000),
+    },
+  );
   if (!res.ok) throw new Error(`Yahoo ${res.status}`);
   const r = (await res.json())?.chart?.result?.[0];
   const stamps: number[] = r?.timestamp ?? [];
@@ -18,7 +21,10 @@ async function fetchDaily(currency: string) {
   const offset: number = r?.meta?.gmtoffset ?? 0;
   // Bars are stamped at the market's local open, so shift by its offset before taking the calendar day.
   return stamps
-    .map((ts, i) => ({ date: new Date((ts + offset) * 1000).toISOString().slice(0, 10), close: closes[i] ?? 0 }))
+    .map((ts, i) => ({
+      date: new Date((ts + offset) * 1000).toISOString().slice(0, 10),
+      close: closes[i] ?? 0,
+    }))
     .filter((c) => c.close > 0);
 }
 
@@ -37,7 +43,7 @@ export async function dailyRates(currencies: string[], today: string): Promise<D
         const closes = await fetchDaily(c).catch(() => hit?.closes ?? []);
         cache.set(c, { day: today, closes });
         out[c] = closes;
-      })
+      }),
   );
   return out;
 }

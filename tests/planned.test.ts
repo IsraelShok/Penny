@@ -27,7 +27,13 @@ it("splits a bank purchase into monthly payments, keeping the rounding remainder
 });
 
 it("puts card payments on the estimated statement date, one per statement", () => {
-  const item = { ...bankItem, accountKind: "card" as const, date: "2026-01-15", installments: 2, amount: 900 };
+  const item = {
+    ...bankItem,
+    accountKind: "card" as const,
+    date: "2026-01-15",
+    installments: 2,
+    amount: 900,
+  };
   const payments = plannedPayments(item, { lag: 1, day: 10 });
   expect(payments.map((p) => p.spendDate)).toEqual(["2026-02-10", "2026-03-10"]);
   expect(payments.map((p) => p.chargeMonth)).toEqual(["2026-02", "2026-03"]);
@@ -43,9 +49,33 @@ it("keeps a single card payment on its purchase date but charges it on the state
 
 it("learns a card's lag and statement day from its own rows", () => {
   const rows: PlannedCharge[] = [
-    { id: 1, description: "a", date: "2025-11-03", billingDate: "2025-12-10", account: "card", amount: 100, installmentNumber: null },
-    { id: 2, description: "b", date: "2025-12-05", billingDate: "2026-01-10", account: "card", amount: 100, installmentNumber: null },
-    { id: 3, description: "c", date: "2026-01-02", billingDate: "2026-02-12", account: "card", amount: 100, installmentNumber: null },
+    {
+      id: 1,
+      description: "a",
+      date: "2025-11-03",
+      billingDate: "2025-12-10",
+      account: "card",
+      amount: 100,
+      installmentNumber: null,
+    },
+    {
+      id: 2,
+      description: "b",
+      date: "2025-12-05",
+      billingDate: "2026-01-10",
+      account: "card",
+      amount: 100,
+      installmentNumber: null,
+    },
+    {
+      id: 3,
+      description: "c",
+      date: "2026-01-02",
+      billingDate: "2026-02-12",
+      account: "card",
+      amount: 100,
+      installmentNumber: null,
+    },
   ];
   expect(cardTiming(rows, "card")).toEqual({ lag: 1, day: 10 });
   expect(cardTiming([], "card", 9)).toEqual({ lag: 1, day: 9 });
@@ -63,12 +93,60 @@ it("finds real rows by account, amount, date window and text", () => {
     rejectedTxnIds: [4],
   };
   const charges: PlannedCharge[] = [
-    { id: 1, description: "IKEA TLV", date: "2026-03-12", billingDate: "2026-04-10", account: "A", amount: 1000, installmentNumber: null },
-    { id: 2, description: "IKEA", date: "2026-03-11", billingDate: "2026-04-10", account: "A", amount: 500, installmentNumber: 1 },
-    { id: 3, description: "IKEA", date: "2026-03-11", billingDate: "2026-04-10", account: "B", amount: 1000, installmentNumber: null },
-    { id: 4, description: "IKEA", date: "2026-03-11", billingDate: "2026-04-10", account: "A", amount: 1000, installmentNumber: null },
-    { id: 5, description: "IKEA", date: "2026-03-11", billingDate: "2026-04-10", account: "A", amount: 500, installmentNumber: 2 },
-    { id: 6, description: "Other", date: "2026-03-11", billingDate: "2026-04-10", account: "A", amount: 1000, installmentNumber: null },
+    {
+      id: 1,
+      description: "IKEA TLV",
+      date: "2026-03-12",
+      billingDate: "2026-04-10",
+      account: "A",
+      amount: 1000,
+      installmentNumber: null,
+    },
+    {
+      id: 2,
+      description: "IKEA",
+      date: "2026-03-11",
+      billingDate: "2026-04-10",
+      account: "A",
+      amount: 500,
+      installmentNumber: 1,
+    },
+    {
+      id: 3,
+      description: "IKEA",
+      date: "2026-03-11",
+      billingDate: "2026-04-10",
+      account: "B",
+      amount: 1000,
+      installmentNumber: null,
+    },
+    {
+      id: 4,
+      description: "IKEA",
+      date: "2026-03-11",
+      billingDate: "2026-04-10",
+      account: "A",
+      amount: 1000,
+      installmentNumber: null,
+    },
+    {
+      id: 5,
+      description: "IKEA",
+      date: "2026-03-11",
+      billingDate: "2026-04-10",
+      account: "A",
+      amount: 500,
+      installmentNumber: 2,
+    },
+    {
+      id: 6,
+      description: "Other",
+      date: "2026-03-11",
+      billingDate: "2026-04-10",
+      account: "A",
+      amount: 1000,
+      installmentNumber: null,
+    },
   ];
   const candidates = plannedCandidates(item, charges, new Set([2]));
   expect(candidates.map((c) => c.id)).toEqual([1]);

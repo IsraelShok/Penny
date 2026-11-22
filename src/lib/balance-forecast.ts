@@ -1,6 +1,7 @@
 // Client-safe date math on YYYY-MM-DD strings, in UTC so the host timezone never shifts a day.
 const pad = (n: number) => String(n).padStart(2, "0");
-const ymd = (y: number, m0: number, d: number) => new Date(Date.UTC(y, m0, d)).toISOString().slice(0, 10);
+const ymd = (y: number, m0: number, d: number) =>
+  new Date(Date.UTC(y, m0, d)).toISOString().slice(0, 10);
 const parts = (date: string) => date.split("-").map(Number) as [number, number, number];
 
 export const addDays = (date: string, days: number) => {
@@ -29,8 +30,14 @@ export function nthCharge(cadence: Cadence, lastDate: string, k: number): string
  * "upcoming transactions": recurring charges that are late (expected in the last `lateDays`
  * days but not seen yet) or due within the next `days` days, soonest first.
  */
-export function upcomingCharges<T extends { cadence: Cadence; lastDate: string }>(series: T[], today: string, days = 3, lateDays = 5) {
-  const from = addDays(today, -lateDays), to = addDays(today, days);
+export function upcomingCharges<T extends { cadence: Cadence; lastDate: string }>(
+  series: T[],
+  today: string,
+  days = 3,
+  lateDays = 5,
+) {
+  const from = addDays(today, -lateDays),
+    to = addDays(today, days);
   return series
     .map((s) => ({ ...s, due: nthCharge(s.cadence, s.lastDate, 1) }))
     .filter((s) => s.due >= from && s.due <= to)
@@ -39,7 +46,12 @@ export function upcomingCharges<T extends { cadence: Cadence; lastDate: string }
 }
 
 /** Expected charge dates of a series within [from, to]. */
-export function chargesBetween(cadence: Cadence, lastDate: string, from: string, to: string): string[] {
+export function chargesBetween(
+  cadence: Cadence,
+  lastDate: string,
+  from: string,
+  to: string,
+): string[] {
   const out: string[] = [];
   for (let k = 1; k < 600; k++) {
     const date = nthCharge(cadence, lastDate, k);
@@ -73,7 +85,7 @@ export function forecastBalance(input: {
   bills: { date: string; total: number }[];
   recurring: { cadence: Cadence; lastDate: string; amount: number }[];
   days?: number;
-  scheduled?: {date:string;total:number}[];
+  scheduled?: { date: string; total: number }[];
 }): BalanceForecast {
   const days = input.days ?? 90;
   const end = addDays(input.today, days);
@@ -89,17 +101,32 @@ export function forecastBalance(input: {
     if (d >= from && d <= end) paydays.push(d);
   }
   if (!(input.monthlyIncome > 0)) paydays.length = 0;
-  for (const d of paydays) { add(d, input.monthlyIncome); events.push({ date: d, amount: input.monthlyIncome, kind: "income" }); }
-  for (const b of input.bills) if (b.date >= from && b.date <= end) { add(b.date, -b.total); events.push({ date: b.date, amount: -b.total, kind: "card" }); }
-  for (const s of input.recurring) for (const d of chargesBetween(s.cadence, s.lastDate, from, end)) { add(d, -s.amount); events.push({ date: d, amount: -s.amount, kind: "recurring" }); }
+  for (const d of paydays) {
+    add(d, input.monthlyIncome);
+    events.push({ date: d, amount: input.monthlyIncome, kind: "income" });
+  }
+  for (const b of input.bills)
+    if (b.date >= from && b.date <= end) {
+      add(b.date, -b.total);
+      events.push({ date: b.date, amount: -b.total, kind: "card" });
+    }
+  for (const s of input.recurring)
+    for (const d of chargesBetween(s.cadence, s.lastDate, from, end)) {
+      add(d, -s.amount);
+      events.push({ date: d, amount: -s.amount, kind: "recurring" });
+    }
 
-  for(const event of input.scheduled??[]) if(event.date>=from&&event.date<=end) { add(event.date,-event.total); events.push({date:event.date,amount:-event.total,kind:"recurring"}); }
+  for (const event of input.scheduled ?? [])
+    if (event.date >= from && event.date <= end) {
+      add(event.date, -event.total);
+      events.push({ date: event.date, amount: -event.total, kind: "recurring" });
+    }
   const points = [{ date: input.today, balance: input.bank }];
   for (let i = 1; i <= days; i++) {
     const date = addDays(input.today, i);
     points.push({ date, balance: points[i - 1].balance + (delta.get(date) ?? 0) });
   }
-  const low = points.reduce((a, b) => (b.balance < a.balance ? b : a));
+  const low = points.reduce((a, b) => (b.balance < a.balance ? b : a), points[0]!);
   return {
     points,
     events: events.sort((a, b) => a.date.localeCompare(b.date)),
@@ -223,7 +250,9 @@ export function projectAccounts(input: {
     let expected = acc.balance;
     let low = acc.balance;
     let high = acc.balance;
-    const points: AccountPoint[] = [{ date: input.today, expected: round2(expected), low: round2(low), high: round2(high) }];
+    const points: AccountPoint[] = [
+      { date: input.today, expected: round2(expected), low: round2(low), high: round2(high) },
+    ];
     for (let date = addDays(input.today, 1); date <= horizonEnd; date = addDays(date, 1)) {
       for (const e of byDate.get(date) ?? []) {
         expected += e.amount;
@@ -241,7 +270,7 @@ export function projectAccounts(input: {
       points.push({ date, expected: round2(expected), low: round2(low), high: round2(high) });
     }
 
-    const lowest = points.reduce((a, b) => (b.expected < a.expected ? b : a));
+    const lowest = points.reduce((a, b) => (b.expected < a.expected ? b : a), points[0]!);
     const balanceDate = acc.balanceDate ? acc.balanceDate.slice(0, 10) : null;
     const belowZero = points.find((p) => p.expected < 0)?.date ?? null;
     const belowBuffer = points.find((p) => p.expected < buffer)?.date ?? null;
@@ -263,14 +292,15 @@ export function projectAccounts(input: {
     };
   });
 
-  const totalPoints = accounts[0]?.points.map((p, i) => ({
-    date: p.date,
-    expected: round2(accounts.reduce((s, a) => s + a.points[i].expected, 0)),
-    low: round2(accounts.reduce((s, a) => s + a.points[i].low, 0)),
-    high: round2(accounts.reduce((s, a) => s + a.points[i].high, 0)),
-  })) ?? [];
+  const totalPoints =
+    accounts[0]?.points.map((p, i) => ({
+      date: p.date,
+      expected: round2(accounts.reduce((s, a) => s + a.points[i].expected, 0)),
+      low: round2(accounts.reduce((s, a) => s + a.points[i].low, 0)),
+      high: round2(accounts.reduce((s, a) => s + a.points[i].high, 0)),
+    })) ?? [];
   const totalLowest = totalPoints.length
-    ? totalPoints.reduce((a, b) => (b.expected < a.expected ? b : a))
+    ? totalPoints.reduce((a, b) => (b.expected < a.expected ? b : a), totalPoints[0]!)
     : { date: input.today, expected: 0 };
   const total: AccountForecast = {
     account: "total",
@@ -285,7 +315,11 @@ export function projectAccounts(input: {
     dailyRate: round2(accounts.reduce((s, a) => s + a.dailyRate, 0)),
     shortfall: {
       amount: round2(accounts.reduce((s, a) => s + a.shortfall.amount, 0)),
-      by: accounts.map((a) => a.shortfall.by).filter((d): d is string => !!d).sort()[0] ?? null,
+      by:
+        accounts
+          .map((a) => a.shortfall.by)
+          .filter((d): d is string => !!d)
+          .sort((a, b) => a.localeCompare(b))[0] ?? null,
     },
   };
 
@@ -298,7 +332,12 @@ export function projectAccounts(input: {
     events: [...input.events].sort((a, b) => a.date.localeCompare(b.date)),
     warnings: accounts
       .filter((a) => a.lowest.amount < buffer)
-      .map((a) => ({ account: a.account, name: a.name, date: a.lowest.date, amount: a.lowest.amount })),
+      .map((a) => ({
+        account: a.account,
+        name: a.name,
+        date: a.lowest.date,
+        amount: a.lowest.amount,
+      })),
   };
 }
 

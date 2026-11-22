@@ -14,7 +14,11 @@ export const WELLBEING_ITEMS = [
 
 /** answers[i] is the chosen option index: 0 = "Completely"/"Always" … 4 = "Not at all"/"Never". */
 export function wellbeingScore(answers: number[]) {
-  if (answers.length !== WELLBEING_ITEMS.length || answers.some((a) => !Number.isInteger(a) || a < 0 || a > 4)) return null;
+  if (
+    answers.length !== WELLBEING_ITEMS.length ||
+    answers.some((a) => !Number.isInteger(a) || a < 0 || a > 4)
+  )
+    return null;
   const points = answers.map((a, i) => (WELLBEING_ITEMS[i].positive ? 4 - a : a));
   return Math.round((points.reduce((s, p) => s + p, 0) / points.length) * 25);
 }
@@ -29,7 +33,14 @@ export const WELLBEING_DUE_DAYS = 90;
 export function parseWellbeingHistory(raw: unknown): WellbeingEntry[] {
   if (!Array.isArray(raw)) return [];
   return raw
-    .filter((e): e is WellbeingEntry => !!e && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && Number.isFinite(e.score) && e.score >= 0 && e.score <= 100)
+    .filter(
+      (e): e is WellbeingEntry =>
+        !!e &&
+        /^\d{4}-\d{2}-\d{2}$/.test(e.date) &&
+        Number.isFinite(e.score) &&
+        e.score >= 0 &&
+        e.score <= 100,
+    )
     .map((e) => ({ date: e.date, score: Math.round(e.score) }))
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(-40);
@@ -39,7 +50,10 @@ export function parseWellbeingHistory(raw: unknown): WellbeingEntry[] {
 export function wellbeingDue(history: WellbeingEntry[], today: string) {
   const last = history.at(-1);
   if (!last) return true;
-  return (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${last.date}T00:00:00Z`)) / 86_400_000 > WELLBEING_DUE_DAYS;
+  return (
+    (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${last.date}T00:00:00Z`)) / 86_400_000 >
+    WELLBEING_DUE_DAYS
+  );
 }
 
 /** Gentle bands for the interpretation text, no judgement. */

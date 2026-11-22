@@ -121,144 +121,136 @@ export function CategoryCard({ data, onClick, footer }: CategoryCardProps) {
   const parentName = data.parentName ? translateCategoryName(data.parentName, tCat) : null;
   return (
     <div className="studio-category-card rounded-2xl bg-card">
-    <button
-      type="button"
-      onClick={onClick}
-      className="group w-full cursor-pointer rounded-2xl p-5 text-start transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
-          <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-            style={{ background: tint(data.categoryColor, 0.18) }}
-          >
-            <Icon className="h-5 w-5" style={{ color: shade(data.categoryColor) }} />
-          </div>
-          <div className="min-w-0 flex-1">
-            {parentName && (
-              <div
-                className="text-xs font-semibold text-muted-foreground"
-              >
-                {parentName}
-              </div>
-            )}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-medium leading-tight">{categoryName}</span>
-              {data.isParent && data.childCount != null && (
-                <span
-                  className="rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums"
-                  style={{
-                    background: tint(data.categoryColor, 0.22),
-                    color: "var(--foreground)",
-                  }}
-                  title={t("subcategoriesTooltip", { count: data.childCount })}
-                >
-                  {data.childCount}
-                </span>
-              )}
-              {data.needsReviewCount > 0 && (
-                <span
-                  className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums"
-                  style={{
-                    backgroundColor:
-                      "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
-                    color: "var(--status-heads-up)",
-                  }}
-                  title={t("needsReviewTooltip", { count: data.needsReviewCount })}
-                >
-                  <HelpCircle className="h-3 w-3" />
-                  {data.needsReviewCount}
-                </span>
-              )}
-              {data.isParent && data.budgetSource === "own" && !isTracking && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("ownBudgetTag")}
-                </span>
-              )}
-              {data.isParent && data.budgetSource === "rollup" && !isTracking && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("rolledUpTag")}
-                </span>
-              )}
+      <button
+        type="button"
+        onClick={onClick}
+        className="group w-full cursor-pointer rounded-2xl p-5 text-start transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+              style={{ background: tint(data.categoryColor, 0.18) }}
+            >
+              <Icon className="h-5 w-5" style={{ color: shade(data.categoryColor) }} />
             </div>
-            <div className="mt-0.5 truncate text-xs text-muted-foreground" title={`${data.transactionCount} ${t(data.transactionCount === 1 ? "transactionsOne" : "transactionsOther")}${data.topMerchant ? ` · ${t("mostlyMerchant", { merchant: data.topMerchant })}` : ""}`}>
-              {data.transactionCount}{" "}
-              {data.transactionCount === 1
-                ? t("transactionsOne")
-                : t("transactionsOther")}
-              {data.topMerchant
-                ? ` · ${t("mostlyMerchant", { merchant: data.topMerchant })}`
-                : ""}
-            </div>
-          </div>
-        </div>
-        {hasBudget && (
-          <ProgressDonut
-            percent={percent}
-            color={data.categoryColor}
-            status={data.status}
-          />
-        )}
-      </div>
-
-      <div className="mt-4">
-        <div className="flex items-baseline gap-1.5">
-          <span className="font-semibold text-3xl tabular-nums">
-            {shekels(data.spent, locale)}
-          </span>
-          {!isTracking && data.budget > 0 && (
-            <span className="font-semibold text-base tabular-nums text-muted-foreground">
-              / {shekels(data.budget, locale)}
-            </span>
-          )}
-        </div>
-        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-          {isTracking ? (
-            <VsTypical vsTypical={data.vsTypical} color={data.categoryColor} />
-          ) : (
-            <>
-              {vsLast != null && <VsLastMonth pct={vsLast} />}
-            </>
-          )}
-        </div>
-      </div>
-
-      {!isTracking && (
-        <div className="mt-4 flex items-center justify-between gap-2 text-xs">
-          <div className="text-muted-foreground tabular-nums">
-            {data.budget > 0 ? (
-              data.spent <= data.budget ? (
-                <>
-                  {t("spentLeft", {
-                    amount: shekels(data.remaining, locale),
-                  })}
-                  {data.perDayRemaining != null && (
-                    <>
-                      {" · "}
-                      {t("perDay", {
-                        amount: shekels(data.perDayRemaining, locale),
-                      })}
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  <span className="text-[var(--status-heads-up)]">
-                    {t("overAmount", {
-                      amount: shekels(data.spent - data.budget, locale),
-                    })}
+            <div className="min-w-0 flex-1">
+              {parentName && (
+                <div className="text-xs font-semibold text-muted-foreground">{parentName}</div>
+              )}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="font-medium leading-tight">{categoryName}</span>
+                {data.isParent && data.childCount != null && (
+                  <span
+                    className="rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums"
+                    style={{
+                      background: tint(data.categoryColor, 0.22),
+                      color: "var(--foreground)",
+                    }}
+                    title={t("subcategoriesTooltip", { count: data.childCount })}
+                  >
+                    {data.childCount}
                   </span>
-                  {t("overByEaseUp")}
-                </>
-              )
-            ) : (
-              <span>{t("setBudgetToTrack")}</span>
+                )}
+                {data.needsReviewCount > 0 && (
+                  <span
+                    className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums"
+                    style={{
+                      backgroundColor:
+                        "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
+                      color: "var(--status-heads-up)",
+                    }}
+                    title={t("needsReviewTooltip", { count: data.needsReviewCount })}
+                  >
+                    <HelpCircle className="h-3 w-3" />
+                    {data.needsReviewCount}
+                  </span>
+                )}
+                {data.isParent && data.budgetSource === "own" && !isTracking && (
+                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {t("ownBudgetTag")}
+                  </span>
+                )}
+                {data.isParent && data.budgetSource === "rollup" && !isTracking && (
+                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {t("rolledUpTag")}
+                  </span>
+                )}
+              </div>
+              <div
+                className="mt-0.5 truncate text-xs text-muted-foreground"
+                title={`${data.transactionCount} ${t(data.transactionCount === 1 ? "transactionsOne" : "transactionsOther")}${data.topMerchant ? ` · ${t("mostlyMerchant", { merchant: data.topMerchant })}` : ""}`}
+              >
+                {data.transactionCount}{" "}
+                {data.transactionCount === 1 ? t("transactionsOne") : t("transactionsOther")}
+                {data.topMerchant
+                  ? ` · ${t("mostlyMerchant", { merchant: data.topMerchant })}`
+                  : ""}
+              </div>
+            </div>
+          </div>
+          {hasBudget && (
+            <ProgressDonut percent={percent} color={data.categoryColor} status={data.status} />
+          )}
+        </div>
+
+        <div className="mt-4">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-semibold text-3xl tabular-nums">
+              {shekels(data.spent, locale)}
+            </span>
+            {!isTracking && data.budget > 0 && (
+              <span className="font-semibold text-base tabular-nums text-muted-foreground">
+                / {shekels(data.budget, locale)}
+              </span>
             )}
           </div>
-          {hasBudget && <StatusPill status={data.status} />}
+          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+            {isTracking ? (
+              <VsTypical vsTypical={data.vsTypical} color={data.categoryColor} />
+            ) : (
+              <>{vsLast != null && <VsLastMonth pct={vsLast} />}</>
+            )}
+          </div>
         </div>
-      )}
-    </button>
-    {footer}
+
+        {!isTracking && (
+          <div className="mt-4 flex items-center justify-between gap-2 text-xs">
+            <div className="text-muted-foreground tabular-nums">
+              {data.budget > 0 ? (
+                data.spent <= data.budget ? (
+                  <>
+                    {t("spentLeft", {
+                      amount: shekels(data.remaining, locale),
+                    })}
+                    {data.perDayRemaining != null && (
+                      <>
+                        {" · "}
+                        {t("perDay", {
+                          amount: shekels(data.perDayRemaining, locale),
+                        })}
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[var(--status-heads-up)]">
+                      {t("overAmount", {
+                        amount: shekels(data.spent - data.budget, locale),
+                      })}
+                    </span>
+                    {t("overByEaseUp")}
+                  </>
+                )
+              ) : (
+                <span>{t("setBudgetToTrack")}</span>
+              )}
+            </div>
+            {hasBudget && <StatusPill status={data.status} />}
+          </div>
+        )}
+      </button>
+      {footer}
     </div>
   );
 }
@@ -304,8 +296,7 @@ function ProgressDonut({
   const circumference = 2 * Math.PI * radius;
   const visualPercent = Math.min(100, percent);
   const dash = (visualPercent / 100) * circumference;
-  const strokeColor =
-    status === "over" ? "var(--status-heads-up)" : shade(color);
+  const strokeColor = status === "over" ? "var(--status-heads-up)" : shade(color);
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
@@ -352,10 +343,7 @@ function StatusPill({ status }: { status: BudgetStatus }) {
         color: m.color,
       }}
     >
-      <span
-        className="h-1.5 w-1.5 rounded-full"
-        style={{ backgroundColor: m.color }}
-      />
+      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: m.color }} />
       {m.label}
     </span>
   );
@@ -369,11 +357,7 @@ function VsLastMonth({ pct }: { pct: number }) {
   }
   const up = rounded > 0;
   return (
-    <span
-      className={
-        up ? "text-[var(--status-heads-up)]" : "text-[var(--status-on-track)]"
-      }
-    >
+    <span className={up ? "text-[var(--status-heads-up)]" : "text-[var(--status-on-track)]"}>
       {up
         ? t("vsLastMonthUp", { pct: Math.abs(rounded) })
         : t("vsLastMonthDown", { pct: Math.abs(rounded) })}
@@ -394,8 +378,8 @@ function shade(hex: string): string {
 function parseHex(hex: string): { r: number; g: number; b: number } {
   const clean = hex.replace("#", "");
   return {
-    r: parseInt(clean.slice(0, 2), 16),
-    g: parseInt(clean.slice(2, 4), 16),
-    b: parseInt(clean.slice(4, 6), 16),
+    r: Number.parseInt(clean.slice(0, 2), 16),
+    g: Number.parseInt(clean.slice(2, 4), 16),
+    b: Number.parseInt(clean.slice(4, 6), 16),
   };
 }

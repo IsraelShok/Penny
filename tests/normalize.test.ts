@@ -37,7 +37,7 @@ describe("normalizeMerchant", () => {
 });
 
 describe("translateMerchant", () => {
-  const table = { "שופרסל": "Shufersal" };
+  const table = { שופרסל: "Shufersal" };
   it("returns the translation for a known key", () => {
     expect(translateMerchant("שופרסל", table)).toBe("Shufersal");
   });

@@ -34,7 +34,8 @@ export interface FlowSnapshot {
 
 const isFlowType = (value: unknown): value is FlowType =>
   typeof value === "string" && (FLOW_TYPES as readonly string[]).includes(value);
-const nullableNumber = (value: unknown): value is number | null => value === null || Number.isInteger(value);
+const nullableNumber = (value: unknown): value is number | null =>
+  value === null || Number.isInteger(value);
 
 /** Stored JSON is untrusted, including rows written by an older version of the engine. */
 export function parseFlowSnapshots(raw: string): FlowSnapshot[] {
@@ -49,8 +50,14 @@ export function parseFlowSnapshots(raw: string): FlowSnapshot[] {
   for (const item of parsed) {
     if (!item || typeof item !== "object") continue;
     const row = item as Record<string, unknown>;
-    if (!Number.isInteger(row.id) || typeof row.kind !== "string" || !isFlowType(row.flow_type)) continue;
-    if (!nullableNumber(row.linked_txn_id) || !nullableNumber(row.transfer_pair_id) || !nullableNumber(row.category_id)) continue;
+    if (!Number.isInteger(row.id) || typeof row.kind !== "string" || !isFlowType(row.flow_type))
+      continue;
+    if (
+      !nullableNumber(row.linked_txn_id) ||
+      !nullableNumber(row.transfer_pair_id) ||
+      !nullableNumber(row.category_id)
+    )
+      continue;
     out.push({
       id: row.id as number,
       kind: row.kind,

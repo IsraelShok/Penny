@@ -66,7 +66,10 @@ describe("elapsedPercent and daysLeft", () => {
   it("counts the period by its own dates", () => {
     expect(elapsedPercent("2026-10-09", "2026-10-10", "2026-11-09")).toBe(0);
     expect(elapsedPercent("2026-11-09", "2026-10-10", "2026-11-09")).toBe(100);
-    expect(elapsedPercent("2026-10-19", "2026-10-10", "2026-11-09")).toBeCloseTo((10 / 31) * 100, 5);
+    expect(elapsedPercent("2026-10-19", "2026-10-10", "2026-11-09")).toBeCloseTo(
+      (10 / 31) * 100,
+      5,
+    );
     expect(daysLeft("2026-11-05", "2026-11-09")).toBe(5);
     expect(daysLeft("2026-11-12", "2026-11-09")).toBe(0);
   });

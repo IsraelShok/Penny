@@ -20,8 +20,20 @@ describe("transaction receipts", () => {
     const { getWorkspaceIdFromRequest } = await import("@/server/lib/workspace-context");
     const db = getDb();
     const ws = getWorkspaceIdFromRequest(new Request("http://127.0.0.1/"));
-    const sync = Number(db.prepare("INSERT INTO sync_runs (workspace_id,provider,status,scrape_from_date,started_at) VALUES (?,'hapoalim','completed','2026-01-01','2026-11-01')").run(ws).lastInsertRowid);
-    const txn = Number(db.prepare("INSERT INTO transactions (workspace_id,account_number,date,processed_date,original_amount,original_currency,charged_amount,description,type,status,provider,sync_run_id,dedup_hash,kind) VALUES (?,'123','2026-11-01','2026-11-01',-100,'ILS',-100,'Shop','normal','completed','hapoalim',?,'r1','expense')").run(ws, sync).lastInsertRowid);
+    const sync = Number(
+      db
+        .prepare(
+          "INSERT INTO sync_runs (workspace_id,provider,status,scrape_from_date,started_at) VALUES (?,'hapoalim','completed','2026-01-01','2026-11-01')",
+        )
+        .run(ws).lastInsertRowid,
+    );
+    const txn = Number(
+      db
+        .prepare(
+          "INSERT INTO transactions (workspace_id,account_number,date,processed_date,original_amount,original_currency,charged_amount,description,type,status,provider,sync_run_id,dedup_hash,kind) VALUES (?,'123','2026-11-01','2026-11-01',-100,'ILS',-100,'Shop','normal','completed','hapoalim',?,'r1','expense')",
+        )
+        .run(ws, sync).lastInsertRowid,
+    );
 
     const list = await import("@/app/api/transactions/[id]/receipts/route");
     const one = await import("@/app/api/receipts/[id]/route");
@@ -38,7 +50,10 @@ describe("transaction receipts", () => {
     expect(file.headers.get("content-type")).toBe("application/pdf");
     expect(await file.text()).toBe("%PDF-1.4 test");
 
-    expect((await one.DELETE(new Request("http://127.0.0.1/", { method: "DELETE" }), ctx(created.id))).status).toBe(200);
+    expect(
+      (await one.DELETE(new Request("http://127.0.0.1/", { method: "DELETE" }), ctx(created.id)))
+        .status,
+    ).toBe(200);
     expect((await one.GET(new Request("http://127.0.0.1/"), ctx(created.id))).status).toBe(404);
   });
 });

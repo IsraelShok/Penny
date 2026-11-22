@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { explainChange } from "@/lib/spend-change";
 
-const r = (merchant: string, ...amounts: number[]) => amounts.map((amount) => ({ merchant, amount }));
+const r = (merchant: string, ...amounts: number[]) =>
+  amounts.map((amount) => ({ merchant, amount }));
 
 describe("explainChange", () => {
   it("splits the change into price, volume, new and gone, adding up to the total", () => {

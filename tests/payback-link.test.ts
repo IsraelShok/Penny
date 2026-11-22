@@ -12,17 +12,34 @@ let food = 0;
 
 const range = (month: string) => [`${month}-01`, `${month}-31`] as const;
 
-function add(kind: "expense" | "income", amount: number, date: string, description: string, businessSharePct = 0) {
+function add(
+  kind: "expense" | "income",
+  amount: number,
+  date: string,
+  description: string,
+  businessSharePct = 0,
+) {
   return manual.createManualTransaction(
     db,
     ws,
-    { kind, amount, date, description, categoryId: kind === "expense" ? food : null, businessSharePct },
+    {
+      kind,
+      amount,
+      date,
+      description,
+      categoryId: kind === "expense" ? food : null,
+      businessSharePct,
+    },
     [],
   );
 }
 
 const shareOf = (id: number) =>
-  (db.prepare("SELECT business_share_pct AS share FROM transactions WHERE id = ?").get(id) as { share: number }).share;
+  (
+    db.prepare("SELECT business_share_pct AS share FROM transactions WHERE id = ?").get(id) as {
+      share: number;
+    }
+  ).share;
 
 beforeAll(async () => {
   process.env.PENNY_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "penny-payback-"));
@@ -33,7 +50,11 @@ beforeAll(async () => {
   const { ensureCategory } = await import("@/server/db/queries/categories");
   ws = (db.prepare("SELECT id FROM workspaces ORDER BY id LIMIT 1").get() as { id: number }).id;
   ensureCategory(ws, "אוכל", undefined, "expense");
-  food = (db.prepare("SELECT id FROM categories WHERE workspace_id = ? AND name = 'אוכל'").get(ws) as { id: number }).id;
+  food = (
+    db.prepare("SELECT id FROM categories WHERE workspace_id = ? AND name = 'אוכל'").get(ws) as {
+      id: number;
+    }
+  ).id;
 });
 
 describe("payback links", () => {
@@ -139,7 +160,9 @@ describe("payback links", () => {
     expect(paybacks.linkPayback(ws, dinner, bit)).toEqual({ ok: true });
     manual.deleteManualTransaction(db, ws, dinner);
 
-    const row = db.prepare("SELECT kind, category_id AS categoryId FROM transactions WHERE id = ?").get(bit) as {
+    const row = db
+      .prepare("SELECT kind, category_id AS categoryId FROM transactions WHERE id = ?")
+      .get(bit) as {
       kind: string;
       categoryId: number | null;
     };
@@ -156,6 +179,8 @@ describe("payback links", () => {
 
     expect(paybacks.linkPayback(ws, bit, dinner)).toEqual({ ok: true });
     const other = add("expense", 220, "2027-02-05", "עוד פיצה");
-    expect((paybacks.getPaybackState(ws, other)?.candidates ?? []).map((c) => c.id)).not.toContain(bit);
+    expect((paybacks.getPaybackState(ws, other)?.candidates ?? []).map((c) => c.id)).not.toContain(
+      bit,
+    );
   });
 });

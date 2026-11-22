@@ -12,7 +12,14 @@ function drawdown(capital: number, r: number, months: number) {
  * Annuity = balance / conversion factor, for life. Lump = balance after tax, invested and drawn down to 0 by `untilAge`.
  * breakEvenAge: from then on the annuity has paid out more than the lump sum (ignoring returns).
  */
-export function annuityVsLump(i: { balance: number; factor: number; age: number; untilAge: number; returnPct: number; lumpTaxPct: number }) {
+export function annuityVsLump(i: {
+  balance: number;
+  factor: number;
+  age: number;
+  untilAge: number;
+  returnPct: number;
+  lumpTaxPct: number;
+}) {
   const annuity = i.factor > 0 ? i.balance / i.factor : 0;
   const lumpNet = i.balance * (1 - Math.min(100, i.lumpTaxPct) / 100);
   const months = Math.min(1200, Math.max(0, Math.round((i.untilAge - i.age) * 12)));
@@ -27,8 +34,20 @@ export function annuityVsLump(i: { balance: number; factor: number; age: number;
  * (shortcut: ignores spreading the tax over years (פריסה); upgrade if users ask for it).
  * Withdrawn money is assumed invested in a taxable account (25% on nominal gains).
  */
-export function severanceChoice(i: { amount: number; serviceYears: number; salary: number; yearsToRetire: number; returnPct: number; taxPct: number; exemptPerYear: number }) {
-  const exempt = Math.min(i.amount, i.exemptPerYear * i.serviceYears, 1.5 * i.salary * i.serviceYears);
+export function severanceChoice(i: {
+  amount: number;
+  serviceYears: number;
+  salary: number;
+  yearsToRetire: number;
+  returnPct: number;
+  taxPct: number;
+  exemptPerYear: number;
+}) {
+  const exempt = Math.min(
+    i.amount,
+    i.exemptPerYear * i.serviceYears,
+    1.5 * i.salary * i.serviceYears,
+  );
   const taxNow = Math.max(0, i.amount - exempt) * (i.taxPct / 100);
   const net = i.amount - taxNow;
   const growth = (1 + i.returnPct / 100) ** Math.min(100, Math.max(0, i.yearsToRetire));
@@ -45,12 +64,19 @@ export type TrackKind = "sp500" | "stocks" | "ageBased" | "general" | "bonds" | 
  * long horizon and calm with drops → equity/index; short horizon or low tolerance → general/bonds.
  * Self-managed (IRA) only makes sense with a larger balance and the will to manage it.
  */
-export function suggestTracks(i: { age: number; horizonYears: number; risk: Risk; balance: number }): TrackKind[] {
+export function suggestTracks(i: {
+  age: number;
+  horizonYears: number;
+  risk: Risk;
+  balance: number;
+}): TrackKind[] {
   const h = i.horizonYears;
   let out: TrackKind[];
-  if (h < 5 || i.risk === "low") out = h < 3 ? ["bonds", "general"] : ["general", "ageBased", "bonds"];
+  if (h < 5 || i.risk === "low")
+    out = h < 3 ? ["bonds", "general"] : ["general", "ageBased", "bonds"];
   else if (h >= 15 && i.risk === "high") out = ["sp500", "stocks", "ageBased"];
-  else if (h >= 10) out = i.risk === "high" ? ["stocks", "sp500", "ageBased"] : ["ageBased", "sp500", "general"];
+  else if (h >= 10)
+    out = i.risk === "high" ? ["stocks", "sp500", "ageBased"] : ["ageBased", "sp500", "general"];
   else out = ["ageBased", "general", "stocks"];
   // shortcut: a fixed ₪200k line for when custody fees stop mattering; upgrade to a fee comparison if needed.
   if (i.balance >= 200_000 && i.risk !== "low" && h >= 10) out.push("selfManaged");
@@ -58,8 +84,14 @@ export function suggestTracks(i: { age: number; horizonYears: number; risk: Risk
 }
 
 /** Disability / survivor cover check for a pension fund, from the clearing-house report. */
-export function coverCheck(i: { disabilityPct: number; hasDependents: boolean; survivorsCovered: boolean }) {
-  const notes: ("disabilityLow" | "disabilityOk" | "survivorsMissing" | "survivorsMaybeWaive" | "survivorsOk")[] = [];
+export function coverCheck(i: {
+  disabilityPct: number;
+  hasDependents: boolean;
+  survivorsCovered: boolean;
+}) {
+  const notes: (
+    "disabilityLow" | "disabilityOk" | "survivorsMissing" | "survivorsMaybeWaive" | "survivorsOk"
+  )[] = [];
   // Pension funds allow up to 75% of insured salary for disability; less leaves a gap if you can't work.
   notes.push(i.disabilityPct < 75 ? "disabilityLow" : "disabilityOk");
   if (i.hasDependents && !i.survivorsCovered) notes.push("survivorsMissing");

@@ -19,7 +19,11 @@ export function LockForm({ next }: { next: string }) {
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
-        const res = await fetch("/api/lock/unlock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ secret }) }).catch(() => null);
+        const res = await fetch("/api/lock/unlock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ secret }),
+        }).catch(() => null);
         if (res?.ok) return window.location.assign(next);
         const body = ((await res?.json().catch(() => ({}))) ?? {}) as { retryAfter?: number };
         setSecret("");
@@ -41,8 +45,14 @@ export function LockForm({ next }: { next: string }) {
           className="h-11"
         />
       </div>
-      {error && <p id="lock-error" role="alert" className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" className="w-full" disabled={busy || !secret}>{t("submit")}</Button>
+      {error && (
+        <p id="lock-error" role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      <Button type="submit" className="w-full" disabled={busy || !secret}>
+        {t("submit")}
+      </Button>
     </form>
   );
 }

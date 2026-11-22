@@ -27,6 +27,12 @@ file alone cannot decrypt them.
   credentials.
 - Transaction data (merchant, amount, date, category) is plaintext in
   the SQLite file. Someone with disk access can see all your spending.
+- With the app lock on, `.app-lock.json` holds both the PIN hash and the
+  PIN-wrapped key. A copied data directory can be attacked offline, so PIN
+  length is the whole defence: new locks require 8+ digits and use
+  `scrypt` N=2^17 (about a quarter second per guess per CPU core), which
+  puts a brute force in the days-to-weeks range on a desktop, not hours.
+  A long passphrase is much stronger than the shortest accepted PIN.
 
 The right defense for both is **full-disk encryption on your laptop**
 (FileVault on macOS, BitLocker on Windows, LUKS on Linux). Turn it on.
@@ -34,7 +40,8 @@ The right defense for both is **full-disk encryption on your laptop**
 ## Network surface
 
 The dev server binds to `127.0.0.1` only. It is not reachable from your
-local network or the internet. The library only contacts:
+local network or the internet, unless you turn on phone access (see
+"Phone access on the home network" below). The library only contacts:
 
 - Your bank's domains (e.g., `digital.isracard.co.il`) — via Puppeteer
 - `api.anthropic.com` — only if Claude is your AI provider
@@ -43,6 +50,27 @@ local network or the internet. The library only contacts:
   name leaves your machine, no credentials)
 
 Run with `mitmproxy` or Charles to verify this yourself.
+
+## Phone access on the home network
+
+Settings -> Privacy & security -> phone access is off by default. It is the
+one mode where the server binds `0.0.0.0` instead of `127.0.0.1`
+(`scripts/serve.mjs`, `desktop/main.cjs`), so a phone on the same Wi-Fi can
+open `http://<private-ip>:41234`.
+
+- The app lock must be on, and turning the lock off turns phone access off
+  (`src/app/api/lock/route.ts`, `src/app/api/lan/route.ts`).
+- Only private addresses are accepted (`10/8`, `172.16/12`, `192.168/16`,
+  `fe80::/10`, `*.local`); the Host check still rejects everything else
+  (`src/lib/host-guard.ts`).
+- **The traffic is plain HTTP.** Penny has no TLS listener, so the lock PIN,
+  the access login and the session cookie cross the Wi-Fi in clear text.
+  Anyone who can sniff the network (a compromised device, a shared or guest
+  Wi-Fi) can take the session and read the financial data behind it. Use it
+  only on a network you control, never on public Wi-Fi. The in-app card says
+  this too; treat it as a real limit, not a disclaimer.
+- With the app lock on, the key on disk is the PIN-wrapped key: see
+  "What's NOT protected at rest".
 
 ## Chromium sandbox
 
@@ -64,7 +92,7 @@ sandbox on.
 
 ## CSRF defense
 
-Next.js middleware (`src/middleware.ts`) rejects any mutating API
+Next.js middleware (`src/proxy.ts`) rejects any mutating API
 request (POST/PUT/PATCH/DELETE) whose `Origin` or `Referer` header
 doesn't match the app's own host. This prevents a malicious tab in
 your browser from triggering syncs / category changes against your
@@ -76,7 +104,7 @@ Configured in `next.config.ts`:
 
 - `X-Frame-Options: DENY` — no embedding in iframes
 - `X-Content-Type-Options: nosniff`
-- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Referrer-Policy: no-referrer`
 - `Permissions-Policy` — camera, microphone, geolocation, payment all disabled
 - `Content-Security-Policy` — restricts script/style/connect sources
 
@@ -93,18 +121,30 @@ Run `npm run security:audit` to check for known vulnerabilities, and
 `npm run security:outdated` to see if anything is out of date. Re-audit
 after every upgrade.
 
-### Known audit findings (checked 2026-11-14)
+### Known audit findings (checked 2026-11-22)
 
-`npm audit` reports issues in packages that only the bank scrapers pull in through
-Puppeteer. None of them read data from websites in Penny:
+`npm audit --omit=dev` reports 12 high-severity advisories, all inherited from the
+`puppeteer` tree that both bank scraper libraries drive. None of them is on a path Penny
+runs:
 
-- `extract-zip`, `basic-ftp`, `get-uri`, `proxy-agent`: Puppeteer uses them to download a
-  browser at install time or to read a proxy config. Penny sets no proxy.
-- `zod` 3 inside `chromium-bidi`: checks messages from the local browser process.
-- `glob`, `minimatch`, `deepmerge`: run on fixed values in build or scraper code.
+- `extract-zip`, `basic-ftp`, `get-uri`, `proxy-agent`, `pac-proxy-agent`: reachable only
+  from `@puppeteer/browsers`, which downloads and unpacks a browser or reads a proxy
+  config. Penny never downloads a browser (`PUPPETEER_SKIP_DOWNLOAD`, system Chromium via
+  `PUPPETEER_EXECUTABLE_PATH`) and sets no proxy, so these functions are never called.
+- `zod` inside `chromium-bidi`: validates messages from the local browser process over the
+  WebDriver BiDi transport. The scrapers speak CDP to a local Chromium, so BiDi is off.
 
-Do not run `npm audit fix --force`: it downgrades `israeli-bank-scrapers` to an old
-version. These findings go away when the scraper libraries update Puppeteer.
+`@sergienko4/israeli-bank-scrapers` is on 10.1.1, which is browserless: it took
+`camoufox-js`, `playwright`, `glob` and `minimatch` out of the tree, and the four moderate
+advisories with them.
+
+The rest go away only with Puppeteer 25, which both scraper libraries exclude (`^24`) and
+which is ESM-only, while `puppeteer-extra` (the pension scraper) patches Puppeteer internals
+through CommonJS `require`. Forcing it would put the pension sync at risk for no reachable
+gain, so the tree stays on 24 until those libraries ship support.
+
+Do not run `npm audit fix --force`: it downgrades `israeli-bank-scrapers` to 6.7.1. CI fails
+on any new **critical** advisory through `npm run security:audit:gate`.
 
 ## Threats this design accepts
 
@@ -164,6 +204,9 @@ script hardcodes `-H 127.0.0.1 -p 41234`, and every per-OS template
 (LaunchAgent plist, systemd unit, Task Scheduler XML) invokes it with
 those flags. The installer runs a post-install check and refuses to
 finish if it detects the server listening on a non-loopback address.
+Phone access is the single documented exception: with the app lock set,
+the launcher restarts the server on `0.0.0.0`, and `npm run service:status`
+reports that listener as non-loopback on purpose.
 
 **No new daemon runs as root or SYSTEM.** The installer refuses to run
 as root. The LaunchAgent and systemd user unit run under your user.
@@ -210,7 +253,7 @@ the server will fail loudly with the fix command.
   the DB and key file with or without the service running.
 - A malicious browser tab on your machine doing a CSRF against
   `127.0.0.1:41234`. The same-origin middleware in
-  `src/middleware.ts` already blocks this on every mutating request,
+  `src/proxy.ts` already blocks this on every mutating request,
   and that protection works the same whether the server runs on demand
   or always-on.
 

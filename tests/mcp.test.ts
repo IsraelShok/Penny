@@ -60,14 +60,30 @@ describe("MCP tool formatting", () => {
     const text = formatTransactions({
       total: 40,
       transactions: [
-        { date: "2026-11-03", chargedAmount: -42.5, description: "Supermarket", categoryName: "Food", accountLabel: "Visa 1234", kind: "expense" },
-        { date: "2026-11-01", chargedAmount: 9000, description: "Salary", categoryName: null, provider: "hapoalim", kind: "income" },
+        {
+          date: "2026-11-03",
+          chargedAmount: -42.5,
+          description: "Supermarket",
+          categoryName: "Food",
+          accountLabel: "Visa 1234",
+          kind: "expense",
+        },
+        {
+          date: "2026-11-01",
+          chargedAmount: 9000,
+          description: "Salary",
+          categoryName: null,
+          provider: "hapoalim",
+          kind: "income",
+        },
       ],
     });
     expect(text).toContain("2026-11-03  −₪43  Supermarket  [Food · Visa 1234 · expense]");
     expect(text).toContain("uncategorized · hapoalim · income");
     expect(text).toContain("Showing 2 of 40");
-    expect(formatTransactions({ transactions: [], total: 0 })).toBe("No transactions match that filter.");
+    expect(formatTransactions({ transactions: [], total: 0 })).toBe(
+      "No transactions match that filter.",
+    );
   });
 
   it("lists only the categories that have a budget, with what is left", () => {
@@ -76,7 +92,14 @@ describe("MCP tool formatting", () => {
       totalBudget: 7000,
       uncategorized: 120,
       categoriesWithData: [
-        { categoryName: "Food", spent: 1200, budget: 2000, remaining: 800, percentSpent: 60, isParent: false },
+        {
+          categoryName: "Food",
+          spent: 1200,
+          budget: 2000,
+          remaining: 800,
+          percentSpent: 60,
+          isParent: false,
+        },
         { categoryName: "Tracking only", spent: 500, budget: 0, remaining: 0, isParent: false },
         { categoryName: "Parent rollup", spent: 900, budget: 900, remaining: 0, isParent: true },
       ],
@@ -89,7 +112,14 @@ describe("MCP tool formatting", () => {
 
   it("reports net worth and its largest holdings", () => {
     const text = formatNetWorth({
-      totals: { assets: 500000, liquid: 120000, liabilities: 200000, deferredTax: 1500, netWorth: 298500, liquidNetWorth: 100000 },
+      totals: {
+        assets: 500000,
+        liquid: 120000,
+        liabilities: 200000,
+        deferredTax: 1500,
+        netWorth: 298500,
+        liquidNetWorth: 100000,
+      },
       assets: [
         { name: "Apartment", type: "real_estate", valueIls: 400000, liquid: false },
         { name: "Brokerage", type: "stock", valueIls: 90000, liquid: true },
@@ -105,9 +135,24 @@ describe("MCP tool formatting", () => {
     const text = formatUpcoming({
       totals: { planned: 9000, matched: 0, overdue: 1500, upcoming: 7500 },
       items: [
-        { status: "planned", description: "Laptop", overdue: true, nextPayment: { date: "2026-11-01", chargeDate: "2026-11-10", amount: 1500 } },
-        { status: "planned", description: "Flight", overdue: false, nextPayment: { date: "2026-12-01", chargeDate: "2026-12-10", amount: 7500 } },
-        { status: "matched", description: "Already bought", overdue: false, nextPayment: { date: "2026-11-20", chargeDate: "2026-11-20", amount: 300 } },
+        {
+          status: "planned",
+          description: "Laptop",
+          overdue: true,
+          nextPayment: { date: "2026-11-01", chargeDate: "2026-11-10", amount: 1500 },
+        },
+        {
+          status: "planned",
+          description: "Flight",
+          overdue: false,
+          nextPayment: { date: "2026-12-01", chargeDate: "2026-12-10", amount: 7500 },
+        },
+        {
+          status: "matched",
+          description: "Already bought",
+          overdue: false,
+          nextPayment: { date: "2026-11-20", chargeDate: "2026-11-20", amount: 300 },
+        },
       ],
     });
     expect(text).toContain("Planned purchases: ₪9,000 · still upcoming ₪7,500 · overdue ₪1,500");
@@ -125,7 +170,7 @@ describe("MCP protocol", () => {
         id: 1,
         method: "initialize",
         params: { protocolVersion: "2024-11-05" },
-      })
+      }),
     );
     expect(reply?.result?.protocolVersion).toBe("2024-11-05");
     expect(reply?.result?.serverInfo?.name).toBe("penny");
@@ -134,7 +179,12 @@ describe("MCP protocol", () => {
 
   it("falls back to its own protocol version for one it does not know", async () => {
     const reply = rpc(
-      await handleMessage({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "1999-01-01" } })
+      await handleMessage({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: { protocolVersion: "1999-01-01" },
+      }),
     );
     expect(reply?.result?.protocolVersion).toBe("2025-06-18");
   });
@@ -151,15 +201,24 @@ describe("MCP protocol", () => {
 
   it("stays silent on notifications", async () => {
     expect(await handleMessage({ jsonrpc: "2.0", method: "notifications/initialized" })).toBeNull();
-    expect(await handleMessage({ jsonrpc: "2.0", method: "notifications/cancelled", params: {} })).toBeNull();
+    expect(
+      await handleMessage({ jsonrpc: "2.0", method: "notifications/cancelled", params: {} }),
+    ).toBeNull();
   });
 
   it("rejects an unknown tool and an unknown method", async () => {
     const unknownTool = rpc(
-      await handleMessage({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "delete_everything" } })
+      await handleMessage({
+        jsonrpc: "2.0",
+        id: 3,
+        method: "tools/call",
+        params: { name: "delete_everything" },
+      }),
     );
     expect(unknownTool?.error?.code).toBe(-32602);
-    const unknownMethod = rpc(await handleMessage({ jsonrpc: "2.0", id: 4, method: "resources/list" }));
+    const unknownMethod = rpc(
+      await handleMessage({ jsonrpc: "2.0", id: 4, method: "resources/list" }),
+    );
     expect(unknownMethod?.error?.code).toBe(-32601);
   });
 
@@ -173,23 +232,35 @@ describe("MCP protocol", () => {
       });
     const reply = rpc(
       await handleMessage(
-        { jsonrpc: "2.0", id: 5, method: "tools/call", params: { name: "penny_budgets", arguments: {} } },
-        { baseUrl: "http://127.0.0.1:41234", fetchImpl }
-      )
+        {
+          jsonrpc: "2.0",
+          id: 5,
+          method: "tools/call",
+          params: { name: "penny_budgets", arguments: {} },
+        },
+        { baseUrl: "http://127.0.0.1:41234", fetchImpl },
+      ),
     );
     expect(reply?.result?.isError).toBe(false);
-    expect(reply?.result?.content?.[0]?.text).toContain("Spent so far in this household month: ₪10");
+    expect(reply?.result?.content?.[0]?.text).toContain(
+      "Spent so far in this household month: ₪10",
+    );
   });
 
   it("turns an app failure into a readable tool error instead of a crash", async () => {
     const reply = rpc(
       await handleMessage(
-        { jsonrpc: "2.0", id: 6, method: "tools/call", params: { name: "penny_net_worth", arguments: {} } },
+        {
+          jsonrpc: "2.0",
+          id: 6,
+          method: "tools/call",
+          params: { name: "penny_net_worth", arguments: {} },
+        },
         {
           baseUrl: "http://127.0.0.1:41234",
           fetchImpl: async () => jsonResponse({ error: "locked" }, 401),
-        }
-      )
+        },
+      ),
     );
     expect(reply?.result?.isError).toBe(true);
     expect(reply?.result?.content?.[0]?.text).toContain("locked");
@@ -202,7 +273,7 @@ describe("MCP protocol", () => {
         fetchImpl: async () => {
           throw new Error("ECONNREFUSED");
         },
-      })
+      }),
     ).rejects.toThrow(/Penny is not answering at http:\/\/127\.0\.0\.1:41234/);
   });
 

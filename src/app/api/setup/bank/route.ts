@@ -15,18 +15,18 @@ export async function POST(request: Request) {
   if (blocked) return blocked;
 
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json()) as {
+  const body = (await request.json().catch(() => null)) as {
     provider: string;
     credentials: Record<string, string>;
     label?: string;
     credentialId?: number;
     requiresManualTwoFactor?: boolean;
-  };
+  } | null;
 
-  if (!body.provider || !body.credentials) {
+  if (!body?.provider || !body.credentials) {
     return NextResponse.json(
       { success: false, message: "Missing provider or credentials" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -35,16 +35,10 @@ export async function POST(request: Request) {
     info?.credentialFields.filter((f) => f.type === "password").map((f) => f.key) ?? [];
 
   const credentialId = body.credentialId;
-  const existing =
-    credentialId != null
-      ? getBankCredentials(workspaceId, credentialId)
-      : null;
+  const existing = credentialId != null ? getBankCredentials(workspaceId, credentialId) : null;
 
   if (credentialId != null && !getBankCredentialMeta(workspaceId, credentialId)) {
-    return NextResponse.json(
-      { success: false, message: "Credential not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ success: false, message: "Credential not found" }, { status: 404 });
   }
 
   const merged: Record<string, string> = { ...body.credentials };
@@ -60,7 +54,7 @@ export async function POST(request: Request) {
     if (!merged[key]) {
       return NextResponse.json(
         { success: false, message: `Missing required field: ${key}` },
-        { status: 400 }
+        { status: 400 },
       );
     }
   }
@@ -84,15 +78,14 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ success: true, credentialId: id });
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Failed to save credentials";
+    const message = err instanceof Error ? err.message : "Failed to save credentials";
     if (/UNIQUE constraint/i.test(message)) {
       return NextResponse.json(
         {
           success: false,
           message: "An account with this label already exists for this bank.",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
     throw err;

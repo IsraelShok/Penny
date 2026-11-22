@@ -13,7 +13,9 @@ const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
 
 export async function GET(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  return NextResponse.json(plannedPayload(workspaceId, israelToday(), Number(process.env.CARD_BILLING_DAY) || 10));
+  return NextResponse.json(
+    plannedPayload(workspaceId, israelToday(), Number(process.env.CARD_BILLING_DAY) || 10),
+  );
 }
 
 /** Body: { item } — creates a planned expense, or updates it when item.id is set. */
@@ -24,12 +26,16 @@ export async function POST(request: Request) {
   if (typeof parsed === "string") return bad(parsed);
 
   if (parsed.account && !accountExists(workspaceId, parsed.account)) return bad("unknown account");
-  if (parsed.categoryId != null && !getAllCategories(workspaceId).some((c) => c.id === parsed.categoryId)) {
+  if (
+    parsed.categoryId != null &&
+    !getAllCategories(workspaceId).some((c) => c.id === parsed.categoryId)
+  ) {
     return bad("unknown category");
   }
   if (parsed.owner != null) {
     const memberIds = getAppSettings(workspaceId).household.members.map((m) => m.id);
-    if (!isValidOwner(parsed.owner, memberIds)) return bad("owner must be a household member or shared");
+    if (!isValidOwner(parsed.owner, memberIds))
+      return bad("owner must be a household member or shared");
   }
 
   const id = upsertPlanned(workspaceId, parsed);

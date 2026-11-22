@@ -8,14 +8,18 @@ export async function GET(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const tag = new URL(request.url).searchParams.get("tag");
   const rows = getTagRows(workspaceId);
-  return NextResponse.json({ tags: tagTotals(rows), breakdown: tag ? tagBreakdown(rows, tag) : [] });
+  return NextResponse.json({
+    tags: tagTotals(rows),
+    breakdown: tag ? tagBreakdown(rows, tag) : [],
+  });
 }
 
 /** Rename a tag everywhere: { from, to }. */
 export async function PATCH(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = (await request.json().catch(() => null)) as { from?: unknown; to?: unknown } | null;
-  const from = normalizeTag(body?.from), to = normalizeTag(body?.to);
+  const from = normalizeTag(body?.from),
+    to = normalizeTag(body?.to);
   if (!from || !to) return NextResponse.json({ error: "Invalid tag" }, { status: 400 });
   return NextResponse.json({ changed: from === to ? 0 : renameTag(workspaceId, from, to) });
 }

@@ -1,8 +1,16 @@
 import "server-only";
 
 import { getAllCategories } from "@/server/db/queries/categories";
-import { batchUpdateCategories, getTransactionsForCategorization, getUncategorizedIdsByKind } from "@/server/db/queries/transactions";
-import { incrementMerchantHits, lookupMerchantCategoriesBulk, normalizeMerchant } from "@/server/lib/merchant-memory";
+import {
+  batchUpdateCategories,
+  getTransactionsForCategorization,
+  getUncategorizedIdsByKind,
+} from "@/server/db/queries/transactions";
+import {
+  incrementMerchantHits,
+  lookupMerchantCategoriesBulk,
+  normalizeMerchant,
+} from "@/server/lib/merchant-memory";
 import { dictionaryCategory } from "@/lib/merchant-dictionary";
 
 /**
@@ -15,9 +23,14 @@ export function categorizeLocally(workspaceId: number): number {
     const ids = getUncategorizedIdsByKind(workspaceId, kind);
     if (ids.length === 0) continue;
     // The dictionary names leaf categories; a household that renamed or removed one simply gets no match.
-    const byName = new Map(getAllCategories(workspaceId, kind, { leavesOnly: true }).map((c) => [c.name, c.id]));
+    const byName = new Map(
+      getAllCategories(workspaceId, kind, { leavesOnly: true }).map((c) => [c.name, c.id]),
+    );
     const txns = getTransactionsForCategorization(workspaceId, ids);
-    const memory = lookupMerchantCategoriesBulk(workspaceId, txns.map((t) => t.description));
+    const memory = lookupMerchantCategoriesBulk(
+      workspaceId,
+      txns.map((t) => t.description),
+    );
     const updates: { id: number; categoryId: number }[] = [];
     const learned: string[] = [];
     for (const t of txns) {

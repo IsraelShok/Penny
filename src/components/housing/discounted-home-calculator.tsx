@@ -4,7 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { NumField } from "@/components/ui/num-field";
-import { DISCOUNTED_HOME_DEFAULTS, discountedVsMarket, type DiscountedHomeInputs, type HomePath } from "@/lib/discounted-home";
+import {
+  DISCOUNTED_HOME_DEFAULTS,
+  discountedVsMarket,
+  type DiscountedHomeInputs,
+  type HomePath,
+} from "@/lib/discounted-home";
 import { shekels } from "@/lib/money";
 
 const pct = (v: number) => Math.round(v * 10000) / 100;
@@ -16,7 +21,10 @@ export function DiscountedHomeCalculator() {
   const r = discountedVsMarket(v);
   const set = (patch: Partial<DiscountedHomeInputs>) => setV({ ...v, ...patch });
   const money = (n: number) => shekels(n, locale);
-  const field = (key: keyof DiscountedHomeInputs, opts: { percent?: boolean; step?: number; max?: number; min?: number } = {}) => (
+  const field = (
+    key: keyof DiscountedHomeInputs,
+    opts: { percent?: boolean; step?: number; max?: number; min?: number } = {},
+  ) => (
     <NumField
       id={`dh-${key}`}
       label={t(`in.${key}`)}
@@ -33,7 +41,9 @@ export function DiscountedHomeCalculator() {
   return (
     <div className="space-y-6">
       <section aria-labelledby="dh-apartment" className="rounded-2xl bg-card p-5 sm:p-6">
-        <h2 id="dh-apartment" className="mb-4 text-headline font-semibold">{t("apartmentTitle")}</h2>
+        <h2 id="dh-apartment" className="mb-4 text-headline font-semibold">
+          {t("apartmentTitle")}
+        </h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {field("marketPrice", { step: 50_000 })}
           {field("equity", { step: 10_000 })}
@@ -44,7 +54,9 @@ export function DiscountedHomeCalculator() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <section aria-labelledby="dh-program" className="rounded-2xl bg-card p-5 sm:p-6">
-          <h2 id="dh-program" className="mb-4 text-headline font-semibold">{t("programTitle")}</h2>
+          <h2 id="dh-program" className="mb-4 text-headline font-semibold">
+            {t("programTitle")}
+          </h2>
           <div className="grid grid-cols-2 gap-4">
             {field("discountPct", { percent: true, max: 100 })}
             {field("discountCap", { step: 10_000 })}
@@ -52,7 +64,9 @@ export function DiscountedHomeCalculator() {
             {field("rent", { step: 100 })}
           </div>
           <details className="mt-4">
-            <summary className="cursor-pointer rounded-lg py-2 text-sm font-medium text-primary focus-visible:outline-2 focus-visible:outline-ring">{t("moreAssumptions")}</summary>
+            <summary className="cursor-pointer rounded-lg py-2 text-sm font-medium text-primary focus-visible:outline-2 focus-visible:outline-ring">
+              {t("moreAssumptions")}
+            </summary>
             <div className="mt-3 grid grid-cols-2 gap-4">
               {field("linkedShare", { percent: true, max: 100, step: 5 })}
               {field("indexRate", { percent: true, step: 0.5 })}
@@ -61,7 +75,9 @@ export function DiscountedHomeCalculator() {
           </details>
         </section>
         <section aria-labelledby="dh-mortgage" className="rounded-2xl bg-card p-5 sm:p-6">
-          <h2 id="dh-mortgage" className="mb-4 text-headline font-semibold">{t("mortgageTitle")}</h2>
+          <h2 id="dh-mortgage" className="mb-4 text-headline font-semibold">
+            {t("mortgageTitle")}
+          </h2>
           <div className="grid grid-cols-2 gap-4">
             {field("mortgageRate", { percent: true, step: 0.25 })}
             {field("mortgageYears", { min: 1, max: 30 })}
@@ -69,22 +85,38 @@ export function DiscountedHomeCalculator() {
         </section>
       </div>
 
-      <section aria-labelledby="dh-result" aria-live="polite" className="rounded-2xl bg-card p-5 sm:p-6">
-        <h2 id="dh-result" className="mb-1 text-headline font-semibold">{t("resultTitle", { years: r.horizon })}</h2>
+      <section
+        aria-labelledby="dh-result"
+        aria-live="polite"
+        className="rounded-2xl bg-card p-5 sm:p-6"
+      >
+        <h2 id="dh-result" className="mb-1 text-headline font-semibold">
+          {t("resultTitle", { years: r.horizon })}
+        </h2>
         <p className="mb-5 text-sm text-pretty">
-          {Math.abs(r.diff) < 1_000 ? t("same") : t(`verdict_${better}`, { amount: money(Math.abs(r.diff)) })}
+          {Math.abs(r.diff) < 1_000
+            ? t("same")
+            : t(`verdict_${better}`, { amount: money(Math.abs(r.diff)) })}
         </p>
         <div className="grid gap-4 md:grid-cols-2">
-          <PathCard title={t("discountedTitle")} p={r.discounted} best={better === "discounted"} extra={[
-            [t("discount"), money(r.discount)],
-            [t("indexation"), money(r.indexation)],
-            [t("rentPaid"), money(r.discounted.rentPaid)],
-          ]} />
+          <PathCard
+            title={t("discountedTitle")}
+            p={r.discounted}
+            best={better === "discounted"}
+            extra={[
+              [t("discount"), money(r.discount)],
+              [t("indexation"), money(r.indexation)],
+              [t("rentPaid"), money(r.discounted.rentPaid)],
+            ]}
+          />
           <PathCard title={t("marketTitle")} p={r.market} best={better === "market"} extra={[]} />
         </div>
         <div className="mt-5 rounded-xl bg-emerald-500/10 p-4 text-sm text-pretty">
           <p>{t("tip")}</p>
-          <Link href="/investments" className="mt-2 inline-flex min-h-11 items-center font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">
+          <Link
+            href="/investments"
+            className="mt-2 inline-flex min-h-11 items-center font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+          >
             {t("investLink")}
           </Link>
         </div>
@@ -93,7 +125,17 @@ export function DiscountedHomeCalculator() {
     </div>
   );
 
-  function PathCard({ title, p, best, extra }: { title: string; p: HomePath; best: boolean; extra: [string, string][] }) {
+  function PathCard({
+    title,
+    p,
+    best,
+    extra,
+  }: {
+    title: string;
+    p: HomePath;
+    best: boolean;
+    extra: [string, string][];
+  }) {
     const rows: [string, string][] = [
       [t("price"), money(p.price)],
       ...extra,
@@ -105,10 +147,16 @@ export function DiscountedHomeCalculator() {
       [t("mortgageLeft"), money(p.mortgageLeft)],
     ];
     return (
-      <div className={`rounded-xl border p-4 ${best ? "border-emerald-500/60 bg-emerald-500/5" : "border-border/60"}`}>
+      <div
+        className={`rounded-xl border p-4 ${best ? "border-emerald-500/60 bg-emerald-500/5" : "border-border/60"}`}
+      >
         <div className="mb-3 flex items-baseline justify-between gap-2">
           <h3 className="font-semibold">{title}</h3>
-          {best && <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-footnote font-medium text-emerald-700 dark:text-emerald-300">{t("better")}</span>}
+          {best && (
+            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-footnote font-medium text-emerald-700 dark:text-emerald-300">
+              {t("better")}
+            </span>
+          )}
         </div>
         <p className="text-footnote text-muted-foreground">{t("position")}</p>
         <p className="mb-3 text-2xl font-semibold tabular-nums">{money(p.position)}</p>

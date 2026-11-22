@@ -11,7 +11,12 @@ const MAX_YEARS = 100;
  * Years until savings reach `target`, saving `monthlySaving` a month at `annualReturn`, compounded monthly.
  * 0 if already there; null if it never gets there within 100 years.
  */
-export function yearsToTarget(current: number, monthlySaving: number, annualReturn: number, target: number): number | null {
+export function yearsToTarget(
+  current: number,
+  monthlySaving: number,
+  annualReturn: number,
+  target: number,
+): number | null {
   if (current >= target) return 0;
   const r = Math.pow(1 + annualReturn, 1 / 12) - 1;
   let balance = current;
@@ -26,7 +31,14 @@ export function yearsToTarget(current: number, monthlySaving: number, annualRetu
  * Early-retirement bridge: retiring at `fiAge`, the savings must carry you alone until pensions start at `pensionAge`,
  * then only the part of spending the pensions don't cover. Today's money, with `realReturn` a year.
  */
-export function fiBridge(i: { fiAge: number; pensionAge: number; monthlySpend: number; monthlyPension: number; withdrawalRate: number; realReturn: number }) {
+export function fiBridge(i: {
+  fiAge: number;
+  pensionAge: number;
+  monthlySpend: number;
+  monthlyPension: number;
+  withdrawalRate: number;
+  realReturn: number;
+}) {
   const gapYears = Math.max(0, i.pensionAge - i.fiAge);
   const after = fiNumber(Math.max(0, i.monthlySpend - i.monthlyPension) * 12, i.withdrawalRate);
   // Spend through the gap, then have `after` left at pension age; both discounted back to fiAge.
@@ -44,8 +56,22 @@ export function coastCheck(current: number, annualReturn: number, years: number,
 }
 
 /** Years to FI at each savings rate, for a given income, current savings, return and withdrawal rate. */
-export function yearsBySavingsRate(income: number, current: number, annualReturn: number, withdrawalRate: number, rates = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]) {
-  return rates.map((s) => ({ rate: s, years: yearsToTarget(current, income * s, annualReturn, fiNumber(income * (1 - s) * 12, withdrawalRate)) }));
+export function yearsBySavingsRate(
+  income: number,
+  current: number,
+  annualReturn: number,
+  withdrawalRate: number,
+  rates = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+) {
+  return rates.map((s) => ({
+    rate: s,
+    years: yearsToTarget(
+      current,
+      income * s,
+      annualReturn,
+      fiNumber(income * (1 - s) * 12, withdrawalRate),
+    ),
+  }));
 }
 
 export interface CarInputs {
@@ -83,7 +109,13 @@ export interface FiEvent {
  * shortcut: monthlyChange moves the saving only, not the FI number; upgrade if events should change the target too.
  */
 export function yearsToTargetWithEvents(
-  current: number, monthlySaving: number, annualReturn: number | number[], target: number, events: FiEvent[], startYear: number, maxYears = MAX_YEARS
+  current: number,
+  monthlySaving: number,
+  annualReturn: number | number[],
+  target: number,
+  events: FiEvent[],
+  startYear: number,
+  maxYears = MAX_YEARS,
 ): number | null {
   let balance = current;
   for (let y = 0; y < maxYears; y++) {
@@ -119,8 +151,16 @@ function mulberry32(seed: number) {
  * and the 10th/50th/90th percentile year (null = not within 100 years).
  */
 export function fiOdds(
-  current: number, monthlySaving: number, meanReturn: number, target: number, years: number,
-  events: FiEvent[] = [], startYear = new Date().getFullYear(), runs = 1000, sd = 0.15, seed = 42
+  current: number,
+  monthlySaving: number,
+  meanReturn: number,
+  target: number,
+  years: number,
+  events: FiEvent[] = [],
+  startYear = new Date().getFullYear(),
+  runs = 1000,
+  sd = 0.15,
+  seed = 42,
 ): { probability: number; p10: number | null; p50: number | null; p90: number | null } {
   const rand = mulberry32(seed);
   const results: number[] = [];
@@ -129,25 +169,46 @@ export function fiOdds(
       const u = 1 - rand();
       return meanReturn + sd * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand());
     });
-    results.push(yearsToTargetWithEvents(current, monthlySaving, returns, target, events, startYear) ?? Infinity);
+    results.push(
+      yearsToTargetWithEvents(current, monthlySaving, returns, target, events, startYear) ??
+        Infinity,
+    );
   }
   results.sort((a, b) => a - b);
   const at = (q: number) => {
     const v = results[Math.min(runs - 1, Math.floor(q * runs))];
     return Number.isFinite(v) ? v : null;
   };
-  return { probability: results.filter((y) => y <= years).length / runs, p10: at(0.1), p50: at(0.5), p90: at(0.9) };
+  return {
+    probability: results.filter((y) => y <= years).length / runs,
+    p10: at(0.1),
+    p50: at(0.5),
+    p90: at(0.9),
+  };
 }
 /**
  * FIRE variants: the target and years to it for a lean life (70% of today's spending),
  * today's life, and a fat one (150%); and Coast FIRE, the sum that grows alone to today's target by retirement.
  */
-export function fireVariants(i: { monthlySpend: number; savings: number; monthlySaving: number; annualReturn: number; withdrawalRate: number; yearsToRetirement: number | null }) {
+export function fireVariants(i: {
+  monthlySpend: number;
+  savings: number;
+  monthlySaving: number;
+  annualReturn: number;
+  withdrawalRate: number;
+  yearsToRetirement: number | null;
+}) {
   const variant = (share: number) => {
     const target = fiNumber(i.monthlySpend * share * 12, i.withdrawalRate);
-    return { target, years: yearsToTarget(i.savings, Math.max(0, i.monthlySaving), i.annualReturn, target) };
+    return {
+      target,
+      years: yearsToTarget(i.savings, Math.max(0, i.monthlySaving), i.annualReturn, target),
+    };
   };
   const regular = variant(1);
-  const coast = i.yearsToRetirement == null ? null : coastCheck(i.savings, i.annualReturn, i.yearsToRetirement, regular.target);
+  const coast =
+    i.yearsToRetirement == null
+      ? null
+      : coastCheck(i.savings, i.annualReturn, i.yearsToRetirement, regular.target);
   return { lean: variant(0.7), regular, fat: variant(1.5), coast };
 }

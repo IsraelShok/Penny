@@ -1,7 +1,11 @@
 /** Small household calculators for /calculators. Estimates, not advice. Bigger ones live in tools.ts, fi.ts, plan.ts, net-salary.ts. */
 import { spitzer } from "@/lib/tools";
 
-export interface Track { amount: number; ratePct: number; years: number }
+export interface Track {
+  amount: number;
+  ratePct: number;
+  years: number;
+}
 
 /** Spitzer loan: monthly payment, total paid and interest. A mortgage is the sum of its tracks. */
 export function loan({ amount, ratePct, years }: Track) {
@@ -25,10 +29,12 @@ export function inflation(amount: number, inflationPct: number, years: number) {
 
 /** Monthly deposit to reach `target` in `months`, starting from `saved`, at `returnPct` a year (monthly compounding). */
 export function savingsGoal(target: number, saved: number, months: number, returnPct: number) {
-  const n = Math.max(1, Math.round(months)), r = (1 + returnPct / 100) ** (1 / 12) - 1;
+  const n = Math.max(1, Math.round(months)),
+    r = (1 + returnPct / 100) ** (1 / 12) - 1;
   const gap = target - saved * (1 + r) ** n;
   if (gap <= 0) return 0;
-  return r === 0 ? gap / n : (gap * r) / ((1 + r) ** n - 1);
+  // r is a computed periodic rate, so compare it to zero with a tolerance, not ===.
+  return Math.abs(r) < 1e-12 ? gap / n : (gap * r) / ((1 + r) ** n - 1);
 }
 
 /** 50/30/20 split of net monthly income: needs, wants, savings. */
@@ -63,9 +69,24 @@ export function leaseVsBuy(i: LeaseBuyInputs) {
 }
 
 /** Pages under /calculators/[slug]. */
-export const CALC_SLUGS = ["compound", "fees", "inflation", "goal", "mortgage", "loan", "credit", "leaseBuy", "net", "budget", "emergency", "fire", "annuity", "severance", "lossOffset"] as const;
+export const CALC_SLUGS = [
+  "compound",
+  "fees",
+  "inflation",
+  "goal",
+  "mortgage",
+  "loan",
+  "credit",
+  "leaseBuy",
+  "net",
+  "budget",
+  "emergency",
+  "fire",
+  "annuity",
+  "severance",
+  "lossOffset",
+] as const;
 export type CalcSlug = (typeof CALC_SLUGS)[number];
-
 
 /** Balance after `years` of monthly deposits at an annual return (fees already netted out). */
 export function growth(initial: number, monthly: number, years: number, annualReturn: number) {
@@ -98,7 +119,9 @@ export type DebtStrategy = "avalanche" | "snowball";
 export function payoffPlan(debts: Debt[], budget: number, strategy: DebtStrategy) {
   const live = debts.filter((d) => d.balance > 0).map((d) => ({ ...d }));
   if (live.reduce((s, d) => s + d.minPayment, 0) > budget + 0.01) return null;
-  const order = [...live].sort((a, b) => (strategy === "avalanche" ? b.ratePct - a.ratePct : a.balance - b.balance));
+  const order = [...live].sort((a, b) =>
+    strategy === "avalanche" ? b.ratePct - a.ratePct : a.balance - b.balance,
+  );
   const paidOff: { name: string; month: number }[] = [];
   let interest = 0;
   let month = 0;
@@ -124,7 +147,9 @@ export function payoffPlan(debts: Debt[], budget: number, strategy: DebtStrategy
       d.balance -= pay;
       left -= pay;
     }
-    for (const d of order) if (d.balance <= 0.005 && !paidOff.some((p) => p.name === d.name)) paidOff.push({ name: d.name, month });
+    for (const d of order)
+      if (d.balance <= 0.005 && !paidOff.some((p) => p.name === d.name))
+        paidOff.push({ name: d.name, month });
   }
   // A budget that never beats the interest keeps the loop at its cap.
   if (month >= 1200) return null;
@@ -138,23 +163,39 @@ export interface Room {
 }
 
 /** Typical Israeli renovation costs in ₪ by finish level, Nov 2026. Editable estimates. */
-export const RENO_COSTS: Record<Room["kind"], [basic: number, standard: number, premium: number]> = {
-  kitchen: [35_000, 60_000, 110_000],
-  bathroom: [20_000, 35_000, 60_000],
-  room: [8_000, 15_000, 28_000],
-  flooring: [15_000, 30_000, 55_000],
-  paint: [5_000, 9_000, 15_000],
-  other: [0, 0, 0],
-};
+export const RENO_COSTS: Record<Room["kind"], [basic: number, standard: number, premium: number]> =
+  {
+    kitchen: [35_000, 60_000, 110_000],
+    bathroom: [20_000, 35_000, 60_000],
+    room: [8_000, 15_000, 28_000],
+    flooring: [15_000, 30_000, 55_000],
+    paint: [5_000, 9_000, 15_000],
+    other: [0, 0, 0],
+  };
 
 /** Renovation total with a buffer for surprises, and how to pay: savings first, the gap as a loan. */
-export function renovationBudget(rooms: Room[], bufferPct: number, savings: number, loanRatePct: number, loanYears: number) {
+export function renovationBudget(
+  rooms: Room[],
+  bufferPct: number,
+  savings: number,
+  loanRatePct: number,
+  loanYears: number,
+) {
   const base = rooms.reduce((s, r) => s + r.cost, 0);
   const buffer = base * bufferPct;
   const total = base + buffer;
   const loan = Math.max(0, total - savings);
   const n = Math.round(loanYears * 12);
   const r = loanRatePct / 100 / 12;
-  const monthly = loan <= 0 || n <= 0 ? 0 : r === 0 ? loan / n : (loan * r) / (1 - Math.pow(1 + r, -n));
-  return { base, buffer, total, fromSavings: Math.min(savings, total), loan, monthly, interest: monthly * n - loan };
+  const monthly =
+    loan <= 0 || n <= 0 ? 0 : r === 0 ? loan / n : (loan * r) / (1 - Math.pow(1 + r, -n));
+  return {
+    base,
+    buffer,
+    total,
+    fromSavings: Math.min(savings, total),
+    loan,
+    monthly,
+    interest: monthly * n - loan,
+  };
 }

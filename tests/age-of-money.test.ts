@@ -14,11 +14,13 @@ describe("ageOfMoney", () => {
   });
 
   it("splits an expense across buckets", () => {
-    expect(ageOfMoney([
-      { date: "2026-01-01", amount: 100 },
-      { date: "2026-01-11", amount: 100 },
-      { date: "2026-01-21", amount: -200 },
-    ])).toBe(15);
+    expect(
+      ageOfMoney([
+        { date: "2026-01-01", amount: 100 },
+        { date: "2026-01-11", amount: 100 },
+        { date: "2026-01-21", amount: -200 },
+      ]),
+    ).toBe(15);
   });
 
   it("uses only the last 10 expenses and ignores unfunded spending", () => {

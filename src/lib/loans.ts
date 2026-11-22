@@ -9,7 +9,11 @@ export interface ScheduleYear {
 }
 
 /** Spitzer (fixed payment) schedule, summed per loan year. Empty when the payment never covers the interest. */
-export function amortizationSchedule(balance: number, ratePct: number, payment: number): ScheduleYear[] {
+export function amortizationSchedule(
+  balance: number,
+  ratePct: number,
+  payment: number,
+): ScheduleYear[] {
   const r = ratePct / 100 / 12;
   if (balance <= 0 || payment <= balance * r) return [];
   const rows: ScheduleYear[] = [];
@@ -28,7 +32,12 @@ export function amortizationSchedule(balance: number, ratePct: number, payment: 
 }
 
 /** Same payment at newRatePct: how many months and how much interest it would save. Null if either rate never pays off. */
-export function refinanceCheck(balance: number, ratePct: number, payment: number, newRatePct: number) {
+export function refinanceCheck(
+  balance: number,
+  ratePct: number,
+  payment: number,
+  newRatePct: number,
+) {
   const now = debtPayoff(balance, ratePct, payment);
   const after = debtPayoff(balance, newRatePct, payment);
   if (!now || !after) return null;
@@ -36,7 +45,8 @@ export function refinanceCheck(balance: number, ratePct: number, payment: number
 }
 
 /** Reference rate for a debt type (not an offer): mortgages ≈ prime − 0.5, other loans ≈ prime + 2. */
-export const referenceRate = (type: string) => (type === "mortgage" ? IL.typicalMortgageRate : IL.primeRate + 2);
+export const referenceRate = (type: string) =>
+  type === "mortgage" ? IL.typicalMortgageRate : IL.primeRate + 2;
 
 /** The user's rate is worth a second look when it is this many points above the reference. */
 export const REFINANCE_GAP = 0.75;
@@ -52,5 +62,7 @@ export function monthsFrom(from: string, months: number): string {
 export function weightedRate(loans: { balance: number; rate: number | null }[]): number | null {
   const withRate = loans.filter((l) => l.rate != null && Math.abs(l.balance) > 0);
   const total = withRate.reduce((s, l) => s + Math.abs(l.balance), 0);
-  return total > 0 ? withRate.reduce((s, l) => s + Math.abs(l.balance) * (l.rate as number), 0) / total : null;
+  return total > 0
+    ? withRate.reduce((s, l) => s + Math.abs(l.balance) * (l.rate as number), 0) / total
+    : null;
 }

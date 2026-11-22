@@ -6,10 +6,7 @@ import { BANK_PROVIDERS } from "./types";
 
 type TranslatorFn = ReturnType<typeof useTranslations<string>>;
 
-export function translateCategoryName(
-  rawName: string,
-  tCat: TranslatorFn,
-): string {
+export function translateCategoryName(rawName: string, tCat: TranslatorFn): string {
   try {
     const translated = tCat(rawName);
     return translated && translated !== rawName ? translated : rawName;
@@ -53,9 +50,11 @@ export function translateCredentialField(
   tBanks: TranslatorFn,
 ): { label: string; placeholder?: string; hint?: string } {
   const base =
-    field.key === "password" && providerId === "isracard" ? "isracardPassword"
-    : field.key === "password" && providerId === "oneZero" ? "oneZeroPassword"
-    : field.key;
+    field.key === "password" && providerId === "isracard"
+      ? "isracardPassword"
+      : field.key === "password" && providerId === "oneZero"
+        ? "oneZeroPassword"
+        : field.key;
   const tr = (prop: string, fallback?: string) => {
     if (fallback === undefined) return undefined;
     const key = `fields.${base}.${prop}`;
@@ -63,7 +62,10 @@ export function translateCredentialField(
   };
   return {
     label: tr("label", field.label)!,
-    placeholder: tr(field.key === "num" ? `${providerId}Placeholder` : "placeholder", field.placeholder),
+    placeholder: tr(
+      field.key === "num" ? `${providerId}Placeholder` : "placeholder",
+      field.placeholder,
+    ),
     hint: tr("hint", field.hint),
   };
 }
@@ -82,7 +84,10 @@ export function useFormatterLabels(): FormatLastSyncLabels {
 }
 
 /** A synced account's name in the user's language ("הפועלים · 0001"); other assets keep the name the person gave them. */
-export function accountLabel(asset: { name: string; provider?: string }, tBanks: TranslatorFn): string {
+export function accountLabel(
+  asset: { name: string; provider?: string },
+  tBanks: TranslatorFn,
+): string {
   if (!asset.provider) return asset.name;
   const [english, last4] = asset.name.split(" · ");
   const bank = translateProviderName(asset.provider, english, tBanks);

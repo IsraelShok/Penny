@@ -53,15 +53,23 @@ const BASE = `FROM category_transactions t LEFT JOIN categories c ON c.id = t.ca
   WHERE t.workspace_id = ? AND t.date >= ? AND t.date <= ? AND t.status = 'completed' AND t.is_excluded = 0
     AND t.charged_amount != t.personal_amount`;
 
-const EXPENSE_SHARE = "SUM(CASE WHEN t.kind = 'expense' THEN -(t.charged_amount - t.personal_amount) ELSE 0 END)";
-const INCOME_SHARE = "SUM(CASE WHEN t.kind = 'income' THEN t.charged_amount - t.personal_amount ELSE 0 END)";
+const EXPENSE_SHARE =
+  "SUM(CASE WHEN t.kind = 'expense' THEN -(t.charged_amount - t.personal_amount) ELSE 0 END)";
+const INCOME_SHARE =
+  "SUM(CASE WHEN t.kind = 'income' THEN t.charged_amount - t.personal_amount ELSE 0 END)";
 
 /** The business side of the ledger for a period, so business spending has a report behind the field. */
 export function getBusinessReport(workspaceId: number, from: string, to: string): BusinessReport {
   const db = getDb();
   const totals = db
-    .prepare(`SELECT ${EXPENSE_SHARE} AS expenses, ${INCOME_SHARE} AS income, COUNT(DISTINCT t.id) AS businessTransactions ${BASE}`)
-    .get(workspaceId, from, to) as { expenses: number; income: number; businessTransactions: number };
+    .prepare(
+      `SELECT ${EXPENSE_SHARE} AS expenses, ${INCOME_SHARE} AS income, COUNT(DISTINCT t.id) AS businessTransactions ${BASE}`,
+    )
+    .get(workspaceId, from, to) as {
+    expenses: number;
+    income: number;
+    businessTransactions: number;
+  };
 
   const months = db
     .prepare(
@@ -92,7 +100,7 @@ export function getBusinessReport(workspaceId: number, from: string, to: string)
        ${BASE}
        ORDER BY t.date DESC, t.id DESC LIMIT 5000`,
     )
-    .all(workspaceId, from, to) as (Omit<BusinessRow, "pct">)[];
+    .all(workspaceId, from, to) as Omit<BusinessRow, "pct">[];
 
   return {
     from,

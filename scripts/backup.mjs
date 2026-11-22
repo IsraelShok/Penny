@@ -14,7 +14,9 @@ const IV_BYTES = 12;
 const SCRYPT = { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
 const MIN_PASSPHRASE = 8;
 
-const dataDir = process.env.PENNY_DATA_DIR ? path.resolve(process.env.PENNY_DATA_DIR) : path.join(process.cwd(), "data");
+const dataDir = process.env.PENNY_DATA_DIR
+  ? path.resolve(process.env.PENNY_DATA_DIR)
+  : path.join(process.cwd(), "data");
 const dbFile = path.join(dataDir, "penny.db");
 const keyFile = path.join(dataDir, ".encryption-key");
 
@@ -28,7 +30,9 @@ async function askPassphrase() {
   if (fromEnv.length >= MIN_PASSPHRASE) return fromEnv;
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   try {
-    const first = await rl.question(`Backup passphrase (at least ${MIN_PASSPHRASE} characters, it echoes): `);
+    const first = await rl.question(
+      `Backup passphrase (at least ${MIN_PASSPHRASE} characters, it echoes): `,
+    );
     if (first.length < MIN_PASSPHRASE) throw new Error("The passphrase is too short.");
     const again = await rl.question("Again: ");
     if (again !== first) throw new Error("The passphrases do not match.");
@@ -61,7 +65,10 @@ try {
   const iv = crypto.randomBytes(IV_BYTES);
   const key = crypto.scryptSync(passphrase, salt, 32, SCRYPT);
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
-  const body = Buffer.concat([cipher.update(Buffer.from(JSON.stringify(payload), "utf8")), cipher.final()]);
+  const body = Buffer.concat([
+    cipher.update(Buffer.from(JSON.stringify(payload), "utf8")),
+    cipher.final(),
+  ]);
   const file = Buffer.concat([MAGIC, salt, iv, cipher.getAuthTag(), body]);
 
   const outDir = path.join(dataDir, "backups");
@@ -70,7 +77,9 @@ try {
   const target = path.join(outDir, `penny-backup-${stamp}.pennybak`);
   fs.writeFileSync(target, file);
   console.log(`Backup written: ${target} (${(file.length / 1024 / 1024).toFixed(1)} MB)`);
-  console.log("Restore it from Settings -> Accounts and import -> Data -> Restore, or in a new install.");
+  console.log(
+    "Restore it from Settings -> Accounts and import -> Data -> Restore, or in a new install.",
+  );
 } finally {
   fs.rmSync(snapshot, { force: true });
 }

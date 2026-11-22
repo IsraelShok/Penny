@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getPlan } from "@/server/db/queries/plan";
-import { budgetHistory, getPeriodBudget, setRolloverRule } from "@/server/db/queries/budget-periods";
+import {
+  budgetHistory,
+  getPeriodBudget,
+  setRolloverRule,
+} from "@/server/db/queries/budget-periods";
 import { budgetMonthByKey, budgetMonthRange, isRolloverRule } from "@/lib/finance-period";
 import { israelToday } from "@/server/lib/date-utils";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
@@ -20,13 +24,20 @@ export async function GET(request: Request) {
   }
   const range = month ? budgetMonthByKey(startDay, month) : budgetMonthRange(startDay, today);
   const { lines, view } = getPeriodBudget(workspaceId, range, startDay);
-  return NextResponse.json({ view, lines, history: budgetHistory(workspaceId, startDay, today, months) });
+  return NextResponse.json({
+    view,
+    lines,
+    history: budgetHistory(workspaceId, startDay, today, months),
+  });
 }
 
 /** Body: { categoryId, rollover } — how a category's leftover follows into the next month. */
 export async function PATCH(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json().catch(() => null)) as { categoryId?: unknown; rollover?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as {
+    categoryId?: unknown;
+    rollover?: unknown;
+  } | null;
   const categoryId = Number(body?.categoryId);
   if (!Number.isSafeInteger(categoryId) || categoryId <= 0 || !isRolloverRule(body?.rollover)) {
     return NextResponse.json({ error: "categoryId and rollover are required" }, { status: 400 });

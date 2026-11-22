@@ -67,14 +67,19 @@ export function discountedVsMarket(i: DiscountedHomeInputs) {
   const horizon = Math.max(i.horizon, i.yearsToKeys);
   const discount = Math.min(i.marketPrice * i.discountPct, i.discountCap);
   const base = i.marketPrice - discount;
-  const indexed = base * (1 - i.linkedShare + i.linkedShare * Math.pow(1 + i.indexRate, i.yearsToKeys));
+  const indexed =
+    base * (1 - i.linkedShare + i.linkedShare * Math.pow(1 + i.indexRate, i.yearsToKeys));
   const homeValue = i.marketPrice * Math.pow(1 + i.appreciation, horizon);
 
   const path = (price: number, startMonth: number): HomePath => {
     const purchaseTax = bracketTax(price, IL.purchaseTaxSingleHome);
     const loan = Math.max(0, price + purchaseTax - i.equity);
     const monthlyPayment = spitzer(loan, i.mortgageRate, i.mortgageYears);
-    let balance = loan, interestPaid = 0, paid = 0, rentPaid = 0, rent = i.rent;
+    let balance = loan,
+      interestPaid = 0,
+      paid = 0,
+      rentPaid = 0,
+      rent = i.rent;
     for (let m = 1; m <= horizon * 12; m++) {
       if (m <= startMonth) {
         rentPaid += rent;
@@ -88,10 +93,28 @@ export function discountedVsMarket(i: DiscountedHomeInputs) {
       if (m % 12 === 0) rent *= 1 + i.rentGrowth;
     }
     const cashOut = Math.min(i.equity, price + purchaseTax) + paid + rentPaid;
-    return { price, purchaseTax, loan, monthlyPayment, interestPaid, rentPaid, cashOut, homeValue, mortgageLeft: balance, position: homeValue - balance - cashOut };
+    return {
+      price,
+      purchaseTax,
+      loan,
+      monthlyPayment,
+      interestPaid,
+      rentPaid,
+      cashOut,
+      homeValue,
+      mortgageLeft: balance,
+      position: homeValue - balance - cashOut,
+    };
   };
 
   const discounted = path(indexed, Math.round(i.yearsToKeys * 12));
   const market = path(i.marketPrice, 0);
-  return { discount, indexation: indexed - base, horizon, discounted, market, diff: discounted.position - market.position };
+  return {
+    discount,
+    indexation: indexed - base,
+    horizon,
+    discounted,
+    market,
+    diff: discounted.position - market.position,
+  };
 }

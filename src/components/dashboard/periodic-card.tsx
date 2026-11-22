@@ -14,7 +14,15 @@ import { deletePeriodic, dismissPeriodicSuggestion, getPeriodic, savePeriodic } 
 import { shekels } from "@/lib/money";
 import { monthlySetAside, totalSetAside, type PeriodicExpense } from "@/lib/periodic";
 
-type Draft = { id?: number; name: string; amount: string; everyMonths: string; nextDue: string; savedSoFar: string; autoKey?: string | null };
+type Draft = {
+  id?: number;
+  name: string;
+  amount: string;
+  everyMonths: string;
+  nextDue: string;
+  savedSoFar: string;
+  autoKey?: string | null;
+};
 
 const thisMonth = () => new Date().toISOString().slice(0, 7);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -29,7 +37,10 @@ export function PeriodicCard() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["periodic"] });
 
   const monthWords = (ym: string) =>
-    new Date(Number(ym.slice(0, 4)), Number(ym.slice(5, 7)) - 1, 1).toLocaleDateString(locale === "he" ? "he-IL" : "en-US", { month: "long", year: "numeric" });
+    new Date(Number(ym.slice(0, 4)), Number(ym.slice(5, 7)) - 1, 1).toLocaleDateString(
+      locale === "he" ? "he-IL" : "en-US",
+      { month: "long", year: "numeric" },
+    );
 
   const save = async (item: Record<string, unknown>) => {
     try {
@@ -70,16 +81,23 @@ export function PeriodicCard() {
       className="grid gap-2 rounded-xl bg-muted/50 p-3 sm:grid-cols-2"
       onSubmit={(ev) => {
         ev.preventDefault();
-        void save({ ...d, amount: Number(d.amount), everyMonths: Number(d.everyMonths), savedSoFar: Number(d.savedSoFar || 0) });
+        void save({
+          ...d,
+          amount: Number(d.amount),
+          everyMonths: Number(d.everyMonths),
+          savedSoFar: Number(d.savedSoFar || 0),
+        });
       }}
     >
-      {([
-        ["name", "text"],
-        ["amount", "number"],
-        ["everyMonths", "number"],
-        ["nextDue", "month"],
-        ["savedSoFar", "number"],
-      ] as const).map(([field, type]) => (
+      {(
+        [
+          ["name", "text"],
+          ["amount", "number"],
+          ["everyMonths", "number"],
+          ["nextDue", "month"],
+          ["savedSoFar", "number"],
+        ] as const
+      ).map(([field, type]) => (
         <label key={field} className="grid gap-1 text-xs text-muted-foreground">
           {t(`field.${field}`)}
           <Input
@@ -96,7 +114,9 @@ export function PeriodicCard() {
       ))}
       <div className="flex items-end gap-2">
         <Button type="submit">{t("save")}</Button>
-        <Button type="button" variant="ghost" onClick={() => setDraft(null)}>{t("cancel")}</Button>
+        <Button type="button" variant="ghost" onClick={() => setDraft(null)}>
+          {t("cancel")}
+        </Button>
       </div>
     </form>
   );
@@ -106,7 +126,19 @@ export function PeriodicCard() {
       label={t("title")}
       action={
         !draft && (
-          <IconButton label={t("add")} showLabel onClick={() => setDraft({ name: "", amount: "", everyMonths: "12", nextDue: thisMonth(), savedSoFar: "0" })}>
+          <IconButton
+            label={t("add")}
+            showLabel
+            onClick={() =>
+              setDraft({
+                name: "",
+                amount: "",
+                everyMonths: "12",
+                nextDue: thisMonth(),
+                savedSoFar: "0",
+              })
+            }
+          >
             <Plus aria-hidden />
           </IconButton>
         )
@@ -120,7 +152,12 @@ export function PeriodicCard() {
 
       <ul className="divide-y divide-border/60">
         {items.map((e) => {
-          if (draft?.id === e.id) return <li key={e.id} className="py-2">{editor(draft)}</li>;
+          if (draft?.id === e.id)
+            return (
+              <li key={e.id} className="py-2">
+                {editor(draft)}
+              </li>
+            );
           const pct = Math.min(100, Math.round((e.savedSoFar / e.amount) * 100));
           return (
             <li key={e.id} className="flex items-center gap-3 py-3">
@@ -131,7 +168,11 @@ export function PeriodicCard() {
                 </div>
                 <div className="mt-0.5 flex flex-wrap justify-between gap-x-3 text-xs text-muted-foreground tabular-nums">
                   <span>{t("due", { month: monthWords(e.nextDue) })}</span>
-                  <span>{t("perMonth", { amount: shekels(Math.ceil(monthlySetAside(e, today())), locale) })}</span>
+                  <span>
+                    {t("perMonth", {
+                      amount: shekels(Math.ceil(monthlySetAside(e, today())), locale),
+                    })}
+                  </span>
                 </div>
                 <div
                   className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"
@@ -143,9 +184,21 @@ export function PeriodicCard() {
                 >
                   <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
                 </div>
-                <div className="mt-1 text-xs text-muted-foreground tabular-nums">{t("savedOf", { saved: shekels(e.savedSoFar, locale), pct })}</div>
+                <div className="mt-1 text-xs text-muted-foreground tabular-nums">
+                  {t("savedOf", { saved: shekels(e.savedSoFar, locale), pct })}
+                </div>
               </div>
-              <IconButton label={t("edit")} onClick={() => setDraft({ ...e, amount: String(e.amount), everyMonths: String(e.everyMonths), savedSoFar: String(e.savedSoFar) })}>
+              <IconButton
+                label={t("edit")}
+                onClick={() =>
+                  setDraft({
+                    ...e,
+                    amount: String(e.amount),
+                    everyMonths: String(e.everyMonths),
+                    savedSoFar: String(e.savedSoFar),
+                  })
+                }
+              >
                 <Pencil aria-hidden />
               </IconButton>
               <IconButton label={t("delete")} onClick={() => void remove(e)}>
@@ -158,18 +211,39 @@ export function PeriodicCard() {
 
       {suggestions.length > 0 && (
         <div className="mt-4 border-t border-border/60 pt-4">
-          <h3 className="mb-1 flex items-center gap-1 text-xs font-semibold text-muted-foreground">{t("suggestionsTitle")}<InfoTip text={t("estimatesFromPastTransactions")} className="-my-3" /></h3>
+          <h3 className="mb-1 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+            {t("suggestionsTitle")}
+            <InfoTip text={t("estimatesFromPastTransactions")} className="-my-3" />
+          </h3>
           <ul className="space-y-2">
             {suggestions.map((s) => (
               <li key={s.autoKey} className="flex flex-wrap items-center gap-2">
                 <span className="min-w-[10rem] flex-1 text-sm">
-                  {t("suggestion", { name: s.name, amount: shekels(s.amount, locale), month: monthWords(s.nextDue) })}
+                  {t("suggestion", {
+                    name: s.name,
+                    amount: shekels(s.amount, locale),
+                    month: monthWords(s.nextDue),
+                  })}
                 </span>
-                <Button size="sm" variant="secondary" onClick={() => setDraft({ ...s, amount: String(s.amount), everyMonths: String(s.everyMonths), savedSoFar: "0" })}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() =>
+                    setDraft({
+                      ...s,
+                      amount: String(s.amount),
+                      everyMonths: String(s.everyMonths),
+                      savedSoFar: "0",
+                    })
+                  }
+                >
                   <Plus aria-hidden />
                   {t("reviewEdit")}
                 </Button>
-                <IconButton label={t("dismiss")} onClick={() => void dismissPeriodicSuggestion(s.autoKey).then(refresh)}>
+                <IconButton
+                  label={t("dismiss")}
+                  onClick={() => void dismissPeriodicSuggestion(s.autoKey).then(refresh)}
+                >
                   <X aria-hidden />
                 </IconButton>
               </li>

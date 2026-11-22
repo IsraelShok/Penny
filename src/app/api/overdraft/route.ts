@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const txns = getDb()
     .prepare(
       `SELECT date, description, charged_amount as amount FROM transactions
-       WHERE workspace_id = ? AND status = 'completed' AND date > ? AND description LIKE '%ריבית%'`
+       WHERE workspace_id = ? AND status = 'completed' AND date > ? AND description LIKE '%ריבית%'`,
     )
     .all(ws, since) as OverdraftTxn[];
   const balances = listAccountBalances(ws);

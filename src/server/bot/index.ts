@@ -1,7 +1,15 @@
 import "server-only";
 
 import { Bot } from "grammy";
-import { handleCommand, splitMessage, menuMarkup, MENU_LABEL, MENU_PREFIX, BOT_COMMANDS, type BotConfig } from "./commands";
+import {
+  handleCommand,
+  splitMessage,
+  menuMarkup,
+  MENU_LABEL,
+  MENU_PREFIX,
+  BOT_COMMANDS,
+  type BotConfig,
+} from "./commands";
 import { categorizeAction, categorizeCard, CAT_PREFIX } from "./categorize";
 import { getBotConfig, getHideAmounts, linkChat } from "./config";
 import { APP_LOCKED_MESSAGE, isKeyLocked } from "../lib/encryption";
@@ -34,7 +42,11 @@ const ignoreUnchanged = (err: unknown) => {
 
 /** Runs one command for the linked chat; null when the chat is not the owner. */
 function reply(text: string, fromChatId: number, chatId: number): Promise<string | null> {
-  const cfg: BotConfig = { chatId, billingDay: Number(process.env.CARD_BILLING_DAY) || 10, hideAmounts: getHideAmounts() };
+  const cfg: BotConfig = {
+    chatId,
+    billingDay: Number(process.env.CARD_BILLING_DAY) || 10,
+    hideAmounts: getHideAmounts(),
+  };
   return handleCommand(text, fromChatId, cfg, {
     workspaceId: listAllWorkspaceIds()[0],
     today: israelToday(),
@@ -49,7 +61,8 @@ function reply(text: string, fromChatId: number, chatId: number): Promise<string
           ? `⚠️ הסנכרון הסתיים עם שגיאות: ${failed.map((f) => f.label).join(", ")}`
           : `✓ הסנכרון הסתיים, ${added} עסקאות חדשות`;
       } catch (err) {
-        if ((err as Error).name === "SyncBusyError") return "סנכרון כבר רץ עכשיו, נסו שוב בעוד רגע.";
+        if ((err as Error).name === "SyncBusyError")
+          return "סנכרון כבר רץ עכשיו, נסו שוב בעוד רגע.";
         throw err;
       }
     },
@@ -68,7 +81,8 @@ export function startBot(): void {
     const text = ctx.message.text.trim();
     if (!chatId) {
       const code = text.match(/^\/start\s+(\S+)$/)?.[1];
-      if (code && linkChat(code, ctx.chat.id)) await ctx.reply(`מחובר ✓ ${HELP_INTRO}`, { reply_markup: KEYBOARD });
+      if (code && linkChat(code, ctx.chat.id))
+        await ctx.reply(`מחובר ✓ ${HELP_INTRO}`, { reply_markup: KEYBOARD });
       return;
     }
     if (ctx.chat.id === chatId && isKeyLocked()) {
@@ -87,7 +101,9 @@ export function startBot(): void {
     const parts = splitMessage(out);
     // The reply keyboard stays put; inline tabs ride on the last part so they sit under the whole card.
     for (const [i, part] of parts.entries())
-      await ctx.reply(part, { reply_markup: i === parts.length - 1 ? menuMarkup(cmdOf(text)) : KEYBOARD });
+      await ctx.reply(part, {
+        reply_markup: i === parts.length - 1 ? menuMarkup(cmdOf(text)) : KEYBOARD,
+      });
   });
 
   bot.on("callback_query:data", async (ctx) => {
@@ -95,12 +111,16 @@ export function startBot(): void {
     const data = ctx.callbackQuery.data;
     // Same owner check as messages: a forwarded card must not work in another chat.
     if (!chatId || ctx.chat?.id !== chatId) return ctx.answerCallbackQuery();
-    if (isKeyLocked()) return ctx.answerCallbackQuery({ text: APP_LOCKED_MESSAGE, show_alert: true });
+    if (isKeyLocked())
+      return ctx.answerCallbackQuery({ text: APP_LOCKED_MESSAGE, show_alert: true });
     if (data.startsWith(CAT_PREFIX)) {
       const ws = listAllWorkspaceIds()[0];
       const card = ws === undefined ? null : categorizeAction(ws, data, getHideAmounts());
       await ctx.answerCallbackQuery();
-      if (card) await ctx.editMessageText(card.text, { parse_mode: "HTML", reply_markup: card.markup }).catch(ignoreUnchanged);
+      if (card)
+        await ctx
+          .editMessageText(card.text, { parse_mode: "HTML", reply_markup: card.markup })
+          .catch(ignoreUnchanged);
       return;
     }
     if (!data.startsWith(MENU_PREFIX)) return ctx.answerCallbackQuery();
@@ -121,12 +141,17 @@ export function startBot(): void {
     scheduleUpdateCheck((text) => {
       const { chatId } = getBotConfig();
       const current = globalThis.__pennyBot;
-      return chatId && current ? current.api.sendMessage(chatId, text).then(() => undefined) : Promise.resolve();
+      return chatId && current
+        ? current.api.sendMessage(chatId, text).then(() => undefined)
+        : Promise.resolve();
     });
   }
   if (!globalThis.__pennyDigest) {
     globalThis.__pennyDigest = true;
-    setInterval(() => void sendDigest().catch((err) => console.error("[digest]", redactError(err))), 15 * 60_000).unref();
+    setInterval(
+      () => void sendDigest().catch((err) => console.error("[digest]", redactError(err))),
+      15 * 60_000,
+    ).unref();
   }
 }
 
@@ -136,13 +161,18 @@ const DIGEST_SENT = "telegram_digest_sent";
 async function sendDigest(): Promise<void> {
   const { chatId } = getBotConfig();
   const bot = globalThis.__pennyBot;
-  if (!bot || !chatId || isKeyLocked() || !digestDue(new Date(), getGlobalSetting(DIGEST_SENT))) return;
+  if (!bot || !chatId || isKeyLocked() || !digestDue(new Date(), getGlobalSetting(DIGEST_SENT)))
+    return;
   setGlobalSetting(DIGEST_SENT, israelClock(new Date()).date);
   const out = await reply("/full", chatId, chatId);
   if (!out) return;
   const parts = splitMessage(`🗓️ סיכום ביניים\n\n${out}`);
   for (const [i, part] of parts.entries())
-    await bot.api.sendMessage(chatId, part, i === parts.length - 1 ? { reply_markup: menuMarkup() } : undefined);
+    await bot.api.sendMessage(
+      chatId,
+      part,
+      i === parts.length - 1 ? { reply_markup: menuMarkup() } : undefined,
+    );
 }
 
 /** Right after a sync: tells the linked chat about new expenses, in context. Silent when locked or nothing new. */
@@ -156,26 +186,50 @@ export async function sendSpendFeedback(since: string): Promise<void> {
   if (!text) return;
   const parts = splitMessage(text);
   for (const [i, part] of parts.entries())
-    await bot.api.sendMessage(chatId, part, i === parts.length - 1 ? { reply_markup: menuMarkup() } : undefined);
+    await bot.api.sendMessage(
+      chatId,
+      part,
+      i === parts.length - 1 ? { reply_markup: menuMarkup() } : undefined,
+    );
 }
 
 /** After a scheduled sync: tells the user when a bank connection starts failing or recovers. */
-export async function sendSyncAlerts(results: { label: string; provider: string; ok: boolean; errorMessage?: string; credentialId: number; syncRunId?: number }[]): Promise<void> {
+export async function sendSyncAlerts(
+  results: {
+    label: string;
+    provider: string;
+    ok: boolean;
+    errorMessage?: string;
+    credentialId: number;
+    syncRunId?: number;
+  }[],
+): Promise<void> {
   const { chatId } = getBotConfig();
   const bot = globalThis.__pennyBot;
   if (!bot || !chatId || isKeyLocked()) return;
   const [{ getDb }, { syncAlert }, { parseSyncError }, he] = await Promise.all([
-    import("../db"), import("@/lib/sync-alert"), import("@/lib/sync-errors"), import("@/i18n/messages/he.json"),
+    import("../db"),
+    import("@/lib/sync-alert"),
+    import("@/lib/sync-errors"),
+    import("@/i18n/messages/he.json"),
   ]);
   // The last finished run before this one; a run that never got created (credentials missing) compares with the latest.
-  const prevStmt = getDb().prepare("SELECT status FROM sync_runs WHERE credential_id = ? AND id < ? AND status != 'running' ORDER BY id DESC LIMIT 1");
+  const prevStmt = getDb().prepare(
+    "SELECT status FROM sync_runs WHERE credential_id = ? AND id < ? AND status != 'running' ORDER BY id DESC LIMIT 1",
+  );
   const errors = he.default.syncErrors as Record<string, string>;
-  const text = syncAlert(results.map((r) => ({
-    label: r.label || r.provider,
-    ok: r.ok,
-    wasFailing: (prevStmt.get(r.credentialId, r.syncRunId ?? Number.MAX_SAFE_INTEGER) as { status: string } | undefined)?.status === "failed",
-    reason: r.errorMessage ? errors[parseSyncError(r.errorMessage).key ?? "unknown"] : undefined,
-  })));
+  const text = syncAlert(
+    results.map((r) => ({
+      label: r.label || r.provider,
+      ok: r.ok,
+      wasFailing:
+        (
+          prevStmt.get(r.credentialId, r.syncRunId ?? Number.MAX_SAFE_INTEGER) as
+            { status: string } | undefined
+        )?.status === "failed",
+      reason: r.errorMessage ? errors[parseSyncError(r.errorMessage).key ?? "unknown"] : undefined,
+    })),
+  );
   if (text) await bot.api.sendMessage(chatId, text);
 }
 

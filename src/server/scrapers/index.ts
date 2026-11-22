@@ -70,10 +70,7 @@ function classifyError(error: unknown): {
   }
 
   // Empty JSON response from bank - usually transient (rate limit, bot block, flaky endpoint).
-  if (
-    /Unexpected end of JSON input/.test(msg) ||
-    /fetchPostWithinPage parse error/.test(msg)
-  ) {
+  if (/Unexpected end of JSON input/.test(msg) || /fetchPostWithinPage parse error/.test(msg)) {
     return { retryable: true, friendly: SYNC_ERRORS.emptyResponse };
   }
 
@@ -114,7 +111,7 @@ async function runScrape(
   provider: BankProvider,
   credentials: Record<string, string>,
   startDate: Date,
-  showBrowser: boolean
+  showBrowser: boolean,
 ): Promise<ScrapeResult> {
   const companyId = PROVIDER_MAP[provider];
   if (!companyId) {
@@ -142,13 +139,19 @@ async function runScrape(
       ? ForkCompanyTypes.Isracard
       : ForkCompanyTypes.Max;
 
+  if (forkCompany && showBrowser) {
+    // Say it out loud: the fork has no browser, so a user waiting for the 2FA window would
+    // otherwise see nothing happen and assume the sync is stuck.
+    console.warn(`[scraper] ${provider} uses the browserless fork - no browser window will open`);
+  }
+
+  // The fork is browserless and drives the bank APIs directly, so it has no browser
+  // or installments options; it takes a whole-run deadline instead of a page timeout.
   const result = forkCompany
     ? await createForkScraper({
         companyId: forkCompany,
         startDate,
-        shouldCombineInstallments: false,
-        shouldShowBrowser: showBrowser,
-        timeout: 60000,
+        deadlineMs: 60000,
       }).scrape(credentials as never)
     : await createScraper({
         companyId,
@@ -165,16 +168,12 @@ async function runScrape(
   if (!result.success) {
     const errorType = result.errorType ?? "GENERIC";
     const friendly = FRIENDLY_ERRORS[errorType];
-    const detail = result.errorMessage
-      ? sanitizeError(new Error(result.errorMessage))
-      : errorType;
+    const detail = result.errorMessage ? sanitizeError(new Error(result.errorMessage)) : errorType;
     console.error(`[scraper] failed (${errorType}):`, detail);
     return {
       success: false,
       accounts: [],
-      errorMessage: friendly
-        ? `${friendly} (${detail})`
-        : `Scraping failed: ${detail}`,
+      errorMessage: friendly ? `${friendly} (${detail})` : `Scraping failed: ${detail}`,
       retryable: RETRYABLE_ERROR_TYPES.has(errorType),
     };
   }
@@ -182,7 +181,7 @@ async function runScrape(
   const mapped = toScrapeResult(result);
   const txnCount = mapped.accounts.reduce((sum, a) => sum + a.transactions.length, 0);
   console.log(
-    `[scraper] ${mapped.success ? "success" : "rejected"}: ${mapped.accounts.length} account(s), ${txnCount} transaction(s)`
+    `[scraper] ${mapped.success ? "success" : "rejected"}: ${mapped.accounts.length} account(s), ${txnCount} transaction(s)`,
   );
   return mapped;
 }
@@ -201,10 +200,9 @@ export async function scrapeBank(
   provider: BankProvider,
   credentials: Record<string, string>,
   startDate: Date,
-  options: ScrapeBankOptions = {}
+  options: ScrapeBankOptions = {},
 ): Promise<ScrapeResult> {
-  const workspaceShowBrowser =
-    getWorkspaceSetting(workspaceId, "scraper_show_browser") === "true";
+  const workspaceShowBrowser = getWorkspaceSetting(workspaceId, "scraper_show_browser") === "true";
   const showBrowser = options.manualTwoFactor === true || workspaceShowBrowser;
   const MAX_ATTEMPTS = 2;
   let lastError: unknown = null;
@@ -212,7 +210,7 @@ export async function scrapeBank(
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       console.log(
-        `[scraper] starting scrape for ${provider} from ${startDate.toISOString()} (attempt ${attempt}/${MAX_ATTEMPTS}, showBrowser=${showBrowser})`
+        `[scraper] starting scrape for ${provider} from ${startDate.toISOString()} (attempt ${attempt}/${MAX_ATTEMPTS}, showBrowser=${showBrowser})`,
       );
       const result = await runScrape(provider, credentials, startDate, showBrowser);
       if (result.success || !result.retryable || attempt === MAX_ATTEMPTS) return result;
@@ -221,10 +219,7 @@ export async function scrapeBank(
       await new Promise((r) => setTimeout(r, backoffMs));
     } catch (error) {
       lastError = error;
-      console.error(
-        `[scraper] unexpected error on attempt ${attempt}:`,
-        sanitizeError(error)
-      );
+      console.error(`[scraper] unexpected error on attempt ${attempt}:`, sanitizeError(error));
       const { retryable } = classifyError(error);
       if (!retryable || attempt === MAX_ATTEMPTS) break;
       const backoffMs = 2000 * attempt;

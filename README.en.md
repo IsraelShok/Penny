@@ -78,7 +78,7 @@ Plus a **knowledge center** of short original guides in Hebrew and English, and 
 - **Demo mode** with a complete made-up household, including connected banks, cards, open banking and investment houses: see every screen without a bank connection and without touching real data.
 
 ### Getting data in
-- **Automatic:** 18 Israeli banks and card companies via [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), on a daily schedule.
+- **Automatic (beta):** 18 Israeli banks and card companies via [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), on a daily schedule. Beta: a bank can change its site and break a connection until the scraper is fixed; statement files always work.
 - **Manual:** drop a CSV, XLSX or XLS statement into the app or into a watched import folder. A transaction that comes from both is stored once.
 - **Smart sheet:** paste a table from any source, from Excel or Google Sheets to a bank file or a list you typed, and fix each cell in the grid itself: date, amount, type, account, category, tags, owner and business percentage. Duplicates are found per account before saving, and the whole import can be undone.
 - **Onboarding** walks a new user through profile and picture, connecting or importing, a monthly target, budgets, an optional AI provider and a short tour. It can be skipped, resumed and reopened.
@@ -92,7 +92,7 @@ Plus a **knowledge center** of short original guides in Hebrew and English, and 
 ### Also
 - **Ask your money** in plain language, and a **Telegram bot** for instant spending feedback.
 - **Phone access on your Wi-Fi** (opt-in), installable as a web app.
-- **Menu bar / tray companion** on macOS and Windows.
+- **Desktop app** for macOS and Windows, with an installer and self-updates on Windows.
 
 ## Screenshots
 
@@ -159,8 +159,8 @@ flowchart LR
 ## Requirements
 
 - **Node.js 22+**, only when installing from source
-- **Windows 11, macOS 13+ or Ubuntu 22+** (with systemd)
-- For the tray companion, built locally: Xcode Command Line Tools on macOS, .NET 8 SDK on Windows. `npm run setup` offers to install them.
+- **Windows 10/11, macOS 13+ or Ubuntu 22+** (with systemd)
+- To build the desktop app from source (optional): `npm run desktop:build`. The ready-made installers need no Node.js.
 - Bank accounts with **2FA disabled** for automatic sync (One Zero is the exception). Without that, use statement files.
 
 ## Install
@@ -182,12 +182,16 @@ Data lives in `%APPDATA%\Penny\data` (Windows) or `~/Library/Application Support
 Runs Penny, its scrapers and Chromium in a container, isolated from your machine. Works on Windows, Mac and Linux with [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 ```bash
-git clone https://github.com/Sergey-Bar/Penny.git
-cd Penny
-./Penny-docker.sh        # Windows: Penny-docker.bat
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/Sergey-Bar/Penny/main/install-docker.sh | bash
 ```
 
-The script builds, starts and opens `http://127.0.0.1:41234`. Or directly: `docker compose up -d --build`.
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/Sergey-Bar/Penny/main/install-docker.ps1 | iex
+```
+
+The installer checks that Docker is installed and running (on Windows it offers to install Docker Desktop with winget, on a Mac with Homebrew), downloads the newest release into `~/Penny` (`PENNY_DIR` to change), builds, starts and opens `http://127.0.0.1:41234`. Run the same command again later: if a newer release exists it offers to update (backup first, rollback if the new version isn't healthy), otherwise it just starts Penny. From a clone, `./Penny-docker.sh` (Windows: `Penny-docker.bat`) or `docker compose up -d --build` work too.
 
 - Published on `127.0.0.1` only. The database and encryption key live in the data volume and survive updates.
 - Settings go in `.env` (copy `.env.example`).
@@ -205,9 +209,9 @@ npm install
 npm run setup
 ```
 
-For developers, or if you want an always-on service and a tray app. `npm run setup` builds the app, installs the always-on service (LaunchAgent on macOS, systemd on Linux, Task Scheduler on Windows), builds and registers the tray companion, and opens the app. On Windows it also adds `127.0.0.1 penny.localhost` to your hosts file, the only step that asks for Administrator.
+For developers, or if you want an always-on service. `npm run setup` builds the app, installs the always-on service (LaunchAgent on macOS, systemd on Linux, Task Scheduler on Windows), and opens the app. The desktop app comes from the installer; build it from source with `npm run desktop:build`. On Windows it also adds `127.0.0.1 penny.localhost` to your hosts file, the only step that asks for Administrator.
 
-The first launch of the tray app shows an unsigned-binary warning, because you built it locally: right-click → Open (macOS) or "More info" → "Run anyway" (Windows). Once.
+The first launch of the desktop app shows an unsigned-binary warning, because it is not signed yet: **System Settings → Privacy & Security → Open Anyway** (macOS) or "More info" → "Run anyway" (Windows). Once.
 
 Then open **`http://penny.localhost:41234`** and bookmark it.
 
@@ -278,7 +282,7 @@ Or `claude mcp add penny -- node /path/to/Penny/scripts/mcp.mjs`, or run `npm ru
 npm run uninstall
 ```
 
-Stops and removes the service, removes the hosts entry on Windows, and removes the tray app and its login item.
+Stops and removes the service, removes the hosts entry on Windows, and removes earlier desktop-app installs if any are left.
 
 **Kept on purpose:** `data/` (your transactions, budgets and encryption key) and the repository itself. To remove everything: `rm -rf data/ && cd .. && rm -rf Penny/`.
 
@@ -333,7 +337,7 @@ Penny/
 │       └── lib/          Encryption, dedupe, transfer detection, import folder
 ├── tests/                Vitest unit tests (and tests/e2e scanners for overlap and contrast)
 ├── e2e/                  Playwright end-to-end tests
-├── menubar/              Tray companions (Swift for macOS, C# for Windows)
+├── desktop/              Electron desktop shell and installer
 ├── scripts/service/      Service installers
 └── data/                 Database and key (gitignored)
 ```

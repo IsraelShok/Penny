@@ -13,7 +13,8 @@ export async function GET(request: Request) {
 
   const params = new URL(request.url).searchParams;
   const source = params.get("source");
-  if (source !== "gemel" && source !== "pension") return NextResponse.json({ error: "source must be gemel or pension" }, { status: 400 });
+  if (source !== "gemel" && source !== "pension")
+    return NextResponse.json({ error: "source must be gemel or pension" }, { status: 400 });
   const q = (params.get("q") ?? "").slice(0, 80);
   return NextResponse.json({ funds: searchFunds(await loadFunds(source), q) });
 }

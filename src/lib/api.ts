@@ -8,7 +8,6 @@ import type {
   TransactionWithCategory,
   DashboardSummary,
   Category,
-
   Budget,
   BudgetMode,
   Integration,
@@ -37,7 +36,8 @@ function withWorkspaceHeader(init?: RequestInit): RequestInit {
     headers.set("x-workspace-id", String(wsId));
   }
   const profileId = getActiveProfileIdSync();
-  if (profileId != null && !headers.has("x-profile-id")) headers.set("x-profile-id", String(profileId));
+  if (profileId != null && !headers.has("x-profile-id"))
+    headers.set("x-profile-id", String(profileId));
   return { ...init, headers };
 }
 
@@ -80,7 +80,8 @@ const ERRORS = {
     syncBusy: "A sync is already running. Try again in a moment.",
     locked: "The app is locked. Enter your code to continue.",
     signInRequired: "Please choose a user again. Refresh the page.",
-    streamLost: "The connection dropped before it finished. Check that Penny is running and try again.",
+    streamLost:
+      "The connection dropped before it finished. Check that Penny is running and try again.",
 
     ownerRequired: "Only the owner of Penny can do this.",
     workspaceDenied: "You don't have access to this workspace.",
@@ -102,7 +103,10 @@ const ERRORS = {
 /** Machine codes the API and the proxy send; they are never shown as they are. */
 /** A failed request: `status` lets callers tell a user error from a broken server. */
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number | "network") {
+  constructor(
+    message: string,
+    readonly status: number | "network",
+  ) {
     super(message);
     this.name = "ApiError";
   }
@@ -127,7 +131,8 @@ const CODE_MESSAGES: Record<string, keyof typeof ERRORS.he> = {
   "child-has-children": "childHasChildren",
 };
 
-const uiLang = (): "he" | "en" => (typeof document !== "undefined" && document.documentElement.lang === "en" ? "en" : "he");
+const uiLang = (): "he" | "en" =>
+  typeof document !== "undefined" && document.documentElement.lang === "en" ? "en" : "he";
 
 /** Picks a message the user can read: the server's own text when it is in the UI language, else one by status. */
 export function friendlyError(status: number | "network", body = "", lang = uiLang()): string {
@@ -146,7 +151,12 @@ export function friendlyError(status: number | "network", body = "", lang = uiLa
   // A bare identifier ("bad_request", "not_restartable") is a code, not copy: it falls through
   // to the status text, so every such code gets a readable message without an entry here.
   const isCode = /^[a-z0-9_-]+$/.test(detail);
-  const fits = detail && detail.length < 200 && !isCode && !/^\s*</.test(detail) && (lang === "he" ? hebrew : !hebrew);
+  const fits =
+    detail &&
+    detail.length < 200 &&
+    !isCode &&
+    !/^\s*</.test(detail) &&
+    (lang === "he" ? hebrew : !hebrew);
   if (fits) return detail;
   if (status === "network") return m.network;
   // 409 covers duplicates, in-use records and the sync lock; only the lock has its own wording.
@@ -154,7 +164,7 @@ export function friendlyError(status: number | "network", body = "", lang = uiLa
   return status in m ? m[status as keyof typeof m] : status >= 500 ? m.server : m[400];
 }
 
-async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
+export async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${url}`, withWorkspaceHeader(init)).catch(() => {
     throw new ApiError(friendlyError("network"), "network");
   });
@@ -176,7 +186,16 @@ export function listProfiles() {
   return fetchJSON<Profile[]>("/api/profiles");
 }
 
-export function saveProfile(id: number | null, name: string, avatar: { avatarEmoji?: string | null; avatarColor?: string | null; avatarPet?: import("./profile-avatar").ProfilePip | null; avatarPhoto?: string | null } = {}) {
+export function saveProfile(
+  id: number | null,
+  name: string,
+  avatar: {
+    avatarEmoji?: string | null;
+    avatarColor?: string | null;
+    avatarPet?: import("./profile-avatar").ProfilePip | null;
+    avatarPhoto?: string | null;
+  } = {},
+) {
   return fetchJSON<Profile>(id == null ? "/api/profiles" : `/api/profiles/${id}`, {
     method: id == null ? "POST" : "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -194,7 +213,7 @@ export function listWorkspaces() {
 
 export function createWorkspace(
   name: string,
-  avatar: { avatarEmoji?: string | null; avatarColor?: string | null } = {}
+  avatar: { avatarEmoji?: string | null; avatarColor?: string | null } = {},
 ) {
   return fetchJSON<Workspace>("/api/workspaces", {
     method: "POST",
@@ -206,7 +225,7 @@ export function createWorkspace(
 export function renameWorkspace(
   id: number,
   name: string,
-  avatar: { avatarEmoji?: string | null; avatarColor?: string | null } = {}
+  avatar: { avatarEmoji?: string | null; avatarColor?: string | null } = {},
 ) {
   return fetchJSON<Workspace>(`/api/workspaces/${id}`, {
     method: "PATCH",
@@ -241,7 +260,7 @@ export function saveBankCredentials(
     label?: string;
     credentialId?: number;
     requiresManualTwoFactor?: boolean;
-  }
+  },
 ) {
   return fetchJSON<{ success: boolean; credentialId: number }>("/api/setup/bank", {
     method: "POST",
@@ -250,9 +269,7 @@ export function saveBankCredentials(
       provider,
       credentials,
       ...(options?.label !== undefined ? { label: options.label } : {}),
-      ...(options?.credentialId !== undefined
-        ? { credentialId: options.credentialId }
-        : {}),
+      ...(options?.credentialId !== undefined ? { credentialId: options.credentialId } : {}),
       ...(options?.requiresManualTwoFactor !== undefined
         ? { requiresManualTwoFactor: options.requiresManualTwoFactor }
         : {}),
@@ -262,7 +279,7 @@ export function saveBankCredentials(
 
 export function updateIntegrationSettings(
   credentialId: number,
-  updates: { requiresManualTwoFactor?: boolean; resetTwoFactorToken?: boolean }
+  updates: { requiresManualTwoFactor?: boolean; resetTwoFactorToken?: boolean },
 ) {
   return fetchJSON<{ success: boolean }>(`/api/integrations/${credentialId}`, {
     method: "PATCH",
@@ -281,7 +298,7 @@ export function submitSyncOtp(syncRunId: number, code: string) {
 
 export function testBankConnection(
   provider: string,
-  options?: { credentialId?: number; credentials?: Record<string, string> }
+  options?: { credentialId?: number; credentials?: Record<string, string> },
 ) {
   return fetchJSON<{
     success: boolean;
@@ -292,12 +309,8 @@ export function testBankConnection(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       provider,
-      ...(options?.credentialId !== undefined
-        ? { credentialId: options.credentialId }
-        : {}),
-      ...(options?.credentials !== undefined
-        ? { credentials: options.credentials }
-        : {}),
+      ...(options?.credentialId !== undefined ? { credentialId: options.credentialId } : {}),
+      ...(options?.credentials !== undefined ? { credentials: options.credentials } : {}),
     }),
   });
 }
@@ -388,17 +401,14 @@ export function getTransactions(params: {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined) return;
-    if (
-      (key === "categoryIds" || key === "credentialIds") &&
-      Array.isArray(value)
-    ) {
+    if ((key === "categoryIds" || key === "credentialIds") && Array.isArray(value)) {
       for (const id of value) searchParams.append(key, String(id));
       return;
     }
     searchParams.set(key, String(value));
   });
   return fetchJSON<{ transactions: TransactionWithCategory[]; total: number }>(
-    `/api/transactions?${searchParams}`
+    `/api/transactions?${searchParams}`,
   );
 }
 
@@ -418,11 +428,7 @@ export function approveTransactionCategory(id: number) {
   });
 }
 
-export function setTransactionExcluded(
-  id: number,
-  excluded: boolean,
-  alwaysForMerchant = false,
-) {
+export function setTransactionExcluded(id: number, excluded: boolean, alwaysForMerchant = false) {
   return fetchJSON<{ success: boolean }>(`/api/transactions/${id}/exclude`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -478,9 +484,7 @@ export interface ExcludedMerchantRule {
 }
 
 export function listExcludedMerchants() {
-  return fetchJSON<{ rules: ExcludedMerchantRule[] }>(
-    `/api/excluded-merchants`,
-  );
+  return fetchJSON<{ rules: ExcludedMerchantRule[] }>(`/api/excluded-merchants`);
 }
 
 export function deleteExcludedMerchantRule(id: number) {
@@ -530,7 +534,12 @@ export function getCashAhead() {
 }
 
 export function getSuggestions() {
-  return fetchJSON<{ suggestions: import("./suggestions").Suggestion[]; dismissed: string[]; stageHints: import("./stage-detect").StageHint[]; donations?: { year: number; total: number }[] }>(`/api/suggestions`);
+  return fetchJSON<{
+    suggestions: import("./suggestions").Suggestion[];
+    dismissed: string[];
+    stageHints: import("./stage-detect").StageHint[];
+    donations?: { year: number; total: number }[];
+  }>(`/api/suggestions`);
 }
 
 export function dismissSuggestion(key: string) {
@@ -616,7 +625,10 @@ export function uploadInsuranceDocument(policyId: number, file: File, kind: stri
   const form = new FormData();
   form.set("file", file);
   form.set("kind", kind);
-  return fetchJSON<import("./types").InsuranceDocument>(`/api/insurance/${policyId}/documents`, { method: "POST", body: form });
+  return fetchJSON<import("./types").InsuranceDocument>(`/api/insurance/${policyId}/documents`, {
+    method: "POST",
+    body: form,
+  });
 }
 
 export function setInsuranceDocumentKind(docId: number, kind: string) {
@@ -636,11 +648,19 @@ export async function fetchInsuranceDocument(docId: number) {
   const res = await fetch(`/api/insurance/documents/${docId}`, withWorkspaceHeader()).catch(() => {
     throw new ApiError(friendlyError("network"), "network");
   });
-  if (!res.ok) throw new ApiError(friendlyError(res.status, await res.text().catch(() => "")), res.status);
+  if (!res.ok)
+    throw new ApiError(friendlyError(res.status, await res.text().catch(() => "")), res.status);
   return res.blob();
 }
 
-export interface Receipt { id: number; transactionId: number; originalName: string; mime: string; size: number; uploadedAt: string }
+export interface Receipt {
+  id: number;
+  transactionId: number;
+  originalName: string;
+  mime: string;
+  size: number;
+  uploadedAt: string;
+}
 
 export function getReceipts(transactionId: number) {
   return fetchJSON<{ receipts: Receipt[] }>(`/api/transactions/${transactionId}/receipts`);
@@ -649,7 +669,10 @@ export function getReceipts(transactionId: number) {
 export function uploadReceipt(transactionId: number, file: File) {
   const form = new FormData();
   form.set("file", file);
-  return fetchJSON<Receipt>(`/api/transactions/${transactionId}/receipts`, { method: "POST", body: form });
+  return fetchJSON<Receipt>(`/api/transactions/${transactionId}/receipts`, {
+    method: "POST",
+    body: form,
+  });
 }
 
 export function deleteReceipt(id: number) {
@@ -661,7 +684,8 @@ export async function fetchReceipt(id: number) {
   const res = await fetch(`/api/receipts/${id}`, withWorkspaceHeader()).catch(() => {
     throw new ApiError(friendlyError("network"), "network");
   });
-  if (!res.ok) throw new ApiError(friendlyError(res.status, await res.text().catch(() => "")), res.status);
+  if (!res.ok)
+    throw new ApiError(friendlyError(res.status, await res.text().catch(() => "")), res.status);
   return res.blob();
 }
 
@@ -675,10 +699,16 @@ export function extractTextRows(text: string) {
 }
 
 export function getTrades(assetId: number) {
-  return fetchJSON<{ trades: import("./holding-trades").HoldingTrade[]; summary: { quantity: number; costBasis: number; realized: number } }>(`/api/assets/${assetId}/trades`);
+  return fetchJSON<{
+    trades: import("./holding-trades").HoldingTrade[];
+    summary: { quantity: number; costBasis: number; realized: number };
+  }>(`/api/assets/${assetId}/trades`);
 }
 
-export function addTrade(assetId: number, trade: Omit<import("./holding-trades").HoldingTrade, "id">) {
+export function addTrade(
+  assetId: number,
+  trade: Omit<import("./holding-trades").HoldingTrade, "id">,
+) {
   return fetchJSON<import("./holding-trades").HoldingTrade>(`/api/assets/${assetId}/trades`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -715,16 +745,24 @@ export function setPlannedItemStatus(id: number, status: "planned" | "matched" |
   });
 }
 
-export function plannedAction(action: "match" | "link" | "reject" | "unlink", ids: { itemId?: number; txnId?: number } = {}) {
-  return fetchJSON<{ success?: boolean; matched?: number; ambiguous?: number }>(`/api/planned/act`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, ...ids }),
-  });
+export function plannedAction(
+  action: "match" | "link" | "reject" | "unlink",
+  ids: { itemId?: number; txnId?: number } = {},
+) {
+  return fetchJSON<{ success?: boolean; matched?: number; ambiguous?: number }>(
+    `/api/planned/act`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ...ids }),
+    },
+  );
 }
 
 export function getPivot(months: number) {
-  return fetchJSON<{ months: string[]; rows: import("./pivot").PivotRow[] }>(`/api/pivot?months=${months}`);
+  return fetchJSON<{ months: string[]; rows: import("./pivot").PivotRow[] }>(
+    `/api/pivot?months=${months}`,
+  );
 }
 
 export function getAssets() {
@@ -824,10 +862,7 @@ export interface CategoryDetail {
   children: CategoryChildBreakdown[] | null;
 }
 
-export function getCategoryDetail(
-  id: number,
-  params: { from: string; to: string }
-) {
+export function getCategoryDetail(id: number, params: { from: string; to: string }) {
   const sp = new URLSearchParams({ from: params.from, to: params.to });
   return fetchJSON<CategoryDetail>(`/api/categories/${id}/detail?${sp}`);
 }
@@ -846,10 +881,15 @@ export function cancelFlowMatch(id: number) {
 }
 
 export function getBudgetPeriod(month?: string) {
-  return fetchJSON<import("./finance-period").BudgetPeriodPayload>(`/api/budgets/period${month ? `?month=${month}` : ""}`);
+  return fetchJSON<import("./finance-period").BudgetPeriodPayload>(
+    `/api/budgets/period${month ? `?month=${month}` : ""}`,
+  );
 }
 
-export function setBudgetRollover(categoryId: number, rollover: import("./finance-period").RolloverRule) {
+export function setBudgetRollover(
+  categoryId: number,
+  rollover: import("./finance-period").RolloverRule,
+) {
   return fetchJSON<{ success: boolean }>("/api/budgets/period", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -865,10 +905,7 @@ export function updateBudget(categoryId: number, amount: number | null) {
   });
 }
 
-export function updateCategoryBudgetMode(
-  categoryId: number,
-  mode: BudgetMode
-) {
+export function updateCategoryBudgetMode(categoryId: number, mode: BudgetMode) {
   return fetchJSON<{ success: boolean }>(`/api/categories/${categoryId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -876,10 +913,7 @@ export function updateCategoryBudgetMode(
   });
 }
 
-export function updateCategoryDescription(
-  categoryId: number,
-  description: string | null
-) {
+export function updateCategoryDescription(categoryId: number, description: string | null) {
   return fetchJSON<{ success: boolean }>(`/api/categories/${categoryId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -895,10 +929,7 @@ export function updateCategoryLook(categoryId: number, fields: { name?: string; 
   });
 }
 
-export function setCategoryParent(
-  categoryId: number,
-  parentId: number | null
-) {
+export function setCategoryParent(categoryId: number, parentId: number | null) {
   return fetchJSON<{ success: boolean }>(`/api/categories/${categoryId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -908,7 +939,7 @@ export function setCategoryParent(
 
 export function updateCategorySpendingType(
   categoryId: number,
-  fields: { needType?: NeedType; costType?: CostType }
+  fields: { needType?: NeedType; costType?: CostType },
 ) {
   return fetchJSON<{ success: boolean }>(`/api/categories/${categoryId}`, {
     method: "PATCH",
@@ -1052,22 +1083,20 @@ export interface SyncProgressEvent {
 
 export function startSync(
   credentialId: number | undefined,
-  onEvent: (event: SyncProgressEvent) => void
+  onEvent: (event: SyncProgressEvent) => void,
 ): { cancel: () => void } {
   const controller = new AbortController();
 
-  (async () => {
+  void (async () => {
     try {
       const res = await fetch(
         "/api/sync",
         withWorkspaceHeader({
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(
-            credentialId != null ? { credentialId } : {}
-          ),
+          body: JSON.stringify(credentialId != null ? { credentialId } : {}),
           signal: controller.signal,
-        })
+        }),
       );
 
       if (!res.ok) {
@@ -1124,7 +1153,6 @@ export function startSync(
   return { cancel: () => controller.abort() };
 }
 
-
 export interface PullProgress {
   status: string;
   digest?: string;
@@ -1142,20 +1170,19 @@ export interface PullEvent {
 export function listOllamaModels(url?: string) {
   const qs = url ? `?url=${encodeURIComponent(url)}` : "";
   // The page sends no Referer (Referrer-Policy: no-referrer), but the proxy origin-checks this GET; send it same-origin only.
-  return fetchJSON<{ models: string[]; error?: string }>(
-    `/api/ai/ollama/models${qs}`,
-    { referrerPolicy: "same-origin" }
-  );
+  return fetchJSON<{ models: string[]; error?: string }>(`/api/ai/ollama/models${qs}`, {
+    referrerPolicy: "same-origin",
+  });
 }
 
 export function pullOllamaModel(
   model: string,
   url: string | undefined,
-  onEvent: (event: PullEvent) => void
+  onEvent: (event: PullEvent) => void,
 ): { cancel: () => void } {
   const controller = new AbortController();
 
-  (async () => {
+  void (async () => {
     try {
       const res = await fetch(
         "/api/ai/ollama/pull",
@@ -1164,11 +1191,17 @@ export function pullOllamaModel(
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ model, url }),
           signal: controller.signal,
-        })
+        }),
       );
 
       if (!res.ok) {
-        onEvent({ type: "error", data: { status: "error", message: friendlyError(res.status, await res.text().catch(() => "")) } });
+        onEvent({
+          type: "error",
+          data: {
+            status: "error",
+            message: friendlyError(res.status, await res.text().catch(() => "")),
+          },
+        });
         return;
       }
 
@@ -1241,14 +1274,20 @@ export function createRule(rule: Omit<Rule, "id">) {
 }
 
 export async function deleteRule(id: number) {
-  const res = await fetch(`${BASE}/api/rules/${id}`, withWorkspaceHeader({ method: "DELETE" })).catch(() => {
+  const res = await fetch(
+    `${BASE}/api/rules/${id}`,
+    withWorkspaceHeader({ method: "DELETE" }),
+  ).catch(() => {
     throw new ApiError(friendlyError("network"), "network");
   });
-  if (!res.ok) throw new ApiError(friendlyError(res.status, await res.text().catch(() => "")), res.status);
+  if (!res.ok)
+    throw new ApiError(friendlyError(res.status, await res.text().catch(() => "")), res.status);
 }
 
 export function searchFunds(source: "gemel" | "pension", q: string) {
-  return fetchJSON<{ funds: import("./types").Fund[] }>(`/api/funds?source=${source}&q=${encodeURIComponent(q)}`);
+  return fetchJSON<{ funds: import("./types").Fund[] }>(
+    `/api/funds?source=${source}&q=${encodeURIComponent(q)}`,
+  );
 }
 
 export function getBudgetSuggestions() {
@@ -1257,7 +1296,7 @@ export function getBudgetSuggestions() {
 
 export function getReviewInbox() {
   return fetchJSON<{ transactions: TransactionWithCategory[]; total: number }>(
-    "/api/transactions?needsReview=1&limit=200&sort=date&order=desc"
+    "/api/transactions?needsReview=1&limit=200&sort=date&order=desc",
   );
 }
 
@@ -1309,12 +1348,23 @@ export function deletePeriodic(id: number) {
   return fetchJSON<{ success: boolean }>(`/api/periodic?id=${id}`, { method: "DELETE" });
 }
 
-export type PensionConnection = { id: number; fundId: string; lastSyncAt: string | null; lastError: string | null; state: "idle" | "running" | "otp" | "done" | "error"; message?: string };
+export type PensionConnection = {
+  id: number;
+  fundId: string;
+  lastSyncAt: string | null;
+  lastError: string | null;
+  state: "idle" | "running" | "otp" | "done" | "error";
+  message?: string;
+};
 export function listPension() {
   return fetchJSON<{ connections: PensionConnection[] }>(`/api/pension`);
 }
 export function pensionAction(body: Record<string, unknown>) {
-  return fetchJSON<{ id?: number; started?: boolean; success?: boolean }>(`/api/pension`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return fetchJSON<{ id?: number; started?: boolean; success?: boolean }>(`/api/pension`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 }
 export function deletePension(id: number) {
   return fetchJSON<{ success: boolean }>(`/api/pension?id=${id}`, { method: "DELETE" });
@@ -1334,23 +1384,42 @@ export function listPensionReports() {
   return fetchJSON<{ reports: PensionReportRecord[] }>(`/api/pension/report`);
 }
 export function importPensionReport(report: unknown) {
-  return fetchJSON<{ products: number; created: number; updated: number; policies: number; policiesCreated: number; reportId: number }>(
-    `/api/pension/report`,
-    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(report) }
-  );
+  return fetchJSON<{
+    products: number;
+    created: number;
+    updated: number;
+    policies: number;
+    policiesCreated: number;
+    reportId: number;
+  }>(`/api/pension/report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(report),
+  });
 }
 
 export function getCashflowHealth() {
-  return fetchJSON<{ hasData: boolean; signs: import("./cashflow-health").CashflowSign[]; level: import("./cashflow-health").CashflowLevel; avgIncome: number; avgExpenses: number }>(`/api/cashflow-health`);
+  return fetchJSON<{
+    hasData: boolean;
+    signs: import("./cashflow-health").CashflowSign[];
+    level: import("./cashflow-health").CashflowLevel;
+    avgIncome: number;
+    avgExpenses: number;
+  }>(`/api/cashflow-health`);
 }
 
 export function getResilience() {
-  return fetchJSON<import("./resilience").Resilience & { ageOfMoney: number | null }>(`/api/resilience`);
+  return fetchJSON<import("./resilience").Resilience & { ageOfMoney: number | null }>(
+    `/api/resilience`,
+  );
 }
 
 export function getRecap(query: { month?: string; year?: number }) {
   const q = query.year ? `year=${query.year}` : query.month ? `month=${query.month}` : "";
-  return fetchJSON<{ mode: "month"; recap: import("./recap").MonthRecap } | { mode: "year"; recap: import("./recap").YearRecap }>(`/api/recap?${q}`);
+  return fetchJSON<
+    | { mode: "month"; recap: import("./recap").MonthRecap }
+    | { mode: "year"; recap: import("./recap").YearRecap }
+  >(`/api/recap?${q}`);
 }
 
 // ---- Tags, owners, cash wallet ----
@@ -1364,19 +1433,37 @@ export function setTransactionTags(id: number, tags: string[]) {
 }
 
 export function renameTag(from: string, to: string) {
-  return fetchJSON<{ changed: number }>(`/api/transactions/tags`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ from, to }) });
+  return fetchJSON<{ changed: number }>(`/api/transactions/tags`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ from, to }),
+  });
 }
 
 export function deleteTag(tag: string) {
-  return fetchJSON<{ removed: number }>(`/api/transactions/tags?tag=${encodeURIComponent(tag)}`, { method: "DELETE" });
+  return fetchJSON<{ removed: number }>(`/api/transactions/tags?tag=${encodeURIComponent(tag)}`, {
+    method: "DELETE",
+  });
 }
 
 export function getCurrencies() {
-  return fetchJSON<{ base: string; currencies: { currency: string; transactions: number; assets: number; rate: number | null; asOf: string | null; change30d: number | null }[] }>(`/api/currencies`);
+  return fetchJSON<{
+    base: string;
+    currencies: {
+      currency: string;
+      transactions: number;
+      assets: number;
+      rate: number | null;
+      asOf: string | null;
+      change30d: number | null;
+    }[];
+  }>(`/api/currencies`);
 }
 
 export function getMerchants() {
-  return fetchJSON<{ merchants: { merchant: string; count: number; total: number; last: string }[] }>(`/api/transactions/merchants`);
+  return fetchJSON<{
+    merchants: { merchant: string; count: number; total: number; last: string }[];
+  }>(`/api/transactions/merchants`);
 }
 
 export function setTransactionOwner(id: number, owner: string | null) {
@@ -1388,9 +1475,10 @@ export function setTransactionOwner(id: number, owner: string | null) {
 }
 
 export function getTagReport(tag?: string) {
-  return fetchJSON<{ tags: import("./tags").TagTotal[]; breakdown: { category: string | null; total: number }[] }>(
-    `/api/transactions/tags${tag ? `?tag=${encodeURIComponent(tag)}` : ""}`
-  );
+  return fetchJSON<{
+    tags: import("./tags").TagTotal[];
+    breakdown: { category: string | null; total: number }[];
+  }>(`/api/transactions/tags${tag ? `?tag=${encodeURIComponent(tag)}` : ""}`);
 }
 
 export function getOwners(from: string, to: string) {
@@ -1410,11 +1498,15 @@ export function setAccountOwner(accountNumber: string, owner: string | null) {
 }
 
 export function getBusinessReport(from: string, to: string) {
-  return fetchJSON<import("@/server/db/queries/business").BusinessReport>(`/api/business?from=${from}&to=${to}`);
+  return fetchJSON<import("@/server/db/queries/business").BusinessReport>(
+    `/api/business?from=${from}&to=${to}`,
+  );
 }
 
 export function getCashWallet() {
-  return fetchJSON<{ days: number; withdrawn: number; logged: number; balance: number }>(`/api/transactions/cash`);
+  return fetchJSON<{ days: number; withdrawn: number; logged: number; balance: number }>(
+    `/api/transactions/cash`,
+  );
 }
 
 export function logCashExpense(amount: number, description: string) {
@@ -1491,19 +1583,22 @@ export function importSheet(rows: SheetRowInput[], dryRun = false) {
 }
 
 export function undoSheetImport(importId: number) {
-  return fetchJSON<{ removed: number }>(`/api/import/sheet?import=${importId}`, { method: "DELETE" });
+  return fetchJSON<{ removed: number }>(`/api/import/sheet?import=${importId}`, {
+    method: "DELETE",
+  });
 }
 
 /** Category suggestions from merchant memory (never written by the server). */
-export function suggestSheetCategories(rows: { description: string; kind: "expense" | "income" }[]) {
-  return fetchJSON<{ suggestions: { index: number; categoryId: number; name: string; kind: "expense" | "income" }[] }>(
-    `/api/import/sheet/suggest`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rows }),
-    },
-  );
+export function suggestSheetCategories(
+  rows: { description: string; kind: "expense" | "income" }[],
+) {
+  return fetchJSON<{
+    suggestions: { index: number; categoryId: number; name: string; kind: "expense" | "income" }[];
+  }>(`/api/import/sheet/suggest`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rows }),
+  });
 }
 
 export function getLegacyNotes() {
@@ -1524,7 +1619,11 @@ export function getFolderImport() {
   return fetchJSON<FolderImportConfig>(`/api/import/folder`);
 }
 
-export function updateFolderImport(patch: { enabled?: boolean; dir?: string; account?: string; minutes?: number } | { action: "scan" | "open" }) {
+export function updateFolderImport(
+  patch:
+    | { enabled?: boolean; dir?: string; account?: string; minutes?: number }
+    | { action: "scan" | "open" },
+) {
   return fetchJSON<FolderImportConfig>(`/api/import/folder`, {
     method: "action" in patch ? "POST" : "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -1538,7 +1637,11 @@ export function getLegacyExport() {
   return fetchJSON<LegacyExportConfig>(`/api/legacy/export`);
 }
 
-export function updateLegacyExport(patch: { enabled?: boolean; frequency?: "weekly" | "monthly"; dir?: string }) {
+export function updateLegacyExport(patch: {
+  enabled?: boolean;
+  frequency?: "weekly" | "monthly";
+  dir?: string;
+}) {
   return fetchJSON<LegacyExportConfig>(`/api/legacy/export`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -1587,15 +1690,25 @@ export interface SettleCounterpart {
 }
 
 export function getSettle() {
-  return fetchJSON<{ me: string | null; counterparts: SettleCounterpart[] }>("/api/transactions/settle");
+  return fetchJSON<{ me: string | null; counterparts: SettleCounterpart[] }>(
+    "/api/transactions/settle",
+  );
 }
 
 export function setSplitRule(counterpart: string, rule: import("./settle").SplitRule) {
-  return fetchJSON<unknown>("/api/transactions/settle", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ counterpart, rule }) });
+  return fetchJSON<unknown>("/api/transactions/settle", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ counterpart, rule }),
+  });
 }
 
 export function addSettlement(counterpart: string, date: string, amount: number) {
-  return fetchJSON<{ id: number }>("/api/transactions/settle", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ counterpart, date, amount }) });
+  return fetchJSON<{ id: number }>("/api/transactions/settle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ counterpart, date, amount }),
+  });
 }
 
 export function undoSettlement(id: number) {
@@ -1606,7 +1719,13 @@ export function getChildReport(member: string, month: string) {
   return fetchJSON<{
     child: import("./household").HouseholdMember;
     summary: import("./kids").ChildSummary;
-    transactions: { id: number; date: string; amount: number; description: string; category: string | null }[];
+    transactions: {
+      id: number;
+      date: string;
+      amount: number;
+      description: string;
+      category: string | null;
+    }[];
   }>(`/api/transactions/kids?member=${encodeURIComponent(member)}&month=${month}`);
 }
 
@@ -1635,7 +1754,10 @@ export function addBudgetMove(month: string, move: import("./budget-moves").Budg
 }
 
 export function undoBudgetMove(month: string, index?: number) {
-  return fetchJSON<import("./budget-moves").BudgetMove[]>(`/api/budgets/moves?month=${month}${index == null ? "" : `&index=${index}`}`, { method: "DELETE" });
+  return fetchJSON<import("./budget-moves").BudgetMove[]>(
+    `/api/budgets/moves?month=${month}${index == null ? "" : `&index=${index}`}`,
+    { method: "DELETE" },
+  );
 }
 
 export function getIncomeSmoothing() {
@@ -1643,21 +1765,89 @@ export function getIncomeSmoothing() {
 }
 
 export function getOverdraft() {
-  return fetchJSON<import("./overdraft").OverdraftCost & { balance: number | null }>("/api/overdraft");
+  return fetchJSON<import("./overdraft").OverdraftCost & { balance: number | null }>(
+    "/api/overdraft",
+  );
 }
 
-export function editTransactions(input: { ids?: number[]; categoryId?: number; remember?: boolean; splits?: { categoryId: number; amount: number }[]; undo?: string }) {
-  return fetchJSON<{ success: boolean; undoToken: string | null }>("/api/transactions/edit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+export function editTransactions(input: {
+  ids?: number[];
+  categoryId?: number;
+  remember?: boolean;
+  splits?: { categoryId: number; amount: number }[];
+  undo?: string;
+}) {
+  return fetchJSON<{ success: boolean; undoToken: string | null }>("/api/transactions/edit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 }
 
-export function getControl(month?:string){return fetchJSON<import("./financial-control").ControlPayload>("/api/control"+(month?`?month=${encodeURIComponent(month)}`:""));}
-export function controlAction(body:Record<string,unknown>){return fetchJSON<{success?:boolean;matches?:import("./financial-control").GoalLink[];undoId?:number}>("/api/control",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});}
-export function getPreference(key:string,workspaceId:number|null=getActiveWorkspaceIdSync()){return fetchJSON<{value:unknown;revision:number}>(`/api/preferences?key=${encodeURIComponent(key)}`,{headers:{"x-workspace-id":workspaceId==null?"":String(workspaceId)}});}
-export function putPreference(key:string,value:unknown,revision:number,workspaceId:number|null=getActiveWorkspaceIdSync()){return fetchJSON<{revision:number}>("/api/preferences",{method:"PUT",headers:{"Content-Type":"application/json","x-workspace-id":workspaceId==null?"":String(workspaceId)},body:JSON.stringify({key,value,revision})});}
+export function getControl(month?: string) {
+  return fetchJSON<import("./financial-control").ControlPayload>(
+    "/api/control" + (month ? `?month=${encodeURIComponent(month)}` : ""),
+  );
+}
+export function controlAction(body: Record<string, unknown>) {
+  return fetchJSON<{
+    success?: boolean;
+    matches?: import("./financial-control").GoalLink[];
+    undoId?: number;
+  }>("/api/control", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+export function getPreference(
+  key: string,
+  workspaceId: number | null = getActiveWorkspaceIdSync(),
+) {
+  return fetchJSON<{ value: unknown; revision: number }>(
+    `/api/preferences?key=${encodeURIComponent(key)}`,
+    { headers: { "x-workspace-id": workspaceId == null ? "" : String(workspaceId) } },
+  );
+}
+export function putPreference(
+  key: string,
+  value: unknown,
+  revision: number,
+  workspaceId: number | null = getActiveWorkspaceIdSync(),
+) {
+  return fetchJSON<{ revision: number }>("/api/preferences", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "x-workspace-id": workspaceId == null ? "" : String(workspaceId),
+    },
+    body: JSON.stringify({ key, value, revision }),
+  });
+}
 
-export type AccessPayload={enabled:boolean;user:{id:number;name:string;username:string;isAdmin:boolean}|null;users:{id:number;name:string;username:string;isAdmin:number;disabled:number}[];members:{userId:number;workspaceId:number;role:"viewer"|"editor"}[];audit:{id:number;name:string;action:string;workspaceId:number|null;createdAt:string}[]};
-export function getAccess(){return fetchJSON<AccessPayload>("/api/access");}
-export function accessAction(body:Record<string,unknown>){return fetchJSON<{success?:boolean;id?:number}>("/api/access",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});}
+export type AccessPayload = {
+  enabled: boolean;
+  user: { id: number; name: string; username: string; isAdmin: boolean } | null;
+  users: { id: number; name: string; username: string; isAdmin: number; disabled: number }[];
+  members: { userId: number; workspaceId: number; role: "viewer" | "editor" }[];
+  audit: {
+    id: number;
+    name: string;
+    action: string;
+    workspaceId: number | null;
+    createdAt: string;
+  }[];
+};
+export function getAccess() {
+  return fetchJSON<AccessPayload>("/api/access");
+}
+export function accessAction(body: Record<string, unknown>) {
+  return fetchJSON<{ success?: boolean; id?: number }>("/api/access", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
 
 export function getInstalledAgents() {
   return fetchJSON<Record<"codex" | "gemini" | "opencode" | "kilo", boolean>>("/api/ai/agents");
@@ -1666,30 +1856,57 @@ export function getInstalledAgents() {
 // ---- Manual transactions (add / edit / delete) ----
 
 export type ManualTransactionInput = {
-  kind?: "expense" | "income"; amount?: number; date?: string; description?: string; categoryId?: number | null;
-  account?: string; memo?: string | null; tags?: string[]; owner?: string | null; excluded?: boolean;
+  kind?: "expense" | "income";
+  amount?: number;
+  date?: string;
+  description?: string;
+  categoryId?: number | null;
+  account?: string;
+  memo?: string | null;
+  tags?: string[];
+  owner?: string | null;
+  excluded?: boolean;
   businessSharePct?: number;
 };
-const jsonInit = (method: string, body?: unknown): RequestInit => ({ method, headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+const jsonInit = (method: string, body?: unknown): RequestInit => ({
+  method,
+  headers: { "Content-Type": "application/json" },
+  body: body === undefined ? undefined : JSON.stringify(body),
+});
 export function createManualTransaction(input: ManualTransactionInput) {
   return fetchJSON<{ id: number }>("/api/transactions/manual", jsonInit("POST", input));
 }
 export function updateTransactionFields(id: number, input: ManualTransactionInput) {
-  return fetchJSON<{ success: boolean }>(`/api/transactions/manual?id=${id}`, jsonInit("PATCH", input));
+  return fetchJSON<{ success: boolean }>(
+    `/api/transactions/manual?id=${id}`,
+    jsonInit("PATCH", input),
+  );
 }
 export function deleteManualTransaction(id: number) {
-  return fetchJSON<{ deleted: ManualTransactionInput }>(`/api/transactions/manual?id=${id}`, jsonInit("DELETE"));
+  return fetchJSON<{ deleted: ManualTransactionInput }>(
+    `/api/transactions/manual?id=${id}`,
+    jsonInit("DELETE"),
+  );
 }
 
 export type { ExpenseShare } from "./expense-shares";
-const jsonBody = (method: string, body: unknown): RequestInit => ({ method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+const jsonBody = (method: string, body: unknown): RequestInit => ({
+  method,
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
 
 export function getShares(transactionId?: number) {
-  return fetchJSON<{ shares: import("./expense-shares").ExpenseShare[] }>(transactionId != null ? `/api/transactions/${transactionId}/shares` : "/api/shares");
+  return fetchJSON<{ shares: import("./expense-shares").ExpenseShare[] }>(
+    transactionId != null ? `/api/transactions/${transactionId}/shares` : "/api/shares",
+  );
 }
 
 export function addShare(transactionId: number, person: string, amount: number) {
-  return fetchJSON<import("./expense-shares").ExpenseShare>(`/api/transactions/${transactionId}/shares`, jsonBody("POST", { person, amount }));
+  return fetchJSON<import("./expense-shares").ExpenseShare>(
+    `/api/transactions/${transactionId}/shares`,
+    jsonBody("POST", { person, amount }),
+  );
 }
 
 export function setShareSettled(id: number, settled: boolean) {
@@ -1708,8 +1925,16 @@ export function getCreditScores() {
   return fetchJSON<{ scores: import("./credit-score").CreditScore[] }>("/api/credit-scores");
 }
 
-export function addCreditScore(entry: { date: string; score: number; bureau: string; note?: string }) {
-  return fetchJSON<import("./credit-score").CreditScore>("/api/credit-scores", jsonBody("POST", entry));
+export function addCreditScore(entry: {
+  date: string;
+  score: number;
+  bureau: string;
+  note?: string;
+}) {
+  return fetchJSON<import("./credit-score").CreditScore>(
+    "/api/credit-scores",
+    jsonBody("POST", entry),
+  );
 }
 
 export function deleteCreditScore(id: number) {
@@ -1721,7 +1946,10 @@ export function getSavingsDone() {
 }
 
 export function setSavingDone(key: string, yearly: number, done: boolean) {
-  return fetchJSON<{ success: boolean }>("/api/savings-done", jsonBody("POST", { key, yearly, done }));
+  return fetchJSON<{ success: boolean }>(
+    "/api/savings-done",
+    jsonBody("POST", { key, yearly, done }),
+  );
 }
 
 export interface SpendChange {
@@ -1743,7 +1971,12 @@ export function getAutoBackup() {
   return fetchJSON<AutoBackupConfig>("/api/backup/auto");
 }
 
-export function updateAutoBackup(patch: { enabled?: boolean; frequency?: "daily" | "weekly"; dir?: string; passphrase?: string }) {
+export function updateAutoBackup(patch: {
+  enabled?: boolean;
+  frequency?: "daily" | "weekly";
+  dir?: string;
+  passphrase?: string;
+}) {
   return fetchJSON<AutoBackupConfig>("/api/backup/auto", jsonBody("PATCH", patch));
 }
 

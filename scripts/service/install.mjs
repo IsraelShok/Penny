@@ -1,15 +1,7 @@
 #!/usr/bin/env node
 import { assertRepoRoot, assertNotRoot, LOOPBACK_URL, URL_BASE } from "./paths.mjs";
 
-const COMMANDS = new Set([
-  "install",
-  "uninstall",
-  "start",
-  "stop",
-  "status",
-  "logs",
-  "open",
-]);
+const COMMANDS = new Set(["install", "uninstall", "start", "stop", "status", "logs", "open"]);
 
 function usage() {
   console.error(

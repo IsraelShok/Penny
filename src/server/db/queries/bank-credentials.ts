@@ -40,22 +40,17 @@ function normalizeLabel(label: string): string {
     throw new Error("Label is required");
   }
   if (trimmed.length > BANK_CREDENTIAL_LABEL_MAX_LENGTH) {
-    throw new Error(
-      `Label must be ${BANK_CREDENTIAL_LABEL_MAX_LENGTH} characters or fewer`
-    );
+    throw new Error(`Label must be ${BANK_CREDENTIAL_LABEL_MAX_LENGTH} characters or fewer`);
   }
   return trimmed;
 }
 
-export function defaultLabelForProvider(
-  workspaceId: number,
-  provider: string
-): string {
+export function defaultLabelForProvider(workspaceId: number, provider: string): string {
   const base = providerDisplayName(provider);
   const rows = getDb()
     .prepare(
       `SELECT label FROM bank_credentials
-       WHERE workspace_id = ? AND provider = ?`
+       WHERE workspace_id = ? AND provider = ?`,
     )
     .all(workspaceId, provider) as { label: string }[];
 
@@ -71,14 +66,14 @@ export function defaultLabelForProvider(
 
 export function getBankCredentialMeta(
   workspaceId: number,
-  credentialId: number
+  credentialId: number,
 ): BankCredentialMeta | null {
   const row = getDb()
     .prepare(
       `SELECT id, provider, label, created_at as createdAt, updated_at as updatedAt,
               requires_manual_two_factor
        FROM bank_credentials
-       WHERE workspace_id = ? AND id = ?`
+       WHERE workspace_id = ? AND id = ?`,
     )
     .get(workspaceId, credentialId) as ListRow | undefined;
 
@@ -107,15 +102,11 @@ export function saveBankCredentials(
   workspaceId: number,
   provider: string,
   credentials: Record<string, string>,
-  options: SaveOptions & { credentialId?: number; label?: string } = {}
+  options: SaveOptions & { credentialId?: number; label?: string } = {},
 ): number {
   const { encrypted, iv, authTag } = encrypt(JSON.stringify(credentials));
   const requiresFlag =
-    options.requiresManualTwoFactor === undefined
-      ? null
-      : options.requiresManualTwoFactor
-        ? 1
-        : 0;
+    options.requiresManualTwoFactor === undefined ? null : options.requiresManualTwoFactor ? 1 : 0;
 
   const db = getDb();
 
@@ -130,29 +121,21 @@ export function saveBankCredentials(
         `UPDATE bank_credentials SET
            credentials_encrypted = ?, iv = ?, auth_tag = ?, label = ?,
            updated_at = datetime('now')
-         WHERE workspace_id = ? AND id = ?`
+         WHERE workspace_id = ? AND id = ?`,
       ).run(encrypted, iv, authTag, label, workspaceId, options.credentialId);
     } else {
       db.prepare(
         `UPDATE bank_credentials SET
            credentials_encrypted = ?, iv = ?, auth_tag = ?, label = ?,
            requires_manual_two_factor = ?, updated_at = datetime('now')
-         WHERE workspace_id = ? AND id = ?`
-      ).run(
-        encrypted,
-        iv,
-        authTag,
-        label,
-        requiresFlag,
-        workspaceId,
-        options.credentialId
-      );
+         WHERE workspace_id = ? AND id = ?`,
+      ).run(encrypted, iv, authTag, label, requiresFlag, workspaceId, options.credentialId);
     }
     return options.credentialId;
   }
 
   const label = normalizeLabel(
-    options.label?.trim() || defaultLabelForProvider(workspaceId, provider)
+    options.label?.trim() || defaultLabelForProvider(workspaceId, provider),
   );
 
   if (requiresFlag === null) {
@@ -160,7 +143,7 @@ export function saveBankCredentials(
       .prepare(
         `INSERT INTO bank_credentials (
            workspace_id, provider, label, credentials_encrypted, iv, auth_tag, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+         ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
       )
       .run(workspaceId, provider, label, encrypted, iv, authTag);
     return Number(result.lastInsertRowid);
@@ -171,32 +154,23 @@ export function saveBankCredentials(
       `INSERT INTO bank_credentials (
          workspace_id, provider, label, credentials_encrypted, iv, auth_tag,
          requires_manual_two_factor, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
     )
-    .run(
-      workspaceId,
-      provider,
-      label,
-      encrypted,
-      iv,
-      authTag,
-      requiresFlag
-    );
+    .run(workspaceId, provider, label, encrypted, iv, authTag, requiresFlag);
   return Number(result.lastInsertRowid);
 }
 
 export function getBankCredentials(
   workspaceId: number,
-  credentialId: number
+  credentialId: number,
 ): Record<string, string> | null {
   const row = getDb()
     .prepare(
       `SELECT credentials_encrypted, iv, auth_tag
-       FROM bank_credentials WHERE workspace_id = ? AND id = ?`
+       FROM bank_credentials WHERE workspace_id = ? AND id = ?`,
     )
     .get(workspaceId, credentialId) as
-    | { credentials_encrypted: Buffer; iv: Buffer; auth_tag: Buffer }
-    | undefined;
+    { credentials_encrypted: Buffer; iv: Buffer; auth_tag: Buffer } | undefined;
 
   if (!row) return null;
 
@@ -209,30 +183,25 @@ export function getBankCredentials(
   return JSON.parse(json);
 }
 
-export function getRequiresManualTwoFactor(
-  workspaceId: number,
-  credentialId: number
-): boolean {
+export function getRequiresManualTwoFactor(workspaceId: number, credentialId: number): boolean {
   const row = getDb()
     .prepare(
       `SELECT requires_manual_two_factor FROM bank_credentials
-       WHERE workspace_id = ? AND id = ?`
+       WHERE workspace_id = ? AND id = ?`,
     )
-    .get(workspaceId, credentialId) as
-    | { requires_manual_two_factor: number }
-    | undefined;
+    .get(workspaceId, credentialId) as { requires_manual_two_factor: number } | undefined;
   return Boolean(row?.requires_manual_two_factor);
 }
 
 export function setRequiresManualTwoFactor(
   workspaceId: number,
   credentialId: number,
-  value: boolean
+  value: boolean,
 ): void {
   getDb()
     .prepare(
       `UPDATE bank_credentials SET requires_manual_two_factor = ?, updated_at = datetime('now')
-       WHERE workspace_id = ? AND id = ?`
+       WHERE workspace_id = ? AND id = ?`,
     )
     .run(value ? 1 : 0, workspaceId, credentialId);
 }
@@ -241,7 +210,7 @@ export function updateCredentialField(
   workspaceId: number,
   credentialId: number,
   key: string,
-  value: string | null
+  value: string | null,
 ): void {
   const meta = getBankCredentialMeta(workspaceId, credentialId);
   if (!meta) return;
@@ -263,10 +232,7 @@ export function hasBankCredentials(workspaceId: number): boolean {
   return row.count > 0;
 }
 
-export function deleteBankCredentials(
-  workspaceId: number,
-  credentialId: number
-): void {
+export function deleteBankCredentials(workspaceId: number, credentialId: number): void {
   getDb()
     .prepare("DELETE FROM bank_credentials WHERE workspace_id = ? AND id = ?")
     .run(workspaceId, credentialId);
@@ -277,7 +243,7 @@ export function listBankCredentials(workspaceId: number): BankCredentialMeta[] {
     .prepare(
       `SELECT id, provider, label, created_at as createdAt, updated_at as updatedAt,
               requires_manual_two_factor
-       FROM bank_credentials WHERE workspace_id = ? ORDER BY provider, label`
+       FROM bank_credentials WHERE workspace_id = ? ORDER BY provider, label`,
     )
     .all(workspaceId) as ListRow[];
 

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { amortizationSchedule, monthsFrom, refinanceCheck, referenceRate, weightedRate } from "@/lib/loans";
+import {
+  amortizationSchedule,
+  monthsFrom,
+  refinanceCheck,
+  referenceRate,
+  weightedRate,
+} from "@/lib/loans";
 
 describe("amortizationSchedule", () => {
   it("pays the loan to zero and principal sums to the balance", () => {
@@ -35,7 +41,13 @@ describe("loan summary helpers", () => {
     expect(monthsFrom("2026-11-21", 0)).toBe("2026-11");
   });
   it("weights rates by balance and skips loans without one", () => {
-    expect(weightedRate([{ balance: -300, rate: 2 }, { balance: 100, rate: 10 }, { balance: 50, rate: null }])).toBe(4);
+    expect(
+      weightedRate([
+        { balance: -300, rate: 2 },
+        { balance: 100, rate: 10 },
+        { balance: 50, rate: null },
+      ]),
+    ).toBe(4);
     expect(weightedRate([])).toBeNull();
   });
 });

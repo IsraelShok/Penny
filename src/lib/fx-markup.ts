@@ -28,7 +28,10 @@ export function rateOn(closes: { date: string; close: number }[], date: string):
 const MAX_RATIO = 1.15;
 
 export function fxMarkup(charges: FxCharge[], rates: DailyRates) {
-  let total = 0, charged = 0, fair = 0, count = 0;
+  let total = 0,
+    charged = 0,
+    fair = 0,
+    count = 0;
   for (const c of charges) {
     const rate = rateOn(rates[c.currency] ?? [], c.date);
     const f = Math.abs(c.original) * (rate ?? 0);

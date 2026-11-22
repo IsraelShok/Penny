@@ -3,20 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import {
-  Bar,
-  BarChart,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-} from "recharts";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IconButton } from "@/components/ui/icon-button";
 import { Badge } from "@/components/ui/badge";
@@ -94,12 +82,7 @@ interface BudgetDetailSheetProps {
   onClose: () => void;
 }
 
-export function BudgetDetailSheet({
-  categoryId,
-  from,
-  to,
-  onClose,
-}: BudgetDetailSheetProps) {
+export function BudgetDetailSheet({ categoryId, from, to, onClose }: BudgetDetailSheetProps) {
   const open = categoryId !== null;
 
   const detailQuery = useQuery({
@@ -115,10 +98,7 @@ export function BudgetDetailSheet({
         if (!o) onClose();
       }}
     >
-      <SheetContent
-        side="right"
-        className="w-full p-0 sm:max-w-xl! md:max-w-2xl! lg:max-w-[35vw]!"
-      >
+      <SheetContent side="right" className="w-full p-0 sm:max-w-xl! md:max-w-2xl! lg:max-w-[35vw]!">
         {detailQuery.isLoading || !detailQuery.data ? (
           <DetailSkeleton />
         ) : (
@@ -150,10 +130,10 @@ function DetailContent({ data }: { data: CategoryDetail }) {
   });
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["category-detail"] });
-    queryClient.invalidateQueries({ queryKey: ["summary"] });
-    queryClient.invalidateQueries({ queryKey: ["transactions"] });
-    queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
+    void queryClient.invalidateQueries({ queryKey: ["category-detail"] });
+    void queryClient.invalidateQueries({ queryKey: ["summary"] });
+    void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    void queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
   };
 
   const handleApprove = async (id: number) => {
@@ -166,10 +146,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
   };
 
   const handleToggleMode = async (checked: boolean) => {
-    await updateCategoryBudgetMode(
-      data.category.id,
-      checked ? "budgeted" : "tracking"
-    );
+    await updateCategoryBudgetMode(data.category.id, checked ? "budgeted" : "tracking");
     invalidate();
   };
 
@@ -190,7 +167,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
         amount: d.amount,
         date: d.date,
       })),
-    [data.dailySpend]
+    [data.dailySpend],
   );
 
   return (
@@ -200,16 +177,12 @@ function DetailContent({ data }: { data: CategoryDetail }) {
         style={{ background: tint(data.category.color, 0.22) }}
       >
         <div className="flex items-center gap-3">
-          <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-background/70"
-          >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-background/70">
             <Icon className="h-5 w-5" style={{ color: iconColor }} />
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-              {data.category.kind === "income"
-                ? tb("incomeCategory")
-                : tb("expenseCategory")}
+              {data.category.kind === "income" ? tb("incomeCategory") : tb("expenseCategory")}
             </div>
             <SheetTitle className="truncate font-semibold text-2xl">
               {data.category.name}
@@ -218,11 +191,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
           {data.category.kind !== "income" && (
             <label className="flex shrink-0 cursor-pointer items-center gap-2 text-xs text-muted-foreground">
               <span>{tb("budget")}</span>
-              <Switch
-                size="sm"
-                checked={!isTracking}
-                onCheckedChange={handleToggleMode}
-              />
+              <Switch size="sm" checked={!isTracking} onCheckedChange={handleToggleMode} />
             </label>
           )}
         </div>
@@ -336,10 +305,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
           <CardLabel>{tb("dailySpend")}</CardLabel>
           <div className="mt-2 h-32">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 8, right: 0, bottom: 4, left: 0 }}
-              >
+              <BarChart data={chartData} margin={{ top: 8, right: 0, bottom: 4, left: 0 }}>
                 <XAxis
                   dataKey="day"
                   tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
@@ -359,9 +325,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
                     };
                     return (
                       <div className="rounded-md border bg-popover px-2 py-1 text-xs shadow-md">
-                        <div className="font-medium">
-                          {formatDate(p.date)}
-                        </div>
+                        <div className="font-medium">{formatDate(p.date)}</div>
                         <div className="tabular-nums text-muted-foreground">
                           {formatCurrency(p.amount)}
                         </div>
@@ -391,7 +355,12 @@ function DetailContent({ data }: { data: CategoryDetail }) {
             <h3 className="text-sm font-medium">
               {tb("transactionsHeading", { count: data.transactionCount })}
             </h3>
-            <IconButton label={tc("add")} title={tb("manualEntryUnavailable")} size="icon-sm" disabled>
+            <IconButton
+              label={tc("add")}
+              title={tb("manualEntryUnavailable")}
+              size="icon-sm"
+              disabled
+            >
               <Plus className="size-3.5" aria-hidden />
             </IconButton>
           </div>
@@ -403,14 +372,9 @@ function DetailContent({ data }: { data: CategoryDetail }) {
             ) : (
               <ul className="divide-y">
                 {data.transactions.map((t) => (
-                  <li
-                    key={t.id}
-                    className="flex items-center justify-between gap-3 px-4 py-2.5"
-                  >
+                  <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
                     <div className="min-w-0 flex-1">
-                      <div className="break-words text-sm font-medium">
-                        {t.description}
-                      </div>
+                      <div className="break-words text-sm font-medium">{t.description}</div>
                       <div className="text-xs text-muted-foreground tabular-nums">
                         {formatDate(t.date)}
                       </div>
@@ -467,15 +431,9 @@ function ChildrenBreakdownSection({
   const tb = useTranslations("budgetDetail");
   const td = useTranslations("dashboard");
   const ts = useTranslations("settings.categories");
-  const banner =
-    budgetSource === "own"
-      ? tb("bannerOwn")
-      : tb("bannerRollup");
+  const banner = budgetSource === "own" ? tb("bannerOwn") : tb("bannerRollup");
   return (
-    <div
-      className="space-y-3 rounded-2xl p-4"
-      style={{ background: tint(color, 0.12) }}
-    >
+    <div className="space-y-3 rounded-2xl p-4" style={{ background: tint(color, 0.12) }}>
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-sm font-medium">
           {tb("subcategoriesHeading", { count: children.length })}
@@ -546,22 +504,14 @@ function NeedsReviewSection({
 }) {
   const tb = useTranslations("budgetDetail");
   return (
-    <div
-      className="space-y-2 rounded-2xl p-4"
-      style={{ background: tint(color, 0.12) }}
-    >
+    <div className="space-y-2 rounded-2xl p-4" style={{ background: tint(color, 0.12) }}>
       <div className="flex items-center gap-2">
-        <HelpCircle
-          className="h-4 w-4"
-          style={{ color: "var(--status-heads-up)" }}
-        />
+        <HelpCircle className="h-4 w-4" style={{ color: "var(--status-heads-up)" }} />
         <h3 className="text-sm font-medium">
           {tb("needsReviewHeading", { count: transactions.length })}
         </h3>
       </div>
-      <p className="text-xs text-muted-foreground">
-        {tb("needsReviewHint")}
-      </p>
+      <p className="text-xs text-muted-foreground">{tb("needsReviewHint")}</p>
       <ul className="mt-2 space-y-2">
         {transactions.map((t) => (
           <li
@@ -569,18 +519,14 @@ function NeedsReviewSection({
             className="flex items-center justify-between gap-3 rounded-xl bg-background/70 p-3"
           >
             <div className="min-w-0 flex-1">
-              <div className="break-words text-sm font-medium">
-                {t.description}
-              </div>
+              <div className="break-words text-sm font-medium">{t.description}</div>
               <div className="text-xs text-muted-foreground tabular-nums">
                 {formatDate(t.date)} · {formatCurrency(t.chargedAmount)}
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               <DropdownMenu>
-                <DropdownMenuTrigger
-                  className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-accent"
-                >
+                <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-accent">
                   <Badge
                     variant="outline"
                     className="border-none p-0"
@@ -594,10 +540,7 @@ function NeedsReviewSection({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {categories.map((cat) => (
-                    <DropdownMenuItem
-                      key={cat.id}
-                      onClick={() => onChange(t.id, cat.id)}
-                    >
+                    <DropdownMenuItem key={cat.id} onClick={() => onChange(t.id, cat.id)}>
                       <div
                         className="me-2 h-2 w-2 rounded-full"
                         style={{ backgroundColor: cat.color }}
@@ -607,7 +550,12 @@ function NeedsReviewSection({
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <IconButton label={tb("approve")} variant="default" size="icon-sm" onClick={() => onApprove(t.id)}>
+              <IconButton
+                label={tb("approve")}
+                variant="default"
+                size="icon-sm"
+                onClick={() => onApprove(t.id)}
+              >
                 <Check className="size-3.5" aria-hidden />
               </IconButton>
             </div>
@@ -618,15 +566,7 @@ function NeedsReviewSection({
   );
 }
 
-function Stat({
-  label,
-  value,
-  sublabel,
-}: {
-  label: string;
-  value: string;
-  sublabel?: string;
-}) {
+function Stat({ label, value, sublabel }: { label: string; value: string; sublabel?: string }) {
   return (
     <div>
       <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
@@ -634,9 +574,7 @@ function Stat({
       </div>
       <div className="mt-0.5 font-semibold text-xl tabular-nums">{value}</div>
       {sublabel && (
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">
-          {sublabel}
-        </div>
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">{sublabel}</div>
       )}
     </div>
   );
@@ -740,9 +678,7 @@ function BudgetStat({
         </button>
       )}
       {!editing && isAuto && amount > 0 && (
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">
-          {tb("auto")}
-        </div>
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">{tb("auto")}</div>
       )}
     </div>
   );
@@ -774,9 +710,8 @@ function shade(hex: string): string {
 function parseHex(hex: string): { r: number; g: number; b: number } {
   const clean = hex.replace("#", "");
   return {
-    r: parseInt(clean.slice(0, 2), 16),
-    g: parseInt(clean.slice(2, 4), 16),
-    b: parseInt(clean.slice(4, 6), 16),
+    r: Number.parseInt(clean.slice(0, 2), 16),
+    g: Number.parseInt(clean.slice(2, 4), 16),
+    b: Number.parseInt(clean.slice(4, 6), 16),
   };
 }
-

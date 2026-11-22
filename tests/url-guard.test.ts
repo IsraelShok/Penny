@@ -10,8 +10,16 @@ describe("normalizeOllamaUrl", () => {
   });
   it("rejects remote hosts, lookalikes, credentials and other schemes", () => {
     for (const u of [
-      "http://192.168.1.1", "http://10.0.0.5:11434", "http://localhost.evil.com", "http://127.0.0.1.evil.com",
-      "http://user:pw@127.0.0.1:11434", "ftp://localhost", "file:///etc/passwd", "javascript:alert(1)", "not a url", "",
+      "http://192.168.1.1",
+      "http://10.0.0.5:11434",
+      "http://localhost.evil.com",
+      "http://127.0.0.1.evil.com",
+      "http://user:pw@127.0.0.1:11434",
+      "ftp://localhost",
+      "file:///etc/passwd",
+      "javascript:alert(1)",
+      "not a url",
+      "",
     ]) {
       expect(normalizeOllamaUrl(u)).toBeNull();
     }
@@ -52,7 +60,12 @@ describe("OllamaProvider with a disallowed stored URL", () => {
     const spy = vi.spyOn(globalThis, "fetch");
     const { OllamaProvider } = await import("@/server/ai/providers/ollama");
     const p = new OllamaProvider("http://192.168.1.20:11434", "llama3.1");
-    await expect(p.categorize([{ description: "x", amount: -1, currency: "ILS" }], [{ name: "Food", description: null }])).rejects.toThrow(/PENNY_ALLOW_REMOTE_OLLAMA/);
+    await expect(
+      p.categorize(
+        [{ description: "x", amount: -1, currency: "ILS" }],
+        [{ name: "Food", description: null }],
+      ),
+    ).rejects.toThrow(/PENNY_ALLOW_REMOTE_OLLAMA/);
     expect(spy).not.toHaveBeenCalled();
   });
 });

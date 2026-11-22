@@ -33,7 +33,9 @@ describe("/api/import", () => {
     expect(body.needsReview).toBe(2);
 
     const stored = getDb()
-      .prepare("SELECT description, kind, needs_review AS review FROM transactions WHERE account_number = ? ORDER BY date")
+      .prepare(
+        "SELECT description, kind, needs_review AS review FROM transactions WHERE account_number = ? ORDER BY date",
+      )
       .all("ישראכרט 1234") as { description: string; kind: string; review: number }[];
     // A refund on a card statement must stay a (negative) expense, never income.
     expect(stored).toEqual([
@@ -46,13 +48,19 @@ describe("/api/import", () => {
     expect(duplicate.added).toBe(0);
     expect(duplicate.duplicates).toBe(2);
 
-    const undo = await DELETE(new Request(`http://127.0.0.1/api/import?batch=${body.batchId}`, { method: "DELETE" }));
+    const undo = await DELETE(
+      new Request(`http://127.0.0.1/api/import?batch=${body.batchId}`, { method: "DELETE" }),
+    );
     expect((await undo.json()).removed).toBe(2);
   });
 
   it("treats a positive bank row as income", async () => {
     const res = await POST(
-      req({ account: "בנק הפועלים 999", rows: [{ date: "2024-03-01", description: "משכורת", amount: 9000 }], source: "bank" }),
+      req({
+        account: "בנק הפועלים 999",
+        rows: [{ date: "2024-03-01", description: "משכורת", amount: 9000 }],
+        source: "bank",
+      }),
     );
     expect((await res.json()).added).toBe(1);
     const row = getDb()

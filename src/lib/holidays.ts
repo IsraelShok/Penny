@@ -5,8 +5,24 @@
 import type { PeriodicSuggestion } from "./periodic";
 
 // shortcut: Gregorian months of Pesach and Rosh Hashana through 2032, extend the table before then.
-const PESACH: Record<number, string> = { 2026: "04", 2027: "04", 2028: "04", 2029: "03", 2030: "04", 2031: "04", 2032: "04" };
-const ROSH_HASHANA: Record<number, string> = { 2026: "09", 2027: "10", 2028: "09", 2029: "09", 2030: "09", 2031: "09", 2032: "09" };
+const PESACH: Record<number, string> = {
+  2026: "04",
+  2027: "04",
+  2028: "04",
+  2029: "03",
+  2030: "04",
+  2031: "04",
+  2032: "04",
+};
+const ROSH_HASHANA: Record<number, string> = {
+  2026: "09",
+  2027: "10",
+  2028: "09",
+  2029: "09",
+  2030: "09",
+  2031: "09",
+  2032: "09",
+};
 
 export const HOLIDAYS = [
   { key: "holiday:pesach", name: "פסח", amount: 4500, months: PESACH },
@@ -34,7 +50,8 @@ export function holidaySuggestions(today: string, known: Set<string>): PeriodicS
   for (const h of HOLIDAYS) {
     if (known.has(h.key)) continue;
     const due = nextDue(h.months, today);
-    if (due) out.push({ name: h.name, amount: h.amount, everyMonths: 12, nextDue: due, autoKey: h.key });
+    if (due)
+      out.push({ name: h.name, amount: h.amount, everyMonths: 12, nextDue: due, autoKey: h.key });
   }
   return out;
 }

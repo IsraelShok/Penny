@@ -7,7 +7,9 @@ export default async function ControlPage() {
   return (
     <AppShell>
       <PageHeader title={t("control_title")} />
-      <div className="mx-auto w-full max-w-[1920px] px-4 py-6 md:px-8"><FinancialControl /></div>
+      <div className="mx-auto w-full max-w-[1920px] px-4 py-6 md:px-8">
+        <FinancialControl />
+      </div>
     </AppShell>
   );
 }

@@ -5,15 +5,8 @@ import { Download, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { buttonVariants } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import {
-  listOllamaModels,
-  pullOllamaModel,
-  type PullEvent,
-} from "@/lib/api";
-import {
-  RECOMMENDED_OLLAMA_MODELS,
-  type OllamaModelInfo,
-} from "@/lib/types";
+import { listOllamaModels, pullOllamaModel, type PullEvent } from "@/lib/api";
+import { RECOMMENDED_OLLAMA_MODELS, type OllamaModelInfo } from "@/lib/types";
 
 interface PullState {
   status: string;
@@ -39,7 +32,7 @@ export function OllamaModelStatus({ ollamaUrl, model }: OllamaModelStatusProps) 
   // Refresh installed-list whenever model or url changes, or a pull finishes.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    void (async () => {
       try {
         const { models, error } = await listOllamaModels(ollamaUrl);
         if (cancelled) return;
@@ -85,9 +78,7 @@ export function OllamaModelStatus({ ollamaUrl, model }: OllamaModelStatusProps) 
         });
       } else if (event.type === "complete") {
         setPullState(null);
-        setInstalled((prev) =>
-          prev && !prev.includes(model) ? [...prev, model] : prev
-        );
+        setInstalled((prev) => (prev && !prev.includes(model) ? [...prev, model] : prev));
       } else if (event.type === "error") {
         setPullError(event.data.message ?? tSetup("aiOllamaFailedDownload"));
         setPullState(null);
@@ -150,11 +141,7 @@ function ModelStatusInner({
           stroke="currentColor"
           strokeWidth={2.5}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M5 13l4 4L19 7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
         </svg>
         <span>
           {t.rich("installedReady", {
@@ -168,9 +155,7 @@ function ModelStatusInner({
 
   if (pullState) {
     const percent =
-      pullState.total > 0
-        ? Math.round((pullState.completed / pullState.total) * 100)
-        : 0;
+      pullState.total > 0 ? Math.round((pullState.completed / pullState.total) * 100) : 0;
     const downloaded = formatBytes(pullState.completed);
     const total = formatBytes(pullState.total);
     const speed = pullState.speed > 0 ? formatBytes(pullState.speed) + "/s" : "";
@@ -218,9 +203,7 @@ function ModelStatusInner({
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             <div className="text-sm font-medium">{t("notInstalledTitle")}</div>
-            <p className="text-xs text-muted-foreground">
-              {t("notInstalledDescription")}
-            </p>
+            <p className="text-xs text-muted-foreground">{t("notInstalledDescription")}</p>
           </div>
           <a
             href="https://ollama.com"
@@ -237,9 +220,7 @@ function ModelStatusInner({
           <li>{t("installStep2")}</li>
           <li>{t("installStep3")}</li>
         </ol>
-        <p className="text-xs text-destructive">
-          {t("unreachable")}
-        </p>
+        <p className="text-xs text-destructive">{t("unreachable")}</p>
       </div>
     );
   }

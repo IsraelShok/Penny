@@ -28,9 +28,13 @@ describe("backupData", () => {
   it("keeps only the newest five backups", async () => {
     const dir = makeDataDir();
     for (let i = 1; i <= 7; i++) await backupData(dir, `20261104-12000${i}`);
-    expect(fs.readdirSync(path.join(dir, "backups")).sort()).toEqual(
-      ["20261104-120003", "20261104-120004", "20261104-120005", "20261104-120006", "20261104-120007"]
-    );
+    expect(fs.readdirSync(path.join(dir, "backups")).sort()).toEqual([
+      "20261104-120003",
+      "20261104-120004",
+      "20261104-120005",
+      "20261104-120006",
+      "20261104-120007",
+    ]);
   });
 
   it("does nothing on a fresh install with no database yet", async () => {

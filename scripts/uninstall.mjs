@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Mirror of setup.mjs: tear down everything `npm run setup` installed.
 // The data/ directory and the repo itself are deliberately NOT touched:
-// uninstall is about removing the always-on service and the menubar, not
-// the user's transactions and encryption key.
+// uninstall is about removing the always-on service and older desktop-app
+// installs, not the user's transactions and encryption key.
 
 import { spawnSync } from "node:child_process";
+import { systemBin } from "./lib/system-bin.mjs";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -39,7 +40,7 @@ function uninstallService() {
 }
 
 export async function macUninstall(name = "Penny") {
-  step(`Quitting ${name} menubar (if running)`);
+  step(`Quitting ${name} desktop app (if running)`);
   tryRun("osascript", ["-e", `tell application "${name}" to quit`]);
   // Give the GUI app a moment to flush and exit before we remove its bundle.
   await new Promise((r) => setTimeout(r, 500));
@@ -56,11 +57,8 @@ export async function macUninstall(name = "Penny") {
 
   step("Removing Login Item");
   const r = spawnSync(
-    "osascript",
-    [
-      "-e",
-      `tell application "System Events" to delete (every login item whose name is "${name}")`,
-    ],
+    systemBin("osascript"),
+    ["-e", `tell application "System Events" to delete (every login item whose name is "${name}")`],
     { encoding: "utf-8" },
   );
   if (r.status === 0) {
@@ -71,7 +69,7 @@ export async function macUninstall(name = "Penny") {
 }
 
 export function windowsUninstall(name = "Penny") {
-  step(`Stopping ${name} menubar (if running)`);
+  step(`Stopping ${name} desktop app (if running)`);
   tryRun("taskkill", ["/IM", `${name}.exe`, "/F"]);
   done("done");
 
@@ -118,7 +116,7 @@ export function windowsUninstall(name = "Penny") {
 }
 
 function linuxUninstall() {
-  step("Linux: no menubar to remove (web-only platform)");
+  step("Linux: no desktop app to remove (web-only platform)");
 }
 
 async function main() {
@@ -144,7 +142,7 @@ async function main() {
 
   const dataDir = path.join(REPO_ROOT, "data");
   console.log("");
-  console.log("Penny is uninstalled. Service and menubar are gone.");
+  console.log("Penny is uninstalled. Service and old desktop installs are gone.");
   console.log("");
   console.log("Kept (intentionally):");
   console.log(`  ${dataDir}  (your transactions + encryption key)`);
@@ -153,7 +151,8 @@ async function main() {
   console.log("To wipe everything, delete those directories manually.");
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((err) => {
-  console.error(`\nuninstall: ${err instanceof Error ? err.message : String(err)}`);
-  process.exit(1);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
+  main().catch((err) => {
+    console.error(`\nuninstall: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  });

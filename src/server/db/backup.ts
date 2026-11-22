@@ -23,7 +23,7 @@ export function backupBeforeMigration(db: Database.Database, reason: string): st
   // A first run has only the migration bookkeeping table, so there is nothing worth copying yet.
   const userTables = db
     .prepare(
-      "SELECT COUNT(*) as n FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != '_migrations'"
+      "SELECT COUNT(*) as n FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != '_migrations'",
     )
     .get() as { n: number };
   if (userTables.n === 0) return null;

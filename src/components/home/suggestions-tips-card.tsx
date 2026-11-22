@@ -14,7 +14,12 @@ export function SuggestionsTipsCard() {
   const t = useTranslations("suggestions");
   const { data } = useQuery({ queryKey: ["suggestions"], queryFn: getSuggestions });
   const [tab, setTab] = useState<"suggestions" | "tip">("suggestions");
-  if (!data?.suggestions.length) return <div className="mb-6 md:mb-8"><DailyTip /></div>;
+  if (!data?.suggestions.length)
+    return (
+      <div className="mb-6 md:mb-8">
+        <DailyTip />
+      </div>
+    );
   return (
     <CardShell className="mb-6 h-auto md:mb-8">
       <div className="mb-4 flex min-h-11 items-center justify-between gap-2">
@@ -23,11 +28,18 @@ export function SuggestionsTipsCard() {
           label={t("tabsLabel")}
           value={tab}
           onChange={setTab}
-          options={[{ value: "suggestions", label: t("title") }, { value: "tip", label: t("tipTab") }]}
+          options={[
+            { value: "suggestions", label: t("title") },
+            { value: "tip", label: t("tipTab") },
+          ]}
         />
         {tab === "suggestions" && <NotifyToggle />}
       </div>
-      {tab === "suggestions" ? <SuggestionsCard bare limit={3} href="/more#suggestions" /> : <DailyTip bare />}
+      {tab === "suggestions" ? (
+        <SuggestionsCard bare limit={3} href="/more#suggestions" />
+      ) : (
+        <DailyTip bare />
+      )}
     </CardShell>
   );
 }

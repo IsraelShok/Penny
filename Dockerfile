@@ -10,9 +10,7 @@ ENV NEXT_TELEMETRY_DISABLED=1 \
 FROM base AS build
 COPY package.json package-lock.json ./
 # No dependency install scripts: better-sqlite3 and sharp ship prebuilt binaries, and Chromium comes from Debian.
-# The one script that matters, the scraper fork's playwright patch, is run explicitly.
-RUN npm ci --ignore-scripts --no-audit --no-fund \
- && node node_modules/@sergienko4/israeli-bank-scrapers/scripts/patch-playwright-core.mjs
+RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY . .
 # Tests run as part of the build: if they fail, no image is produced and the running version stays.
 RUN npm test

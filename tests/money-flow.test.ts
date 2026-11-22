@@ -5,7 +5,15 @@ const sum = (links: { value: number }[]) => links.reduce((s, l) => s + l.value, 
 
 describe("moneyFlow", () => {
   it("splits income into expenses and savings, and expenses into top categories plus other", () => {
-    const f = moneyFlow(1000, [{ name: "a", spent: 300, color: "#1" }, { name: "b", spent: 200, color: "#2" }, { name: "c", spent: 100, color: "#3" }], 2)!;
+    const f = moneyFlow(
+      1000,
+      [
+        { name: "a", spent: 300, color: "#1" },
+        { name: "b", spent: 200, color: "#2" },
+        { name: "c", spent: 100, color: "#3" },
+      ],
+      2,
+    )!;
     expect(f.nodes.map((n) => n.name)).toEqual(["income", "expenses", "saved", "a", "b", "other"]);
     const into = (i: number) => sum(f.links.filter((l) => l.target === i));
     const out = (i: number) => sum(f.links.filter((l) => l.source === i));

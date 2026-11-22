@@ -81,10 +81,12 @@ export function toCsv(rows: (string | number | null | undefined)[][]): string {
     .map((row) =>
       row
         .map((cell) => {
-          const text = cell == null ? "" : String(cell);
+          const raw = cell == null ? "" : String(cell);
+          // Text starting with = + - @ runs as a formula in Excel; plain numbers like -84.90 stay as they are.
+          const text = /^[=+\-@\t\r]/.test(raw) && !/^[+-]?\d[\d.,]*$/.test(raw) ? `'${raw}` : raw;
           return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
         })
-        .join(",")
+        .join(","),
     )
     .join("\r\n");
 }
@@ -105,10 +107,7 @@ export function parseAmount(s: string | undefined): number | null {
   const lastDot = t.lastIndexOf(".");
   if (lastComma >= 0 && lastDot >= 0) {
     // The rightmost separator is the decimal one; the other groups thousands.
-    t =
-      lastComma > lastDot
-        ? t.replace(/\./g, "").replace(",", ".")
-        : t.replace(/,/g, "");
+    t = lastComma > lastDot ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, "");
   } else if (lastComma >= 0) {
     const parts = t.split(",");
     const decimals = parts[parts.length - 1].length;

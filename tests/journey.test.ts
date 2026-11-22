@@ -3,7 +3,14 @@ import { detectMilestones, sortNewestFirst } from "@/lib/milestones";
 import { homeTeasers } from "@/lib/home-layout";
 import { EMPTY_HOUSEHOLD, shouldShowWelcome, type Household } from "@/lib/household";
 
-const base = { history: [], liabilities: [], goals: [], months: [], cashReserve: 0, monthlyExpenses: 0 };
+const base = {
+  history: [],
+  liabilities: [],
+  goals: [],
+  months: [],
+  cashReserve: 0,
+  monthlyExpenses: 0,
+};
 
 describe("detectMilestones", () => {
   it("finds net-worth crossings, not starting points", () => {
@@ -22,14 +29,22 @@ describe("detectMilestones", () => {
   });
 
   it("skips a step the household started above", () => {
-    expect(detectMilestones({ ...base, history: [{ date: "2025-01-01", netWorth: 20_000 }] })).toEqual([]);
+    expect(
+      detectMilestones({ ...base, history: [{ date: "2025-01-01", netWorth: 20_000 }] }),
+    ).toEqual([]);
   });
 
   it("finds paid debts, reached goals, first 20% month and emergency fund", () => {
     const m = detectMilestones({
       ...base,
-      liabilities: [{ name: "Car loan", value: 0, updatedAt: "2025-05-03T10:00:00Z" }, { name: "Mortgage", value: 900_000 }],
-      goals: [{ name: "Trip", targetAmount: 5000, savedAmount: 5000 }, { name: "Car", targetAmount: 5000, savedAmount: 10 }],
+      liabilities: [
+        { name: "Car loan", value: 0, updatedAt: "2025-05-03T10:00:00Z" },
+        { name: "Mortgage", value: 900_000 },
+      ],
+      goals: [
+        { name: "Trip", targetAmount: 5000, savedAmount: 5000 },
+        { name: "Car", targetAmount: 5000, savedAmount: 10 },
+      ],
       months: [
         { month: "2025-04", income: 10_000, kept: 2500 },
         { month: "2025-02", income: 10_000, kept: 1000 },
@@ -47,11 +62,9 @@ describe("detectMilestones", () => {
   });
 
   it("sorts newest first with undated on top", () => {
-    expect(sortNewestFirst([{ date: "2024-01-01" }, { date: null }, { date: "2025-01-01" }])).toEqual([
-      { date: null },
-      { date: "2025-01-01" },
-      { date: "2024-01-01" },
-    ]);
+    expect(
+      sortNewestFirst([{ date: "2024-01-01" }, { date: null }, { date: "2025-01-01" }]),
+    ).toEqual([{ date: null }, { date: "2025-01-01" }, { date: "2024-01-01" }]);
   });
 });
 
@@ -68,8 +81,13 @@ describe("homeTeasers", () => {
     expect(homeTeasers(h({ incomeShape: "mixed" }), all)).toEqual(["taxSetAside"]);
   });
   it("hides a teaser without data and caps at two", () => {
-    expect(homeTeasers(h({ members: [kid, partner] }), { childSpend: false, settleUp: true })).toEqual(["settleUp"]);
-    expect(homeTeasers(h({ incomeShape: "freelancer", members: [kid, partner] }), all)).toEqual(["taxSetAside", "childSpend"]);
+    expect(
+      homeTeasers(h({ members: [kid, partner] }), { childSpend: false, settleUp: true }),
+    ).toEqual(["settleUp"]);
+    expect(homeTeasers(h({ incomeShape: "freelancer", members: [kid, partner] }), all)).toEqual([
+      "taxSetAside",
+      "childSpend",
+    ]);
   });
   it("joint money needs no settle-up; pension gets no salary items", () => {
     expect(homeTeasers(h({ members: [partner], moneyStyle: "joint" }), all)).toEqual([]);

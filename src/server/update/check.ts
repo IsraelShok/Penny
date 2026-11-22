@@ -20,7 +20,8 @@ export function parseVersion(v: string): number[] | null {
 }
 
 export function isNewer(latest: string, current: string): boolean {
-  const a = parseVersion(latest), b = parseVersion(current);
+  const a = parseVersion(latest),
+    b = parseVersion(current);
   if (!a || !b) return false;
   for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] > b[i];
   return false;
@@ -30,19 +31,38 @@ export function isNewer(latest: string, current: string): boolean {
  * Compares the running version with the newest GitHub release of the repo.
  * Only reads public release metadata; nothing about the user is sent. Returns null when up to date or unknown.
  */
-export async function checkForUpdate(opts: { repo: string; current: string; fetchFn?: typeof fetch }): Promise<UpdateInfo | null> {
+export async function checkForUpdate(opts: {
+  repo: string;
+  current: string;
+  fetchFn?: typeof fetch;
+}): Promise<UpdateInfo | null> {
   const [owner, name, ...rest] = opts.repo.split("/");
-  if (rest.length || !owner || !name || !OWNER.test(owner) || !NAME.test(name) || !parseVersion(opts.current)) return null;
+  if (
+    rest.length ||
+    !owner ||
+    !name ||
+    !OWNER.test(owner) ||
+    !NAME.test(name) ||
+    !parseVersion(opts.current)
+  )
+    return null;
   try {
-    const res = await (opts.fetchFn ?? fetch)(`https://api.github.com/repos/${owner}/${name}/releases/latest`, {
-      headers: { Accept: "application/vnd.github+json" },
-      signal: AbortSignal.timeout(10_000),
-    });
+    const res = await (opts.fetchFn ?? fetch)(
+      `https://api.github.com/repos/${owner}/${name}/releases/latest`,
+      {
+        headers: { Accept: "application/vnd.github+json" },
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
     if (!res.ok) return null;
     const tag = ((await res.json()) as { tag_name?: string }).tag_name ?? "";
     if (!isNewer(tag, opts.current)) return null;
     const latest = tag.replace(/^v/, "");
-    return { current: opts.current, latest, url: `https://github.com/${owner}/${name}/releases/tag/${encodeURIComponent(tag)}` };
+    return {
+      current: opts.current,
+      latest,
+      url: `https://github.com/${owner}/${name}/releases/tag/${encodeURIComponent(tag)}`,
+    };
   } catch {
     return null;
   }
@@ -54,16 +74,21 @@ export function createUpdateNotifier(send: (text: string) => Promise<void>, howT
   return async (info: UpdateInfo) => {
     if (info.latest === notified) return;
     notified = info.latest;
-    await send(`A new version of Penny is available (${info.current} -> ${info.latest}).\nWhat's new: ${info.url}\n${howTo}`);
+    await send(
+      `A new version of Penny is available (${info.current} -> ${info.latest}).\nWhat's new: ${info.url}\n${howTo}`,
+    );
   };
 }
 
 /** How this copy was installed, set by the desktop shell and the Docker image. */
 export type InstallKind = "desktop" | "docker" | "source";
-export const installKind = (v: string | undefined): InstallKind => (v === "desktop" || v === "docker" ? v : "source");
+export const installKind = (v: string | undefined): InstallKind =>
+  v === "desktop" || v === "docker" ? v : "source";
 
 export const HOW_TO_UPDATE: Record<InstallKind, string> = {
-  desktop: "On Windows, Penny downloads the update itself and asks to restart. On Mac, download the new .dmg from the release page and open it. Your data stays.",
-  docker: "To update, run Penny-update.bat (Windows) or ./Penny-update.sh (Mac, Linux). It backs up your data first and keeps the current version if the new one fails its tests.",
+  desktop:
+    "On Windows, Penny downloads the update itself and asks to restart. On Mac, download the new .dmg from the release page and open it. Your data stays.",
+  docker:
+    "To update, run Penny-update.bat (Windows) or ./Penny-update.sh (Mac, Linux). It backs up your data first and keeps the current version if the new one fails its tests.",
   source: "To update, run git pull and restart Penny.",
 };

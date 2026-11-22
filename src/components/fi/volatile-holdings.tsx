@@ -25,14 +25,25 @@ export function VolatileHoldings() {
   const [editing, setEditing] = useState<Asset | "new" | null>(null);
   const list = (data?.assets ?? []).filter(isVolatile);
   const total = list.reduce((s, a) => s + (a.valueIls ?? 0), 0);
-  const date = (d: string) => new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(d));
-  const signed = (n: number) => <span dir="ltr" className={n >= 0 ? "text-status-on-track" : "text-destructive"}>{n >= 0 ? "+" : ""}{shekels(n, locale)}</span>;
+  const date = (d: string) =>
+    new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(d));
+  const signed = (n: number) => (
+    <span dir="ltr" className={n >= 0 ? "text-status-on-track" : "text-destructive"}>
+      {n >= 0 ? "+" : ""}
+      {shekels(n, locale)}
+    </span>
+  );
 
   return (
     <CardShell
       label={t("title")}
       className="lg:col-span-3"
-      action={<Button size="sm" variant="outline" onClick={() => setEditing("new")}><Plus className="size-4" aria-hidden />{t("add")}</Button>}
+      action={
+        <Button size="sm" variant="outline" onClick={() => setEditing("new")}>
+          <Plus className="size-4" aria-hidden />
+          {t("add")}
+        </Button>
+      }
     >
       {isLoading ? (
         <Skeleton className="h-24" />
@@ -44,7 +55,9 @@ export function VolatileHoldings() {
         <>
           <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <p className="figure text-3xl">{shekels(total, locale)}</p>
-            <span className="rounded-full bg-status-heads-up/15 px-2 py-0.5 text-caption font-medium text-status-heads-up">{t("volatile")}</span>
+            <span className="rounded-full bg-status-heads-up/15 px-2 py-0.5 text-caption font-medium text-status-heads-up">
+              {t("volatile")}
+            </span>
           </div>
           <p className="mb-3 text-caption text-pretty text-muted-foreground">{t("note")}</p>
           <ul className="row-grid">
@@ -52,25 +65,55 @@ export function VolatileHoldings() {
               const c = a.change;
               return (
                 <li key={a.id}>
-                  <button type="button" onClick={() => setEditing(a)} className="flex min-h-11 w-full items-start justify-between gap-3 py-2.5 text-start">
+                  <button
+                    type="button"
+                    onClick={() => setEditing(a)}
+                    className="flex min-h-11 w-full items-start justify-between gap-3 py-2.5 text-start"
+                  >
                     <span className="min-w-0">
                       <span className="block truncate font-medium">{a.name}</span>
                       <span className="block text-caption text-muted-foreground">
                         {ti(`type_${a.type}`)}
-                        {a.symbol && <> · <span dir="ltr">{a.quantity} × {a.symbol}</span></>}
+                        {a.symbol && (
+                          <>
+                            {" "}
+                            ·{" "}
+                            <span dir="ltr">
+                              {a.quantity} × {a.symbol}
+                            </span>
+                          </>
+                        )}
                         {" · "}
                         {a.quote
-                          ? t(a.quote.stale ? "priceStale" : "priceLive", { date: date(a.quote.asOf) })
+                          ? t(a.quote.stale ? "priceStale" : "priceLive", {
+                              date: date(a.quote.asOf),
+                            })
                           : t("manual", { date: c?.since ? date(c.since) : t("today") })}
                       </span>
                     </span>
                     <span className="shrink-0 text-end">
-                      <span className="block font-medium tabular-nums">{a.valueIls == null ? "—" : shekels(a.valueIls, locale)}</span>
+                      <span className="block font-medium tabular-nums">
+                        {a.valueIls == null ? "—" : shekels(a.valueIls, locale)}
+                      </span>
                       <span className="block text-caption tabular-nums">
                         {c?.changeIls != null && c.changePct != null && (
-                          <span title={t("sinceLast")}>{signed(c.changeIls)} <span dir="ltr" className={cn(c.changePct >= 0 ? "text-status-on-track" : "text-destructive")}>{pct(c.changePct)}</span></span>
+                          <span title={t("sinceLast")}>
+                            {signed(c.changeIls)}{" "}
+                            <span
+                              dir="ltr"
+                              className={cn(
+                                c.changePct >= 0 ? "text-status-on-track" : "text-destructive",
+                              )}
+                            >
+                              {pct(c.changePct)}
+                            </span>
+                          </span>
                         )}
-                        {a.gainIls != null && <span className="ms-2 text-muted-foreground">{t("sinceBuy")} {signed(a.gainIls)}</span>}
+                        {a.gainIls != null && (
+                          <span className="ms-2 text-muted-foreground">
+                            {t("sinceBuy")} {signed(a.gainIls)}
+                          </span>
+                        )}
                       </span>
                     </span>
                   </button>
@@ -80,7 +123,13 @@ export function VolatileHoldings() {
           </ul>
         </>
       )}
-      {editing && <AssetDialog asset={editing} preset={editing === "new" ? { type: "stock" } : undefined} onClose={() => setEditing(null)} />}
+      {editing && (
+        <AssetDialog
+          asset={editing}
+          preset={editing === "new" ? { type: "stock" } : undefined}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </CardShell>
   );
 }

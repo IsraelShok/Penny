@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { ownerScopeFromParam } from "@/server/lib/account-owners";
 
-import {
-  queryTransactions,
-  type TransactionKindFilter,
-} from "@/server/db/queries/transactions";
+import { queryTransactions, type TransactionKindFilter } from "@/server/db/queries/transactions";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 function parseKind(raw: string | null): TransactionKindFilter | undefined {
@@ -41,9 +38,7 @@ export async function GET(request: Request) {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
     search: searchParams.get("search") ?? undefined,
-    category: searchParams.has("category")
-      ? intParam(searchParams.get("category"))
-      : undefined,
+    category: searchParams.has("category") ? intParam(searchParams.get("category")) : undefined,
     categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
     sort: searchParams.get("sort") ?? undefined,
     order: (searchParams.get("order") as "asc" | "desc") ?? undefined,

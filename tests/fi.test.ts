@@ -25,8 +25,15 @@ describe("yearsToTarget", () => {
 describe("carCost", () => {
   it("matches HaExolidit's car example", () => {
     const c = carCost({
-      purchasePrice: 36_900, currentValue: 34_000, kmDriven: 41_220, kmPerYear: 11_206, kmPerLiter: 12.7,
-      fuelPrice: 6.82, annualTest: 1_374, annualInsurance: 2_000, annualMaintenance: 1_960,
+      purchasePrice: 36_900,
+      currentValue: 34_000,
+      kmDriven: 41_220,
+      kmPerYear: 11_206,
+      kmPerLiter: 12.7,
+      fuelPrice: 6.82,
+      annualTest: 1_374,
+      annualInsurance: 2_000,
+      annualMaintenance: 1_960,
     })!;
     expect(c.years).toBeCloseTo(3.68, 2);
     expect(c.perYear).toBeCloseTo(12_140.1, 0);

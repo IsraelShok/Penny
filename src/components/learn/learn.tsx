@@ -28,20 +28,34 @@ export function LearnHub() {
   const shown = ARTICLES.filter(
     (a) =>
       (topic === "all" || a.topic === topic) &&
-      (!query || `${pick(a.title, locale)} ${pick(a.summary, locale)}`.toLowerCase().includes(query))
+      (!query ||
+        `${pick(a.title, locale)} ${pick(a.summary, locale)}`.toLowerCase().includes(query)),
   );
 
   return (
     <div className="space-y-6">
       <div className="relative">
-        <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-        <Input type="search" aria-label={t("search")} placeholder={t("search")} value={q} onChange={(e) => setQ(e.target.value)} className="h-11 ps-9" />
+        <Search
+          className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
+        <Input
+          type="search"
+          aria-label={t("search")}
+          placeholder={t("search")}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="h-11 ps-9"
+        />
       </div>
       <Segmented
         label={t("topic")}
         value={topic}
         onChange={setTopic}
-        options={[{ value: "all" as const, label: t("all") }, ...TOPICS.map((tp) => ({ value: tp, label: pick(TOPIC_LABEL[tp], locale) }))]}
+        options={[
+          { value: "all" as const, label: t("all") },
+          ...TOPICS.map((tp) => ({ value: tp, label: pick(TOPIC_LABEL[tp], locale) })),
+        ]}
       />
       {shown.length === 0 ? (
         <p className="py-10 text-center text-muted-foreground">{t("empty")}</p>
@@ -63,14 +77,26 @@ function ArticleCard({ a }: { a: Article }) {
   const t = useTranslations("learn");
   const locale = useLocale();
   return (
-    <Link href={`/learn/${a.slug}`} className="flex h-full gap-4 rounded-2xl bg-card p-5 transition-[background-color] duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-      <span className={`grid size-11 shrink-0 place-items-center rounded-xl text-white ${TOPIC_TINT[a.topic]}`} aria-hidden>
+    <Link
+      href={`/learn/${a.slug}`}
+      className="flex h-full gap-4 rounded-2xl bg-card p-5 transition-[background-color] duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      <span
+        className={`grid size-11 shrink-0 place-items-center rounded-xl text-white ${TOPIC_TINT[a.topic]}`}
+        aria-hidden
+      >
         <BookOpen className="size-5" />
       </span>
       <span className="min-w-0">
-        <span className="block text-footnote font-medium text-muted-foreground">{pick(TOPIC_LABEL[a.topic], locale)} · {t("minutes", { n: a.minutes })}</span>
-        <span className="mt-0.5 block text-headline font-semibold text-pretty">{pick(a.title, locale)}</span>
-        <span className="mt-1 block text-sm text-pretty text-muted-foreground">{pick(a.summary, locale)}</span>
+        <span className="block text-footnote font-medium text-muted-foreground">
+          {pick(TOPIC_LABEL[a.topic], locale)} · {t("minutes", { n: a.minutes })}
+        </span>
+        <span className="mt-0.5 block text-headline font-semibold text-pretty">
+          {pick(a.title, locale)}
+        </span>
+        <span className="mt-1 block text-sm text-pretty text-muted-foreground">
+          {pick(a.summary, locale)}
+        </span>
       </span>
     </Link>
   );
@@ -79,7 +105,9 @@ function ArticleCard({ a }: { a: Article }) {
 export function ArticleView({ a }: { a: Article }) {
   const t = useTranslations("learn");
   const locale = useLocale();
-  const related = ARTICLES.filter((x) => x.slug !== a.slug && x.topic === a.topic).concat(ARTICLES.filter((x) => x.topic !== a.topic)).slice(0, 2);
+  const related = ARTICLES.filter((x) => x.slug !== a.slug && x.topic === a.topic)
+    .concat(ARTICLES.filter((x) => x.topic !== a.topic))
+    .slice(0, 2);
   return (
     <article className="space-y-6">
       <header className="space-y-2">
@@ -97,17 +125,24 @@ export function ArticleView({ a }: { a: Article }) {
           <section key={s.heading.en} className="space-y-3">
             <h2 className="text-title font-semibold">{pick(s.heading, locale)}</h2>
             {s.body.map((p) => (
-              <p key={p.en} className="max-w-prose leading-relaxed text-pretty">{pick(p, locale)}</p>
+              <p key={p.en} className="max-w-prose leading-relaxed text-pretty">
+                {pick(p, locale)}
+              </p>
             ))}
           </section>
         ))}
       </div>
 
       <aside className="rounded-2xl bg-emerald-500/10 p-5" aria-label={t("takeaway")}>
-        <p className="text-footnote font-semibold text-emerald-700 dark:text-emerald-300">{t("takeaway")}</p>
+        <p className="text-footnote font-semibold text-emerald-700 dark:text-emerald-300">
+          {t("takeaway")}
+        </p>
         <p className="mt-1 font-medium text-pretty">{pick(a.takeaway, locale)}</p>
         {a.calculator && (
-          <Link href={a.calculator.href} className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+          <Link
+            href={a.calculator.href}
+            className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
             <Calculator className="size-4" aria-hidden />
             {pick(a.calculator.label, locale)}
           </Link>
@@ -115,11 +150,20 @@ export function ArticleView({ a }: { a: Article }) {
       </aside>
 
       <section aria-labelledby="learn-related" className="space-y-3">
-        <h2 id="learn-related" className="text-footnote font-semibold text-muted-foreground">{t("related")}</h2>
+        <h2 id="learn-related" className="text-footnote font-semibold text-muted-foreground">
+          {t("related")}
+        </h2>
         <ul className="grid gap-3 sm:grid-cols-2">
-          {related.map((r) => <li key={r.slug}><ArticleCard a={r} /></li>)}
+          {related.map((r) => (
+            <li key={r.slug}>
+              <ArticleCard a={r} />
+            </li>
+          ))}
         </ul>
-        <Link href="/learn" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary hover:underline">
+        <Link
+          href="/learn"
+          className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary hover:underline"
+        >
           {t("all")} <Forward />
         </Link>
       </section>

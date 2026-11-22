@@ -19,10 +19,7 @@ export async function PUT(request: Request) {
   };
 
   if (!Number.isSafeInteger(body.categoryId) || body.categoryId <= 0) {
-    return NextResponse.json(
-      { error: "categoryId is required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "categoryId is required" }, { status: 400 });
   }
 
   if (body.amount == null) {
@@ -35,10 +32,7 @@ export async function PUT(request: Request) {
   }
 
   if (typeof body.amount !== "number" || !Number.isFinite(body.amount) || body.amount < 0) {
-    return NextResponse.json(
-      { error: "amount must be non-negative" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "amount must be non-negative" }, { status: 400 });
   }
 
   // Writes this period's line and the default later periods inherit, so history stays intact.

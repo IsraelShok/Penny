@@ -9,7 +9,7 @@ export function listRules(workspaceId: number): Rule[] {
   return getDb()
     .prepare(
       `SELECT id, field, op, value, category_id as categoryId, kind
-       FROM rules WHERE workspace_id = ? ORDER BY id`
+       FROM rules WHERE workspace_id = ? ORDER BY id`,
     )
     .all(workspaceId)
     .map((r) => {
@@ -28,7 +28,10 @@ export function validateRule(workspaceId: number, rule: NewRule): void {
   if (!OPS_BY_FIELD[rule.field]?.includes(rule.op)) {
     throw new Error(`The ${rule.op} operator cannot be used on ${rule.field}`);
   }
-  if (rule.field === "amount" && !(Number.isFinite(Number(rule.value)) && Number(rule.value) >= 0)) {
+  if (
+    rule.field === "amount" &&
+    !(Number.isFinite(Number(rule.value)) && Number(rule.value) >= 0)
+  ) {
     throw new Error("Amount must be a non-negative number");
   }
   if (rule.op === "regex" && !isSafeRegex(rule.value)) {
@@ -36,7 +39,9 @@ export function validateRule(workspaceId: number, rule: NewRule): void {
   }
   if (
     rule.categoryId != null &&
-    !getDb().prepare("SELECT 1 FROM categories WHERE id = ? AND workspace_id = ?").get(rule.categoryId, workspaceId)
+    !getDb()
+      .prepare("SELECT 1 FROM categories WHERE id = ? AND workspace_id = ?")
+      .get(rule.categoryId, workspaceId)
   ) {
     throw new Error("Unknown category");
   }
@@ -47,7 +52,7 @@ export function createRule(workspaceId: number, rule: NewRule): number {
   return getDb()
     .prepare(
       `INSERT INTO rules (workspace_id, field, op, value, category_id, kind)
-       VALUES (?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?)`,
     )
     .run(workspaceId, rule.field, rule.op, rule.value, rule.categoryId ?? null, rule.kind ?? null)
     .lastInsertRowid as number;
@@ -67,9 +72,14 @@ export function applyRulesToSyncRun(workspaceId: number, syncRunId: number): num
     .prepare(
       `SELECT id, description, charged_amount as chargedAmount, account_number as accountNumber
        FROM transactions
-       WHERE workspace_id = ? AND sync_run_id = ? AND category_source IS NULL`
+       WHERE workspace_id = ? AND sync_run_id = ? AND category_source IS NULL`,
     )
-    .all(workspaceId, syncRunId) as { id: number; description: string; chargedAmount: number; accountNumber: string }[];
+    .all(workspaceId, syncRunId) as {
+    id: number;
+    description: string;
+    chargedAmount: number;
+    accountNumber: string;
+  }[];
 
   const update = db.prepare(
     `UPDATE transactions
@@ -77,7 +87,7 @@ export function applyRulesToSyncRun(workspaceId: number, syncRunId: number): num
          category_source = CASE WHEN ? IS NULL THEN category_source ELSE 'user' END,
          kind = COALESCE(?, kind),
          updated_at = datetime('now')
-     WHERE id = ? AND workspace_id = ?`
+     WHERE id = ? AND workspace_id = ?`,
   );
 
   let changed = 0;
@@ -85,7 +95,13 @@ export function applyRulesToSyncRun(workspaceId: number, syncRunId: number): num
     for (const row of rows) {
       const hit = applyRules(row, rules);
       if (!hit) continue;
-      update.run(hit.categoryId ?? null, hit.categoryId ?? null, hit.kind ?? null, row.id, workspaceId);
+      update.run(
+        hit.categoryId ?? null,
+        hit.categoryId ?? null,
+        hit.kind ?? null,
+        row.id,
+        workspaceId,
+      );
       changed++;
     }
   })();
@@ -101,14 +117,17 @@ function matchPast(workspaceId: number, rule: NewRule): PastRow[] {
       `SELECT id, description, charged_amount as chargedAmount, account_number as accountNumber
        FROM transactions
        WHERE workspace_id = ? AND category_source IS NOT 'user'
-       ORDER BY date DESC, id DESC`
+       ORDER BY date DESC, id DESC`,
     )
     .all(workspaceId) as PastRow[];
   const asRule = [{ ...rule, id: 0 }];
   return rows.filter((row) => applyRules(row, asRule));
 }
 
-export function previewRule(workspaceId: number, rule: NewRule): { count: number; sample: string[] } {
+export function previewRule(
+  workspaceId: number,
+  rule: NewRule,
+): { count: number; sample: string[] } {
   const hits = matchPast(workspaceId, rule);
   return { count: hits.length, sample: [...new Set(hits.map((h) => h.description))].slice(0, 5) };
 }
@@ -124,7 +143,7 @@ export function applyRuleToPast(workspaceId: number, rule: NewRule): number {
          kind = COALESCE(?, kind),
          needs_review = CASE WHEN ? IS NULL THEN needs_review ELSE 0 END,
          updated_at = datetime('now')
-     WHERE id = ? AND workspace_id = ?`
+     WHERE id = ? AND workspace_id = ?`,
   );
   const cat = rule.categoryId ?? null;
   db.transaction(() => {

@@ -5,14 +5,33 @@ import { parsePlan } from "@/lib/plan";
 
 describe("fundSwitch", () => {
   it("lower fees end higher; equal fees end equal", () => {
-    const r = fundSwitch(200_000, 2_000, 20, 0.05, { depositPct: 1, balancePct: 0.8 }, { depositPct: 0, balancePct: 0.3 });
+    const r = fundSwitch(
+      200_000,
+      2_000,
+      20,
+      0.05,
+      { depositPct: 1, balancePct: 0.8 },
+      { depositPct: 0, balancePct: 0.3 },
+    );
     expect(r.diff).toBeGreaterThan(50_000);
-    expect(fundSwitch(1, 1, 1, 0.05, { depositPct: 1, balancePct: 1 }, { depositPct: 1, balancePct: 1 }).diff).toBe(0);
+    expect(
+      fundSwitch(1, 1, 1, 0.05, { depositPct: 1, balancePct: 1 }, { depositPct: 1, balancePct: 1 })
+        .diff,
+    ).toBe(0);
   });
 });
 
 describe("gemelVsBroker", () => {
-  const base = { initial: 0, monthly: 1_000, years: 20, grossReturn: 0.06, inflation: 0.02, gemelFeePct: 0.65, etfFeePct: 0.1, custodyMonthly: 0 };
+  const base = {
+    initial: 0,
+    monthly: 1_000,
+    years: 20,
+    grossReturn: 0.06,
+    inflation: 0.02,
+    gemelFeePct: 0.65,
+    etfFeePct: 0.1,
+    custodyMonthly: 0,
+  };
   it("annuity is untaxed, lump sum pays 25% of nominal gains", () => {
     const r = gemelVsBroker(base);
     expect(r.deposited).toBe(240_000);
@@ -20,7 +39,13 @@ describe("gemelVsBroker", () => {
     expect(r.broker).toBeGreaterThan(r.gemelLump); // lower fees and tax on real gains only
   });
   it("no gains, no tax", () => {
-    const r = gemelVsBroker({ ...base, grossReturn: 0, inflation: 0, gemelFeePct: 0, etfFeePct: 0 });
+    const r = gemelVsBroker({
+      ...base,
+      grossReturn: 0,
+      inflation: 0,
+      gemelFeePct: 0,
+      etfFeePct: 0,
+    });
     expect(r.broker).toBeCloseTo(240_000, 6);
     expect(r.gemelLump).toBeCloseTo(240_000, 6);
   });
@@ -38,12 +63,33 @@ describe("brokerOutcome", () => {
 
 describe("FI with events and Monte Carlo", () => {
   it("matches the plain projection without events", () => {
-    expect(yearsToTargetWithEvents(100_000, 5_000, 0.05, 1_000_000, [], 2026)).toBeCloseTo(yearsToTarget(100_000, 5_000, 0.05, 1_000_000)!, 6);
+    expect(yearsToTargetWithEvents(100_000, 5_000, 0.05, 1_000_000, [], 2026)).toBeCloseTo(
+      yearsToTarget(100_000, 5_000, 0.05, 1_000_000)!,
+      6,
+    );
   });
   it("a cost pushes FI later, a mortgage end brings it closer", () => {
     const plain = yearsToTargetWithEvents(100_000, 5_000, 0.05, 1_000_000, [], 2026)!;
-    expect(yearsToTargetWithEvents(100_000, 5_000, 0.05, 1_000_000, [{ year: 2028, amount: -300_000, monthlyChange: 0 }], 2026)!).toBeGreaterThan(plain);
-    expect(yearsToTargetWithEvents(100_000, 5_000, 0.05, 1_000_000, [{ year: 2027, amount: 0, monthlyChange: -3_000 }], 2026)!).toBeLessThan(plain);
+    expect(
+      yearsToTargetWithEvents(
+        100_000,
+        5_000,
+        0.05,
+        1_000_000,
+        [{ year: 2028, amount: -300_000, monthlyChange: 0 }],
+        2026,
+      )!,
+    ).toBeGreaterThan(plain);
+    expect(
+      yearsToTargetWithEvents(
+        100_000,
+        5_000,
+        0.05,
+        1_000_000,
+        [{ year: 2027, amount: 0, monthlyChange: -3_000 }],
+        2026,
+      )!,
+    ).toBeLessThan(plain);
   });
   it("is deterministic and sensible", () => {
     const a = fiOdds(100_000, 5_000, 0.05, 1_000_000, 10, [], 2026);
@@ -56,7 +102,14 @@ describe("FI with events and Monte Carlo", () => {
 
 describe("plan events", () => {
   it("validates and caps at 12", () => {
-    const p = parsePlan({ events: [{ name: "ילד", year: 2028, amount: "-5000", monthlyChange: 2000 }, null, "x", ...Array(20).fill({ year: 2030 })] });
+    const p = parsePlan({
+      events: [
+        { name: "ילד", year: 2028, amount: "-5000", monthlyChange: 2000 },
+        null,
+        "x",
+        ...Array(20).fill({ year: 2030 }),
+      ],
+    });
     expect(p.events[0]).toEqual({ name: "ילד", year: 2028, amount: -5000, monthlyChange: 2000 });
     expect(p.events).toHaveLength(12);
     expect(parsePlan({}).events).toEqual([]);
@@ -80,14 +133,29 @@ describe("purchase tax and spitzer", () => {
 });
 
 describe("rentVsBuy", () => {
-  const base = { price: 2_500_000, down: 750_000, mortgageRate: 0.045, mortgageYears: 25, purchaseTax: 7_000, oneOffs: 60_000, ownerMonthly: 500, appreciation: 0.03, rent: 7_000, rentGrowth: 0.03, investReturn: 0.05, years: 15 };
+  const base = {
+    price: 2_500_000,
+    down: 750_000,
+    mortgageRate: 0.045,
+    mortgageYears: 25,
+    purchaseTax: 7_000,
+    oneOffs: 60_000,
+    ownerMonthly: 500,
+    appreciation: 0.03,
+    rent: 7_000,
+    rentGrowth: 0.03,
+    investReturn: 0.05,
+    years: 15,
+  };
   it("returns one row per year and a consistent diff", () => {
     const r = rentVsBuy(base);
     expect(r.yearly).toHaveLength(15);
     expect(r.diff).toBeCloseTo(r.buy - r.rent);
   });
   it("cheap rent with high returns favours renting; strong appreciation favours buying", () => {
-    expect(rentVsBuy({ ...base, rent: 3_000, appreciation: 0, investReturn: 0.08 }).diff).toBeLessThan(0);
+    expect(
+      rentVsBuy({ ...base, rent: 3_000, appreciation: 0, investReturn: 0.08 }).diff,
+    ).toBeLessThan(0);
     const b = rentVsBuy({ ...base, rent: 12_000, appreciation: 0.06, investReturn: 0.02 });
     expect(b.diff).toBeGreaterThan(0);
     expect(b.breakEven).not.toBeNull();
@@ -95,7 +163,14 @@ describe("rentVsBuy", () => {
 });
 
 describe("amendment190", () => {
-  const base = { balance: 1_000_000, realGainShare: 0.4, age: 62, qualifyingPension: 6_000, annuityFactor: 200, ...IL.amendment190 };
+  const base = {
+    balance: 1_000_000,
+    realGainShare: 0.4,
+    age: 62,
+    qualifyingPension: 6_000,
+    annuityFactor: 200,
+    ...IL.amendment190,
+  };
   it("annuity = balance / factor; tax saved = 15% of real gain", () => {
     const r = amendment190(base);
     expect(r.monthly).toBe(5_000);
@@ -120,7 +195,13 @@ describe("wellbeing", () => {
     expect(wellbeingDue([], "2026-11-06")).toBe(true);
     expect(wellbeingDue([{ date: "2026-09-01", score: 50 }], "2026-11-06")).toBe(false);
     expect(wellbeingDue([{ date: "2026-07-01", score: 50 }], "2026-11-06")).toBe(true);
-    expect(parseWellbeingHistory([{ date: "x", score: 1 }, { date: "2026-01-01", score: 120 }, { date: "2026-02-01", score: 40 }])).toEqual([{ date: "2026-02-01", score: 40 }]);
+    expect(
+      parseWellbeingHistory([
+        { date: "x", score: 1 },
+        { date: "2026-01-01", score: 120 },
+        { date: "2026-02-01", score: 40 },
+      ]),
+    ).toEqual([{ date: "2026-02-01", score: 40 }]);
   });
 });
 
@@ -135,11 +216,27 @@ describe("competitor-gap calculators", () => {
 
   it("rental yield: gross, net and cash on cash", async () => {
     const { rentalYield } = await import("@/lib/tools");
-    const r = rentalYield({ price: 1_200_000, equity: 1_200_000, rent: 4_000, costs: 500, rate: 0.05, years: 25 });
+    const r = rentalYield({
+      price: 1_200_000,
+      equity: 1_200_000,
+      rent: 4_000,
+      costs: 500,
+      rate: 0.05,
+      years: 25,
+    });
     expect(r.gross).toBeCloseTo(0.04);
     expect(r.net).toBeCloseTo(0.035);
     expect(r.cashOnCash).toBeCloseTo(0.035);
-    expect(rentalYield({ price: 1_200_000, equity: 400_000, rent: 4_000, costs: 500, rate: 0.05, years: 25 }).cashflow).toBeLessThan(0);
+    expect(
+      rentalYield({
+        price: 1_200_000,
+        equity: 400_000,
+        rent: 4_000,
+        costs: 500,
+        rate: 0.05,
+        years: 25,
+      }).cashflow,
+    ).toBeLessThan(0);
   });
 
   it("money-market fund taxes only the real gain", async () => {

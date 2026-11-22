@@ -6,7 +6,8 @@ import { setOnboardingStep } from "@/server/lib/onboarding";
 export async function PUT(request: Request) {
   const body = (await request.json().catch(() => null)) as { step?: unknown } | null;
   const step = body?.step;
-  if (step !== "complete" && !isOnboardingStep(step)) return NextResponse.json({ error: "invalid step" }, { status: 400 });
+  if (step !== "complete" && !isOnboardingStep(step))
+    return NextResponse.json({ error: "invalid step" }, { status: 400 });
   setOnboardingStep(step);
   return NextResponse.json({ success: true });
 }

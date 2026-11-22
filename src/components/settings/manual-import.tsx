@@ -41,7 +41,12 @@ export function ManualImport() {
     const byName = (x: Institution, y: Institution) => x.label.localeCompare(y.label, locale);
     const bank = (kind: "bank" | "card"): Institution[] =>
       BANK_PROVIDERS.filter((b) => b.enabled && b.kind === kind)
-        .map((b) => ({ id: b.id, label: translateProviderName(b.id, b.name, tBanks), color: b.color, domain: b.domain }))
+        .map((b) => ({
+          id: b.id,
+          label: translateProviderName(b.id, b.name, tBanks),
+          color: b.color,
+          domain: b.domain,
+        }))
         .sort(byName);
     return [
       { key: "banks", title: t("groupBanks"), items: bank("bank") },
@@ -49,14 +54,21 @@ export function ManualImport() {
       {
         key: "houses",
         title: t("groupInvestment"),
-        items: INVESTMENT_HOUSES.map((h) => ({ id: h.id, label: locale === "he" ? h.name.he : h.name.en, color: h.color, domain: h.domain })).sort(byName),
+        items: INVESTMENT_HOUSES.map((h) => ({
+          id: h.id,
+          label: locale === "he" ? h.name.he : h.name.en,
+          color: h.color,
+          domain: h.domain,
+        })).sort(byName),
       },
     ];
   }, [locale, t, tBanks]);
 
   const all = groups.flatMap((g) => g.items);
-  const account = chosen === OTHER || !chosen ? "" : all.find((i) => i.id === chosen)?.label ?? "";
-  const chosenLabel = all.find((i) => i.id === chosen)?.label ?? (chosen === OTHER ? t("manualOther") : "");
+  const account =
+    chosen === OTHER || !chosen ? "" : (all.find((i) => i.id === chosen)?.label ?? "");
+  const chosenLabel =
+    all.find((i) => i.id === chosen)?.label ?? (chosen === OTHER ? t("manualOther") : "");
 
   return (
     <>
@@ -81,7 +93,9 @@ export function ManualImport() {
           ))}
 
           <div className="space-y-2">
-            <h4 className="text-footnote font-semibold text-muted-foreground">{t("manualOtherGroup")}</h4>
+            <h4 className="text-footnote font-semibold text-muted-foreground">
+              {t("manualOtherGroup")}
+            </h4>
             <InstitutionGrid>
               <InstitutionTile
                 label={t("manualOther")}

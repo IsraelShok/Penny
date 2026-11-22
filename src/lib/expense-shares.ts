@@ -1,4 +1,13 @@
-export interface ExpenseShare { id: number; transactionId: number; person: string; amount: number; settledAt: string | null; createdAt: string; description?: string; date?: string }
+export interface ExpenseShare {
+  id: number;
+  transactionId: number;
+  person: string;
+  amount: number;
+  settledAt: string | null;
+  createdAt: string;
+  description?: string;
+  date?: string;
+}
 
 /** What each person still owes, biggest first; settled shares count for nothing. Names match ignoring case and spaces. */
 export function shareBalances(shares: Pick<ExpenseShare, "person" | "amount" | "settledAt">[]) {

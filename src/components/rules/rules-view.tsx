@@ -9,7 +9,14 @@ import { Switch } from "@/components/ui/switch";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createRule, createRuleWithPast, deleteRule, getCategories, listRules, previewRule } from "@/lib/api";
+import {
+  createRule,
+  createRuleWithPast,
+  deleteRule,
+  getCategories,
+  listRules,
+  previewRule,
+} from "@/lib/api";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { Rule } from "@/server/rules/engine";
 
@@ -36,7 +43,13 @@ export function RulesView() {
     if (!draftReady) return;
     let stale = false;
     const timer = setTimeout(() => {
-      previewRule({ field, op, value, categoryId: categoryId ? Number(categoryId) : undefined, kind: (kind || undefined) as Rule["kind"] })
+      previewRule({
+        field,
+        op,
+        value,
+        categoryId: categoryId ? Number(categoryId) : undefined,
+        kind: (kind || undefined) as Rule["kind"],
+      })
         .then((p) => !stale && setPreview(p))
         .catch(() => !stale && setPreview(null));
     }, 300);
@@ -47,12 +60,16 @@ export function RulesView() {
   }, [draftReady, field, op, value, categoryId, kind]);
 
   const refresh = useCallback(() => {
-    listRules().then(setRules).catch(() => setError(true));
+    listRules()
+      .then(setRules)
+      .catch(() => setError(true));
   }, []);
 
   useEffect(() => {
     refresh();
-    getCategories("expense").then((c) => setCategories(c)).catch(() => {});
+    getCategories("expense")
+      .then((c) => setCategories(c))
+      .catch(() => {});
   }, [refresh]);
 
   const preview = draftReady ? fetchedPreview : null;
@@ -77,7 +94,7 @@ export function RulesView() {
           categoryId: categoryId ? Number(categoryId) : undefined,
           kind: (kind || undefined) as Rule["kind"],
         },
-        applyToPast
+        applyToPast,
       );
       if (applied > 0) toast(t("appliedPast", { count: applied }));
       setValue("");
@@ -112,109 +129,155 @@ export function RulesView() {
   };
 
   return (
-    <SectionShell title={t("title")} description={t("description")} icon={<ListFilter aria-hidden />}>
+    <SectionShell
+      title={t("title")}
+      description={t("description")}
+      icon={<ListFilter aria-hidden />}
+    >
       <SettingCard title={t("add")}>
-          <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
-              <Label htmlFor="rule-field">{t("when")}</Label>
-              <select
-                id="rule-field"
-                className={selectClass}
-                value={field}
-                onChange={(e) => {
-                  const f = e.target.value as Rule["field"];
-                  setField(f);
-                  setOp(f === "amount" ? "gt" : "contains");
-                }}
-              >
-                {(["merchant", "amount", "account"] as const).map((f) => (
-                  <option key={f} value={f}>{t(f)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="rule-op">{t("condition")}</Label>
-              <select id="rule-op" className={selectClass} value={op} onChange={(e) => setOp(e.target.value as Rule["op"])}>
-                {ops.map((o) => (
-                  <option key={o} value={o}>{t(o)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-1.5 sm:col-span-2">
-              <Label htmlFor="rule-value">{t("value")}</Label>
-              <Input
-                id="rule-value"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                maxLength={200}
-                aria-invalid={missing === "needValue" || undefined}
-                aria-describedby={missing === "needValue" ? "rule-missing" : undefined}
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="rule-category">{t("setCategory")}</Label>
-              <select
-                id="rule-category"
-                className={selectClass}
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                aria-invalid={missing === "needTarget" || undefined}
-                aria-describedby={missing === "needTarget" ? "rule-missing" : undefined}
-              >
-                <option value="">{t("none")}</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{translateCategoryName(c.name, tCat)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="rule-kind">{t("markAs")}</Label>
-              <select id="rule-kind" className={selectClass} value={kind} onChange={(e) => setKind(e.target.value)}>
-                <option value="">{t("none")}</option>
-                {(["expense", "income", "transfer"] as const).map((k) => (
-                  <option key={k} value={k}>{t(k)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-2 sm:col-span-2">
-              <p role="status" className="text-footnote text-muted-foreground">
-                {preview ? t("previewCount", { count: preview.count }) : null}
-                {preview && preview.sample.length > 0 ? (
-                  <span className="block">{t("previewSample")} {preview.sample.map((d, i) => <bdi key={i}>{i ? ", " : ""}{d}</bdi>)}</span>
-                ) : null}
-              </p>
-              <label className="flex min-h-11 cursor-pointer items-center justify-between gap-4 font-medium">
-                {t("applyToPast")}
-                <Switch checked={applyToPast} onCheckedChange={setApplyToPast} />
-              </label>
-            </div>
-            <div className="sm:col-span-2">
-              <IconButton showLabel label={t("add")} variant="default" type="submit"><Plus className="size-4" aria-hidden /></IconButton>
-              {missing ? <span id="rule-missing" role="alert" className="ms-3 text-sm text-destructive">{t(missing)}</span> : null}
-              {error ? <span role="alert" className="ms-3 text-sm text-destructive">{t("saveFailed")}</span> : null}
-            </div>
-          </form>
+        <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor="rule-field">{t("when")}</Label>
+            <select
+              id="rule-field"
+              className={selectClass}
+              value={field}
+              onChange={(e) => {
+                const f = e.target.value as Rule["field"];
+                setField(f);
+                setOp(f === "amount" ? "gt" : "contains");
+              }}
+            >
+              {(["merchant", "amount", "account"] as const).map((f) => (
+                <option key={f} value={f}>
+                  {t(f)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="rule-op">{t("condition")}</Label>
+            <select
+              id="rule-op"
+              className={selectClass}
+              value={op}
+              onChange={(e) => setOp(e.target.value as Rule["op"])}
+            >
+              {ops.map((o) => (
+                <option key={o} value={o}>
+                  {t(o)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-1.5 sm:col-span-2">
+            <Label htmlFor="rule-value">{t("value")}</Label>
+            <Input
+              id="rule-value"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              maxLength={200}
+              aria-invalid={missing === "needValue" || undefined}
+              aria-describedby={missing === "needValue" ? "rule-missing" : undefined}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="rule-category">{t("setCategory")}</Label>
+            <select
+              id="rule-category"
+              className={selectClass}
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              aria-invalid={missing === "needTarget" || undefined}
+              aria-describedby={missing === "needTarget" ? "rule-missing" : undefined}
+            >
+              <option value="">{t("none")}</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {translateCategoryName(c.name, tCat)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="rule-kind">{t("markAs")}</Label>
+            <select
+              id="rule-kind"
+              className={selectClass}
+              value={kind}
+              onChange={(e) => setKind(e.target.value)}
+            >
+              <option value="">{t("none")}</option>
+              {(["expense", "income", "transfer"] as const).map((k) => (
+                <option key={k} value={k}>
+                  {t(k)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-2 sm:col-span-2">
+            <p role="status" className="text-footnote text-muted-foreground">
+              {preview ? t("previewCount", { count: preview.count }) : null}
+              {preview && preview.sample.length > 0 ? (
+                <span className="block">
+                  {t("previewSample")}{" "}
+                  {preview.sample.map((d, i) => (
+                    <bdi key={i}>
+                      {i ? ", " : ""}
+                      {d}
+                    </bdi>
+                  ))}
+                </span>
+              ) : null}
+            </p>
+            <label className="flex min-h-11 cursor-pointer items-center justify-between gap-4 font-medium">
+              {t("applyToPast")}
+              <Switch checked={applyToPast} onCheckedChange={setApplyToPast} />
+            </label>
+          </div>
+          <div className="sm:col-span-2">
+            <IconButton showLabel label={t("add")} variant="default" type="submit">
+              <Plus className="size-4" aria-hidden />
+            </IconButton>
+            {missing ? (
+              <span id="rule-missing" role="alert" className="ms-3 text-sm text-destructive">
+                {t(missing)}
+              </span>
+            ) : null}
+            {error ? (
+              <span role="alert" className="ms-3 text-sm text-destructive">
+                {t("saveFailed")}
+              </span>
+            ) : null}
+          </div>
+        </form>
       </SettingCard>
 
       <SettingCard title={t("title")}>
-      {rules.length === 0 ? (
-        <p className="py-1 text-footnote text-muted-foreground">{t("emptyHint")}</p>
-      ) : (
-        <ul className="divide-y divide-border">
-          {rules.map((r) => (
-            <li key={r.id} className="flex min-h-11 items-center justify-between gap-3 py-1.5">
-              <span className="min-w-0 break-words">
-                {t(r.field)} {t(r.op)} <bdi className="font-medium">{r.value}</bdi>
-                {` ${t("arrow")} `}
-                {[categoryName(r.categoryId), r.kind ? t(r.kind) : null].filter(Boolean).join(", ")}
-              </span>
-              <IconButton label={t("deleteRule", { rule: r.value })} className="text-destructive" onClick={() => remove(r)}>
-                <Trash2 className="size-4" aria-hidden />
-              </IconButton>
-            </li>
-          ))}
-        </ul>
-      )}
+        {rules.length === 0 ? (
+          <p className="py-1 text-footnote text-muted-foreground">{t("emptyHint")}</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {rules.map((r) => (
+              <li key={r.id} className="flex min-h-11 items-center justify-between gap-3 py-1.5">
+                <span className="min-w-0 break-words">
+                  {t(r.field)} {t(r.op)} <bdi className="font-medium">{r.value}</bdi>
+                  {` ${t("arrow")} `}
+                  {[categoryName(r.categoryId), r.kind ? t(r.kind) : null]
+                    .filter(Boolean)
+                    .join(", ")}
+                </span>
+                <IconButton
+                  label={t("deleteRule", { rule: r.value })}
+                  className="text-destructive"
+                  onClick={() => remove(r)}
+                >
+                  <Trash2 className="size-4" aria-hidden />
+                </IconButton>
+              </li>
+            ))}
+          </ul>
+        )}
       </SettingCard>
     </SectionShell>
   );

@@ -12,7 +12,11 @@ export function onboardingStep(): OnboardingStep | null {
   if (stored === "complete") return null;
   if (isOnboardingStep(stored)) return stored;
   // Never started: only a brand-new install goes through it; people who already have data are never pushed in.
-  const row = getDb().prepare("SELECT EXISTS(SELECT 1 FROM bank_credentials) OR EXISTS(SELECT 1 FROM transactions) AS has").get() as { has: number };
+  const row = getDb()
+    .prepare(
+      "SELECT EXISTS(SELECT 1 FROM bank_credentials) OR EXISTS(SELECT 1 FROM transactions) AS has",
+    )
+    .get() as { has: number };
   return row.has ? null : "welcome";
 }
 

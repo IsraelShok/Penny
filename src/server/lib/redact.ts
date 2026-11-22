@@ -4,7 +4,7 @@ const KEYS = "password|pass|otp|token|apiKey|api_key|id|userCode|card6Digits|car
 const RULES: [RegExp, string][] = [
   [/\bsk-[A-Za-z0-9_-]{16,}/g, "[key]"], // Anthropic / OpenAI style API keys
   [/\b\d{6,}:[A-Za-z0-9_-]{30,}/g, "[token]"], // Telegram bot tokens
-  [/\b(bearer|authorization)\b\s*[:=]?\s*\S+/gi, "$1 [redacted]"],
+  [/\b(bearer|authorization)\b\s*[:=]?\s*(?:bearer\s+)?\S+/gi, "$1 [redacted]"], // "Authorization: Bearer x" too
   [new RegExp(`"(${KEYS})"\\s*:\\s*"[^"]*"`, "gi"), '"$1":"[redacted]"'],
   [new RegExp(`\\b(${KEYS})\\s*=\\s*[^\\s&]+`, "gi"), "$1=[redacted]"],
   [/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[email]"],
@@ -14,6 +14,19 @@ const RULES: [RegExp, string][] = [
 
 export function redact(text: string): string {
   return RULES.reduce((out, [re, rep]) => out.replace(re, rep), text);
+}
+
+/**
+ * Replaces stored secrets verbatim. A bank's own error text can echo a password without
+ * naming it ("login failed for 12345678/Passw0rd"), which the pattern rules cannot spot.
+ */
+export function redactKnownSecrets(text: string, secrets: string[]): string {
+  let out = text;
+  for (const secret of secrets) {
+    if (secret.length < 4) continue; // too short to replace safely without mangling the text
+    out = out.split(secret).join("[redacted]");
+  }
+  return out;
 }
 
 /** Error -> short, redacted string. Stack traces are dropped: some libraries put request bodies in them. */

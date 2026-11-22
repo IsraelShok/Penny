@@ -8,13 +8,27 @@ const median = (xs: (number | null)[]) => {
 };
 
 /** Pension data has no track field, so the track is read from the name (most specific first). */
-const PENSION_TRACKS = [/עוקב/, /מניות/, /הלכה/, /אג"ח|אשראי/, /50 ומטה/, /50 עד 60/, /60 ומעלה/, /כללי/];
+const PENSION_TRACKS = [
+  /עוקב/,
+  /מניות/,
+  /הלכה/,
+  /אג"ח|אשראי/,
+  /50 ומטה/,
+  /50 עד 60/,
+  /60 ומעלה/,
+  /כללי/,
+];
 const pensionTrack = (name: string) => PENSION_TRACKS.findIndex((re) => re.test(name));
 
 /** Funds of the same kind: same classification and the same investment track. */
 export function peersOf(fund: Fund, all: Fund[]): Fund[] {
   const track = (f: Fund) => (f.source === "pension" ? pensionTrack(f.name) : f.specialization);
-  return all.filter((f) => f.source === fund.source && f.classification === fund.classification && track(f) === track(fund));
+  return all.filter(
+    (f) =>
+      f.source === fund.source &&
+      f.classification === fund.classification &&
+      track(f) === track(fund),
+  );
 }
 
 export function compareFund(fund: Fund, all: Fund[]): FundComparison {
@@ -45,4 +59,8 @@ export function searchFunds(all: Fund[], query: string, limit = 20): Fund[] {
 }
 
 /** Capital Market Authority comparison sites (Gemel-Net, Pensia-Net, Bituach-Net). Plain links, nothing fetched. */
-export const CMA_SITES = { GemelNet: "https://gemelnet.cma.gov.il", PensiaNet: "https://pensyanet.cma.gov.il", BituachNet: "https://bituachnet.cma.gov.il" } as const;
+export const CMA_SITES = {
+  GemelNet: "https://gemelnet.cma.gov.il",
+  PensiaNet: "https://pensyanet.cma.gov.il",
+  BituachNet: "https://bituachnet.cma.gov.il",
+} as const;

@@ -15,12 +15,16 @@ const lanAllowed = () => fs.existsSync(flag) && fs.existsSync(path.join(data, ".
 
 function run() {
   const host = lanAllowed() ? "0.0.0.0" : "127.0.0.1";
-  const child = spawn(process.execPath, [path.join(root, "node_modules/next/dist/bin/next"), "start", "-H", host, "-p", port], {
-    cwd: root,
-    stdio: "inherit",
-    env: { ...process.env, PENNY_LISTEN_HOST: host, PENNY_RESTARTABLE: "1" },
-    windowsHide: true,
-  });
+  const child = spawn(
+    process.execPath,
+    [path.join(root, "node_modules/next/dist/bin/next"), "start", "-H", host, "-p", port],
+    {
+      cwd: root,
+      stdio: "inherit",
+      env: { ...process.env, PENNY_LISTEN_HOST: host, PENNY_RESTARTABLE: "1" },
+      windowsHide: true,
+    },
+  );
   child.on("exit", (code) => (code === 75 ? run() : process.exit(code ?? 1)));
 }
 run();

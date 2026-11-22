@@ -5,6 +5,21 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 
+// SHA256SUMS.txt is signed in CI with a private key kept only in GitHub secrets (Ed25519). A checksum from the same
+// release only catches a broken download; the signature means a release published without that key is never installed.
+const UPDATE_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEADEOci8VykQONMt5Z+YioT64kbU8xy3MxB1ISFfUiS3U=
+-----END PUBLIC KEY-----`;
+
+/** True when `listing` carries a valid signature (base64) by the release key. */
+function signatureValid(listing, signatureB64, publicKey = UPDATE_PUBLIC_KEY) {
+  try {
+    return crypto.verify(null, Buffer.from(listing), publicKey, Buffer.from(String(signatureB64).trim(), "base64"));
+  } catch {
+    return false;
+  }
+}
+
 /** True when version a is newer than b ("1.10.0" > "1.9.3"); pre-release tags are never offered. */
 function isNewer(a, b) {
   if (!/^\d+\.\d+\.\d+$/.test(a)) return false;
@@ -34,9 +49,16 @@ async function downloadUpdate({ repo, current, dir, log = () => {} }) {
   const name = `Penny-Setup-${version}.exe`;
   const asset = (rel.assets || []).find((a) => a.name === name);
   const sums = (rel.assets || []).find((a) => a.name === "SHA256SUMS.txt");
-  // No published checksum, no silent install: the banner still offers the manual download.
-  if (!asset || !sums) return null;
-  const expected = checksumFor(await (await fetch(sums.browser_download_url, { headers, signal: AbortSignal.timeout(15000) })).text(), name);
+  const sig = (rel.assets || []).find((a) => a.name === "SHA256SUMS.txt.sig");
+  // No signed checksum, no silent install: the banner still offers the manual download.
+  if (!asset || !sums || !sig) return null;
+  const get = async (a) => (await fetch(a.browser_download_url, { headers, signal: AbortSignal.timeout(15000) })).text();
+  const listing = await get(sums);
+  if (!signatureValid(listing, await get(sig))) {
+    log("[update] SHA256SUMS.txt signature is missing or wrong; not installing");
+    return null;
+  }
+  const expected = checksumFor(listing, name);
   if (!expected) return null;
 
   const file = path.join(dir, name);
@@ -53,4 +75,4 @@ async function downloadUpdate({ repo, current, dir, log = () => {} }) {
   return { file, version };
 }
 
-module.exports = { isNewer, checksumFor, downloadUpdate };
+module.exports = { isNewer, checksumFor, signatureValid, downloadUpdate };

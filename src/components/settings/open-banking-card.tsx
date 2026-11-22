@@ -162,7 +162,11 @@ export function OpenBankingCard({
 
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={connect} disabled={!ready || saving || testing}>
-            {saving ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Landmark className="size-4" aria-hidden />}
+            {saving ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : (
+              <Landmark className="size-4" aria-hidden />
+            )}
             {t("connect")}
           </Button>
           <Button variant="outline" onClick={test} disabled={!ready || testing || saving}>

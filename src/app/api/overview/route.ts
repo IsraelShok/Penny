@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
-import { budgetToday, periodRange, previousPeriod, sameElapsed, samePeriodLastYear, shiftRange, PERIOD_MONTHS, type PeriodKind } from "@/lib/period";
+import {
+  budgetToday,
+  periodRange,
+  previousPeriod,
+  sameElapsed,
+  samePeriodLastYear,
+  shiftRange,
+  PERIOD_MONTHS,
+  type PeriodKind,
+} from "@/lib/period";
 import {
   getCategoryRows,
   getMonthlyFlow,
@@ -25,12 +34,25 @@ export async function GET(request: Request) {
   const today = budgetToday(new Date(), startDay);
   const cal = periodRange(kind, today, offset);
   // The current period is part-done: compare it with the same stretch of the others.
-  const prev = shiftRange(offset === 0 ? sameElapsed(previousPeriod(cal), cal, today) : previousPeriod(cal), startDay);
-  const ly = shiftRange(offset === 0 ? sameElapsed(samePeriodLastYear(cal), cal, today) : samePeriodLastYear(cal), startDay);
+  const prev = shiftRange(
+    offset === 0 ? sameElapsed(previousPeriod(cal), cal, today) : previousPeriod(cal),
+    startDay,
+  );
+  const ly = shiftRange(
+    offset === 0 ? sameElapsed(samePeriodLastYear(cal), cal, today) : samePeriodLastYear(cal),
+    startDay,
+  );
   const r = shiftRange(cal, startDay);
   const split = getSpendingTypeSplit(workspaceId, r);
   const payload: OverviewPayload = {
-    period: { kind, year: r.year, startMonth: r.startMonth, from: r.from, to: r.to, months: r.months },
+    period: {
+      kind,
+      year: r.year,
+      startMonth: r.startMonth,
+      from: r.from,
+      to: r.to,
+      months: r.months,
+    },
     totals: getPeriodTotals(workspaceId, r),
     previous: getPeriodTotals(workspaceId, prev),
     lastYear: getPeriodTotals(workspaceId, ly),

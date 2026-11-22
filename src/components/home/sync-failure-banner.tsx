@@ -35,44 +35,35 @@ export function SyncFailureBanner({ items, className }: Props) {
   const errorText = useSyncErrorText();
   if (!items) return null;
   const failures = items.filter(
-    (i) => i.status === "error" && i.lastSyncAt && isToday(i.lastSyncAt)
+    (i) => i.status === "error" && i.lastSyncAt && isToday(i.lastSyncAt),
   );
   if (failures.length === 0) return null;
 
-  const firstName = translateProviderName(
-    failures[0].provider,
-    failures[0].providerName,
-    tBanks,
-  );
+  const firstName = translateProviderName(failures[0].provider, failures[0].providerName, tBanks);
 
   const headline =
     failures.length === 1
       ? t("oneBankTitle", { bank: firstName })
       : t("multiBankTitle", { count: failures.length });
 
-  const showsTwoFAHint = failures.some(
-    (f) => f.errorMessage && TWO_FA_RE.test(f.errorMessage)
-  );
+  const showsTwoFAHint = failures.some((f) => f.errorMessage && TWO_FA_RE.test(f.errorMessage));
 
   return (
     <div
       role="alert"
       className={cn(
         "flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-start sm:gap-4 sm:p-5",
-        className
+        className,
       )}
       style={{
-        background:
-          "color-mix(in oklch, var(--status-over) 12%, var(--card))",
-        borderColor:
-          "color-mix(in oklch, var(--status-over) 40%, var(--border))",
+        background: "color-mix(in oklch, var(--status-over) 12%, var(--card))",
+        borderColor: "color-mix(in oklch, var(--status-over) 40%, var(--border))",
       }}
     >
       <div
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
         style={{
-          background:
-            "color-mix(in oklch, var(--status-over) 24%, var(--card))",
+          background: "color-mix(in oklch, var(--status-over) 24%, var(--card))",
           color: "var(--status-over)",
         }}
       >
@@ -80,32 +71,29 @@ export function SyncFailureBanner({ items, className }: Props) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="font-semibold text-base leading-tight tracking-tight">
-          {headline}
-        </div>
+        <div className="font-semibold text-base leading-tight tracking-tight">{headline}</div>
         <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
           {failures.map((f) => {
-            const name = translateProviderName(f.provider, f.providerName, tBanks) + (f.label ? ` · ${f.label}` : "");
+            const name =
+              translateProviderName(f.provider, f.providerName, tBanks) +
+              (f.label ? ` · ${f.label}` : "");
             const { message, detail } = errorText(f.errorMessage ?? t("fallbackErrorMsg"));
             return (
               <li key={f.id} className="break-words">
-                <span className="font-medium text-foreground/80">{name}:</span>{" "}
-                {message}
+                <span className="font-medium text-foreground/80">{name}:</span> {message}
                 {detail && (
                   <details className="mt-1 text-xs">
                     <summary className="cursor-pointer">{t("showDetails")}</summary>
-                    <bdi dir="ltr" className="block break-all font-mono">{detail}</bdi>
+                    <bdi dir="ltr" className="block break-all font-mono">
+                      {detail}
+                    </bdi>
                   </details>
                 )}
               </li>
             );
           })}
         </ul>
-        {showsTwoFAHint && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t("twoFaHelper")}
-          </p>
-        )}
+        {showsTwoFAHint && <p className="mt-2 text-xs text-muted-foreground">{t("twoFaHelper")}</p>}
       </div>
 
       <IconButton

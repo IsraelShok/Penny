@@ -110,20 +110,40 @@ const addMonths = (month: string, n: number): string => {
   return d.toISOString().slice(0, 7);
 };
 const monthsBetween = (from: string, to: string): number =>
-  (Number(to.slice(0, 4)) - Number(from.slice(0, 4))) * 12 + Number(to.slice(5, 7)) - Number(from.slice(5, 7));
+  (Number(to.slice(0, 4)) - Number(from.slice(0, 4))) * 12 +
+  Number(to.slice(5, 7)) -
+  Number(from.slice(5, 7));
 
 /** Learns a card's lag and statement day from rows whose purchase and billing dates differ. */
-export function cardTiming(charges: PlannedCharge[], account: string, fallbackDay = 10): CardTiming {
+export function cardTiming(
+  charges: PlannedCharge[],
+  account: string,
+  fallbackDay = 10,
+): CardTiming {
   const rows = charges
-    .filter((c) => c.account === account && c.billingDate && c.billingDate.slice(0, 10) !== c.date.slice(0, 10))
+    .filter(
+      (c) =>
+        c.account === account &&
+        c.billingDate &&
+        c.billingDate.slice(0, 10) !== c.date.slice(0, 10),
+    )
     .slice(-200);
   const lags = rows.map((c) => monthsBetween(c.date.slice(0, 7), c.billingDate.slice(0, 7)));
   const days = rows.map((c) => Number(c.billingDate.slice(8, 10))).filter((d) => d > 0);
-  return { lag: lags.length ? Math.max(0, Math.round(median(lags))) : 1, day: days.length ? Math.round(median(days)) : fallbackDay };
+  return {
+    lag: lags.length ? Math.max(0, Math.round(median(lags))) : 1,
+    day: days.length ? Math.round(median(days)) : fallbackDay,
+  };
 }
 
 /** The payments of an item: one, or one per installment on consecutive statements / months. */
-export function plannedPayments(item: Pick<PlannedItem, "id" | "description" | "amount" | "date" | "account" | "accountKind" | "installments">, timing: CardTiming | null = null): PlannedPayment[] {
+export function plannedPayments(
+  item: Pick<
+    PlannedItem,
+    "id" | "description" | "amount" | "date" | "account" | "accountKind" | "installments"
+  >,
+  timing: CardTiming | null = null,
+): PlannedPayment[] {
   const installments = Math.max(1, Math.min(60, item.installments || 1));
   const per = round(item.amount / installments);
   const out: PlannedPayment[] = [];
@@ -170,15 +190,26 @@ export const MATCH_AFTER_DAYS = 30;
 
 /** Real rows that could be this planned expense: same account, close amount, near the planned date. */
 export function plannedCandidates(
-  item: Pick<PlannedItem, "id" | "amount" | "date" | "account" | "accountKind" | "installments" | "matchPattern" | "rejectedTxnIds">,
+  item: Pick<
+    PlannedItem,
+    | "id"
+    | "amount"
+    | "date"
+    | "account"
+    | "accountKind"
+    | "installments"
+    | "matchPattern"
+    | "rejectedTxnIds"
+  >,
   charges: PlannedCharge[],
-  claimed: Set<number>
+  claimed: Set<number>,
 ): PlannedCandidate[] {
   if (item.accountKind === "manual" || !item.account) return [];
   const full = item.amount;
   const installments = Math.max(1, item.installments || 1);
   const per = full / installments;
-  const close = (value: number, target: number) => Math.abs(value - target) <= Math.max(20, target * 0.1);
+  const close = (value: number, target: number) =>
+    Math.abs(value - target) <= Math.max(20, target * 0.1);
   const pattern = (item.matchPattern ?? "").trim().toLowerCase();
   const from = addDays(item.date, -MATCH_BEFORE_DAYS);
   const to = addDays(item.date, MATCH_AFTER_DAYS);
@@ -195,7 +226,7 @@ export function plannedCandidates(
         // An installment purchase is recognised by its first payment (or by the whole amount, if reported so).
         (c.installmentNumber == null || c.installmentNumber <= 1) &&
         (close(c.amount, full) || (installments > 1 && close(c.amount, per))) &&
-        (!pattern || c.description.toLowerCase().includes(pattern))
+        (!pattern || c.description.toLowerCase().includes(pattern)),
     )
     .map((c) => ({ ...c, daysOff: Math.abs(daysBetween(item.date, c.date)) }));
 }
@@ -213,25 +244,35 @@ export const isOverdue = (item: Pick<PlannedItem, "status" | "date">, asOf: stri
 
 /** Planned (not yet charged) payments that count as spend between two dates. */
 export function plannedSpend(
-  items: Pick<PlannedItem, "status" | "id" | "description" | "amount" | "date" | "account" | "accountKind" | "installments">[],
+  items: Pick<
+    PlannedItem,
+    "status" | "id" | "description" | "amount" | "date" | "account" | "accountKind" | "installments"
+  >[],
   timings: Map<number, CardTiming | null>,
   from: string,
   to: string,
-  asOf: string
+  asOf: string,
 ): PlannedPayment[] {
   return items
     .filter((i) => i.status === "planned")
     .flatMap((item) =>
-      plannedPayments(item, item.accountKind === "card" ? (timings.get(item.id) ?? null) : null).map((p) => ({
+      plannedPayments(
+        item,
+        item.accountKind === "card" ? (timings.get(item.id) ?? null) : null,
+      ).map((p) => ({
         ...p,
         // A date that passed without the row arriving is still expected — count it from today.
         spendDate: p.spendDate < asOf ? asOf : p.spendDate,
-      }))
+      })),
     )
     .filter((p) => p.spendDate >= from && p.spendDate <= to);
 }
 
 /** The next payment that has not left the account yet. */
 export function nextPayment(payments: PlannedPayment[], asOf: string): PlannedPayment | null {
-  return [...payments].sort((a, b) => a.chargeDate.localeCompare(b.chargeDate)).find((p) => p.chargeDate >= asOf) ?? null;
+  return (
+    [...payments]
+      .sort((a, b) => a.chargeDate.localeCompare(b.chargeDate))
+      .find((p) => p.chargeDate >= asOf) ?? null
+  );
 }

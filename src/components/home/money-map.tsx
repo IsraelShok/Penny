@@ -3,7 +3,17 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { Home, Landmark, LifeBuoy, PiggyBank, Plus, Scale, TrendingUp, Wallet, type LucideIcon } from "lucide-react";
+import {
+  Home,
+  Landmark,
+  LifeBuoy,
+  PiggyBank,
+  Plus,
+  Scale,
+  TrendingUp,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { getAssets, getCashAhead, getCashflowHealth } from "@/lib/api";
 import { usePlan } from "@/hooks/use-plan";
 import { useHousehold } from "@/hooks/use-household";
@@ -31,7 +41,8 @@ export function MoneyMap() {
   const { plan } = usePlan();
   const { household, loading } = useHousehold();
 
-  if (assets.isPending || health.isPending || cash.isPending || loading) return <CardSkeleton label={t("title")} height={220} className="mb-6" />;
+  if (assets.isPending || health.isPending || cash.isPending || loading)
+    return <CardSkeleton label={t("title")} height={220} className="mb-6" />;
 
   const { rows, more } = buildMoneyMap({
     forecast: cash.data?.safeToSpend ?? null,
@@ -47,14 +58,26 @@ export function MoneyMap() {
     const bad = v != null && v < 0 && r.area !== "debts";
     const owed = r.area === "debts" && v != null && v > 0;
     // Status colour: red for a shortfall or debt, green for "no debts", else the area's own hue.
-    const tone = bad || owed ? "var(--expense)" : r.area === "debts" && v === 0 ? "var(--status-on-track)" : AREA[r.area].tone;
-    const cushionPct = r.area === "cushion" && v != null && r.target ? Math.min(100, (v / r.target) * 100) : null;
-    const caption = v == null ? null
-      : r.area === "debts" && v === 0 ? t("noDebts")
-      : r.area === "cashflow" && v < 0 ? t("caption.cashflowNegative")
-      : r.area === "cushion" && r.months != null ? t("caption.cushionMonths", { months: r.months, target: plan.emergencyMonths })
-      : r.area === "debts" && r.count ? t("caption.debtsCount", { count: r.count })
-      : t(`caption.${r.area}`);
+    const tone =
+      bad || owed
+        ? "var(--expense)"
+        : r.area === "debts" && v === 0
+          ? "var(--status-on-track)"
+          : AREA[r.area].tone;
+    const cushionPct =
+      r.area === "cushion" && v != null && r.target ? Math.min(100, (v / r.target) * 100) : null;
+    const caption =
+      v == null
+        ? null
+        : r.area === "debts" && v === 0
+          ? t("noDebts")
+          : r.area === "cashflow" && v < 0
+            ? t("caption.cashflowNegative")
+            : r.area === "cushion" && r.months != null
+              ? t("caption.cushionMonths", { months: r.months, target: plan.emergencyMonths })
+              : r.area === "debts" && r.count
+                ? t("caption.debtsCount", { count: r.count })
+                : t(`caption.${r.area}`);
 
     return (
       <li key={r.area}>
@@ -65,12 +88,21 @@ export function MoneyMap() {
           <span className="flex items-center gap-2">
             <span
               className="grid size-7 shrink-0 place-items-center rounded-full"
-              style={v == null ? undefined : { backgroundColor: `color-mix(in oklch, ${tone} 16%, transparent)`, color: `color-mix(in oklch, ${tone} 70%, var(--foreground))` }}
+              style={
+                v == null
+                  ? undefined
+                  : {
+                      backgroundColor: `color-mix(in oklch, ${tone} 16%, transparent)`,
+                      color: `color-mix(in oklch, ${tone} 70%, var(--foreground))`,
+                    }
+              }
               aria-hidden
             >
               <Icon className={`size-3.5 ${v == null ? "text-muted-foreground" : ""}`} />
             </span>
-            <span className="line-clamp-2 min-w-0 text-footnote font-semibold leading-tight">{t(`area.${r.area}`)}</span>
+            <span className="line-clamp-2 min-w-0 text-footnote font-semibold leading-tight">
+              {t(`area.${r.area}`)}
+            </span>
           </span>
           {v == null ? (
             <span className="mt-auto flex items-start gap-1 text-caption text-primary">
@@ -79,12 +111,22 @@ export function MoneyMap() {
             </span>
           ) : (
             <>
-              <span className="mt-auto text-headline font-semibold tabular-nums" style={owed || bad ? { color: "var(--expense)" } : undefined}>
+              <span
+                className="mt-auto text-headline font-semibold tabular-nums"
+                style={owed || bad ? { color: "var(--expense)" } : undefined}
+              >
                 <bdi>{shekels(Math.abs(v), locale)}</bdi>
               </span>
               {cushionPct != null && (
                 <span className="h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
-                  <span className="block h-full rounded-full" style={{ width: `${cushionPct}%`, backgroundColor: cushionPct >= 100 ? "var(--status-on-track)" : "var(--status-heads-up)" }} />
+                  <span
+                    className="block h-full rounded-full"
+                    style={{
+                      width: `${cushionPct}%`,
+                      backgroundColor:
+                        cushionPct >= 100 ? "var(--status-on-track)" : "var(--status-heads-up)",
+                    }}
+                  />
                 </span>
               )}
               <span className="line-clamp-2 text-caption text-muted-foreground">{caption}</span>
@@ -97,7 +139,9 @@ export function MoneyMap() {
 
   return (
     <CardShell label={t("title")} className="mb-6 h-auto">
-      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">{[...rows, ...more].map(tile)}</ul>
+      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        {[...rows, ...more].map(tile)}
+      </ul>
     </CardShell>
   );
 }

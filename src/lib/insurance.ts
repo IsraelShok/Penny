@@ -29,11 +29,15 @@ export function insuranceOverlaps(policies: P[]): Overlap[] {
   for (const [who, list] of byWho) {
     const of = (...kinds: string[]) => list.filter((p) => kinds.includes(p.kind));
     const names = (ps: P[]) => ps.map((p) => p.name);
-    const health = of("health"), shaban = of("shaban"), life = of("life", "mortgage_life");
+    const health = of("health"),
+      shaban = of("shaban"),
+      life = of("life", "mortgage_life");
     // Indemnity health cover pays once, however many policies pay for it.
-    if (health.length > 1) out.push({ kind: "health", who, policyKind: "health", names: names(health) });
+    if (health.length > 1)
+      out.push({ kind: "health", who, policyKind: "health", names: names(health) });
     // Private surgery cover often repeats what the health fund's supplementary plan already gives.
-    if (health.length > 0 && shaban.length > 0) out.push({ kind: "shaban", who, policyKind: "shaban", names: names([...health, ...shaban]) });
+    if (health.length > 0 && shaban.length > 0)
+      out.push({ kind: "shaban", who, policyKind: "shaban", names: names([...health, ...shaban]) });
     // Life cover does add up, but two policies plus the mortgage's is often more than the family needs.
     if (life.length > 1) out.push({ kind: "life", who, policyKind: "life", names: names(life) });
     for (const k of ["disability", "long_term_care", "home", "car", "travel"] as const) {
@@ -75,7 +79,7 @@ function patternOf(policy: Pick<InsurancePolicy, "matchPattern">): string {
  */
 export function policyMatchesCharge(
   policy: Pick<InsurancePolicy, "matchPattern" | "paymentAccount">,
-  charge: Pick<InsuranceCharge, "description" | "account">
+  charge: Pick<InsuranceCharge, "description" | "account">,
 ): boolean {
   const pattern = patternOf(policy);
   if (!pattern) return false;
@@ -85,9 +89,13 @@ export function policyMatchesCharge(
 }
 
 /** What the household actually paid for a policy in the given charges. */
-export function summarizePayments(charges: Pick<InsuranceCharge, "amount" | "date">[]): InsurancePayments {
-  let total = 0, count = 0;
-  let lastDate: string | null = null, lastAmount: number | null = null;
+export function summarizePayments(
+  charges: Pick<InsuranceCharge, "amount" | "date">[],
+): InsurancePayments {
+  let total = 0,
+    count = 0;
+  let lastDate: string | null = null,
+    lastAmount: number | null = null;
   for (const c of charges) {
     total += c.amount;
     if (c.amount > 0) count++;
@@ -102,7 +110,7 @@ export function summarizePayments(charges: Pick<InsuranceCharge, "amount" | "dat
 /** Insurance charges no active policy explains, grouped by description and account. */
 export function unlinkedCharges(
   charges: InsuranceCharge[],
-  policies: Pick<InsurancePolicy, "matchPattern" | "paymentAccount" | "archived">[]
+  policies: Pick<InsurancePolicy, "matchPattern" | "paymentAccount" | "archived">[],
 ): InsuranceUnlinkedCharge[] {
   const active = policies.filter((p) => !p.archived);
   const groups = new Map<string, InsuranceUnlinkedCharge>();
@@ -110,7 +118,14 @@ export function unlinkedCharges(
     if (active.some((p) => policyMatchesCharge(p, c))) continue;
     // The same text on two cards is two different things (his and hers at one insurer).
     const key = `${c.description}|${c.account}`;
-    const g = groups.get(key) ?? { description: c.description, account: c.account, count: 0, total: 0, lastDate: "", lastAmount: 0 };
+    const g = groups.get(key) ?? {
+      description: c.description,
+      account: c.account,
+      count: 0,
+      total: 0,
+      lastDate: "",
+      lastAmount: 0,
+    };
     g.count++;
     g.total = round(g.total + c.amount);
     if (!g.lastDate || c.date > g.lastDate) {
@@ -134,7 +149,9 @@ export function insuranceTotals(policies: InsurancePolicyView[]) {
 }
 
 /** The first day of a YYYY-MM renewal. */
-export function renewalDay(policy: Pick<InsurancePolicy, "endDate" | "renewalMonth">): string | null {
+export function renewalDay(
+  policy: Pick<InsurancePolicy, "endDate" | "renewalMonth">,
+): string | null {
   if (policy.endDate) return policy.endDate.slice(0, 10);
   if (policy.renewalMonth) return `${policy.renewalMonth.slice(0, 7)}-01`;
   return null;
@@ -151,7 +168,7 @@ export function daysUntil(day: string, today: Date): number {
 export function renewalSoon(
   policy: Pick<InsurancePolicy, "endDate" | "renewalMonth" | "archived">,
   today = new Date(),
-  days = 60
+  days = 60,
 ): boolean {
   if (policy.archived) return false;
   const day = renewalDay(policy);
@@ -161,7 +178,10 @@ export function renewalSoon(
 }
 
 /** A yearly or one-off premium as a monthly cost, for the form. */
-export function monthlyPremium(amount: number, frequency: "monthly" | "yearly" | "one_time"): number {
+export function monthlyPremium(
+  amount: number,
+  frequency: "monthly" | "yearly" | "one_time",
+): number {
   if (!Number.isFinite(amount) || amount <= 0) return 0;
   if (frequency === "yearly") return round(amount / 12);
   if (frequency === "one_time") return 0;
@@ -172,7 +192,8 @@ export function monthlyPremium(amount: number, frequency: "monthly" | "yearly" |
 export function sortPolicies(policies: InsurancePolicyView[]): InsurancePolicyView[] {
   return [...policies].sort((a, b) => {
     if (a.archived !== b.archived) return a.archived ? 1 : -1;
-    const da = renewalDay(a), db = renewalDay(b);
+    const da = renewalDay(a),
+      db = renewalDay(b);
     if (da && db) return da.localeCompare(db);
     if (da) return -1;
     if (db) return 1;

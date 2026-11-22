@@ -20,7 +20,9 @@ export function PlanVsActual({ summary }: { summary: DashboardSummary }) {
   const planned = rows.reduce((s, c) => s + c.budget, 0);
   const actual = rows.reduce((s, c) => s + c.spent, 0);
   const expected = projectMonthEnd(actual, summary.timeElapsedPercent);
-  const furthest = [...rows].sort((a, b) => Math.abs(b.spent - b.budget) - Math.abs(a.spent - a.budget)).slice(0, 5);
+  const furthest = [...rows]
+    .sort((a, b) => Math.abs(b.spent - b.budget) - Math.abs(a.spent - a.budget))
+    .slice(0, 5);
   const figures = [
     { key: "planned", value: planned },
     { key: "actual", value: actual },
@@ -30,7 +32,11 @@ export function PlanVsActual({ summary }: { summary: DashboardSummary }) {
   return (
     <CardShell label={t("summaryLabel")}>
       <p className="text-base leading-relaxed">
-        {t("sentence", { actual: shekels(actual, locale), planned: shekels(planned, locale), expected: shekels(expected, locale) })}
+        {t("sentence", {
+          actual: shekels(actual, locale),
+          planned: shekels(planned, locale),
+          expected: shekels(expected, locale),
+        })}
       </p>
       <dl className="mt-4 grid grid-cols-3 gap-3 text-center">
         {figures.map((f) => (
@@ -41,13 +47,25 @@ export function PlanVsActual({ summary }: { summary: DashboardSummary }) {
         ))}
       </dl>
       <table className="mt-4 w-full text-sm">
-        <caption className="mb-2 text-start text-xs text-muted-foreground">{t("tableCaption")}</caption>
+        <caption className="mb-2 text-start text-xs text-muted-foreground">
+          {t("tableCaption")}
+        </caption>
         <thead>
           <tr className="text-xs text-muted-foreground">
-            <th scope="col" className="py-1 text-start font-medium">{t("category")}</th>
-            <th scope="col" className="py-1 text-end font-medium">{t("planned")}</th>
-            <th scope="col" className="py-1 text-end font-medium">{t("actual")}</th>
-            {!gentle && <th scope="col" className="py-1 text-end font-medium">{t("difference")}</th>}
+            <th scope="col" className="py-1 text-start font-medium">
+              {t("category")}
+            </th>
+            <th scope="col" className="py-1 text-end font-medium">
+              {t("planned")}
+            </th>
+            <th scope="col" className="py-1 text-end font-medium">
+              {t("actual")}
+            </th>
+            {!gentle && (
+              <th scope="col" className="py-1 text-end font-medium">
+                {t("difference")}
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-border/60">
@@ -55,13 +73,21 @@ export function PlanVsActual({ summary }: { summary: DashboardSummary }) {
             const diff = c.spent - c.budget;
             return (
               <tr key={c.categoryId}>
-                <th scope="row" className="py-2 text-start font-normal">{translateCategoryName(c.categoryName, tCat)}</th>
+                <th scope="row" className="py-2 text-start font-normal">
+                  {translateCategoryName(c.categoryName, tCat)}
+                </th>
                 <td className="py-2 text-end tabular-nums">{shekels(c.budget, locale)}</td>
                 <td className="py-2 text-end tabular-nums">{shekels(c.spent, locale)}</td>
                 {/* Words, not only color, say which way it went. */}
-                {!gentle && <td className={`py-2 text-end tabular-nums ${diff > 0 ? "text-[var(--status-heads-up)]" : "text-muted-foreground"}`}>
-                  {diff > 0 ? t("over", { amount: shekels(diff, locale) }) : t("under", { amount: shekels(-diff, locale) })}
-                </td>}
+                {!gentle && (
+                  <td
+                    className={`py-2 text-end tabular-nums ${diff > 0 ? "text-[var(--status-heads-up)]" : "text-muted-foreground"}`}
+                  >
+                    {diff > 0
+                      ? t("over", { amount: shekels(diff, locale) })
+                      : t("under", { amount: shekels(-diff, locale) })}
+                  </td>
+                )}
               </tr>
             );
           })}

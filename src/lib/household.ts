@@ -1,11 +1,39 @@
 // Household profile and life events — stored as one JSON workspace setting.
 
-export const MEMBER_ROLES = ["me", "partner", "child", "roommate", "exPartner", "parent", "sibling"] as const;
-export const INCOME_SHAPES = ["salaried", "freelancer", "mixed", "pension", "allowance", "irregular", "none"] as const;
+export const MEMBER_ROLES = [
+  "me",
+  "partner",
+  "child",
+  "roommate",
+  "exPartner",
+  "parent",
+  "sibling",
+] as const;
+export const INCOME_SHAPES = [
+  "salaried",
+  "freelancer",
+  "mixed",
+  "pension",
+  "allowance",
+  "irregular",
+  "none",
+] as const;
 export const MONEY_STYLES = ["joint", "mixed", "separate"] as const;
 export const LIFE_EVENTS = [
-  "birth", "firstJob", "armyRelease", "movedIn", "wedding", "homePurchase", "newChild",
-  "jobLoss", "startedBusiness", "divorce", "illness", "caringParent", "retirement", "loss",
+  "birth",
+  "firstJob",
+  "armyRelease",
+  "movedIn",
+  "wedding",
+  "homePurchase",
+  "newChild",
+  "jobLoss",
+  "startedBusiness",
+  "divorce",
+  "illness",
+  "caringParent",
+  "retirement",
+  "loss",
 ] as const;
 // Events that trigger a one-time gentle-mode suggestion.
 export const HARD_EVENTS: readonly LifeEventType[] = ["jobLoss", "divorce", "illness", "loss"];
@@ -15,8 +43,17 @@ export type IncomeShape = (typeof INCOME_SHAPES)[number];
 export type MoneyStyle = (typeof MONEY_STYLES)[number];
 export type LifeEventType = (typeof LIFE_EVENTS)[number];
 
-export interface HouseholdMember { id: string; name: string; role: MemberRole; birthYear: number | null }
-export interface LifeEvent { id: string; type: LifeEventType; date: string }
+export interface HouseholdMember {
+  id: string;
+  name: string;
+  role: MemberRole;
+  birthYear: number | null;
+}
+export interface LifeEvent {
+  id: string;
+  type: LifeEventType;
+  date: string;
+}
 
 export interface Household {
   members: HouseholdMember[];
@@ -30,8 +67,13 @@ export interface Household {
 }
 
 export const EMPTY_HOUSEHOLD: Household = {
-  members: [], incomeShape: null, moneyStyle: null,
-  gentleMode: false, gentleSuggestionDismissed: false, welcomeDismissed: false, events: [],
+  members: [],
+  incomeShape: null,
+  moneyStyle: null,
+  gentleMode: false,
+  gentleSuggestionDismissed: false,
+  welcomeDismissed: false,
+  events: [],
 };
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -46,7 +88,8 @@ function oneOf<T extends string>(list: readonly T[], v: unknown): T {
   return v as T;
 }
 function amount(v: unknown): number {
-  if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > 1e10) throw new Error("invalid amount");
+  if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > 1e10)
+    throw new Error("invalid amount");
   return v;
 }
 function list<T>(v: unknown, map: (x: Record<string, unknown>) => T): T[] {
@@ -73,22 +116,36 @@ export function parseHousehold(raw: unknown): Household {
     gentleMode: o.gentleMode === true,
     gentleSuggestionDismissed: o.gentleSuggestionDismissed === true,
     welcomeDismissed: o.welcomeDismissed === true,
-    events: list(o.events ?? [], (e) => ({ id: str(e.id, 40), type: oneOf(LIFE_EVENTS, e.type), date: date(e.date) })),
+    events: list(o.events ?? [], (e) => ({
+      id: str(e.id, 40),
+      type: oneOf(LIFE_EVENTS, e.type),
+      date: date(e.date),
+    })),
   };
 }
 
 export function shouldSuggestGentle(h: Household): boolean {
-  return !h.gentleMode && !h.gentleSuggestionDismissed && h.events.some((e) => HARD_EVENTS.includes(e.type));
+  return (
+    !h.gentleMode &&
+    !h.gentleSuggestionDismissed &&
+    h.events.some((e) => HARD_EVENTS.includes(e.type))
+  );
 }
 
 /** Gentle mode is on, or a hard event happened in the last 12 months (undated counts). */
 export function isGentle(h: Household, today = new Date()): boolean {
-  const cutoff = new Date(today); cutoff.setMonth(cutoff.getMonth() - 12);
-  return h.gentleMode || h.events.some((e) => HARD_EVENTS.includes(e.type) && (!e.date || new Date(e.date) >= cutoff));
+  const cutoff = new Date(today);
+  cutoff.setMonth(cutoff.getMonth() - 12);
+  return (
+    h.gentleMode ||
+    h.events.some((e) => HARD_EVENTS.includes(e.type) && (!e.date || new Date(e.date) >= cutoff))
+  );
 }
 
 export function shouldShowWelcome(h: Household): boolean {
-  return !h.welcomeDismissed && h.members.length === 0 && h.incomeShape == null && h.moneyStyle == null;
+  return (
+    !h.welcomeDismissed && h.members.length === 0 && h.incomeShape == null && h.moneyStyle == null
+  );
 }
 
 export function newId(): string {

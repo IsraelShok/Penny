@@ -35,14 +35,20 @@ export async function backupData(dataDir, stamp) {
     fs.chmodSync(path.join(target, ".encryption-key"), 0o600);
   }
 
-  const old = fs.readdirSync(root).sort().slice(0, -KEEP);
+  const old = fs
+    .readdirSync(root)
+    .sort((a, b) => a.localeCompare(b))
+    .slice(0, -KEEP);
   for (const name of old) fs.rmSync(path.join(root, name), { recursive: true, force: true });
   return target;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const dataDir = path.resolve(process.argv[2] ?? process.env.PENNY_DATA_DIR ?? process.env.SPENT_DATA_DIR ?? "data"); // legacy: SPENT_DATA_DIR from installs before the Penny rename
-  const stamp = process.argv[3] ?? new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
+  const dataDir = path.resolve(
+    process.argv[2] ?? process.env.PENNY_DATA_DIR ?? process.env.SPENT_DATA_DIR ?? "data",
+  ); // legacy: SPENT_DATA_DIR from installs before the Penny rename
+  const stamp =
+    process.argv[3] ?? new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
   const target = await backupData(dataDir, stamp);
   console.log(target ? `Backup saved to ${target}` : "No database yet, nothing to back up.");
 }

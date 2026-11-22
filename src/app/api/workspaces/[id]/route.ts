@@ -1,17 +1,10 @@
 import { NextResponse } from "next/server";
-import {
-  deleteWorkspace,
-  getWorkspace,
-  updateWorkspace,
-} from "@/server/db/queries/workspaces";
+import { deleteWorkspace, getWorkspace, updateWorkspace } from "@/server/db/queries/workspaces";
 import { parseAvatar } from "@/lib/profile-avatar";
 
 import { errorResponse } from "@/server/lib/api-error";
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const numericId = Number(id);
   if (!Number.isInteger(numericId) || numericId <= 0) {
@@ -26,15 +19,10 @@ export async function PATCH(
   }
 
   const name =
-    typeof (body as { name?: unknown })?.name === "string"
-      ? ((body as { name: string }).name)
-      : "";
+    typeof (body as { name?: unknown })?.name === "string" ? (body as { name: string }).name : "";
 
   if (!name.trim()) {
-    return NextResponse.json(
-      { error: "name is required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
   }
 
   if (!getWorkspace(numericId)) {
@@ -54,10 +42,7 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const numericId = Number(id);
   if (!Number.isInteger(numericId) || numericId <= 0) {

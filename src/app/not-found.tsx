@@ -16,7 +16,9 @@ export default function NotFound() {
         <section className="rounded-2xl border border-border/60 bg-card px-6 py-10 sm:px-10">
           <Compass className="mb-5 size-7 text-muted-foreground" aria-hidden />
           {/* The page header already carries the title, so the card only explains. */}
-          <p className="max-w-xl text-base leading-relaxed text-muted-foreground">{t("notFoundHint")}</p>
+          <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
+            {t("notFoundHint")}
+          </p>
           <Link href="/" className={buttonVariants({ size: "lg", className: "mt-6" })}>
             {t("home")}
           </Link>

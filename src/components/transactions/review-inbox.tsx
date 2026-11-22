@@ -41,7 +41,9 @@ export function ReviewInbox() {
     const next = Math.max(0, Math.min(i, rows.length - 1));
     setActive(next);
     // Rows re-render after state changes, so focus on the next frame.
-    requestAnimationFrame(() => (listRef.current?.querySelector(`[data-row="${next}"]`) as HTMLElement | null)?.focus());
+    requestAnimationFrame(() =>
+      (listRef.current?.querySelector(`[data-row="${next}"]`) as HTMLElement | null)?.focus(),
+    );
   };
 
   const refresh = () => {
@@ -53,11 +55,14 @@ export function ReviewInbox() {
   const hide = (ids: number[], on: boolean) =>
     setHidden((h) => {
       const next = new Set(h);
-      for (const id of ids) if (on) next.add(id); else next.delete(id);
+      for (const id of ids)
+        if (on) next.add(id);
+        else next.delete(id);
       return next;
     });
 
-  const focusPicker = (id: number) => (document.getElementById(`review-cat-${id}`) as HTMLSelectElement | null)?.focus();
+  const focusPicker = (id: number) =>
+    (document.getElementById(`review-cat-${id}`) as HTMLSelectElement | null)?.focus();
 
   const approve = async (txns: TransactionWithCategory[]) => {
     // Approving keeps the current category, so a row without one needs a pick first.
@@ -109,7 +114,8 @@ export function ReviewInbox() {
   const toggle = (id: number) =>
     setSelected((s) => {
       const next = new Set(s);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
 
@@ -151,15 +157,30 @@ export function ReviewInbox() {
     <CardShell
       label={t("count", { count: rows.length })}
       action={
-        <IconButton label={t("approveAll")} showLabel variant="outline" onClick={() => void approve(rows)}>
+        <IconButton
+          label={t("approveAll")}
+          showLabel
+          variant="outline"
+          onClick={() => void approve(rows)}
+        >
           <CheckCheck className="size-4" aria-hidden />
         </IconButton>
       }
     >
-      <p id="review-keys" className="mb-3 text-footnote text-muted-foreground">{t("shortcuts")}</p>
-      <ul ref={listRef} aria-describedby="review-keys" aria-label={t("listLabel")} className="divide-y divide-border/60" onKeyDown={onKeyDown}>
+      <p id="review-keys" className="mb-3 text-footnote text-muted-foreground">
+        {t("shortcuts")}
+      </p>
+      <ul
+        ref={listRef}
+        aria-describedby="review-keys"
+        aria-label={t("listLabel")}
+        className="divide-y divide-border/60"
+        onKeyDown={onKeyDown}
+      >
         {rows.map((r, i) => {
-          const options = (categories.data ?? []).filter((c) => c.kind === (r.kind === "income" ? "income" : "expense"));
+          const options = (categories.data ?? []).filter(
+            (c) => c.kind === (r.kind === "income" ? "income" : "expense"),
+          );
           const isSelected = selected.has(r.id);
           return (
             <li
@@ -171,7 +192,7 @@ export function ReviewInbox() {
               className={cn(
                 "flex flex-wrap items-center gap-3 rounded-lg px-2 py-3 outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 i === current && "bg-muted/60",
-                isSelected && "bg-primary/10"
+                isSelected && "bg-primary/10",
               )}
             >
               <input
@@ -182,12 +203,16 @@ export function ReviewInbox() {
                 aria-label={t("select", { name: r.description })}
               />
               <div className="min-w-0 flex-1">
-                <bdi className="block truncate font-medium" title={r.description}>{r.description}</bdi>
+                <bdi className="block truncate font-medium" title={r.description}>
+                  {r.description}
+                </bdi>
                 <span className="text-footnote text-muted-foreground">
                   {formatDate(r.date)} · {r.categoryId == null ? t("noCategory") : t("unsure")}
                 </span>
               </div>
-              <span className="tabular-nums" dir="ltr">{formatCurrency(r.chargedAmount, "ILS", locale)}</span>
+              <span className="tabular-nums" dir="ltr">
+                {formatCurrency(r.chargedAmount, "ILS", locale)}
+              </span>
               <select
                 id={`review-cat-${r.id}`}
                 aria-label={t("category", { name: r.description })}
@@ -197,10 +222,16 @@ export function ReviewInbox() {
               >
                 <option value="">{t("pick")}</option>
                 {options.map((c) => (
-                  <option key={c.id} value={c.id}>{translateCategoryName(c.name, tCat)}</option>
+                  <option key={c.id} value={c.id}>
+                    {translateCategoryName(c.name, tCat)}
+                  </option>
                 ))}
               </select>
-              <IconButton label={t("approve")} disabled={r.categoryId == null} onClick={() => void approve([r])}>
+              <IconButton
+                label={t("approve")}
+                disabled={r.categoryId == null}
+                onClick={() => void approve([r])}
+              >
                 <Check className="size-4" aria-hidden />
               </IconButton>
             </li>

@@ -8,8 +8,10 @@ export function wrap(text: string, max: number) {
   for (const para of text.split("\n")) {
     let line = "";
     for (const word of para.split(" ")) {
-      if (line && (line + " " + word).length > max) { lines.push(line); line = word; }
-      else line = line ? `${line} ${word}` : word;
+      if (line && (line + " " + word).length > max) {
+        lines.push(line);
+        line = word;
+      } else line = line ? `${line} ${word}` : word;
     }
     lines.push(line);
   }
@@ -37,7 +39,11 @@ export async function saveCardAsPng(card: StoryCard, rtl: boolean, filename: str
   const url = URL.createObjectURL(new Blob([cardSvg(card, rtl)], { type: "image/svg+xml" }));
   try {
     const img = new Image();
-    await new Promise<void>((resolve, reject) => { img.onload = () => resolve(); img.onerror = reject; img.src = url; });
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = reject;
+      img.src = url;
+    });
     const canvas = document.createElement("canvas");
     canvas.width = img.width;
     canvas.height = img.height;

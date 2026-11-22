@@ -10,7 +10,15 @@ import { SHARED } from "@/lib/tags";
 import { OwnerPicker } from "./owner-picker";
 
 /** This month by owner (mine / partner / shared) and a calm who-owes-whom line. Only for 2+ members. */
-export function OwnerSummary({ members, from, to }: { members: HouseholdMember[]; from: string; to: string }) {
+export function OwnerSummary({
+  members,
+  from,
+  to,
+}: {
+  members: HouseholdMember[];
+  from: string;
+  to: string;
+}) {
   const t = useTranslations("tags");
   const locale = useLocale();
   const queryClient = useQueryClient();
@@ -18,7 +26,8 @@ export function OwnerSummary({ members, from, to }: { members: HouseholdMember[]
   if (!query.data) return null;
   const { summary, accounts, accountOwners } = query.data;
   const money = (n: number) => shekels(Math.round(n), locale);
-  const nameOf = (id: string) => (id === SHARED ? t("shared") : members.find((m) => m.id === id)?.name ?? "");
+  const nameOf = (id: string) =>
+    id === SHARED ? t("shared") : (members.find((m) => m.id === id)?.name ?? "");
 
   const setDefault = async (accountNumber: string, owner: string | null) => {
     try {
@@ -36,7 +45,9 @@ export function OwnerSummary({ members, from, to }: { members: HouseholdMember[]
         {[...members.map((m) => m.id), SHARED].map((id) => (
           <div key={id}>
             <dt className="text-xs text-muted-foreground">{nameOf(id)}</dt>
-            <dd className="text-lg font-semibold tabular-nums">{money(summary.byOwner[id] ?? 0)}</dd>
+            <dd className="text-lg font-semibold tabular-nums">
+              {money(summary.byOwner[id] ?? 0)}
+            </dd>
           </div>
         ))}
         {summary.unset > 0 && (
@@ -49,15 +60,27 @@ export function OwnerSummary({ members, from, to }: { members: HouseholdMember[]
       <p className="mt-2 text-sm leading-relaxed">
         {summary.settlements.length === 0
           ? t("settledEven")
-          : summary.settlements.map((s) => t("settlement", { from: nameOf(s.from), to: nameOf(s.to), amount: money(s.amount) })).join(" · ")}
+          : summary.settlements
+              .map((s) =>
+                t("settlement", {
+                  from: nameOf(s.from),
+                  to: nameOf(s.to),
+                  amount: money(s.amount),
+                }),
+              )
+              .join(" · ")}
       </p>
       {accounts.length > 0 && (
         <details className="mt-3">
-          <summary className="cursor-pointer rounded text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring">{t("accountDefaults")}</summary>
+          <summary className="cursor-pointer rounded text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring">
+            {t("accountDefaults")}
+          </summary>
           <ul className="mt-2 grid max-w-3xl gap-x-8 gap-y-2 lg:grid-cols-2">
             {accounts.map((a) => (
               <li key={a.accountNumber} className="flex items-center justify-between gap-3 text-sm">
-                <span className="tabular-nums" dir="ltr">{a.label ?? a.provider} · {a.accountNumber.slice(-4)}</span>
+                <span className="tabular-nums" dir="ltr">
+                  {a.label ?? a.provider} · {a.accountNumber.slice(-4)}
+                </span>
                 <OwnerPicker
                   label={t("accountOwnerLabel", { account: a.accountNumber.slice(-4) })}
                   value={accountOwners[a.accountNumber] ?? null}

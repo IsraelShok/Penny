@@ -12,10 +12,23 @@ export function IconButton({
   variant = "ghost",
   size = "icon",
   ...props
-}: Omit<ComponentProps<typeof Button>, "aria-label"> & { label: string; showLabel?: boolean; children: ReactNode }) {
+}: Omit<ComponentProps<typeof Button>, "aria-label"> & {
+  label: string;
+  showLabel?: boolean;
+  children: ReactNode;
+}) {
   return (
     <Tooltip>
-      <TooltipTrigger render={<Button variant={variant} size={showLabel ? "default" : size} aria-label={label} {...props} />}>
+      <TooltipTrigger
+        render={
+          <Button
+            variant={variant}
+            size={showLabel ? "default" : size}
+            aria-label={label}
+            {...props}
+          />
+        }
+      >
         {children}
         {showLabel && <span>{label}</span>}
       </TooltipTrigger>

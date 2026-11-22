@@ -21,7 +21,10 @@ import {
   type InsurancePolicyView,
 } from "@/lib/types";
 
-export type InsurancePolicyInput = Omit<InsurancePolicy, "id" | "archived"> & { id?: number; archived?: boolean };
+export type InsurancePolicyInput = Omit<InsurancePolicy, "id" | "archived"> & {
+  id?: number;
+  archived?: boolean;
+};
 
 export const FILE_MIME: Record<string, string> = {
   "application/pdf": "pdf",
@@ -79,7 +82,9 @@ function documentOf(row: Row): InsuranceDocument {
 
 /** Premium-looking debits of the last year: by category, or by a policy's own match text. */
 function charges(workspaceId: number, today: Date): InsuranceCharge[] {
-  const from = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 365).toISOString().slice(0, 10);
+  const from = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 365)
+    .toISOString()
+    .slice(0, 10);
   const rows = getDb()
     .prepare(
       `SELECT t.id, t.description, substr(t.date, 1, 10) AS date, t.account_number AS account, -t.charged_amount AS amount
@@ -98,7 +103,7 @@ function charges(workspaceId: number, today: Date): InsuranceCharge[] {
                AND instr(lower(t.description), lower(ip.match_pattern)) > 0
            )
          )
-       ORDER BY t.date`
+       ORDER BY t.date`,
     )
     .all(workspaceId, from, today.toISOString().slice(0, 10)) as InsuranceCharge[];
   return rows;
@@ -106,8 +111,16 @@ function charges(workspaceId: number, today: Date): InsuranceCharge[] {
 
 export function listInsurance(workspaceId: number, today = new Date()): InsurancePayload {
   const db = getDb();
-  const policies = (db.prepare(`SELECT * FROM insurance_policies WHERE workspace_id = ? ORDER BY archived, name`).all(workspaceId) as Row[]).map(policyOf);
-  const documents = (db.prepare(`SELECT * FROM insurance_documents WHERE workspace_id = ? ORDER BY uploaded_at DESC`).all(workspaceId) as Row[]).map(documentOf);
+  const policies = (
+    db
+      .prepare(`SELECT * FROM insurance_policies WHERE workspace_id = ? ORDER BY archived, name`)
+      .all(workspaceId) as Row[]
+  ).map(policyOf);
+  const documents = (
+    db
+      .prepare(`SELECT * FROM insurance_documents WHERE workspace_id = ? ORDER BY uploaded_at DESC`)
+      .all(workspaceId) as Row[]
+  ).map(documentOf);
   const list = charges(workspaceId, today);
 
   const views: InsurancePolicyView[] = policies.map((p) => ({
@@ -120,7 +133,11 @@ export function listInsurance(workspaceId: number, today = new Date()): Insuranc
   const sorted = sortPolicies(views);
 
   const accounts = (
-    db.prepare(`SELECT DISTINCT account_number AS account FROM transactions WHERE workspace_id = ? ORDER BY account_number`).all(workspaceId) as {
+    db
+      .prepare(
+        `SELECT DISTINCT account_number AS account FROM transactions WHERE workspace_id = ? ORDER BY account_number`,
+      )
+      .all(workspaceId) as {
       account: string;
     }[]
   ).map((r) => r.account);
@@ -133,7 +150,10 @@ export function listInsurance(workspaceId: number, today = new Date()): Insuranc
   };
 }
 
-export function upsertInsurancePolicy(workspaceId: number, input: InsurancePolicyInput): number | null {
+export function upsertInsurancePolicy(
+  workspaceId: number,
+  input: InsurancePolicyInput,
+): number | null {
   const db = getDb();
   const values = {
     name: input.name,
@@ -159,14 +179,16 @@ export function upsertInsurancePolicy(workspaceId: number, input: InsurancePolic
     const changes = db
       .prepare(
         `UPDATE insurance_policies SET ${columns.map((c) => `${c} = ?`).join(", ")}, updated_at = datetime('now')
-         WHERE workspace_id = ? AND id = ?`
+         WHERE workspace_id = ? AND id = ?`,
       )
       .run(...columns.map((c) => values[c]), workspaceId, input.id).changes;
     return changes ? input.id : null;
   }
   const columns = Object.keys(values) as (keyof typeof values)[];
   const res = db
-    .prepare(`INSERT INTO insurance_policies (workspace_id, ${columns.join(", ")}) VALUES (?, ${columns.map(() => "?").join(", ")})`)
+    .prepare(
+      `INSERT INTO insurance_policies (workspace_id, ${columns.join(", ")}) VALUES (?, ${columns.map(() => "?").join(", ")})`,
+    )
     .run(workspaceId, ...columns.map((c) => values[c]));
   return Number(res.lastInsertRowid);
 }
@@ -177,7 +199,10 @@ export function policyFolder(workspaceId: number, policyId: number): string {
 
 export function deleteInsurancePolicy(workspaceId: number, id: number): boolean {
   const db = getDb();
-  const removed = db.prepare(`DELETE FROM insurance_policies WHERE workspace_id = ? AND id = ?`).run(workspaceId, id).changes > 0;
+  const removed =
+    db
+      .prepare(`DELETE FROM insurance_policies WHERE workspace_id = ? AND id = ?`)
+      .run(workspaceId, id).changes > 0;
   if (removed) fs.rmSync(policyFolder(workspaceId, id), { recursive: true, force: true });
   return removed;
 }
@@ -195,16 +220,20 @@ export function safeFileName(name: string): string {
 export function addInsuranceDocument(
   workspaceId: number,
   policyId: number,
-  file: { name: string; mime: string; data: Buffer }
+  file: { name: string; mime: string; data: Buffer },
 ): InsuranceDocument | null {
   const db = getDb();
-  const policy = db.prepare(`SELECT 1 FROM insurance_policies WHERE workspace_id = ? AND id = ?`).get(workspaceId, policyId);
+  const policy = db
+    .prepare(`SELECT 1 FROM insurance_policies WHERE workspace_id = ? AND id = ?`)
+    .get(workspaceId, policyId);
   if (!policy) return null;
   const ext = FILE_MIME[file.mime];
   if (!ext || !file.data.length || file.data.length > MAX_INSURANCE_FILE) return null;
 
   const res = db
-    .prepare(`INSERT INTO insurance_documents (workspace_id, policy_id, file_name, original_name, mime, size) VALUES (?, ?, '', ?, ?, ?)`)
+    .prepare(
+      `INSERT INTO insurance_documents (workspace_id, policy_id, file_name, original_name, mime, size) VALUES (?, ?, '', ?, ?, ?)`,
+    )
     .run(workspaceId, policyId, file.name.slice(0, 200), file.mime, file.data.length);
   const id = Number(res.lastInsertRowid);
   const fileName = `${id}-${safeFileName(file.name)}.${ext}`;
@@ -217,7 +246,9 @@ export function addInsuranceDocument(
 }
 
 export function getInsuranceDocument(workspaceId: number, docId: number): InsuranceDocument | null {
-  const row = getDb().prepare(`SELECT * FROM insurance_documents WHERE workspace_id = ? AND id = ?`).get(workspaceId, docId) as Row | undefined;
+  const row = getDb()
+    .prepare(`SELECT * FROM insurance_documents WHERE workspace_id = ? AND id = ?`)
+    .get(workspaceId, docId) as Row | undefined;
   return row ? documentOf(row) : null;
 }
 
@@ -229,9 +260,15 @@ export function insuranceDocumentFile(workspaceId: number, doc: InsuranceDocumen
   return fs.existsSync(file) ? file : null;
 }
 
-export function setInsuranceDocumentKind(workspaceId: number, docId: number, kind: (typeof INSURANCE_DOC_KINDS)[number]): boolean {
+export function setInsuranceDocumentKind(
+  workspaceId: number,
+  docId: number,
+  kind: (typeof INSURANCE_DOC_KINDS)[number],
+): boolean {
   return (
-    getDb().prepare(`UPDATE insurance_documents SET kind = ? WHERE workspace_id = ? AND id = ?`).run(kind, workspaceId, docId).changes > 0
+    getDb()
+      .prepare(`UPDATE insurance_documents SET kind = ? WHERE workspace_id = ? AND id = ?`)
+      .run(kind, workspaceId, docId).changes > 0
   );
 }
 
@@ -240,5 +277,9 @@ export function deleteInsuranceDocument(workspaceId: number, docId: number): boo
   if (!doc) return false;
   const file = insuranceDocumentFile(workspaceId, doc);
   if (file) fs.rmSync(file, { force: true });
-  return getDb().prepare(`DELETE FROM insurance_documents WHERE workspace_id = ? AND id = ?`).run(workspaceId, docId).changes > 0;
+  return (
+    getDb()
+      .prepare(`DELETE FROM insurance_documents WHERE workspace_id = ? AND id = ?`)
+      .run(workspaceId, docId).changes > 0
+  );
 }

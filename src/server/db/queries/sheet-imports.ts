@@ -7,7 +7,10 @@ import { recordMerchantCategory } from "@/server/lib/merchant-memory";
 import type { CategoryKind } from "@/lib/types";
 
 /** Leaf categories by name, for the sheet's category column. Duplicates keep the first. */
-export function categoryIdsByName(workspaceId: number, names: string[]): Map<string, { id: number; kind: CategoryKind }> {
+export function categoryIdsByName(
+  workspaceId: number,
+  names: string[],
+): Map<string, { id: number; kind: CategoryKind }> {
   const out = new Map<string, { id: number; kind: CategoryKind }>();
   if (names.length === 0) return out;
   const unique = [...new Set(names.filter(Boolean))];
@@ -65,18 +68,29 @@ export function insertSheetRows(
        ON CONFLICT(workspace_id, dedup_hash, dedup_sequence) DO NOTHING`,
     );
     // A manual row on a real account would double-count against the bank: these are statement rows.
-    const credential = (db
-      .prepare(
-        "SELECT credential_id AS c FROM transactions WHERE workspace_id = ? AND account_number = ? AND credential_id IS NOT NULL LIMIT 1",
-      )
-      .get(workspaceId, account) as { c: number } | undefined)?.c ?? null;
-    const tagInsert = db.prepare("INSERT OR IGNORE INTO transaction_tags (workspace_id, transaction_id, tag) VALUES (?, ?, ?)");
+    const credential =
+      (
+        db
+          .prepare(
+            "SELECT credential_id AS c FROM transactions WHERE workspace_id = ? AND account_number = ? AND credential_id IS NOT NULL LIMIT 1",
+          )
+          .get(workspaceId, account) as { c: number } | undefined
+      )?.c ?? null;
+    const tagInsert = db.prepare(
+      "INSERT OR IGNORE INTO transaction_tags (workspace_id, transaction_id, tag) VALUES (?, ?, ?)",
+    );
     const hashCounts = new Map<string, number>();
     const ids: number[] = [];
     const flags: boolean[] = [];
     for (const r of rows) {
       const signed = roundCents(r.kind === "expense" ? -r.amount : r.amount);
-      const hash = computeDedupHash({ accountNumber: account, date: r.date, originalAmount: signed, originalCurrency: "ILS", description: r.description });
+      const hash = computeDedupHash({
+        accountNumber: account,
+        date: r.date,
+        originalAmount: signed,
+        originalCurrency: "ILS",
+        description: r.description,
+      });
       const seq = hashCounts.get(hash) ?? 0;
       hashCounts.set(hash, seq + 1);
       const res = insert.run({
@@ -102,21 +116,29 @@ export function insertSheetRows(
       const id = Number(res.lastInsertRowid);
       ids.push(id);
       for (const tag of r.tags) tagInsert.run(workspaceId, id, tag);
-      if (r.categoryId != null) recordMerchantCategory(workspaceId, r.description, r.categoryId, r.kind, "user");
+      if (r.categoryId != null)
+        recordMerchantCategory(workspaceId, r.description, r.categoryId, r.kind, "user");
     }
     return { batchId, ids, added: ids.length, flags };
   })();
 }
 
 /** Records one sheet save so undo can remove exactly its rows later. */
-export function recordSheetImport(workspaceId: number, transactionIds: number[], skipped: number): number {
+export function recordSheetImport(
+  workspaceId: number,
+  transactionIds: number[],
+  skipped: number,
+): number {
   const db = getDb();
   return db.transaction(() => {
     const id = Number(
-      db.prepare("INSERT INTO sheet_imports (workspace_id, added, skipped) VALUES (?, ?, ?)").run(workspaceId, transactionIds.length, skipped)
-        .lastInsertRowid,
+      db
+        .prepare("INSERT INTO sheet_imports (workspace_id, added, skipped) VALUES (?, ?, ?)")
+        .run(workspaceId, transactionIds.length, skipped).lastInsertRowid,
     );
-    const link = db.prepare("INSERT OR IGNORE INTO sheet_import_rows (sheet_import_id, transaction_id) VALUES (?, ?)");
+    const link = db.prepare(
+      "INSERT OR IGNORE INTO sheet_import_rows (sheet_import_id, transaction_id) VALUES (?, ?)",
+    );
     for (const t of transactionIds) link.run(id, t);
     return id;
   })();
@@ -126,28 +148,48 @@ export function recordSheetImport(workspaceId: number, transactionIds: number[],
 export function deleteSheetImport(workspaceId: number, importId: number): number {
   const db = getDb();
   return db.transaction(() => {
-    const row = db.prepare("SELECT id FROM sheet_imports WHERE workspace_id = ? AND id = ?").get(workspaceId, importId) as { id: number } | undefined;
+    const row = db
+      .prepare("SELECT id FROM sheet_imports WHERE workspace_id = ? AND id = ?")
+      .get(workspaceId, importId) as { id: number } | undefined;
     if (!row) return 0;
-    const ids = (db.prepare("SELECT transaction_id FROM sheet_import_rows WHERE sheet_import_id = ?").all(importId) as { transaction_id: number }[]).map(
-      (r) => r.transaction_id,
-    );
+    const ids = (
+      db
+        .prepare("SELECT transaction_id FROM sheet_import_rows WHERE sheet_import_id = ?")
+        .all(importId) as { transaction_id: number }[]
+    ).map((r) => r.transaction_id);
     let removed = 0;
     if (ids.length > 0) {
-      const runs = (db
-        .prepare(
-          `SELECT DISTINCT sync_run_id AS id FROM transactions
+      const runs = (
+        db
+          .prepare(
+            `SELECT DISTINCT sync_run_id AS id FROM transactions
            WHERE workspace_id = ? AND provider = 'file' AND id IN (${ids.map(() => "?").join(",")})`,
-        )
-        .all(workspaceId, ...ids) as { id: number }[]).map((r) => r.id);
+          )
+          .all(workspaceId, ...ids) as { id: number }[]
+      ).map((r) => r.id);
       removed = db
-        .prepare(`DELETE FROM transactions WHERE workspace_id = ? AND id IN (${ids.map(() => "?").join(",")})`)
+        .prepare(
+          `DELETE FROM transactions WHERE workspace_id = ? AND id IN (${ids.map(() => "?").join(",")})`,
+        )
         .run(workspaceId, ...ids).changes;
       for (const runId of runs) {
-        const left = (db.prepare("SELECT COUNT(*) AS n FROM transactions WHERE workspace_id = ? AND sync_run_id = ?").get(workspaceId, runId) as { n: number }).n;
-        if (left === 0) db.prepare("DELETE FROM sync_runs WHERE workspace_id = ? AND id = ? AND provider = 'file'").run(workspaceId, runId);
+        const left = (
+          db
+            .prepare(
+              "SELECT COUNT(*) AS n FROM transactions WHERE workspace_id = ? AND sync_run_id = ?",
+            )
+            .get(workspaceId, runId) as { n: number }
+        ).n;
+        if (left === 0)
+          db.prepare(
+            "DELETE FROM sync_runs WHERE workspace_id = ? AND id = ? AND provider = 'file'",
+          ).run(workspaceId, runId);
       }
     }
-    db.prepare("DELETE FROM sheet_imports WHERE workspace_id = ? AND id = ?").run(workspaceId, importId);
+    db.prepare("DELETE FROM sheet_imports WHERE workspace_id = ? AND id = ?").run(
+      workspaceId,
+      importId,
+    );
     return removed;
   })();
 }

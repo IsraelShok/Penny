@@ -17,10 +17,7 @@ const SUGGESTION_KEYS = [
   "workspaceSuggestionSide",
 ] as const;
 
-export function WorkspaceNameStep({
-  onComplete,
-  submitting = false,
-}: WorkspaceNameStepProps) {
+export function WorkspaceNameStep({ onComplete, submitting = false }: WorkspaceNameStepProps) {
   const t = useTranslations("setup");
   const [name, setName] = useState("");
 
@@ -67,7 +64,6 @@ export function WorkspaceNameStep({
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={60}
-            autoFocus
             disabled={submitting}
             placeholder={t("workspaceExample")}
             className="mt-2 w-full border-0 bg-transparent p-0 font-semibold text-2xl leading-tight tracking-tight text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring placeholder:text-muted-foreground/70"
@@ -88,11 +84,10 @@ export function WorkspaceNameStep({
           ))}
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          {t("workspaceRenameHint")}
-        </p>
+        <p className="text-xs text-muted-foreground">{t("workspaceRenameHint")}</p>
 
-        <IconButton showLabel
+        <IconButton
+          showLabel
           label={submitting ? t("workspaceCreating") : t("workspaceCreateButton")}
           variant="default"
           type="submit"

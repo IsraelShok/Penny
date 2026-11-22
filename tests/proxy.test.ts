@@ -3,7 +3,10 @@ import { NextRequest } from "next/server";
 import { proxy } from "@/proxy";
 
 const req = (path: string, method = "GET", headers: Record<string, string> = {}) =>
-  new NextRequest(`http://127.0.0.1:3000${path}`, { method, headers: { host: "127.0.0.1:3000", ...headers } });
+  new NextRequest(`http://127.0.0.1:3000${path}`, {
+    method,
+    headers: { host: "127.0.0.1:3000", ...headers },
+  });
 
 describe("proxy", () => {
   it("rejects an unexpected Host (DNS rebinding)", () => {

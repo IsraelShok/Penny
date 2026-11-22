@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
-import { addSettleEntry, deleteSettleEntry, getSettleRows, listSettleEntries } from "@/server/db/queries/transactions";
-import { getAppSettings, getWorkspaceSetting, setWorkspaceSetting } from "@/server/db/queries/settings";
+import {
+  addSettleEntry,
+  deleteSettleEntry,
+  getSettleRows,
+  listSettleEntries,
+} from "@/server/db/queries/transactions";
+import {
+  getAppSettings,
+  getWorkspaceSetting,
+  setWorkspaceSetting,
+} from "@/server/db/queries/settings";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { isValidOwner, type AccountOwners } from "@/lib/tags";
 import { DEFAULT_RULE, ledger, parseSplitRule, parseSplitRules } from "@/lib/settle";
@@ -10,14 +19,20 @@ const COUNTERPART_ROLES = ["partner", "roommate", "exPartner", "sibling", "paren
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function readJSON(workspaceId: number, key: string): unknown {
-  try { return JSON.parse(getWorkspaceSetting(workspaceId, key) ?? "{}"); } catch { return {}; }
+  try {
+    return JSON.parse(getWorkspaceSetting(workspaceId, key) ?? "{}");
+  } catch {
+    return {};
+  }
 }
 
 function context(workspaceId: number) {
   const members = getAppSettings(workspaceId).household.members;
   const ids = members.map((m) => m.id);
   const accountOwners = Object.fromEntries(
-    Object.entries(readJSON(workspaceId, "account_owners") as Record<string, unknown>).filter(([, v]) => isValidOwner(v, ids)),
+    Object.entries(readJSON(workspaceId, "account_owners") as Record<string, unknown>).filter(
+      ([, v]) => isValidOwner(v, ids),
+    ),
   ) as AccountOwners;
   return {
     me: members.find((m) => m.role === "me") ?? null,
@@ -40,7 +55,14 @@ export async function GET(request: Request) {
     counterparts: counterparts.map((member) => {
       const rule = rules[member.id] ?? DEFAULT_RULE;
       const l = ledger(rows, accountOwners, me.id, member.id, rule, entries, today);
-      return { member, rule, balance: l.balance, since: l.since, lines: l.lines.slice(0, 30), entries: entries.filter((e) => e.counterpart === member.id) };
+      return {
+        member,
+        rule,
+        balance: l.balance,
+        since: l.since,
+        lines: l.lines.slice(0, 30),
+        entries: entries.filter((e) => e.counterpart === member.id),
+      };
     }),
   });
 }
@@ -48,9 +70,13 @@ export async function GET(request: Request) {
 /** Sets one counterpart's split rule: { counterpart, rule }. */
 export async function PUT(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json().catch(() => ({}))) as { counterpart?: unknown; rule?: unknown };
+  const body = (await request.json().catch(() => ({}))) as {
+    counterpart?: unknown;
+    rule?: unknown;
+  };
   const { counterparts, rules } = context(workspaceId);
-  if (!counterparts.some((m) => m.id === body.counterpart)) return NextResponse.json({ error: "unknown counterpart" }, { status: 400 });
+  if (!counterparts.some((m) => m.id === body.counterpart))
+    return NextResponse.json({ error: "unknown counterpart" }, { status: 400 });
   try {
     const next = { ...rules, [body.counterpart as string]: parseSplitRule(body.rule) };
     setWorkspaceSetting(workspaceId, RULES_KEY, JSON.stringify(next));
@@ -63,11 +89,23 @@ export async function PUT(request: Request) {
 /** Records a settle-up: { counterpart, date, amount }. */
 export async function POST(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json().catch(() => ({}))) as { counterpart?: unknown; date?: unknown; amount?: unknown };
+  const body = (await request.json().catch(() => ({}))) as {
+    counterpart?: unknown;
+    date?: unknown;
+    amount?: unknown;
+  };
   const { counterparts } = context(workspaceId);
-  if (!counterparts.some((m) => m.id === body.counterpart)) return NextResponse.json({ error: "unknown counterpart" }, { status: 400 });
-  if (typeof body.date !== "string" || !DATE_RE.test(body.date)) return NextResponse.json({ error: "invalid date" }, { status: 400 });
-  if (typeof body.amount !== "number" || !Number.isFinite(body.amount) || body.amount < 0 || body.amount > 1e9) return NextResponse.json({ error: "invalid amount" }, { status: 400 });
+  if (!counterparts.some((m) => m.id === body.counterpart))
+    return NextResponse.json({ error: "unknown counterpart" }, { status: 400 });
+  if (typeof body.date !== "string" || !DATE_RE.test(body.date))
+    return NextResponse.json({ error: "invalid date" }, { status: 400 });
+  if (
+    typeof body.amount !== "number" ||
+    !Number.isFinite(body.amount) ||
+    body.amount < 0 ||
+    body.amount > 1e9
+  )
+    return NextResponse.json({ error: "invalid amount" }, { status: 400 });
   const id = addSettleEntry(workspaceId, body.counterpart as string, body.date, body.amount);
   return NextResponse.json({ id });
 }
@@ -76,6 +114,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const id = Number(new URL(request.url).searchParams.get("id"));
-  if (!Number.isInteger(id) || !deleteSettleEntry(workspaceId, id)) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!Number.isInteger(id) || !deleteSettleEntry(workspaceId, id))
+    return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

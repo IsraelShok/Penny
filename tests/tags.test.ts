@@ -65,7 +65,12 @@ describe("ownerSummary", () => {
   });
 
   it("does not make children pay toward shared costs", () => {
-    const s = ownerSummary([{ amount: -300, owner: "shared", accountNumber: "1111" }], accounts, ["a", "b", "kid"], ["a", "b"]);
+    const s = ownerSummary(
+      [{ amount: -300, owner: "shared", accountNumber: "1111" }],
+      accounts,
+      ["a", "b", "kid"],
+      ["a", "b"],
+    );
     expect(s.settlements).toEqual([{ from: "b", to: "a", amount: 150 }]);
   });
 
@@ -84,6 +89,9 @@ describe("walletBalance", () => {
       { amount: -90, description: "ATMOSPHERE BAR", categoryName: null, provider: "max" }, // not an ATM
     ]);
     expect(w).toEqual({ withdrawn: 700, logged: 40, balance: 660 });
-    expect(walletBalance([{ amount: -40, description: "x", categoryName: null, provider: "cash" }]).balance).toBe(0);
+    expect(
+      walletBalance([{ amount: -40, description: "x", categoryName: null, provider: "cash" }])
+        .balance,
+    ).toBe(0);
   });
 });

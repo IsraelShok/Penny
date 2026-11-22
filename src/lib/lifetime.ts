@@ -184,7 +184,11 @@ export function simulateLifetime(input: LifetimeInput): LifetimeResult {
   const endAge = LIFETIME_END_AGE;
   const startAge = whole(input.startAge, 0, endAge);
   const retirementAge = whole(input.retirementAge, startAge, endAge);
-  const pensionStartAge = whole(input.pensionStartAge ?? Math.max(retirementAge, IL.pensionAge), startAge, endAge);
+  const pensionStartAge = whole(
+    input.pensionStartAge ?? Math.max(retirementAge, IL.pensionAge),
+    startAge,
+    endAge,
+  );
   const startYear = Math.round(finite(input.startYear));
   const realReturn = clamp(finite(input.realReturn, DEFAULT_REAL_RETURN), -0.2, 0.2);
   const pensionFactor = Math.max(1, finite(input.pensionFactor, DEFAULT_PENSION_FACTOR));
@@ -247,7 +251,8 @@ export function simulateLifetime(input: LifetimeInput): LifetimeResult {
     const retired = age >= retirementAge;
     const pensionIncome = age >= pensionStartAge ? (annuityMonthly + monthlyStatePension) * 12 : 0;
     const income = (retired ? 0 : monthlyIncome * 12) + pensionIncome;
-    const expenses = Math.max(0, monthlyExpenses * (retired ? retirementSpendPct : 1) + extraMonthly) * 12;
+    const expenses =
+      Math.max(0, monthlyExpenses * (retired ? retirementSpendPct : 1) + extraMonthly) * 12;
 
     let debtPayment = 0;
     for (const debt of balances.debts) {

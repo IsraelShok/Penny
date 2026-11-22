@@ -17,13 +17,38 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      # Same policy as the Dockerfile: no dependency install scripts in CI.
+      # better-sqlite3 ships prebuilt binaries; Chromium is installed explicitly elsewhere.
+      - run: npm ci --ignore-scripts
         env:
           PUPPETEER_SKIP_DOWNLOAD: "1"
       - run: npx next typegen   # route types (PageProps) are generated, not committed
       - run: npx tsc --noEmit
       - run: npm run lint
-      - run: npm test
+      - run: npm run format:check
+      # Same suites plus the coverage floor; CI fails if logic or server coverage drops.
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: ignore
+
+  # A new critical advisory should never reach main unnoticed. High and moderate findings are
+  # triaged in SECURITY.md; criticals are not negotiable.
+  dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "1"
+      - run: npm run security:audit:gate
 
   build:
     runs-on: ubuntu-latest
@@ -33,7 +58,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
         env:
           PUPPETEER_SKIP_DOWNLOAD: "1"
       - run: npx next typegen
@@ -51,7 +76,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
         env:
           PUPPETEER_SKIP_DOWNLOAD: "1"
       - run: npx playwright install --with-deps chromium

@@ -58,10 +58,19 @@ export const MORTGAGE_DEFAULTS: MortgageInputs = {
  * Sources: boi.org.il/en/economic-roles/supervision-and-regulation/2503/ltv-limitations-in-housing-loans,
  * leumi.co.il/he/Articles/48371 (variable share ≤ 66.66%), bizportal.co.il/guides/news/article/20041241 (PTI 50%).
  */
-export const LIMITS = { ltv: { first: 0.75, upgrade: 0.7, investor: 0.5 } as Record<Buyer, number>, minFixedShare: 1 / 3, maxPti: 0.5, warnPti: 0.4 };
+export const LIMITS = {
+  ltv: { first: 0.75, upgrade: 0.7, investor: 0.5 } as Record<Buyer, number>,
+  minFixedShare: 1 / 3,
+  maxPti: 0.5,
+  warnPti: 0.4,
+};
 
 const pmt = (balance: number, monthlyRate: number, n: number) =>
-  n <= 0 ? balance : monthlyRate === 0 ? balance / n : (balance * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -n));
+  n <= 0
+    ? balance
+    : monthlyRate === 0
+      ? balance / n
+      : (balance * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -n));
 
 export interface TrackResult {
   principal: number;
@@ -72,15 +81,26 @@ export interface TrackResult {
   cost: number;
 }
 
-export function simulateTrack(t: Track, loan: number, i: Pick<MortgageInputs, "inflationPct" | "primePct" | "primeShock">): TrackResult {
+export function simulateTrack(
+  t: Track,
+  loan: number,
+  i: Pick<MortgageInputs, "inflationPct" | "primePct" | "primeShock">,
+): TrackResult {
   const principal = loan * t.share;
   const n = Math.round(t.years * 12);
   const infl = Math.pow(1 + i.inflationPct / 100, 1 / 12) - 1;
-  let balance = principal, totalPaid = 0, firstPayment = 0, maxPayment = 0;
+  let balance = principal,
+    totalPaid = 0,
+    firstPayment = 0,
+    maxPayment = 0;
   for (let m = 0; m < n && balance > 0.01; m++) {
     // var5: the rate holds for 5 years, then resets; the shock stands in for where the market anchor moved.
-    const annual = t.kind === "prime" ? i.primePct + (m >= 12 ? i.primeShock : 0) + t.ratePct
-      : (t.kind === "var5" || t.kind === "var5Linked") && m >= RESET_MONTHS ? t.ratePct + i.primeShock : t.ratePct;
+    const annual =
+      t.kind === "prime"
+        ? i.primePct + (m >= 12 ? i.primeShock : 0) + t.ratePct
+        : (t.kind === "var5" || t.kind === "var5Linked") && m >= RESET_MONTHS
+          ? t.ratePct + i.primeShock
+          : t.ratePct;
     const r = Math.max(0, annual) / 100 / 12;
     if (LINKED_KINDS.includes(t.kind)) balance *= 1 + infl;
     // Recomputed monthly: prime follows the rate, a linked track follows the index (the Spitzer payment Israeli banks use).
@@ -97,7 +117,9 @@ export function mortgage(i: MortgageInputs) {
   const tracks = i.tracks.map((t) => simulateTrack(t, i.loan, i));
   const sum = (k: keyof TrackResult) => tracks.reduce((s, t) => s + t[k], 0);
   const shareTotal = i.tracks.reduce((s, t) => s + t.share, 0);
-  const fixedShare = i.tracks.filter((t) => FIXED_KINDS.includes(t.kind)).reduce((s, t) => s + t.share, 0);
+  const fixedShare = i.tracks
+    .filter((t) => FIXED_KINDS.includes(t.kind))
+    .reduce((s, t) => s + t.share, 0);
   const firstPayment = sum("firstPayment");
   const ltv = i.propertyValue > 0 ? i.loan / i.propertyValue : 0;
   const pti = i.income > 0 ? firstPayment / i.income : 0;
@@ -130,13 +152,21 @@ export function mortgage(i: MortgageInputs) {
  * bizportal.co.il/additives/391/mortgage-refinance.html (Nov 2026). The order's discount (roughly 10–40%,
  * by track and loan age) and small operating fees are left out, so this errs high.
  */
-export function prepayFee(p: { amount: number; ratePct: number; marketRatePct: number; monthsLeft: number; horizonMonths?: number }): number {
+export function prepayFee(p: {
+  amount: number;
+  ratePct: number;
+  marketRatePct: number;
+  monthsLeft: number;
+  horizonMonths?: number;
+}): number {
   const n = Math.round(p.monthsLeft);
   const h = Math.min(n, Math.round(p.horizonMonths ?? n));
   if (p.amount <= 0 || n <= 0 || h <= 0 || p.marketRatePct >= p.ratePct) return 0;
-  const r = p.ratePct / 100 / 12, q = Math.max(0, p.marketRatePct) / 100 / 12;
+  const r = p.ratePct / 100 / 12,
+    q = Math.max(0, p.marketRatePct) / 100 / 12;
   const pay = pmt(p.amount, r, n);
-  let balance = p.amount, pv = 0;
+  let balance = p.amount,
+    pv = 0;
   for (let k = 1; k <= h; k++) {
     balance = balance * (1 + r) - pay;
     pv += pay / Math.pow(1 + q, k);
@@ -150,7 +180,14 @@ export function prepayFee(p: { amount: number; ratePct: number; marketRatePct: n
  * Prepay: the fee comes out of the lump, the payment drops, and the drop is invested monthly at the same return.
  * Real terms on a linked track (indexation ignored). An estimate, not advice.
  */
-export function prepayVsInvest(p: { amount: number; fee: number; ratePct: number; years: number; returnPct: number; taxRate: number }) {
+export function prepayVsInvest(p: {
+  amount: number;
+  fee: number;
+  ratePct: number;
+  years: number;
+  returnPct: number;
+  taxRate: number;
+}) {
   const n = Math.round(p.years * 12);
   const i = Math.pow(1 + p.returnPct / 100, 1 / 12) - 1;
   const afterTax = (end: number, paidIn: number) => end - Math.max(0, end - paidIn) * p.taxRate;
@@ -158,5 +195,10 @@ export function prepayVsInvest(p: { amount: number; fee: number; ratePct: number
   const fvDrop = i === 0 ? drop * n : (drop * (Math.pow(1 + i, n) - 1)) / i;
   const prepay = afterTax(fvDrop, drop * n);
   const invest = afterTax(p.amount * Math.pow(1 + i, n), p.amount);
-  return { monthlyDrop: drop, prepay, invest, better: prepay >= invest ? ("prepay" as const) : ("invest" as const) };
+  return {
+    monthlyDrop: drop,
+    prepay,
+    invest,
+    better: prepay >= invest ? ("prepay" as const) : ("invest" as const),
+  };
 }

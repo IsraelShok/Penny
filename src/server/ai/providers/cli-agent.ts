@@ -17,11 +17,23 @@ export class CliAgentProvider implements AIProvider {
   async categorize(
     transactions: TransactionForCategorization[],
     categories: CategoryForCategorization[],
-    options?: { allowProposals?: boolean; pastCorrections?: PastCorrection[] }
+    options?: { allowProposals?: boolean; pastCorrections?: PastCorrection[] },
   ): Promise<CategoryMapping[]> {
     const allowProposals = options?.allowProposals ?? false;
-    const prompt = buildCategorizationPrompt(transactions, categories, allowProposals, options?.pastCorrections ?? []);
-    const text = await runCliAgent(this.agent, `${SYSTEM_PROMPT}\n\nDo not use any tools or read files. Reply with the JSON only.\n\n${prompt}`);
-    return parseResponse(text, categories.map((c) => c.name), allowProposals);
+    const prompt = buildCategorizationPrompt(
+      transactions,
+      categories,
+      allowProposals,
+      options?.pastCorrections ?? [],
+    );
+    const text = await runCliAgent(
+      this.agent,
+      `${SYSTEM_PROMPT}\n\nDo not use any tools or read files. Reply with the JSON only.\n\n${prompt}`,
+    );
+    return parseResponse(
+      text,
+      categories.map((c) => c.name),
+      allowProposals,
+    );
   }
 }

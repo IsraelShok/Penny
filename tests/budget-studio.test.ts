@@ -1,12 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { budgetMetrics, DEFAULT_STUDIO, distributionCategories, parseStudioPreferences } from "@/lib/budget-studio";
+import {
+  budgetMetrics,
+  DEFAULT_STUDIO,
+  distributionCategories,
+  parseStudioPreferences,
+} from "@/lib/budget-studio";
 import type { CategoryWithData } from "@/lib/types";
 
 describe("budget studio preferences", () => {
   it("recovers from malformed or older stored preferences", () => {
-    for (const raw of [null, "{broken", "null", "[]"]) expect(parseStudioPreferences(raw)).toEqual(DEFAULT_STUDIO);
-    expect(parseStudioPreferences('{"theme":"midnight","chart":"unknown","showChart":false,"motion":"false"}'))
-      .toEqual({ ...DEFAULT_STUDIO, theme: "midnight", showChart: false });
+    for (const raw of [null, "{broken", "null", "[]"])
+      expect(parseStudioPreferences(raw)).toEqual(DEFAULT_STUDIO);
+    expect(
+      parseStudioPreferences(
+        '{"theme":"midnight","chart":"unknown","showChart":false,"motion":"false"}',
+      ),
+    ).toEqual({ ...DEFAULT_STUDIO, theme: "midnight", showChart: false });
   });
 });
 describe("budget studio figures", () => {
@@ -26,7 +35,9 @@ describe("budget studio figures", () => {
     }
   });
   it("waits for five days of observations before projecting", () => {
-    expect(budgetMetrics(12000, 100, new Date(2026, 10, 2), new Date(2026, 10, 2)).forecast).toBeNull();
+    expect(
+      budgetMetrics(12000, 100, new Date(2026, 10, 2), new Date(2026, 10, 2)).forecast,
+    ).toBeNull();
     expect(budgetMetrics(12000, 1500, now, now).forecast).toBe(7500);
   });
   it("handles leap years and absent budgets", () => {
@@ -47,6 +58,8 @@ describe("budget studio figures", () => {
 });
 
 it("opens the retired see-through look as light, and ignores accent and custom colour", () => {
-  const p = parseStudioPreferences(JSON.stringify({ theme: "glass", accent: "rose", customColor: "#ff0000" }));
+  const p = parseStudioPreferences(
+    JSON.stringify({ theme: "glass", accent: "rose", customColor: "#ff0000" }),
+  );
   expect(p).toMatchObject({ theme: "pearl", accent: "violet", customColor: null });
 });

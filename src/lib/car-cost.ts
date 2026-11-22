@@ -33,14 +33,59 @@ export interface SharedInputs {
 }
 
 /** Typical Israeli figures, Nov 2026. Every one is editable in the calculator. */
-export const CAR_DEFAULTS: Record<Powertrain, Omit<CarInputs, "price" | "downShare" | "loanRate" | "loanYears">> = {
-  gas: { type: "gas", litersPer100: 7.5, kwhPer100: 0, electricShare: 0, insuranceYearly: 5_500, maintenanceYearly: 3_500, licenseYearly: 1_300, resaleAfter5: 0.55 },
-  hybrid: { type: "hybrid", litersPer100: 4.8, kwhPer100: 0, electricShare: 0, insuranceYearly: 5_500, maintenanceYearly: 3_000, licenseYearly: 1_300, resaleAfter5: 0.58 },
-  phev: { type: "phev", litersPer100: 6, kwhPer100: 18, electricShare: 0.6, insuranceYearly: 6_000, maintenanceYearly: 3_200, licenseYearly: 1_300, resaleAfter5: 0.45 },
-  ev: { type: "ev", litersPer100: 0, kwhPer100: 16, electricShare: 1, insuranceYearly: 6_500, maintenanceYearly: 1_800, licenseYearly: 1_300, resaleAfter5: 0.45 },
+export const CAR_DEFAULTS: Record<
+  Powertrain,
+  Omit<CarInputs, "price" | "downShare" | "loanRate" | "loanYears">
+> = {
+  gas: {
+    type: "gas",
+    litersPer100: 7.5,
+    kwhPer100: 0,
+    electricShare: 0,
+    insuranceYearly: 5_500,
+    maintenanceYearly: 3_500,
+    licenseYearly: 1_300,
+    resaleAfter5: 0.55,
+  },
+  hybrid: {
+    type: "hybrid",
+    litersPer100: 4.8,
+    kwhPer100: 0,
+    electricShare: 0,
+    insuranceYearly: 5_500,
+    maintenanceYearly: 3_000,
+    licenseYearly: 1_300,
+    resaleAfter5: 0.58,
+  },
+  phev: {
+    type: "phev",
+    litersPer100: 6,
+    kwhPer100: 18,
+    electricShare: 0.6,
+    insuranceYearly: 6_000,
+    maintenanceYearly: 3_200,
+    licenseYearly: 1_300,
+    resaleAfter5: 0.45,
+  },
+  ev: {
+    type: "ev",
+    litersPer100: 0,
+    kwhPer100: 16,
+    electricShare: 1,
+    insuranceYearly: 6_500,
+    maintenanceYearly: 1_800,
+    licenseYearly: 1_300,
+    resaleAfter5: 0.45,
+  },
 };
 
-export const SHARED_DEFAULTS: SharedInputs = { years: 5, kmPerYear: 15_000, fuelPrice: 7.2, electricityPrice: 0.64, investReturn: 0.06 };
+export const SHARED_DEFAULTS: SharedInputs = {
+  years: 5,
+  kmPerYear: 15_000,
+  fuelPrice: 7.2,
+  electricityPrice: 0.64,
+  investReturn: 0.06,
+};
 
 export interface CarCost {
   depreciation: number;
@@ -84,7 +129,10 @@ export function carCost(car: CarInputs, s: SharedInputs): CarCost {
 
   const km = s.kmPerYear * s.years;
   const electric = car.type === "ev" ? 1 : car.type === "phev" ? car.electricShare : 0;
-  const energy = km / 100 * ((1 - electric) * car.litersPer100 * s.fuelPrice + electric * car.kwhPer100 * s.electricityPrice);
+  const energy =
+    (km / 100) *
+    ((1 - electric) * car.litersPer100 * s.fuelPrice +
+      electric * car.kwhPer100 * s.electricityPrice);
 
   const insurance = car.insuranceYearly * s.years;
   const maintenance = car.maintenanceYearly * s.years;
@@ -93,11 +141,19 @@ export function carCost(car: CarInputs, s: SharedInputs): CarCost {
   const totalMonths = Math.round(s.years * 12);
   const rm = Math.pow(1 + s.investReturn, 1 / 12) - 1;
   let missedReturn = down * (Math.pow(1 + s.investReturn, s.years) - 1);
-  for (let m = 1; m <= months; m++) missedReturn += payment * (Math.pow(1 + rm, totalMonths - m) - 1);
+  for (let m = 1; m <= months; m++)
+    missedReturn += payment * (Math.pow(1 + rm, totalMonths - m) - 1);
 
   const total = depreciation + interest + energy + insurance + maintenance + license + missedReturn;
   return {
-    depreciation, interest, energy, insurance, maintenance, license, missedReturn, total,
+    depreciation,
+    interest,
+    energy,
+    insurance,
+    maintenance,
+    license,
+    missedReturn,
+    total,
     perMonth: total / (s.years * 12),
     perKm: km > 0 ? total / km : 0,
     monthlyLoanPayment: payment,

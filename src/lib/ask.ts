@@ -2,7 +2,8 @@
 
 import { budgetMonthByKey, budgetMonthRange, shiftBudgetMonthKey } from "./finance-period";
 
-export type AskIntent = "spent" | "income" | "biggest" | "untilPayday" | "subscriptions" | "savings";
+export type AskIntent =
+  "spent" | "income" | "biggest" | "untilPayday" | "subscriptions" | "savings";
 
 export interface AskPeriod {
   /** Inclusive ISO dates. */
@@ -33,12 +34,42 @@ const quarterStartKey = (key: string) => {
   return `${year}-${pad(Math.floor((month - 1) / 3) * 3 + 1)}`;
 };
 
-const HE_MONTHS = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
-const EN_MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const HE_MONTHS = [
+  "ינואר",
+  "פברואר",
+  "מרץ",
+  "אפריל",
+  "מאי",
+  "יוני",
+  "יולי",
+  "אוגוסט",
+  "ספטמבר",
+  "אוקטובר",
+  "נובמבר",
+  "דצמבר",
+];
+const EN_MONTHS = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+];
 
 /** Lowercase, drop punctuation and Hebrew geresh/maqaf so "ב-3" reads as "ב 3". */
 export function normalize(text: string): string {
-  return text.toLowerCase().replace(/[?!.,:;"'׳״()\-־–]/g, " ").replace(/\s+/g, " ").trim();
+  return text
+    .toLowerCase()
+    .replace(/[?!.,:;"'׳״()\-־–]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** A word plus forms without one or two Hebrew prefix letters ("לוולט" → "וולט") and without a plural ending. */
@@ -69,7 +100,12 @@ export function parsePeriod(q: string, today: Date, startDay = 1): AskPeriod {
     return { from: budgetMonthRange(startDay, t, -(n - 1)).from, to: t, explicit: true };
   }
   if (/היום|today/.test(q)) return { from: t, to: t, explicit: true };
-  if (/השבוע|this week/.test(q)) return { from: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay())), to: t, explicit: true };
+  if (/השבוע|this week/.test(q))
+    return {
+      from: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay())),
+      to: t,
+      explicit: true,
+    };
   if (/חודש שעבר|החודש הקודם|last month|previous month/.test(q)) {
     const previous = budgetMonthRange(startDay, t, -1);
     return { from: previous.from, to: previous.to, explicit: true };
@@ -82,7 +118,8 @@ export function parsePeriod(q: string, today: Date, startDay = 1): AskPeriod {
       explicit: true,
     };
   }
-  if (/רבעון|quarter/.test(q)) return { from: budgetMonthByKey(startDay, quarterStartKey(key)).from, to: t, explicit: true };
+  if (/רבעון|quarter/.test(q))
+    return { from: budgetMonthByKey(startDay, quarterStartKey(key)).from, to: t, explicit: true };
   if (/שנה שעברה|השנה הקודמת|last year/.test(q)) {
     return {
       from: budgetMonthByKey(startDay, `${year - 1}-01`).from,
@@ -90,7 +127,8 @@ export function parsePeriod(q: string, today: Date, startDay = 1): AskPeriod {
       explicit: true,
     };
   }
-  if (/השנה|this year|year to date/.test(q)) return { from: budgetMonthByKey(startDay, `${year}-01`).from, to: t, explicit: true };
+  if (/השנה|this year|year to date/.test(q))
+    return { from: budgetMonthByKey(startDay, `${year}-01`).from, to: t, explicit: true };
   const words = q.split(" ");
   for (let i = 0; i < 12; i++) {
     if (words.some((w) => variants(w).includes(HE_MONTHS[i])) || words.includes(EN_MONTHS[i])) {
@@ -115,7 +153,9 @@ function parseIntent(q: string): AskIntent | null {
 
 // Words that never name a category or merchant.
 const STOP = new Set(
-  "כמה מה מתי איך אני לי שלי שלך על את זה הזה הזאת היה היו עד יותר הכי בחודש החודש חודש שעבר השנה שנה שעברה השבוע היום רבעון הרבעון הקודם האחרונים חודשים הוצאתי שילמתי הוצאה הוצאות נכנס הכנסה ההוצאה גדולה גדול נשאר how much what did i on at for in the this last my spend spent pay paid month year week today quarter".split(" ")
+  "כמה מה מתי איך אני לי שלי שלך על את זה הזה הזאת היה היו עד יותר הכי בחודש החודש חודש שעבר השנה שנה שעברה השבוע היום רבעון הרבעון הקודם האחרונים חודשים הוצאתי שילמתי הוצאה הוצאות נכנס הכנסה ההוצאה גדולה גדול נשאר how much what did i on at for in the this last my spend spent pay paid month year week today quarter".split(
+    " ",
+  ),
 );
 
 /** Parse a question. `descriptions` are the workspace's transaction descriptions, used for merchant matching. */
@@ -124,7 +164,7 @@ export function parseQuestion(
   today: Date,
   categories: AskCategory[],
   descriptions: string[],
-  startDay = 1
+  startDay = 1,
 ): ParsedQuestion {
   const q = normalize(question);
   const period = parsePeriod(q, today, startDay);
@@ -133,7 +173,19 @@ export function parseQuestion(
   const result: ParsedQuestion = { intent, period };
   if (intent && intent !== "spent" && intent !== "income" && intent !== "biggest") return result;
 
-  const catForms = categories.map((c) => ({ id: c.id, forms: new Set(c.names.flatMap((n) => [normalize(n), ...normalize(n).split(" ").filter((w) => w.length >= 3)]).flatMap(variants)) }));
+  const catForms = categories.map((c) => ({
+    id: c.id,
+    forms: new Set(
+      c.names
+        .flatMap((n) => [
+          normalize(n),
+          ...normalize(n)
+            .split(" ")
+            .filter((w) => w.length >= 3),
+        ])
+        .flatMap(variants),
+    ),
+  }));
   for (const w of words) {
     const hit = catForms.find((c) => variants(w).some((v) => v.length >= 3 && c.forms.has(v)));
     if (hit) {
@@ -145,7 +197,9 @@ export function parseQuestion(
     const lower = descriptions.map((d) => d.toLowerCase());
     outer: for (const w of words) {
       // Longest form first, so "לוולט" tries "לוולט" before "וולט".
-      for (const v of variants(w).filter((v) => v.length >= 3).sort((a, b) => b.length - a.length)) {
+      for (const v of variants(w)
+        .filter((v) => v.length >= 3)
+        .sort((a, b) => b.length - a.length)) {
         if (lower.some((d) => d.includes(v))) {
           result.merchant = v;
           break outer;
@@ -166,10 +220,16 @@ export function periodLabel(p: { from: string; to: string }, locale: string): st
   if (locale === "he") {
     const yr = (x: Date) => (sameYear ? "" : ` ${x.getFullYear()}`);
     if (p.from === p.to) return `ב-${a.getDate()} ב${HE_MONTHS[a.getMonth()]}`;
-    if (sameYear && a.getMonth() === b.getMonth()) return `בין ${a.getDate()} ל-${b.getDate()} ב${HE_MONTHS[a.getMonth()]}`;
+    if (sameYear && a.getMonth() === b.getMonth())
+      return `בין ${a.getDate()} ל-${b.getDate()} ב${HE_MONTHS[a.getMonth()]}`;
     return `בין ${a.getDate()} ב${HE_MONTHS[a.getMonth()]}${yr(a)} ל-${b.getDate()} ב${HE_MONTHS[b.getMonth()]}${yr(b)}`;
   }
-  const f = (x: Date) => x.toLocaleDateString("en-US", { month: "short", day: "numeric", ...(sameYear ? {} : { year: "numeric" }) });
+  const f = (x: Date) =>
+    x.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      ...(sameYear ? {} : { year: "numeric" }),
+    });
   return p.from === p.to ? `on ${f(a)}` : `between ${f(a)} and ${f(b)}`;
 }
 

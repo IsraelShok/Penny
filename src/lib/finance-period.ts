@@ -18,7 +18,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 export function shiftBudgetMonthKey(key: string, offset: number): string {
   const [year, month] = key.split("-").map(Number);
   const index = year * 12 + (month - 1) + offset;
-  return `${Math.floor(index / 12)}-${pad(((index % 12) + 12) % 12 + 1)}`;
+  return `${Math.floor(index / 12)}-${pad((((index % 12) + 12) % 12) + 1)}`;
 }
 
 /** The period that starts in the calendar month `key`. */
@@ -37,7 +37,7 @@ export function budgetMonthRange(startDay: number, today: string, offset = 0): B
   let index = year * 12 + (month - 1);
   if (date < day) index -= 1;
   index += offset;
-  const key = `${Math.floor(index / 12)}-${pad(((index % 12) + 12) % 12 + 1)}`;
+  const key = `${Math.floor(index / 12)}-${pad((((index % 12) + 12) % 12) + 1)}`;
   return budgetMonthByKey(day, key);
 }
 
@@ -96,7 +96,12 @@ export const isRolloverRule = (value: unknown): value is RolloverRule =>
  */
 export function carryAmount(rule: RolloverRule, leftover: number, base: number): number {
   if (rule === "none" || base <= 0 || !Number.isFinite(leftover)) return 0;
-  const value = rule === "positive" ? Math.max(0, leftover) : rule === "negative" ? Math.min(0, leftover) : leftover;
+  const value =
+    rule === "positive"
+      ? Math.max(0, leftover)
+      : rule === "negative"
+        ? Math.min(0, leftover)
+        : leftover;
   const capped = Math.max(-base, Math.min(base, value));
   return Math.round(capped * 100) / 100;
 }

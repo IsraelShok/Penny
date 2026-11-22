@@ -1,7 +1,22 @@
 import "server-only";
 
 import { spawn, type ChildProcess } from "child_process";
+import fs from "node:fs";
+import path from "node:path";
 import { normalizeOllamaUrl, OLLAMA_URL_ERROR } from "@/lib/url-guard";
+
+// Never resolve the binary through PATH: a writable directory earlier in PATH could
+// shadow it. Known install locations first, PATH only as the last resort.
+function ollamaBinary(): string {
+  const candidates =
+    process.platform === "win32"
+      ? [
+          path.join(process.env.LOCALAPPDATA ?? "", "Programs", "Ollama", "ollama.exe"),
+          "C:\\Program Files\\Ollama\\ollama.exe",
+        ]
+      : ["/usr/local/bin/ollama", "/opt/homebrew/bin/ollama", "/usr/bin/ollama"];
+  return candidates.find((p) => p && fs.existsSync(p)) ?? "ollama";
+}
 
 declare global {
   var _ollamaProcess: ChildProcess | undefined;
@@ -20,10 +35,7 @@ async function isReachable(url: string, timeoutMs = 1500): Promise<boolean> {
   }
 }
 
-async function waitForReachable(
-  url: string,
-  maxWaitMs: number
-): Promise<boolean> {
+async function waitForReachable(url: string, maxWaitMs: number): Promise<boolean> {
   const deadline = Date.now() + maxWaitMs;
   while (Date.now() < deadline) {
     if (await isReachable(url)) return true;
@@ -60,17 +72,14 @@ export async function listOllamaModels(rawUrl: string): Promise<string[]> {
   }
 }
 
-export async function isModelInstalled(
-  url: string,
-  model: string
-): Promise<boolean> {
+export async function isModelInstalled(url: string, model: string): Promise<boolean> {
   const installed = await listOllamaModels(url);
   return installed.includes(model);
 }
 
 export async function* pullOllamaModel(
   rawUrl: string,
-  model: string
+  model: string,
 ): AsyncGenerator<OllamaPullProgress, void, unknown> {
   const url = normalizeOllamaUrl(rawUrl);
   if (!url) throw new Error(OLLAMA_URL_ERROR);
@@ -117,9 +126,7 @@ export async function* pullOllamaModel(
   }
 }
 
-export async function ensureOllamaRunning(
-  rawUrl: string
-): Promise<OllamaCheckResult> {
+export async function ensureOllamaRunning(rawUrl: string): Promise<OllamaCheckResult> {
   const url = normalizeOllamaUrl(rawUrl);
   if (!url) return { ok: false, error: OLLAMA_URL_ERROR };
   if (await isReachable(url)) {
@@ -135,7 +142,7 @@ export async function ensureOllamaRunning(
   console.log("[ollama] not reachable, attempting to spawn 'ollama serve'");
 
   try {
-    const proc = spawn("ollama", ["serve"], {
+    const proc = spawn(ollamaBinary(), ["serve"], {
       detached: false,
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -153,22 +160,19 @@ export async function ensureOllamaRunning(
 
     globalThis._ollamaProcess = proc;
 
-    const errorOnSpawn = await new Promise<NodeJS.ErrnoException | null>(
-      (resolve) => {
-        const timer = setTimeout(() => resolve(null), 200);
-        proc.once("error", (err) => {
-          clearTimeout(timer);
-          resolve(err as NodeJS.ErrnoException);
-        });
-      }
-    );
+    const errorOnSpawn = await new Promise<NodeJS.ErrnoException | null>((resolve) => {
+      const timer = setTimeout(() => resolve(null), 200);
+      proc.once("error", (err) => {
+        clearTimeout(timer);
+        resolve(err as NodeJS.ErrnoException);
+      });
+    });
 
     if (errorOnSpawn) {
       if (errorOnSpawn.code === "ENOENT") {
         return {
           ok: false,
-          error:
-            "Ollama is not installed. Install it from https://ollama.com, then try again.",
+          error: "Ollama is not installed. Install it from https://ollama.com, then try again.",
         };
       }
       return {

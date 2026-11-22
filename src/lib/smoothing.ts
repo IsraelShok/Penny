@@ -30,7 +30,11 @@ export interface Smoothing {
  * `incomes`: income of each past complete month (up to 12). `current`: income this month so far.
  * Null when the income is steady, or there are fewer than 3 months to go on.
  */
-export function smoothIncome(incomes: number[], current: number, shape: IncomeShape | null): Smoothing | null {
+export function smoothIncome(
+  incomes: number[],
+  current: number,
+  shape: IncomeShape | null,
+): Smoothing | null {
   const months = incomes.filter((n) => n > 0);
   if (months.length < 3) return null;
   if (!(shape && IRREGULAR.includes(shape)) && !variesALot(incomes)) return null;
@@ -40,6 +44,11 @@ export function smoothIncome(incomes: number[], current: number, shape: IncomeSh
   return {
     steady,
     bufferTarget: steady * 3,
-    thisMonth: diff > 0 ? { kind: "save", amount: diff } : diff < 0 ? { kind: "draw", amount: -diff } : { kind: "even", amount: 0 },
+    thisMonth:
+      diff > 0
+        ? { kind: "save", amount: diff }
+        : diff < 0
+          ? { kind: "draw", amount: -diff }
+          : { kind: "even", amount: 0 },
   };
 }

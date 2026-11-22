@@ -13,8 +13,19 @@ export function normalizeTag(raw: unknown): string | null {
 
 // ---- Tags -----------------------------------------------------------------
 
-export interface TagRow { tag: string; amount: number; date: string; category: string | null }
-export interface TagTotal { tag: string; total: number; count: number; from: string; to: string }
+export interface TagRow {
+  tag: string;
+  amount: number;
+  date: string;
+  category: string | null;
+}
+export interface TagTotal {
+  tag: string;
+  total: number;
+  count: number;
+  from: string;
+  to: string;
+}
 
 /** Spending per tag (expenses positive; refunds inside the tag reduce it), biggest first. */
 export function tagTotals(rows: TagRow[]): TagTotal[] {
@@ -31,16 +42,26 @@ export function tagTotals(rows: TagRow[]): TagTotal[] {
 }
 
 /** Category breakdown of one tag, biggest first. `category` null = uncategorized. */
-export function tagBreakdown(rows: TagRow[], tag: string): { category: string | null; total: number }[] {
+export function tagBreakdown(
+  rows: TagRow[],
+  tag: string,
+): { category: string | null; total: number }[] {
   const map = new Map<string | null, number>();
-  for (const r of rows) if (r.tag === tag) map.set(r.category, (map.get(r.category) ?? 0) - r.amount);
-  return [...map].map(([category, total]) => ({ category, total })).sort((a, b) => b.total - a.total);
+  for (const r of rows)
+    if (r.tag === tag) map.set(r.category, (map.get(r.category) ?? 0) - r.amount);
+  return [...map]
+    .map(([category, total]) => ({ category, total }))
+    .sort((a, b) => b.total - a.total);
 }
 
 // ---- Owners ---------------------------------------------------------------
 
 export type AccountOwners = Record<string, string>;
-export interface OwnerRow { amount: number; owner: string | null; accountNumber: string }
+export interface OwnerRow {
+  amount: number;
+  owner: string | null;
+  accountNumber: string;
+}
 export interface OwnerSummary {
   byOwner: Record<string, number>; // member id or "shared" -> spent
   unset: number;
@@ -48,7 +69,11 @@ export interface OwnerSummary {
 }
 
 /** Row owner, falling back to the account's default owner. */
-export function effectiveOwner(owner: string | null, accountNumber: string, accountOwners: AccountOwners): string | null {
+export function effectiveOwner(
+  owner: string | null,
+  accountNumber: string,
+  accountOwners: AccountOwners,
+): string | null {
   return owner ?? accountOwners[accountNumber] ?? null;
 }
 
@@ -56,14 +81,22 @@ export function effectiveOwner(owner: string | null, accountNumber: string, acco
  * Spending per owner, plus who owes whom for shared expenses: split evenly between members,
  * the payer is the account's default owner (a shared or unknown account settles nothing).
  */
-export function ownerSummary(rows: OwnerRow[], accountOwners: AccountOwners, memberIds: string[], payingIds = memberIds): OwnerSummary {
+export function ownerSummary(
+  rows: OwnerRow[],
+  accountOwners: AccountOwners,
+  memberIds: string[],
+  payingIds = memberIds,
+): OwnerSummary {
   const byOwner: Record<string, number> = {};
   const net: Record<string, number> = Object.fromEntries(payingIds.map((m) => [m, 0])); // kids don't split shared costs
   let unset = 0;
   for (const r of rows) {
     const spent = -r.amount;
     const owner = effectiveOwner(r.owner, r.accountNumber, accountOwners);
-    if (owner == null || (owner !== SHARED && !memberIds.includes(owner))) { unset += spent; continue; }
+    if (owner == null || (owner !== SHARED && !memberIds.includes(owner))) {
+      unset += spent;
+      continue;
+    }
     byOwner[owner] = (byOwner[owner] ?? 0) + spent;
     const payer = accountOwners[r.accountNumber];
     if (owner === SHARED && payer && payingIds.includes(payer) && payingIds.length > 1) {
@@ -96,14 +129,27 @@ export function isValidOwner(v: unknown, memberIds: string[]): v is string {
 
 const ATM_RE = /כספומט|משיכת מזומן|\bATM\b/i;
 
-export interface WalletRow { amount: number; description: string; categoryName: string | null; provider: string }
+export interface WalletRow {
+  amount: number;
+  description: string;
+  categoryName: string | null;
+  provider: string;
+}
 
 export function isAtmWithdrawal(r: WalletRow): boolean {
-  return r.provider !== CASH_PROVIDER && r.amount < 0 && (r.categoryName === "Cash & ATM" || ATM_RE.test(r.description));
+  return (
+    r.provider !== CASH_PROVIDER &&
+    r.amount < 0 &&
+    (r.categoryName === "Cash & ATM" || ATM_RE.test(r.description))
+  );
 }
 
 /** Withdrawn cash minus logged cash spending; never below zero (logging more than withdrawn is fine). */
-export function walletBalance(rows: WalletRow[]): { withdrawn: number; logged: number; balance: number } {
+export function walletBalance(rows: WalletRow[]): {
+  withdrawn: number;
+  logged: number;
+  balance: number;
+} {
   let withdrawn = 0;
   let logged = 0;
   for (const r of rows) {

@@ -1,12 +1,62 @@
-import {NextResponse} from "next/server";
-import {currentUser} from "@/server/lib/user-access";
-import {getDb} from "@/server/db";
-import {getWorkspaceIdFromRequest} from "@/server/lib/workspace-context";
-import {profileFromRequest} from "@/server/db/queries/profiles";
+import { NextResponse } from "next/server";
+import { currentUser } from "@/server/lib/user-access";
+import { getDb } from "@/server/db";
+import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
+import { profileFromRequest } from "@/server/db/queries/profiles";
 // Preferences belong to the active profile (X-Profile-ID); without one, the signed-in user or "local".
 // Household keys are shared by every profile.
-const HOUSEHOLD=new Set(["activation"]);
-const who=(request:Request,ws:number,key?:unknown)=>{if(HOUSEHOLD.has(key as string))return "household";const p=profileFromRequest(request,ws);return p?`p${p.id}`:String(currentUser(request)?.id??"local");};
-const valid=(key:unknown):key is string=>typeof key==="string"&&/^(studio|a11y|home-desktop|home-mobile|goal-focus|activation|sidebar-accounts|home-board|trackers|transaction-views|transactions-upcoming|card-limits|ventures|transaction-templates|transaction-defaults)$/.test(key);
-export async function GET(request:Request){const ws=getWorkspaceIdFromRequest(request),key=new URL(request.url).searchParams.get("key"),profile=who(request,ws,key);if(!valid(key))return NextResponse.json({error:"Invalid preference"},{status:400});const row=getDb().prepare("SELECT value,revision FROM synced_preferences WHERE workspace_id=? AND profile=? AND key=?").get(ws,profile,key) as {value:string;revision:number}|undefined;return NextResponse.json(row?{value:JSON.parse(row.value),revision:row.revision}:{value:null,revision:0});}
-export async function PUT(request:Request){const ws=getWorkspaceIdFromRequest(request),body=await request.json().catch(()=>null),profile=who(request,ws,body?.key);if(!body||!valid(body.key)||!Number.isSafeInteger(body.revision)||JSON.stringify(body.value??null).length>64000)return NextResponse.json({error:"Invalid preference"},{status:400});const db=getDb();return db.transaction(()=>{const old=db.prepare("SELECT revision FROM synced_preferences WHERE workspace_id=? AND profile=? AND key=?").get(ws,profile,body.key) as {revision:number}|undefined;if((old?.revision??0)!==body.revision)return NextResponse.json({error:"Changed on another device. Reload before saving."},{status:409});const revision=body.revision+1;db.prepare("INSERT INTO synced_preferences(workspace_id,profile,key,value,revision) VALUES (?,?,?,?,?) ON CONFLICT(workspace_id,profile,key) DO UPDATE SET value=excluded.value,revision=excluded.revision,updated_at=datetime('now')").run(ws,profile,body.key,JSON.stringify(body.value??null),revision);return NextResponse.json({revision});})();}
+const HOUSEHOLD = new Set(["activation"]);
+const who = (request: Request, ws: number, key?: unknown) => {
+  if (HOUSEHOLD.has(key as string)) return "household";
+  const p = profileFromRequest(request, ws);
+  return p ? `p${p.id}` : String(currentUser(request)?.id ?? "local");
+};
+const valid = (key: unknown): key is string =>
+  typeof key === "string" &&
+  /^(studio|a11y|home-desktop|home-mobile|goal-focus|activation|sidebar-accounts|home-board|trackers|transaction-views|transactions-upcoming|card-limits|ventures|transaction-templates|transaction-defaults)$/.test(
+    key,
+  );
+export async function GET(request: Request) {
+  const ws = getWorkspaceIdFromRequest(request),
+    key = new URL(request.url).searchParams.get("key"),
+    profile = who(request, ws, key);
+  if (!valid(key)) return NextResponse.json({ error: "Invalid preference" }, { status: 400 });
+  const row = getDb()
+    .prepare(
+      "SELECT value,revision FROM synced_preferences WHERE workspace_id=? AND profile=? AND key=?",
+    )
+    .get(ws, profile, key) as { value: string; revision: number } | undefined;
+  return NextResponse.json(
+    row ? { value: JSON.parse(row.value), revision: row.revision } : { value: null, revision: 0 },
+  );
+}
+export async function PUT(request: Request) {
+  const ws = getWorkspaceIdFromRequest(request),
+    body = await request.json().catch(() => null),
+    profile = who(request, ws, body?.key);
+  if (
+    !body ||
+    !valid(body.key) ||
+    !Number.isSafeInteger(body.revision) ||
+    JSON.stringify(body.value ?? null).length > 64000
+  )
+    return NextResponse.json({ error: "Invalid preference" }, { status: 400 });
+  const db = getDb();
+  return db.transaction(() => {
+    const old = db
+      .prepare(
+        "SELECT revision FROM synced_preferences WHERE workspace_id=? AND profile=? AND key=?",
+      )
+      .get(ws, profile, body.key) as { revision: number } | undefined;
+    if ((old?.revision ?? 0) !== body.revision)
+      return NextResponse.json(
+        { error: "Changed on another device. Reload before saving." },
+        { status: 409 },
+      );
+    const revision = body.revision + 1;
+    db.prepare(
+      "INSERT INTO synced_preferences(workspace_id,profile,key,value,revision) VALUES (?,?,?,?,?) ON CONFLICT(workspace_id,profile,key) DO UPDATE SET value=excluded.value,revision=excluded.revision,updated_at=datetime('now')",
+    ).run(ws, profile, body.key, JSON.stringify(body.value ?? null), revision);
+    return NextResponse.json({ revision });
+  })();
+}

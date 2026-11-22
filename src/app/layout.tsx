@@ -80,21 +80,32 @@ export default async function RootLayout({
           }}
         />
         {/* Accessibility menu choices, before first paint (mirrors A11yProvider). */}
-        <script dangerouslySetInnerHTML={{ __html: `try{var c=localStorage.getItem("penny.a11y.classes");if(c)document.documentElement.classList.add.apply(document.documentElement.classList,c.split(" ").filter(Boolean))}catch(e){}` }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var c=localStorage.getItem("penny.a11y.classes");if(c)document.documentElement.classList.add.apply(document.documentElement.classList,c.split(" ").filter(Boolean))}catch(e){}`,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <I18nProvider locale={locale} messages={messages as Record<string, unknown>}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             <StudioProvider>
-            <QueryProvider>
-              <TooltipProvider>
-                <A11yProvider>
-                <SidebarRoot defaultOpen={sidebarOpen}><PersistentShell>{children}</PersistentShell></SidebarRoot>
-                </A11yProvider>
-                <Toaster />
-                <ServiceWorkerRegister />
-              </TooltipProvider>
-            </QueryProvider>
+              <QueryProvider>
+                <TooltipProvider>
+                  <A11yProvider>
+                    <SidebarRoot defaultOpen={sidebarOpen}>
+                      <PersistentShell>{children}</PersistentShell>
+                    </SidebarRoot>
+                  </A11yProvider>
+                  <Toaster />
+                  <ServiceWorkerRegister />
+                </TooltipProvider>
+              </QueryProvider>
             </StudioProvider>
           </ThemeProvider>
         </I18nProvider>

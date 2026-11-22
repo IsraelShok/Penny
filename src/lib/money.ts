@@ -1,8 +1,12 @@
 export const fmt = (n: number, locale: string, digits = 0) =>
-  n.toLocaleString(locale === "he" ? "he-IL" : "en-US", { maximumFractionDigits: digits, minimumFractionDigits: digits });
+  n.toLocaleString(locale === "he" ? "he-IL" : "en-US", {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: digits,
+  });
 
 /** ₪ amount; the LTR isolate keeps the sign in front inside Hebrew text. */
-export const shekels = (n: number, locale: string) => `⁦${n < 0 ? "−" : ""}₪${fmt(Math.abs(n), locale)}⁩`;
+export const shekels = (n: number, locale: string) =>
+  `⁦${n < 0 ? "−" : ""}₪${fmt(Math.abs(n), locale)}⁩`;
 
 /**
  * Rounds a money value to agorot without float drift: Math.round(1.005 * 100) is 100, not 101,
@@ -19,4 +23,5 @@ export const compactShekels = (n: number, locale: string) =>
   `⁦${n < 0 ? "−" : ""}₪${new Intl.NumberFormat(locale === "he" ? "he-IL" : "en-US", { notation: "compact", maximumFractionDigits: 1 }).format(Math.abs(n)).replace(/[\u200e\u200f]/g, "")}⁩`;
 
 /** Like shekels, with "+" on positive amounts too (income, money left). */
-export const signedShekels = (n: number, locale: string, digits = 0) => `⁦${n > 0 ? "+" : n < 0 ? "−" : ""}₪${fmt(Math.abs(n), locale, digits)}⁩`;
+export const signedShekels = (n: number, locale: string, digits = 0) =>
+  `⁦${n > 0 ? "+" : n < 0 ? "−" : ""}₪${fmt(Math.abs(n), locale, digits)}⁩`;

@@ -3,17 +3,39 @@ import { expect, test } from "@playwright/test";
 // The empty test install would otherwise start at first-run onboarding.
 test.beforeAll(async ({ playwright }) => {
   const base = "http://127.0.0.1:3100"; // playwright.config.ts PORT; the API wants a same-origin header
-  const api = await playwright.request.newContext({ baseURL: base, extraHTTPHeaders: { origin: base } });
+  const api = await playwright.request.newContext({
+    baseURL: base,
+    extraHTTPHeaders: { origin: base },
+  });
   await api.put("/api/setup/onboarding", { data: { step: "complete" } });
   await api.dispose();
 });
 
 test.describe("core screens", () => {
   test("no page scrolls sideways", async ({ page }) => {
-    for (const path of ["/", "/learn", "/learn/electric-car", "/calculators", "/car", "/discounted-home", "/calculators/mortgage", "/calculators/debt", "/optimizations", "/groups", "/loans", "/control", "/tips", "/budget", "/accounts", "/insurance"]) {
+    for (const path of [
+      "/",
+      "/learn",
+      "/learn/electric-car",
+      "/calculators",
+      "/car",
+      "/discounted-home",
+      "/calculators/mortgage",
+      "/calculators/debt",
+      "/optimizations",
+      "/groups",
+      "/loans",
+      "/control",
+      "/tips",
+      "/budget",
+      "/accounts",
+      "/insurance",
+    ]) {
       await page.goto(path);
       await page.getByRole("heading", { level: 1 }).waitFor();
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      );
       expect(overflow, path).toBeLessThanOrEqual(1);
     }
   });
@@ -26,7 +48,10 @@ test.describe("navigation", () => {
     // Analytics is one link in the side menu; its pages have their own menu card.
     await page.getByRole("link", { name: "ניתוח" }).first().click();
     await expect(page).toHaveURL(/\/overview$/);
-    await page.getByRole("navigation", { name: "ניתוח" }).getByRole("link", { name: /^מחשבונים/ }).click();
+    await page
+      .getByRole("navigation", { name: "ניתוח" })
+      .getByRole("link", { name: /^מחשבונים/ })
+      .click();
     await expect(page).toHaveURL(/\/calculators$/);
     await expect(page.getByRole("link", { name: /משכנתא/ })).toBeVisible();
   });
@@ -70,7 +95,9 @@ test.describe("knowledge center", () => {
     await expect(page.getByRole("link", { name: /תמהיל משכנתא/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /לצאת מהמינוס/ })).toHaveCount(0);
     await page.getByRole("link", { name: /תמהיל משכנתא/ }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "תמהיל משכנתא בלי כאב ראש" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "תמהיל משכנתא בלי כאב ראש" }),
+    ).toBeVisible();
     await page.getByRole("link", { name: "מחשבון משכנתא" }).click();
     await expect(page).toHaveURL(/\/calculators\/mortgage$/);
   });
@@ -100,12 +127,35 @@ test.describe("money features", () => {
     await expect(card.getByText("742").first()).toBeVisible();
   });
 
-  test("who owes me: a split shows per person, paid back can be undone", async ({ page, request, baseURL }) => {
+  test("who owes me: a split shows per person, paid back can be undone", async ({
+    page,
+    request,
+    baseURL,
+  }) => {
     const headers = { origin: baseURL! };
     const day = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jerusalem" });
-    const tx = await (await request.post("/api/transactions/manual", { headers, data: { kind: "expense", amount: 300, date: day, description: "ארוחה משותפת" } })).json();
-    expect((await request.post(`/api/transactions/${tx.id}/shares`, { headers, data: { person: "דנה", amount: 400 } })).status()).toBe(400); // more than the expense
-    expect((await request.post(`/api/transactions/${tx.id}/shares`, { headers, data: { person: "דנה", amount: 150 } })).ok()).toBe(true);
+    const tx = await (
+      await request.post("/api/transactions/manual", {
+        headers,
+        data: { kind: "expense", amount: 300, date: day, description: "ארוחה משותפת" },
+      })
+    ).json();
+    expect(
+      (
+        await request.post(`/api/transactions/${tx.id}/shares`, {
+          headers,
+          data: { person: "דנה", amount: 400 },
+        })
+      ).status(),
+    ).toBe(400); // more than the expense
+    expect(
+      (
+        await request.post(`/api/transactions/${tx.id}/shares`, {
+          headers,
+          data: { person: "דנה", amount: 150 },
+        })
+      ).ok(),
+    ).toBe(true);
 
     await page.goto("/groups");
     const card = page.getByRole("region", { name: "מי חייב לי" });
@@ -116,15 +166,23 @@ test.describe("money features", () => {
     await expect(card.getByText("דנה")).toBeVisible();
   });
 
-  test("a split added from the transaction sheet saves with Enter, without submitting the sheet", async ({ page, request, baseURL }) => {
+  test("a split added from the transaction sheet saves with Enter, without submitting the sheet", async ({
+    page,
+    request,
+    baseURL,
+  }) => {
     const headers = { origin: baseURL! };
     const day = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jerusalem" });
-    await request.post("/api/transactions/manual", { headers, data: { kind: "expense", amount: 200, date: day, description: "פיצה QA", tags: ["חופשה"] } });
+    await request.post("/api/transactions/manual", {
+      headers,
+      data: { kind: "expense", amount: 200, date: day, description: "פיצה QA", tags: ["חופשה"] },
+    });
     await page.goto("/transactions?search=QA");
     await page.getByRole("button", { name: "עריכת פיצה QA" }).click();
     const sheet = page.getByRole("dialog");
     const more = sheet.locator("details").first();
-    if (!(await more.evaluate((d) => (d as HTMLDetailsElement).open))) await more.locator("summary").click();
+    if (!(await more.evaluate((d) => (d as HTMLDetailsElement).open)))
+      await more.locator("summary").click();
     await sheet.getByRole("button", { name: "מישהו חייב לי חלק" }).click();
     await sheet.getByPlaceholder("למשל: דנה").fill("רון");
     await sheet.getByPlaceholder("למשל: דנה").press("Enter");
@@ -133,11 +191,19 @@ test.describe("money features", () => {
   });
 
   test("Groups with data fit a phone", async ({ browser, baseURL }) => {
-    const phone = await browser.newContext({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true, locale: "he-IL", baseURL });
+    const phone = await browser.newContext({
+      viewport: { width: 375, height: 812 },
+      isMobile: true,
+      hasTouch: true,
+      locale: "he-IL",
+      baseURL,
+    });
     const page = await phone.newPage();
     await page.goto("/groups");
     await page.getByRole("heading", { level: 1 }).waitFor();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      376,
+    );
     await phone.close();
   });
 
@@ -151,7 +217,11 @@ test.describe("money features", () => {
 });
 
 test.describe("profiles", () => {
-  test("with two profiles, a new session starts at who's using, and picking one goes home", async ({ page, browser, isMobile }) => {
+  test("with two profiles, a new session starts at who's using, and picking one goes home", async ({
+    page,
+    browser,
+    isMobile,
+  }) => {
     test.skip(isMobile, "profiles are shared data; one project is enough");
     await page.goto("/profiles");
     await page.getByRole("button", { name: "הוספת פרופיל" }).click();

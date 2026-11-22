@@ -43,7 +43,13 @@ export function findAnomalies(txns: AnomalyTxn[], today: string): Anomaly[] {
   for (const [category, { now, before }] of byCat) {
     const mean = before / 3;
     if (mean > 0 && now >= SPIKE_MIN && now > SPIKE_RATIO * mean) {
-      out.push({ type: "category_spike", category, amount: now, usual: mean, detail: `${category}: ${Math.round(now)} this month vs ${Math.round(mean)} usual` });
+      out.push({
+        type: "category_spike",
+        category,
+        amount: now,
+        usual: mean,
+        detail: `${category}: ${Math.round(now)} this month vs ${Math.round(mean)} usual`,
+      });
     }
   }
 
@@ -53,7 +59,12 @@ export function findAnomalies(txns: AnomalyTxn[], today: string): Anomaly[] {
   const seenBefore = new Set(spend.filter((t) => t.date <= recentFrom).map((t) => t.merchant));
   for (const t of recent) {
     if (-t.amount >= LARGE_CHARGE && !seenBefore.has(t.merchant)) {
-      out.push({ type: "new_large_merchant", merchant: t.merchant, amount: -t.amount, detail: `New merchant ${t.merchant}: ${Math.round(-t.amount)}` });
+      out.push({
+        type: "new_large_merchant",
+        merchant: t.merchant,
+        amount: -t.amount,
+        detail: `New merchant ${t.merchant}: ${Math.round(-t.amount)}`,
+      });
       seenBefore.add(t.merchant);
     }
   }
@@ -66,7 +77,13 @@ export function findAnomalies(txns: AnomalyTxn[], today: string): Anomaly[] {
   for (const [key, n] of counts) {
     if (n < 2) continue;
     const [merchant, amount] = key.split("|");
-    out.push({ type: "duplicate_charge", merchant, amount: -Number(amount), count: n, detail: `${merchant} charged ${n}x ${-Number(amount)} on the same day` });
+    out.push({
+      type: "duplicate_charge",
+      merchant,
+      amount: -Number(amount),
+      count: n,
+      detail: `${merchant} charged ${n}x ${-Number(amount)} on the same day`,
+    });
   }
   return out;
 }

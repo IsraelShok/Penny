@@ -1,4 +1,4 @@
-import {applyAutomaticGoalRules} from "@/server/db/queries/financial-control";
+import { applyAutomaticGoalRules } from "@/server/db/queries/financial-control";
 import { saveAccountBalances } from "../db/queries/assets";
 import { APP_LOCKED_MESSAGE, isKeyLocked } from "../lib/encryption";
 import { redactError } from "../lib/redact";
@@ -12,11 +12,7 @@ import {
   type BankCredentialMeta,
 } from "@/server/db/queries/bank-credentials";
 import { getAppSettings } from "@/server/db/queries/settings";
-import {
-  createSyncRun,
-  completeSyncRun,
-  failSyncRun,
-} from "@/server/db/queries/sync-runs";
+import { createSyncRun, completeSyncRun, failSyncRun } from "@/server/db/queries/sync-runs";
 import {
   saveSyncTransactions,
   getUncategorizedIdsByKind,
@@ -37,10 +33,7 @@ import { getAllCategories } from "@/server/db/queries/categories";
 import { getRecentCorrections } from "@/server/db/queries/category-corrections";
 import { scrapeBank } from "@/server/scrapers";
 import { connectOpenBanking } from "@/server/open-banking/client";
-import {
-  scrapeOneZeroFirstTime,
-  scrapeOneZeroWithToken,
-} from "@/server/scrapers/one-zero";
+import { scrapeOneZeroFirstTime, scrapeOneZeroWithToken } from "@/server/scrapers/one-zero";
 import { createAIProvider } from "@/server/ai/factory";
 import { ensureOllamaRunning } from "@/server/ai/ollama-manager";
 import { toLocalISODate } from "@/server/lib/date-utils";
@@ -48,21 +41,11 @@ import { listAllWorkspaceIds } from "@/server/lib/workspace-context";
 import { SyncBusyError, tryAcquireSync } from "@/server/sync/lock";
 import { getWorkspace } from "@/server/db/queries/workspaces";
 import { BANK_PROVIDERS, type BankProvider, type SyncKind } from "@/lib/types";
-import {
-  cancelOtpRequest,
-  registerOtpRequest,
-} from "@/server/sync/otp-bridge";
-import {
-  markSyncEnd,
-  markSyncHeartbeat,
-  markSyncStart,
-} from "@/server/sync/activity";
+import { cancelOtpRequest, registerOtpRequest } from "@/server/sync/otp-bridge";
+import { markSyncEnd, markSyncHeartbeat, markSyncStart } from "@/server/sync/activity";
 import type { ScrapeResult } from "@/server/scrapers/types";
 
-export type SyncEventSender = (
-  event: string,
-  data: Record<string, unknown>
-) => void;
+export type SyncEventSender = (event: string, data: Record<string, unknown>) => void;
 
 export interface ProviderResult {
   provider: BankProvider;
@@ -100,9 +83,7 @@ export function friendlyAIError(err: unknown, modelName: string): string {
 }
 
 function supportsProgrammaticTwoFactor(provider: BankProvider): boolean {
-  return Boolean(
-    BANK_PROVIDERS.find((b) => b.id === provider)?.supportsProgrammaticTwoFactor
-  );
+  return Boolean(BANK_PROVIDERS.find((b) => b.id === provider)?.supportsProgrammaticTwoFactor);
 }
 
 interface RunScrapeArgs {
@@ -152,8 +133,7 @@ async function runScrapeForProvider(args: RunScrapeArgs): Promise<ScrapeResult> 
       return {
         success: false,
         accounts: [],
-        errorMessage:
-          "Phone number is required to receive the One Zero 2FA code.",
+        errorMessage: "Phone number is required to receive the One Zero 2FA code.",
       };
     }
 
@@ -184,12 +164,7 @@ async function runScrapeForProvider(args: RunScrapeArgs): Promise<ScrapeResult> 
     });
 
     if (result.otpLongTermToken) {
-      updateCredentialField(
-        workspaceId,
-        credentialId,
-        "otpLongTermToken",
-        result.otpLongTermToken
-      );
+      updateCredentialField(workspaceId, credentialId, "otpLongTermToken", result.otpLongTermToken);
     }
 
     return result;
@@ -219,15 +194,10 @@ async function syncOneCredential(
   meta: BankCredentialMeta,
   credentials: Record<string, string>,
   startDate: Date,
-  send: SyncEventSender
+  send: SyncEventSender,
 ): Promise<ProviderResult> {
   const provider = meta.provider as BankProvider;
-  const syncRunId = createSyncRun(
-    workspaceId,
-    provider,
-    meta.id,
-    toLocalISODate(startDate)
-  );
+  const syncRunId = createSyncRun(workspaceId, provider, meta.id, toLocalISODate(startDate));
   // Anything that throws after the run exists still closes it as failed, so it never stays "running" and
   // the next run can tell this connection was already failing.
   try {
@@ -270,7 +240,7 @@ async function syncOneCredential(
         ...txn,
         installmentNumber: txn.installments?.number,
         installmentTotal: txn.installments?.total,
-      }))
+      })),
     );
 
     const { added, updated } = saveSyncTransactions(
@@ -279,7 +249,7 @@ async function syncOneCredential(
       provider,
       meta.id,
       syncRunId,
-      result.accounts.map((a) => a.accountNumber)
+      result.accounts.map((a) => a.accountNumber),
     );
     // Bank balances feed cash, the emergency fund and net worth without typing them in.
     if (BANK_PROVIDERS.find((b) => b.id === provider)?.kind === "bank") {
@@ -303,14 +273,23 @@ async function syncOneCredential(
   } catch (err) {
     const message = err instanceof Error ? redactError(err) : "Unknown scrape error";
     failSyncRun(syncRunId, message);
-    return { provider, credentialId: meta.id, label: meta.label, ok: false, added: 0, updated: 0, errorMessage: message, syncRunId };
+    return {
+      provider,
+      credentialId: meta.id,
+      label: meta.label,
+      ok: false,
+      added: 0,
+      updated: 0,
+      errorMessage: message,
+      syncRunId,
+    };
   }
 }
 
 export async function syncWorkspace(
   workspaceId: number,
   filterCredentialId: number | undefined,
-  send: SyncEventSender
+  send: SyncEventSender,
 ): Promise<WorkspaceSummary> {
   const workspace = getWorkspace(workspaceId);
   const workspaceName = workspace?.name ?? `Workspace ${workspaceId}`;
@@ -405,7 +384,7 @@ export async function syncWorkspace(
         meta,
         credentials,
         startDate,
-        send
+        send,
       );
       results.push(result);
       send("provider-done", {
@@ -420,10 +399,7 @@ export async function syncWorkspace(
         errorMessage: result.errorMessage,
       });
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? redactError(err)
-          : "Unknown scrape error";
+      const message = err instanceof Error ? redactError(err) : "Unknown scrape error";
       results.push({
         provider,
         credentialId: meta.id,
@@ -462,9 +438,12 @@ export async function syncWorkspace(
     console.error("[sync] AI provider unavailable:", redactError(err));
   }
   // Without AI, warn only when memory and the dictionary left something uncategorized.
-  if (!aiProvider && (getUncategorizedIdsByKind(workspaceId, "expense").length > 0 || getUncategorizedIdsByKind(workspaceId, "income").length > 0)) {
-    aiWarning =
-      "AI provider not connected — new transactions weren't auto-categorized.";
+  if (
+    !aiProvider &&
+    (getUncategorizedIdsByKind(workspaceId, "expense").length > 0 ||
+      getUncategorizedIdsByKind(workspaceId, "income").length > 0)
+  ) {
+    aiWarning = "AI provider not connected — new transactions weren't auto-categorized.";
   }
   if (aiProvider) {
     if (settings.aiProvider === "ollama") {
@@ -502,14 +481,11 @@ export async function syncWorkspace(
         }));
         const pastCorrections = getRecentCorrections(workspaceId, kind);
 
-        const allTxns = getTransactionsForCategorization(
-          workspaceId,
-          uncategorizedIds
-        );
+        const allTxns = getTransactionsForCategorization(workspaceId, uncategorizedIds);
 
         const memoryMap = lookupMerchantCategoriesBulk(
           workspaceId,
-          allTxns.map((t) => t.description)
+          allTxns.map((t) => t.description),
         );
 
         const memoryUpdates: { id: number; categoryId: number }[] = [];
@@ -549,7 +525,7 @@ export async function syncWorkspace(
                 memo: t.memo,
               })),
               categoryInput,
-              { pastCorrections }
+              { pastCorrections },
             );
 
             const updates: {
@@ -560,9 +536,7 @@ export async function syncWorkspace(
             const reviewFlags: { id: number; needsReview: boolean }[] = [];
 
             for (const m of mappings) {
-              const category = categories.find(
-                (c) => c.name === m.categoryName
-              );
+              const category = categories.find((c) => c.name === m.categoryName);
               const txn = batch[m.index];
               if (!category || !txn) continue;
               const confidence = m.confidence ?? null;
@@ -581,10 +555,7 @@ export async function syncWorkspace(
             batchSetNeedsReview(workspaceId, reviewFlags);
             categorized += updates.length;
           } catch (err) {
-            console.error(
-              `[sync] AI categorization batch failed (${kind}):`,
-              redactError(err)
-            );
+            console.error(`[sync] AI categorization batch failed (${kind}):`, redactError(err));
             if (!aiWarning) {
               aiWarning = friendlyAIError(err, settings.ollamaModel);
             }
@@ -613,7 +584,7 @@ export async function runAllWorkspaces(
   onEvent?: SyncEventSender,
   kind: SyncKind = "manual",
   /** The caller already holds the sync lock (the SSE route does, so it can answer 409 itself). */
-  options: { lockHeld?: boolean } = {}
+  options: { lockHeld?: boolean } = {},
 ): Promise<WorkspaceSummary[]> {
   const release = options.lockHeld ? null : tryAcquireSync(kind);
   if (!options.lockHeld && !release) throw new SyncBusyError();
@@ -634,7 +605,9 @@ export async function runAllWorkspaces(
         // A manual sync shows its errors on screen; a scheduled one has nobody watching.
         if (kind === "scheduled") await m.sendSyncAlerts(summaries.flatMap((w) => w.providers));
       })
-      .catch((err) => console.error("[bot] spend feedback", err instanceof Error ? err.message : err));
+      .catch((err) =>
+        console.error("[bot] spend feedback", err instanceof Error ? err.message : err),
+      );
     return summaries;
   } finally {
     markSyncEnd();

@@ -50,7 +50,7 @@ export function StatStrip({
         hero
           ? "rounded-none border-0 border-t border-white/15 bg-transparent text-white shadow-none"
           : "border-border/80 bg-card shadow-[var(--card-elevation)]",
-        className
+        className,
       )}
     >
       {items.map((item, i) => (
@@ -60,30 +60,43 @@ export function StatStrip({
           className={cn(
             "min-w-0 px-3 py-3.5 sm:px-5 sm:py-4",
             i > 0 && "border-s",
-            hero ? "border-white/15" : "border-border/80"
+            hero ? "border-white/15" : "border-border/80",
           )}
         >
           <dt
             className={cn(
               "flex items-center gap-1.5 text-[0.625rem] font-semibold uppercase tracking-[0.08em] sm:text-[0.6875rem]",
-              hero ? "text-white/70" : "text-muted-foreground"
+              hero ? "text-white/70" : "text-muted-foreground",
             )}
           >
-            {item.dot && <span aria-hidden className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: item.dot }} />}
+            {item.dot && (
+              <span
+                aria-hidden
+                className="size-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: item.dot }}
+              />
+            )}
             <span className="min-w-0 truncate">{item.label}</span>
           </dt>
           <dd
             className={cn(
               "figure mt-1 whitespace-nowrap text-[1.0625rem] leading-tight sm:mt-1.5 sm:text-2xl",
               item.tone === "positive" && "text-status-on-track",
-              item.tone === "negative" && "text-status-over"
+              item.tone === "negative" && "text-status-over",
             )}
           >
             {item.value}
           </dd>
           {/* On a phone the three figures are the point; the context line returns at 640px. */}
           {anyHint && (
-            <dd className={cn("mt-1 hidden min-h-4 text-caption sm:block", hero ? "text-white/65" : "text-muted-foreground")}>{item.hint}</dd>
+            <dd
+              className={cn(
+                "mt-1 hidden min-h-4 text-caption sm:block",
+                hero ? "text-white/65" : "text-muted-foreground",
+              )}
+            >
+              {item.hint}
+            </dd>
           )}
         </div>
       ))}

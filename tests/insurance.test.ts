@@ -32,14 +32,26 @@ const view = (over: Partial<InsurancePolicyView>): InsurancePolicyView => ({
 
 it("matches a charge by its text and, when set, its account", () => {
   const policy = { matchPattern: "הפניקס", paymentAccount: "" };
-  expect(policyMatchesCharge(policy, { description: "הפניקס ביטוח חיים", account: "12-345" })).toBe(true);
-  expect(policyMatchesCharge(policy, { description: "הפניקס ביטוח חיים", account: "999" })).toBe(true);
+  expect(policyMatchesCharge(policy, { description: "הפניקס ביטוח חיים", account: "12-345" })).toBe(
+    true,
+  );
+  expect(policyMatchesCharge(policy, { description: "הפניקס ביטוח חיים", account: "999" })).toBe(
+    true,
+  );
   expect(policyMatchesCharge(policy, { description: "מכולת", account: "12-345" })).toBe(false);
   // No match text never claims a charge.
-  expect(policyMatchesCharge({ matchPattern: "", paymentAccount: "" }, { description: "x", account: "y" })).toBe(false);
+  expect(
+    policyMatchesCharge(
+      { matchPattern: "", paymentAccount: "" },
+      { description: "x", account: "y" },
+    ),
+  ).toBe(false);
   // An account on the policy narrows the match.
   expect(
-    policyMatchesCharge({ matchPattern: "הפניקס", paymentAccount: "12-345" }, { description: "הפניקס", account: "999" })
+    policyMatchesCharge(
+      { matchPattern: "הפניקס", paymentAccount: "12-345" },
+      { description: "הפניקס", account: "999" },
+    ),
   ).toBe(false);
 });
 
@@ -76,7 +88,7 @@ it("keeps the same text on two accounts apart", () => {
       { id: 1, description: "כלל", date: "2026-01-05", account: "A", amount: 100 },
       { id: 2, description: "כלל", date: "2026-01-05", account: "B", amount: 80 },
     ],
-    []
+    [],
   );
   expect(out.map((g) => g.account).sort()).toEqual(["A", "B"]);
 });
@@ -90,11 +102,19 @@ it("derives the renewal day from an end date, then a renewal month", () => {
 it("flags renewals within the window and not in the past", () => {
   const today = day("2026-11-16");
   expect(daysUntil("2026-12-01", today)).toBe(15);
-  expect(renewalSoon({ endDate: null, renewalMonth: "2026-12", archived: false }, today)).toBe(true);
-  expect(renewalSoon({ endDate: null, renewalMonth: "2026-10", archived: false }, today)).toBe(false);
-  expect(renewalSoon({ endDate: null, renewalMonth: "2027-06", archived: false }, today)).toBe(false);
+  expect(renewalSoon({ endDate: null, renewalMonth: "2026-12", archived: false }, today)).toBe(
+    true,
+  );
+  expect(renewalSoon({ endDate: null, renewalMonth: "2026-10", archived: false }, today)).toBe(
+    false,
+  );
+  expect(renewalSoon({ endDate: null, renewalMonth: "2027-06", archived: false }, today)).toBe(
+    false,
+  );
   // Archived policies never remind.
-  expect(renewalSoon({ endDate: null, renewalMonth: "2026-12", archived: true }, today)).toBe(false);
+  expect(renewalSoon({ endDate: null, renewalMonth: "2026-12", archived: true }, today)).toBe(
+    false,
+  );
 });
 
 it("turns a yearly or one-off premium into a monthly cost", () => {
@@ -106,7 +126,13 @@ it("turns a yearly or one-off premium into a monthly cost", () => {
 
 it("totals only the active policies", () => {
   const totals = insuranceTotals([
-    view({ id: 1, monthlyPremium: 100, archived: false, renewalSoon: true, documents: [viewDoc(1)] }),
+    view({
+      id: 1,
+      monthlyPremium: 100,
+      archived: false,
+      renewalSoon: true,
+      documents: [viewDoc(1)],
+    }),
     view({ id: 2, monthlyPremium: 50, archived: false }),
     view({ id: 3, monthlyPremium: 999, archived: true }),
   ]);
@@ -133,7 +159,11 @@ it("spots household overlaps without double counting the household itself", () =
     { name: "Car A", kind: "car", insured: "" },
   ]);
   expect(overlaps).toHaveLength(1);
-  expect(overlaps[0]).toMatchObject({ kind: "health", who: "Dana", names: ["Health A", "Health B"] });
+  expect(overlaps[0]).toMatchObject({
+    kind: "health",
+    who: "Dana",
+    names: ["Health A", "Health B"],
+  });
 });
 
 function viewDoc(id: number) {

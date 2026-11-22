@@ -16,9 +16,18 @@ const req = (body: unknown) =>
   });
 const row = (date: string, description: string, amount: number) => ({ date, description, amount });
 const importRows = async (account: string, rows: unknown[], extra: Record<string, unknown> = {}) =>
-  (await (await POST(req({ account, rows, ...extra }))).json()) as { added: number; duplicates: number; ready: number; batchId: number | null };
+  (await (await POST(req({ account, rows, ...extra }))).json()) as {
+    added: number;
+    duplicates: number;
+    ready: number;
+    batchId: number | null;
+  };
 const count = (account: string) =>
-  (getDb().prepare("SELECT COUNT(*) AS n FROM transactions WHERE account_number = ?").get(account) as { n: number }).n;
+  (
+    getDb()
+      .prepare("SELECT COUNT(*) AS n FROM transactions WHERE account_number = ?")
+      .get(account) as { n: number }
+  ).n;
 
 beforeAll(async () => {
   process.env.PENNY_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "penny-import-combo-"));
@@ -30,7 +39,11 @@ describe("statement import: addition, duplication and overlap", () => {
   it("adds a first file, then skips the whole file when it is imported again", async () => {
     const rows = [row("2025-01-02", "סופר", -100), row("2025-01-03", "דלק", -200)];
     expect(await importRows("לאומי 111", rows)).toMatchObject({ added: 2, duplicates: 0 });
-    expect(await importRows("לאומי 111", rows)).toMatchObject({ added: 0, duplicates: 2, ready: 0 });
+    expect(await importRows("לאומי 111", rows)).toMatchObject({
+      added: 0,
+      duplicates: 2,
+      ready: 0,
+    });
     expect(count("לאומי 111")).toBe(2);
   });
 
@@ -53,7 +66,10 @@ describe("statement import: addition, duplication and overlap", () => {
     // Re-importing the same pair: both are matches, one copy per stored row, so nothing is added.
     expect(await importRows("מזומן 333", twice)).toMatchObject({ added: 0, duplicates: 2 });
     // A third identical charge after the fact is a new charge, not a duplicate of a used pair.
-    expect(await importRows("מזומן 333", [row("2025-03-01", "קפה", -12)])).toMatchObject({ added: 0, duplicates: 1 });
+    expect(await importRows("מזומן 333", [row("2025-03-01", "קפה", -12)])).toMatchObject({
+      added: 0,
+      duplicates: 1,
+    });
     expect(count("מזומן 333")).toBe(2);
   });
 
@@ -65,8 +81,14 @@ describe("statement import: addition, duplication and overlap", () => {
 
   it("does not dedupe by description alone: a different amount is a different charge", async () => {
     await importRows("mercantile 555", [row("2025-05-05", "סופר", -50)]);
-    expect(await importRows("mercantile 555", [row("2025-05-05", "סופר", -50)])).toMatchObject({ added: 0, duplicates: 1 });
-    expect(await importRows("mercantile 555", [row("2025-05-05", "סופר", -51)])).toMatchObject({ added: 1, duplicates: 0 });
+    expect(await importRows("mercantile 555", [row("2025-05-05", "סופר", -50)])).toMatchObject({
+      added: 0,
+      duplicates: 1,
+    });
+    expect(await importRows("mercantile 555", [row("2025-05-05", "סופר", -51)])).toMatchObject({
+      added: 1,
+      duplicates: 0,
+    });
   });
 
   it("never crosses accounts: the same statement in two accounts is kept twice", async () => {
@@ -81,16 +103,23 @@ describe("statement import: addition, duplication and overlap", () => {
     const rows = [row("2025-07-01", "תיקון", -70)];
     const first = await importRows("בנק 666", rows);
     expect(first.added).toBe(1);
-    await DELETE(new Request(`http://127.0.0.1/api/import?batch=${first.batchId}`, { method: "DELETE" }));
+    await DELETE(
+      new Request(`http://127.0.0.1/api/import?batch=${first.batchId}`, { method: "DELETE" }),
+    );
     expect(count("בנק 666")).toBe(0);
     expect(await importRows("בנק 666", rows)).toMatchObject({ added: 1 });
   });
 
   it("removes only its own batch when a later file overlapped it", async () => {
     const a = await importRows("בנק 777", [row("2025-08-01", "A", -10)]);
-    const b = await importRows("בנק 777", [row("2025-08-01", "A", -10), row("2025-08-02", "B", -20)]);
+    const b = await importRows("בנק 777", [
+      row("2025-08-01", "A", -10),
+      row("2025-08-02", "B", -20),
+    ]);
     expect(b).toMatchObject({ added: 1, duplicates: 1 });
-    await DELETE(new Request(`http://127.0.0.1/api/import?batch=${b.batchId}`, { method: "DELETE" }));
+    await DELETE(
+      new Request(`http://127.0.0.1/api/import?batch=${b.batchId}`, { method: "DELETE" }),
+    );
     const left = getDb()
       .prepare("SELECT description FROM transactions WHERE account_number = ? ORDER BY description")
       .all("בנק 777") as { description: string }[];
@@ -100,7 +129,11 @@ describe("statement import: addition, duplication and overlap", () => {
 
   it("counts without writing on a dry run, and trims the account name", async () => {
     const rows = [row("2025-09-01", "בדיקה", -5)];
-    expect(await importRows("  בנק 888  ", rows, { dryRun: true })).toMatchObject({ ready: 1, added: 0, batchId: null });
+    expect(await importRows("  בנק 888  ", rows, { dryRun: true })).toMatchObject({
+      ready: 1,
+      added: 0,
+      batchId: null,
+    });
     expect(count("בנק 888")).toBe(0);
     expect(await importRows("בנק 888", rows)).toMatchObject({ added: 1 });
     expect(await importRows("  בנק 888  ", rows)).toMatchObject({ added: 0, duplicates: 1 });

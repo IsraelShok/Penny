@@ -29,10 +29,12 @@ describe("allocate", () => {
 describe("liquidCash", () => {
   it("counts cash, deposits and money-market funds, not stocks", async () => {
     const { liquidCash } = await import("@/lib/allocation");
-    expect(liquidCash([
-      { type: "cash", name: "עו\"ש", isLiability: false, valueIls: 6500 },
-      { type: "fund", name: "קרן כספית", isLiability: false, valueIls: 12000 },
-      { type: "stock", name: "תיק", isLiability: false, valueIls: 45000 },
-    ])).toBe(18500);
+    expect(
+      liquidCash([
+        { type: "cash", name: 'עו"ש', isLiability: false, valueIls: 6500 },
+        { type: "fund", name: "קרן כספית", isLiability: false, valueIls: 12000 },
+        { type: "stock", name: "תיק", isLiability: false, valueIls: 45000 },
+      ]),
+    ).toBe(18500);
   });
 });

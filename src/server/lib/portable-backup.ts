@@ -10,6 +10,8 @@ import { backupBeforeMigration, backupDir } from "@/server/db/backup";
 import { dataDir, dbPath } from "@/server/lib/data-dir";
 import { getKey, keyPath, setKeyInMemory } from "@/server/lib/encryption";
 import { isLockEnabled } from "@/server/lib/app-lock";
+import { requireRelink } from "@/server/bot/config";
+import { resetFolderImportDir } from "@/server/lib/folder-import";
 
 /**
  * One portable, passphrase-encrypted file holding the database and the key that decrypts the
@@ -55,7 +57,11 @@ export function collectDataFiles(root: string): Record<string, string> {
 /** Where a backed-up file goes back, or null for any path outside those folders (a crafted backup must not write elsewhere). */
 export function restorePathFor(root: string, rel: string): string | null {
   const parts = rel.split("/");
-  if (!(BACKUP_FILE_DIRS as readonly string[]).includes(parts[0]) || parts.some((p) => p === "" || p === "." || p === "..")) return null;
+  if (
+    !(BACKUP_FILE_DIRS as readonly string[]).includes(parts[0]) ||
+    parts.some((p) => p === "" || p === "." || p === "..")
+  )
+    return null;
   const base = path.resolve(root, parts[0]);
   const target = path.resolve(root, ...parts);
   return target.startsWith(base + path.sep) ? target : null;
@@ -67,7 +73,8 @@ export interface BackupCounts {
   to: string | null;
 }
 
-const derive = (passphrase: string, salt: Buffer) => crypto.scryptSync(passphrase, salt, 32, SCRYPT);
+const derive = (passphrase: string, salt: Buffer) =>
+  crypto.scryptSync(passphrase, salt, 32, SCRYPT);
 
 export function encryptBackup(plain: Buffer, passphrase: string): Buffer {
   const salt = crypto.randomBytes(SALT_BYTES);
@@ -80,13 +87,16 @@ export function encryptBackup(plain: Buffer, passphrase: string): Buffer {
 /** Throws "badFile" for anything that is not a Penny backup, "badPassphrase" when the tag fails. */
 export function decryptBackup(file: Buffer, passphrase: string): Buffer {
   const header = MAGIC.length + SALT_BYTES + IV_BYTES + TAG_BYTES;
-  if (file.length <= header || !file.subarray(0, MAGIC.length).equals(MAGIC)) throw new Error("badFile");
+  if (file.length <= header || !file.subarray(0, MAGIC.length).equals(MAGIC))
+    throw new Error("badFile");
   const salt = file.subarray(MAGIC.length, MAGIC.length + SALT_BYTES);
   const iv = file.subarray(MAGIC.length + SALT_BYTES, MAGIC.length + SALT_BYTES + IV_BYTES);
   const tag = file.subarray(MAGIC.length + SALT_BYTES + IV_BYTES, header);
   const body = file.subarray(header);
   try {
-    const decipher = crypto.createDecipheriv("aes-256-gcm", derive(passphrase, salt), iv);
+    const decipher = crypto.createDecipheriv("aes-256-gcm", derive(passphrase, salt), iv, {
+      authTagLength: 16,
+    });
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(body), decipher.final()]);
   } catch {
@@ -103,19 +113,30 @@ export function readBackup(file: Buffer, passphrase: string): BackupPayload {
   } catch {
     throw new Error("badFile");
   }
-  if (payload?.format !== 1 || typeof payload.database !== "string" || !isSqlite(Buffer.from(payload.database, "base64"))) {
+  if (
+    payload?.format !== 1 ||
+    typeof payload.database !== "string" ||
+    !isSqlite(Buffer.from(payload.database, "base64"))
+  ) {
     throw new Error("badFile");
   }
   return payload;
 }
 
 export function isSqlite(bytes: Buffer): boolean {
-  return bytes.length > SQLITE_HEADER.length && bytes.subarray(0, SQLITE_HEADER.length).equals(SQLITE_HEADER);
+  return (
+    bytes.length > SQLITE_HEADER.length &&
+    bytes.subarray(0, SQLITE_HEADER.length).equals(SQLITE_HEADER)
+  );
 }
 
 function countsOf(db: Database.Database): BackupCounts {
   try {
-    const row = db.prepare("SELECT COUNT(*) AS n, MIN(substr(date, 1, 10)) AS from, MAX(substr(date, 1, 10)) AS to FROM transactions").get() as {
+    const row = db
+      .prepare(
+        "SELECT COUNT(*) AS n, MIN(substr(date, 1, 10)) AS from, MAX(substr(date, 1, 10)) AS to FROM transactions",
+      )
+      .get() as {
       n: number;
       from: string | null;
       to: string | null;
@@ -132,7 +153,11 @@ export function backupFileName(now = new Date()): string {
 }
 
 /** Checkpoints WAL, then encrypts the database file and the key into one buffer. */
-export function createBackup(passphrase: string): { bytes: Buffer; fileName: string; counts: BackupCounts } {
+export function createBackup(passphrase: string): {
+  bytes: Buffer;
+  fileName: string;
+  counts: BackupCounts;
+} {
   if (passphrase.length < MIN_PASSPHRASE) throw new Error("weakPassphrase");
   const db = getDb();
   db.pragma("wal_checkpoint(TRUNCATE)");
@@ -183,8 +208,12 @@ function opensAsPennyDatabase(bytes: Buffer): boolean {
     fs.writeFileSync(file, bytes);
     const probe = new Database(file, { readonly: true, fileMustExist: true });
     try {
-      const tables = probe.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as { name: string }[];
-      return tables.some((t) => t.name === "transactions") && tables.some((t) => t.name === "workspaces");
+      const tables = probe.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as {
+        name: string;
+      }[];
+      return (
+        tables.some((t) => t.name === "transactions") && tables.some((t) => t.name === "workspaces")
+      );
     } finally {
       probe.close();
     }
@@ -230,7 +259,8 @@ export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
   const key = backupKey(payload.encryptionKey);
   // With the lock on, the key lives wrapped by the passphrase, which a restore doesn't have. A different key
   // can't be stored without breaking the lock, so ask for the lock to be turned off first (before anything changes).
-  if (key && isLockEnabled() && !key.equals(currentKey() ?? Buffer.alloc(0))) throw new Error("lockOn");
+  if (key && isLockEnabled() && !key.equals(currentKey() ?? Buffer.alloc(0)))
+    throw new Error("lockOn");
 
   const db = getDb();
   const preRestoreBackup = backupBeforeMigration(db, "restore");
@@ -255,6 +285,8 @@ export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
   const fresh = getDb();
   const check = fresh.pragma("quick_check") as { quick_check: string }[];
   if (!check.every((row) => row.quick_check === "ok")) throw new Error("corruptRestore");
+  requireRelink();
+  resetFolderImportDir();
   return { counts: countsOf(fresh), preRestoreBackup, createdAt: payload.createdAt };
 }
 

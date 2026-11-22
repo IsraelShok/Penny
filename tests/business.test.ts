@@ -17,7 +17,8 @@ beforeAll(async () => {
   ({ getBusinessReport } = await import("@/server/db/queries/business"));
   ({ getPeriodTotal } = await import("@/server/db/queries/transactions"));
   ({ ensureCategory } = await import("@/server/db/queries/categories"));
-  ws = (getDb().prepare("SELECT id FROM workspaces ORDER BY id LIMIT 1").get() as { id: number }).id;
+  ws = (getDb().prepare("SELECT id FROM workspaces ORDER BY id LIMIT 1").get() as { id: number })
+    .id;
 });
 
 describe("business report", () => {
@@ -26,13 +27,28 @@ describe("business report", () => {
     createManualTransaction(
       getDb(),
       ws,
-      { kind: "expense", amount: 200, date: "2026-01-10", description: "Adobe", categoryId: category.id, account: "cash", businessSharePct: 50 },
+      {
+        kind: "expense",
+        amount: 200,
+        date: "2026-01-10",
+        description: "Adobe",
+        categoryId: category.id,
+        account: "cash",
+        businessSharePct: 50,
+      },
       [],
     );
     createManualTransaction(
       getDb(),
       ws,
-      { kind: "expense", amount: 100, date: "2026-01-11", description: "סופר", categoryId: category.id, account: "cash" },
+      {
+        kind: "expense",
+        amount: 100,
+        date: "2026-01-11",
+        description: "סופר",
+        categoryId: category.id,
+        account: "cash",
+      },
       [],
     );
 
@@ -41,7 +57,12 @@ describe("business report", () => {
     expect(report.businessTransactions).toBe(1);
     expect(report.months).toEqual([{ month: "2026-01", expenses: 100, income: 0, net: -100 }]);
     expect(report.categories[0]).toMatchObject({ name: "ציוד משרדי", expenses: 100, count: 1 });
-    expect(report.rows[0]).toMatchObject({ description: "Adobe", charged: -200, business: -100, pct: 50 });
+    expect(report.rows[0]).toMatchObject({
+      description: "Adobe",
+      charged: -200,
+      business: -100,
+      pct: 50,
+    });
 
     // The household total keeps both rows at their personal amount: 100 + 100.
     expect(getPeriodTotal(ws, "2026-01-01", "2026-12-31")).toBe(200);
@@ -51,7 +72,14 @@ describe("business report", () => {
     createManualTransaction(
       getDb(),
       ws,
-      { kind: "income", amount: 1000, date: "2026-02-01", description: "לקוח", account: "cash", businessSharePct: 100 },
+      {
+        kind: "income",
+        amount: 1000,
+        date: "2026-02-01",
+        description: "לקוח",
+        account: "cash",
+        businessSharePct: 100,
+      },
       [],
     );
     const report = getBusinessReport(ws, "2026-02-01", "2026-02-28");
@@ -62,6 +90,13 @@ describe("business report", () => {
 
   it("is empty when nothing carries a business share", () => {
     const report = getBusinessReport(ws, "2025-01-01", "2025-01-31");
-    expect(report).toMatchObject({ expenses: 0, income: 0, businessTransactions: 0, months: [], categories: [], merchants: [] });
+    expect(report).toMatchObject({
+      expenses: 0,
+      income: 0,
+      businessTransactions: 0,
+      months: [],
+      categories: [],
+      merchants: [],
+    });
   });
 });

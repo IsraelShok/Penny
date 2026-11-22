@@ -1,5 +1,8 @@
 /** Reads PENNY_<name>, falling back to the variable older installs set. */
-export function pennyEnv(name: string, env: Record<string, string | undefined> = process.env): string | undefined {
+export function pennyEnv(
+  name: string,
+  env: Record<string, string | undefined> = process.env,
+): string | undefined {
   return env[`PENNY_${name}`] ?? env[`SPENT_${name}`]; // legacy: SPENT_* env vars from installs before the Penny rename
 }
 

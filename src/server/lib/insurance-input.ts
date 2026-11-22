@@ -3,7 +3,8 @@ import "server-only";
 import { POLICY_KINDS, type InsurancePolicy } from "@/lib/types";
 import type { InsurancePolicyInput } from "@/server/db/queries/insurance";
 
-const text = (v: unknown, max: number): string | null => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);
+const text = (v: unknown, max: number): string | null =>
+  typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null;
 const amount = (v: unknown): number | null => {
   if (v === "" || v === null || v === undefined) return null;
   const n = Number(v);
@@ -40,9 +41,11 @@ export function parsePolicyInput(body: unknown): InsurancePolicyInput | string {
   if (startDate && endDate && endDate < startDate) return "end date is before the start date";
 
   const coverage = amount(item.coverage);
-  if (coverage == null && item.coverage !== "" && item.coverage != null) return "coverage must be a non-negative amount";
+  if (coverage == null && item.coverage !== "" && item.coverage != null)
+    return "coverage must be a non-negative amount";
   const deductible = amount(item.deductible);
-  if (deductible == null && item.deductible !== "" && item.deductible != null) return "deductible must be a non-negative amount";
+  if (deductible == null && item.deductible !== "" && item.deductible != null)
+    return "deductible must be a non-negative amount";
 
   return {
     id,
@@ -67,6 +70,14 @@ export function parsePolicyInput(body: unknown): InsurancePolicyInput | string {
 }
 
 /** Body of a document: { kind } only; the file carries the rest. */
-export function parseDocumentKind(value: unknown): "policy" | "appendix" | "renewal" | "claim" | "other" | null {
-  return value === "policy" || value === "appendix" || value === "renewal" || value === "claim" || value === "other" ? value : null;
+export function parseDocumentKind(
+  value: unknown,
+): "policy" | "appendix" | "renewal" | "claim" | "other" | null {
+  return value === "policy" ||
+    value === "appendix" ||
+    value === "renewal" ||
+    value === "claim" ||
+    value === "other"
+    ? value
+    : null;
 }

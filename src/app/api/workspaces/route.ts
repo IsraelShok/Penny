@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
-import {
-  createWorkspace,
-  listWorkspaces,
-} from "@/server/db/queries/workspaces";
-import {accessEnabled,currentUser,membership} from "@/server/lib/user-access";
+import { createWorkspace, listWorkspaces } from "@/server/db/queries/workspaces";
+import { accessEnabled, currentUser, membership } from "@/server/lib/user-access";
 import { parseAvatar } from "@/lib/profile-avatar";
 
 import { errorResponse } from "@/server/lib/api-error";
 
-export async function GET(request:Request) {
-  const user=currentUser(request);
-  return NextResponse.json(listWorkspaces().filter(ws=>!accessEnabled()||!!user&&!!membership(user,ws.id)));
+export async function GET(request: Request) {
+  const user = currentUser(request);
+  return NextResponse.json(
+    listWorkspaces().filter((ws) => !accessEnabled() || (!!user && !!membership(user, ws.id))),
+  );
 }
 
 export async function POST(request: Request) {
@@ -22,15 +21,10 @@ export async function POST(request: Request) {
   }
 
   const name =
-    typeof (body as { name?: unknown })?.name === "string"
-      ? ((body as { name: string }).name)
-      : "";
+    typeof (body as { name?: unknown })?.name === "string" ? (body as { name: string }).name : "";
 
   if (!name.trim()) {
-    return NextResponse.json(
-      { error: "name is required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
   }
 
   const avatar = parseAvatar(body);

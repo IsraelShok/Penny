@@ -15,7 +15,7 @@ export function getAllBudgets(workspaceId: number): BudgetRow[] {
   const rows = getDb()
     .prepare(
       `SELECT category_id as categoryId, monthly_amount as monthlyAmount, is_auto as isAuto
-       FROM budgets WHERE workspace_id = ?`
+       FROM budgets WHERE workspace_id = ?`,
     )
     .all(workspaceId) as {
     categoryId: number;
@@ -29,18 +29,14 @@ export function getAllBudgets(workspaceId: number): BudgetRow[] {
   }));
 }
 
-export function getBudgetForCategory(
-  workspaceId: number,
-  categoryId: number
-): BudgetRow | null {
+export function getBudgetForCategory(workspaceId: number, categoryId: number): BudgetRow | null {
   const row = getDb()
     .prepare(
       `SELECT category_id as categoryId, monthly_amount as monthlyAmount, is_auto as isAuto
-       FROM budgets WHERE workspace_id = ? AND category_id = ?`
+       FROM budgets WHERE workspace_id = ? AND category_id = ?`,
     )
     .get(workspaceId, categoryId) as
-    | { categoryId: number; monthlyAmount: number; isAuto: number }
-    | undefined;
+    { categoryId: number; monthlyAmount: number; isAuto: number } | undefined;
   if (!row) return null;
   return {
     categoryId: row.categoryId,
@@ -53,7 +49,7 @@ export function setBudget(
   workspaceId: number,
   categoryId: number,
   amount: number,
-  isAuto = false
+  isAuto = false,
 ): void {
   getDb()
     .prepare(
@@ -62,7 +58,7 @@ export function setBudget(
        ON CONFLICT(workspace_id, category_id) DO UPDATE SET
          monthly_amount = excluded.monthly_amount,
          is_auto = excluded.is_auto,
-         updated_at = excluded.updated_at`
+         updated_at = excluded.updated_at`,
     )
     .run(workspaceId, categoryId, amount, isAuto ? 1 : 0);
 }
@@ -84,10 +80,7 @@ interface AutoSpend {
  * so a fresh DB with one month of history returns that month's spend, not
  * one-third of it.
  */
-export function getAutoBudgetAverage(
-  workspaceId: number,
-  monthsBack: number = 3
-): AutoSpend[] {
+export function getAutoBudgetAverage(workspaceId: number, monthsBack: number = 3): AutoSpend[] {
   const now = new Date();
   const periods: { from: string; to: string }[] = [];
   for (let i = 1; i <= monthsBack; i++) {
@@ -109,7 +102,7 @@ export function getAutoBudgetAverage(
         `SELECT category_id as categoryId, SUM(spend) as amount
          FROM v_spend_rows
          WHERE workspace_id = ? AND date >= ? AND date <= ? AND category_id IS NOT NULL
-         GROUP BY category_id`
+         GROUP BY category_id`,
       )
       .all(workspaceId, from, to) as AutoSpend[];
 
@@ -148,13 +141,14 @@ export function getMonthlyIncomes(workspaceId: number, months = 12, now = new Da
     .prepare(
       `SELECT substr(date, 1, 7) as month, SUM(cash_amount) as income FROM v_cash_rows
        WHERE workspace_id = ? AND flow_type = 'income' AND date >= ?
-       GROUP BY month`
+       GROUP BY month`,
     )
     .all(workspaceId, from) as { month: string; income: number }[];
   const byMonth = new Map(rows.map((r) => [r.month, r.income]));
   const key = (d: Date) => toLocalISODate(d).slice(0, 7);
   const past: number[] = [];
-  for (let i = months; i >= 1; i--) past.push(byMonth.get(key(new Date(now.getFullYear(), now.getMonth() - i, 1))) ?? 0);
+  for (let i = months; i >= 1; i--)
+    past.push(byMonth.get(key(new Date(now.getFullYear(), now.getMonth() - i, 1))) ?? 0);
   // Leading empty months are before the data starts, not weak months.
   while (past.length && past[0] === 0) past.shift();
   return { past, current: byMonth.get(key(now)) ?? 0 };

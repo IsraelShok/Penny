@@ -45,7 +45,11 @@ export function CategorizeButton({ onApplied }: CategorizeButtonProps) {
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending}
       >
-        {mutation.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Tags className="size-4" aria-hidden />}
+        {mutation.isPending ? (
+          <Loader2 className="size-4 animate-spin" aria-hidden />
+        ) : (
+          <Tags className="size-4" aria-hidden />
+        )}
       </IconButton>
 
       {preview && (
@@ -54,9 +58,9 @@ export function CategorizeButton({ onApplied }: CategorizeButtonProps) {
           onClose={() => setPreview(null)}
           onApplied={() => {
             setPreview(null);
-            queryClient.invalidateQueries({ queryKey: ["summary"] });
-            queryClient.invalidateQueries({ queryKey: ["transactions"] });
-            queryClient.invalidateQueries({ queryKey: ["categories"] });
+            void queryClient.invalidateQueries({ queryKey: ["summary"] });
+            void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            void queryClient.invalidateQueries({ queryKey: ["categories"] });
             onApplied?.();
           }}
         />

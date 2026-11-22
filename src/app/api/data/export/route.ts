@@ -31,14 +31,29 @@ function ofx(workspaceId: number): NextResponse {
     .prepare(
       `SELECT id, date, charged_amount as amount, COALESCE(charged_currency, original_currency, 'ILS') as currency,
               description as name, memo, account_number as account, provider
-       FROM transactions WHERE workspace_id = ? AND status = 'completed' AND is_excluded = 0 ORDER BY account_number, date, id`
+       FROM transactions WHERE workspace_id = ? AND status = 'completed' AND is_excluded = 0 ORDER BY account_number, date, id`,
     )
-    .all(workspaceId) as { id: number; date: string; amount: number; currency: string; name: string; memo: string | null; account: string; provider: string }[];
+    .all(workspaceId) as {
+    id: number;
+    date: string;
+    amount: number;
+    currency: string;
+    name: string;
+    memo: string | null;
+    account: string;
+    provider: string;
+  }[];
   const cards = new Set<string>(BANK_PROVIDERS.filter((b) => b.kind === "card").map((b) => b.id));
   const accounts = new Map<string, OfxAccount>();
   for (const r of rows) {
     const key = `${r.provider}|${r.account}`;
-    const a = accounts.get(key) ?? { number: r.account || r.provider, kind: cards.has(r.provider) ? "card" : "bank", currency: r.currency || "ILS", bank: r.provider, txns: [] };
+    const a = accounts.get(key) ?? {
+      number: r.account || r.provider,
+      kind: cards.has(r.provider) ? "card" : "bank",
+      currency: r.currency || "ILS",
+      bank: r.provider,
+      txns: [],
+    };
     a.txns.push({ id: r.id, date: r.date, amount: r.amount, name: r.name, memo: r.memo });
     accounts.set(key, a);
   }
@@ -66,7 +81,7 @@ export async function GET(request: Request) {
        FROM transactions t
        LEFT JOIN categories c ON c.id = t.category_id
        WHERE t.workspace_id = ?
-       ORDER BY t.date, t.id`
+       ORDER BY t.date, t.id`,
     )
     .all(workspaceId) as Record<string, unknown>[];
 

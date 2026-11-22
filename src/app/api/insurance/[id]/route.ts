@@ -15,7 +15,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const parsed = parsePolicyInput({ ...(body as Record<string, unknown> | null), id: numericId });
   if (typeof parsed === "string") return bad(parsed);
   const saved = upsertInsurancePolicy(workspaceId, parsed);
-  return saved == null ? NextResponse.json({ error: "not found" }, { status: 404 }) : NextResponse.json({ success: true, id: saved });
+  return saved == null
+    ? NextResponse.json({ error: "not found" }, { status: 404 })
+    : NextResponse.json({ success: true, id: saved });
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {

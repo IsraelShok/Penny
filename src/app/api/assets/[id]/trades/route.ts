@@ -5,7 +5,10 @@ import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 export const dynamic = "force-dynamic";
 
-const idOf = async (params: Promise<{ id: string }>) => { const n = Number((await params).id); return Number.isSafeInteger(n) && n > 0 ? n : null; };
+const idOf = async (params: Promise<{ id: string }>) => {
+  const n = Number((await params).id);
+  return Number.isSafeInteger(n) && n > 0 ? n : null;
+};
 
 /** A holding's buys and sells, newest first, with what they add up to. */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -22,5 +25,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const input = parseTradeInput(await request.json().catch(() => null));
   if (typeof input === "string") return NextResponse.json({ error: input }, { status: 400 });
   const trade = addTrade(getWorkspaceIdFromRequest(request), id, input);
-  return trade ? NextResponse.json(trade) : NextResponse.json({ error: "holding not found" }, { status: 404 });
+  return trade
+    ? NextResponse.json(trade)
+    : NextResponse.json({ error: "holding not found" }, { status: 404 });
 }

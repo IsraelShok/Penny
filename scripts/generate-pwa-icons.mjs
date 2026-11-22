@@ -10,7 +10,15 @@ await mkdir("public/icons", { recursive: true });
 // padding is the share of the canvas left around the logo; maskable needs ≥ 20% safe zone.
 async function icon(size, padding, out) {
   const inner = Math.round(size * (1 - padding * 2));
-  const fg = await sharp(logo).resize({ height: inner, width: inner, fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+  const fg = await sharp(logo)
+    .resize({
+      height: inner,
+      width: inner,
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png()
+    .toBuffer();
   await sharp({ create: { width: size, height: size, channels: 4, background: BG } })
     .composite([{ input: fg, gravity: "center" }])
     .png()

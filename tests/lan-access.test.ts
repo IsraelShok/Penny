@@ -7,12 +7,34 @@ import { isAllowedHost, isPrivateLanName } from "@/lib/host-guard";
 
 describe("isPrivateLanName", () => {
   it("accepts private ranges and .local names", () => {
-    for (const n of ["10.0.0.5", "172.16.0.1", "172.31.255.255", "192.168.1.20", "[fe80::1]", "[febf::1]", "mypc.local", "my-pc.home.local"]) {
+    for (const n of [
+      "10.0.0.5",
+      "172.16.0.1",
+      "172.31.255.255",
+      "192.168.1.20",
+      "[fe80::1]",
+      "[febf::1]",
+      "mypc.local",
+      "my-pc.home.local",
+    ]) {
       expect(isPrivateLanName(n)).toBe(true);
     }
   });
   it("rejects public, out-of-range and lookalike names", () => {
-    for (const n of ["8.8.8.8", "172.15.0.1", "172.32.0.1", "192.169.1.1", "11.0.0.1", "192.168.1.256", "[2001:db8::1]", "[fec0::1]", "evil.com", "local", "x.local.evil.com", "10.0.0.1.evil.com"]) {
+    for (const n of [
+      "8.8.8.8",
+      "172.15.0.1",
+      "172.32.0.1",
+      "192.169.1.1",
+      "11.0.0.1",
+      "192.168.1.256",
+      "[2001:db8::1]",
+      "[fec0::1]",
+      "evil.com",
+      "local",
+      "x.local.evil.com",
+      "10.0.0.1.evil.com",
+    ]) {
       expect(isPrivateLanName(n)).toBe(false);
     }
   });
@@ -40,7 +62,9 @@ describe("proxy gate for LAN requests", () => {
     globalThis.__pennyUnlockFails = undefined;
   });
   const req = (p: string, cookie?: string) =>
-    new NextRequest(`http://192.168.1.20:41234${p}`, { headers: { host: "192.168.1.20:41234", ...(cookie ? { cookie } : {}) } });
+    new NextRequest(`http://192.168.1.20:41234${p}`, {
+      headers: { host: "192.168.1.20:41234", ...(cookie ? { cookie } : {}) },
+    });
 
   it("blocks LAN hosts while phone access is off, and while the lock is off even if the flag is set", async () => {
     const { proxy } = await import("@/proxy");

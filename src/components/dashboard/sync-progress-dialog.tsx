@@ -3,35 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
-import {
-  Check,
-  X,
-  Loader2,
-  Sparkles,
-  ShieldCheck,
-  ExternalLink,
-  Plug,
-} from "lucide-react";
+import { Check, X, Loader2, Sparkles, ShieldCheck, ExternalLink, Plug } from "lucide-react";
 import { BANK_PROVIDERS } from "@/lib/types";
 import { ProviderBadge } from "@/components/setup/provider-badge";
 import { cn } from "@/lib/utils";
 import { useSyncErrorText } from "@/hooks/use-sync-error-text";
 
-type RowStatus =
-  | "idle"
-  | "running"
-  | "awaiting-otp"
-  | "manual-2fa"
-  | "done"
-  | "error";
+type RowStatus = "idle" | "running" | "awaiting-otp" | "manual-2fa" | "done" | "error";
 
 export interface ProviderRow {
   provider: string;
@@ -81,7 +62,7 @@ export function SyncProgressDialog({
           status: "idle",
           added: 0,
           updated: 0,
-        }
+        },
     );
   }, [providers, rows]);
 
@@ -92,18 +73,11 @@ export function SyncProgressDialog({
         if (!o && done) onClose();
       }}
     >
-      <DialogContent
-        className="max-w-md p-0 sm:max-w-md"
-        showCloseButton={done}
-      >
+      <DialogContent className="max-w-md p-0 sm:max-w-md" showCloseButton={done}>
         <div className="px-6 pt-6 pb-2">
           <HeroDots done={done} warning={Boolean(aiWarning)} />
           <DialogTitle className="mt-4 text-center font-semibold text-2xl">
-            {done
-              ? aiWarning
-                ? t("titleSkipped")
-                : t("titleDone")
-              : t("titleSyncing")}
+            {done ? (aiWarning ? t("titleSkipped") : t("titleDone")) : t("titleSyncing")}
           </DialogTitle>
           <DialogDescription className="mt-1 text-center text-xs">
             {done
@@ -120,11 +94,7 @@ export function SyncProgressDialog({
 
         <div className="space-y-2 px-6 pb-2">
           {fullRows.map((row) => (
-            <ProviderRowView
-              key={row.provider}
-              row={row}
-              onSubmitOtp={onSubmitOtp}
-            />
+            <ProviderRowView key={row.provider} row={row} onSubmitOtp={onSubmitOtp} />
           ))}
         </div>
 
@@ -144,17 +114,14 @@ export function SyncProgressDialog({
           <div
             className="mx-6 mb-6 flex flex-col gap-3 rounded-xl border p-4 text-sm sm:flex-row sm:items-center"
             style={{
-              background:
-                "color-mix(in oklch, var(--status-heads-up) 14%, var(--card))",
-              borderColor:
-                "color-mix(in oklch, var(--status-heads-up) 35%, var(--border))",
+              background: "color-mix(in oklch, var(--status-heads-up) 14%, var(--card))",
+              borderColor: "color-mix(in oklch, var(--status-heads-up) 35%, var(--border))",
             }}
           >
             <div
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
               style={{
-                background:
-                  "color-mix(in oklch, var(--status-heads-up) 28%, var(--card))",
+                background: "color-mix(in oklch, var(--status-heads-up) 28%, var(--card))",
                 color: "var(--status-heads-up)",
               }}
             >
@@ -199,7 +166,7 @@ function ProviderRowView({
         row.status === "running" &&
           "shadow-[0_0_0_1px_color-mix(in_oklch,var(--ring)_30%,transparent)]",
         isInteractive2fa &&
-          "shadow-[0_0_0_1px_color-mix(in_oklch,var(--status-heads-up)_50%,transparent)]"
+          "shadow-[0_0_0_1px_color-mix(in_oklch,var(--status-heads-up)_50%,transparent)]",
       )}
     >
       <div className="relative flex items-center gap-3">
@@ -213,13 +180,7 @@ function ProviderRowView({
         )}
 
         <div className="relative">
-          <ProviderBadge
-            color={color}
-            name={label}
-            domain={info?.domain}
-            size={36}
-            radius={10}
-          />
+          <ProviderBadge color={color} name={label} domain={info?.domain} size={36} radius={10} />
         </div>
 
         <div className="relative min-w-0 flex-1">
@@ -227,8 +188,7 @@ function ProviderRowView({
           <div className="truncate text-xs text-muted-foreground">
             {row.status === "idle" && t("rowWaiting")}
             {row.status === "running" && t("rowPulling")}
-            {row.status === "awaiting-otp" &&
-              t("rowAwaitingOtp")}
+            {row.status === "awaiting-otp" && t("rowAwaitingOtp")}
             {row.status === "manual-2fa" && (
               <span className="inline-flex items-center gap-1">
                 <ExternalLink className="h-3 w-3" />
@@ -255,10 +215,7 @@ function ProviderRowView({
       </div>
 
       {isInteractive2fa && onSubmitOtp && row.syncRunId ? (
-        <OtpInputArea
-          syncRunId={row.syncRunId}
-          onSubmit={onSubmitOtp}
-        />
+        <OtpInputArea syncRunId={row.syncRunId} onSubmit={onSubmitOtp} />
       ) : null}
     </div>
   );
@@ -315,32 +272,21 @@ function OtpInputArea({
         type="submit"
         disabled={submitting || code.trim().length < 4}
       >
-        {submitting ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Check className="size-3.5" aria-hidden />}
+        {submitting ? (
+          <Loader2 className="size-3.5 animate-spin" aria-hidden />
+        ) : (
+          <Check className="size-3.5" aria-hidden />
+        )}
       </IconButton>
-      {error && (
-        <p className="absolute -bottom-5 start-0 text-xs text-destructive">
-          {error}
-        </p>
-      )}
+      {error && <p className="absolute -bottom-5 start-0 text-xs text-destructive">{error}</p>}
     </form>
   );
 }
 
-function StatusBadge({
-  status,
-  color,
-}: {
-  status: RowStatus;
-  color: string;
-}) {
+function StatusBadge({ status, color }: { status: RowStatus; color: string }) {
   const t = useTranslations("syncDialog");
   if (status === "running") {
-    return (
-      <Loader2
-        className="h-4 w-4 animate-spin"
-        style={{ color }}
-      />
-    );
+    return <Loader2 className="h-4 w-4 animate-spin" style={{ color }} />;
   }
   if (status === "awaiting-otp") {
     return (
@@ -354,12 +300,7 @@ function StatusBadge({
     );
   }
   if (status === "manual-2fa") {
-    return (
-      <Loader2
-        className="h-4 w-4 animate-spin"
-        style={{ color: "var(--status-heads-up)" }}
-      />
-    );
+    return <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--status-heads-up)" }} />;
   }
   if (status === "done") {
     return (
@@ -390,33 +331,12 @@ function HeroDots({ done, warning }: { done: boolean; warning?: boolean }) {
       <div
         className={cn(
           "relative h-16 w-16",
-          done && "motion-safe:animate-[pop_500ms_cubic-bezier(0.16,1,0.3,1)_forwards]"
+          done && "motion-safe:animate-[pop_500ms_cubic-bezier(0.16,1,0.3,1)_forwards]",
         )}
       >
-        <Dot
-          x={32}
-          y={42}
-          r={20}
-          color="var(--primary)"
-          delay={0}
-          done={done}
-        />
-        <Dot
-          x={32}
-          y={20}
-          r={9}
-          color="var(--status-heads-up)"
-          delay={150}
-          done={done}
-        />
-        <Dot
-          x={48}
-          y={28}
-          r={7}
-          color="var(--status-plenty-left)"
-          delay={300}
-          done={done}
-        />
+        <Dot x={32} y={42} r={20} color="var(--primary)" delay={0} done={done} />
+        <Dot x={32} y={20} r={9} color="var(--status-heads-up)" delay={150} done={done} />
+        <Dot x={48} y={28} r={7} color="var(--status-plenty-left)" delay={300} done={done} />
         {done && (
           <div
             className="absolute inset-0 flex items-center justify-center motion-safe:animate-[fadeIn_500ms_ease-out_forwards]"
@@ -425,16 +345,11 @@ function HeroDots({ done, warning }: { done: boolean; warning?: boolean }) {
             <div
               className="flex h-9 w-9 items-center justify-center rounded-full"
               style={{
-                background: warning
-                  ? "var(--status-heads-up)"
-                  : "var(--status-on-track)",
+                background: warning ? "var(--status-heads-up)" : "var(--status-on-track)",
               }}
             >
               {warning ? (
-                <Sparkles
-                  className="h-5 w-5 text-background"
-                  strokeWidth={2.5}
-                />
+                <Sparkles className="h-5 w-5 text-background" strokeWidth={2.5} />
               ) : (
                 <Check className="h-5 w-5 text-background" strokeWidth={3} />
               )}
@@ -470,9 +385,7 @@ function Dot({
         width: r * 2,
         height: r * 2,
         background: color,
-        animation: done
-          ? "none"
-          : `dotPulse 1.4s ease-in-out ${delay}ms infinite`,
+        animation: done ? "none" : `dotPulse 1.4s ease-in-out ${delay}ms infinite`,
         opacity: done ? 0.35 : 1,
         transition: "opacity 400ms ease",
       }}
@@ -480,29 +393,19 @@ function Dot({
   );
 }
 
-function SummaryStat({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number;
-  accent?: boolean;
-}) {
+function SummaryStat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
     <div className="flex flex-1 flex-col">
       <span
         className={cn(
           "font-semibold text-2xl tabular-nums",
           accent && "text-[var(--status-on-track)]",
-          "motion-safe:animate-[countIn_450ms_cubic-bezier(0.16,1,0.3,1)_forwards]"
+          "motion-safe:animate-[countIn_450ms_cubic-bezier(0.16,1,0.3,1)_forwards]",
         )}
       >
         {value}
       </span>
-      <span className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
-        {label}
-      </span>
+      <span className="text-xs uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
     </div>
   );
 }
@@ -511,12 +414,7 @@ function Divider() {
   return <span className="h-8 w-px bg-border" />;
 }
 
-export function useAutoClose(
-  open: boolean,
-  done: boolean,
-  delayMs: number,
-  onClose: () => void
-) {
+export function useAutoClose(open: boolean, done: boolean, delayMs: number, onClose: () => void) {
   useEffect(() => {
     if (!open || !done) return;
     const t = setTimeout(onClose, delayMs);

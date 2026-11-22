@@ -32,13 +32,28 @@ export function bituachLeumi(income: number, [reduced, full]: readonly [number, 
   return low * reduced + (base - low) * full;
 }
 
-export function netSalary({ gross, sex, extraPoints = 0, pensionRate = 0.06, studyFundRate = 0.025 }: NetSalaryInput) {
+export function netSalary({
+  gross,
+  sex,
+  extraPoints = 0,
+  pensionRate = 0.06,
+  studyFundRate = 0.025,
+}: NetSalaryInput) {
   const pension = gross * pensionRate;
   const studyFund = gross * studyFundRate;
   const credits = (IL.creditPoints[sex] + extraPoints) * IL.creditPointMonthly;
-  const pensionCredit = IL.pensionCredit.rate * Math.min(pension, IL.pensionCredit.ofSalary * Math.min(gross, IL.pensionCredit.salaryCeiling));
+  const pensionCredit =
+    IL.pensionCredit.rate *
+    Math.min(pension, IL.pensionCredit.ofSalary * Math.min(gross, IL.pensionCredit.salaryCeiling));
   const incomeTax = Math.max(0, bracketTax(gross) - credits - pensionCredit);
   const bituach = bituachLeumi(gross, IL.bituach.employee);
   const net = gross - incomeTax - bituach - pension - studyFund;
-  return { net, incomeTax, bituach, pension, studyFund, effectiveTaxRate: gross > 0 ? (incomeTax + bituach) / gross : 0 };
+  return {
+    net,
+    incomeTax,
+    bituach,
+    pension,
+    studyFund,
+    effectiveTaxRate: gross > 0 ? (incomeTax + bituach) / gross : 0,
+  };
 }

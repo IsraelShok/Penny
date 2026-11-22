@@ -12,7 +12,9 @@ export default async function Page() {
       <PageHeader title={t("title")} largeTitle={false} />
       <div className="mx-auto w-full max-w-[1920px] px-4 pb-8 pt-3 md:px-6 lg:px-8">
         <FiView />
-        <div className="mt-4"><ContextTips categories={["retirement", "pension", "savings"]} /></div>
+        <div className="mt-4">
+          <ContextTips categories={["retirement", "pension", "savings"]} />
+        </div>
       </div>
     </AppShell>
   );

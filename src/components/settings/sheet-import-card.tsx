@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -30,7 +36,13 @@ import { SettingCard } from "@/components/settings/section-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SheetContext {
   accounts: { accountNumber: string; provider: string; label: string | null }[];
@@ -89,10 +101,16 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
     [dateOrder, positiveIsExpense, account],
   );
   const parsed = useMemo(() => drafts.map((d) => normalizeSheetRow(d, options)), [drafts, options]);
-  const badRows = useMemo(() => parsed.flatMap((p, i) => (p.errors.length > 0 ? [i] : [])), [parsed]);
+  const badRows = useMemo(
+    () => parsed.flatMap((p, i) => (p.errors.length > 0 ? [i] : [])),
+    [parsed],
+  );
 
   // Only clean rows go to the server; map its answer back to the draft index.
-  const validIndexes = useMemo(() => parsed.flatMap((p, i) => (p.errors.length === 0 ? [i] : [])), [parsed]);
+  const validIndexes = useMemo(
+    () => parsed.flatMap((p, i) => (p.errors.length === 0 ? [i] : [])),
+    [parsed],
+  );
   const payload = useMemo<SheetRowInput[]>(
     () =>
       validIndexes.map((i) => {
@@ -143,7 +161,10 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
   );
 
   const keptSet = useMemo(() => new Set(keptIndexes), [keptIndexes]);
-  const summary = useMemo(() => sheetSummary(keptIndexes.map((i) => parsed[i].values)), [keptIndexes, parsed]);
+  const summary = useMemo(
+    () => sheetSummary(keptIndexes.map((i) => parsed[i].values)),
+    [keptIndexes, parsed],
+  );
   const ready = keptIndexes.length;
 
   function loadTable(rows: string[][]) {
@@ -153,12 +174,19 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
     const guessed = guessSheetColumns(rows[headerIndex] ?? []);
     const nextMap: SheetMap = hasHeader
       ? guessed
-      : { ...guessed, date: guessed.date ?? 0, description: guessed.description ?? 1, amount: guessed.amount ?? 2 };
+      : {
+          ...guessed,
+          date: guessed.date ?? 0,
+          description: guessed.description ?? 1,
+          amount: guessed.amount ?? 2,
+        };
     const body = hasHeader ? rows.slice(headerIndex + 1) : rows;
     setTable(rows);
     setHeaderRow(headerIndex);
     setMap(nextMap);
-    setDrafts(buildSheetDrafts(body, nextMap).map((d) => ({ ...d, account: d.account || account })));
+    setDrafts(
+      buildSheetDrafts(body, nextMap).map((d) => ({ ...d, account: d.account || account })),
+    );
     setManualInclude(new Set());
     setExcluded(new Set());
     setSuggestions(new Map());
@@ -183,16 +211,24 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
   const [reading, setReading] = useState(false);
   async function readWithAI() {
     if (!paste.trim()) return;
-    if (paste.length > MAX_TEXT_IMPORT) { toast.error(t("aiTooLong")); return; }
+    if (paste.length > MAX_TEXT_IMPORT) {
+      toast.error(t("aiTooLong"));
+      return;
+    }
     setReading(true);
     try {
       const { rows } = await extractTextRows(paste);
       if (rows.length === 0) toast.error(t("aiNoRows"));
-      else { loadTable(extractedToTable(rows)); toast.success(t("aiFound", { count: rows.length })); }
+      else {
+        loadTable(extractedToTable(rows));
+        toast.success(t("aiFound", { count: rows.length }));
+      }
     } catch (e) {
       const status = (e as { status?: number }).status;
       toast.error(status === 503 ? t("aiNoProvider") : t("aiFailed"));
-    } finally { setReading(false); }
+    } finally {
+      setReading(false);
+    }
   }
 
   async function pasteFromClipboard() {
@@ -234,7 +270,10 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
       toast.error(t("tooMany", { max: MAX_SHEET_ROWS }));
       return;
     }
-    setDrafts((ds) => [...ds, emptySheetDraft({ account, date: ds[ds.length - 1]?.date ?? applyDate })]);
+    setDrafts((ds) => [
+      ...ds,
+      emptySheetDraft({ account, date: ds[ds.length - 1]?.date ?? applyDate }),
+    ]);
   }
 
   function focusCell(row: number, field: SheetField | keyof SheetDraft) {
@@ -263,12 +302,16 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
   const suggest = useMutation({
     mutationFn: async () => {
       const rows = parsed.flatMap((p, i) =>
-        p.errors.length === 0 ? [{ i, description: p.values.description, kind: p.values.kind }] : [],
+        p.errors.length === 0
+          ? [{ i, description: p.values.description, kind: p.values.kind }]
+          : [],
       );
       const res = await fetch("/api/import/sheet/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows: rows.map(({ description, kind }) => ({ description, kind })) }),
+        body: JSON.stringify({
+          rows: rows.map(({ description, kind }) => ({ description, kind })),
+        }),
       }).then((r) => r.json() as Promise<{ suggestions?: { index: number; name: string }[] }>);
       const next = new Map<number, string>();
       for (const s of res.suggestions ?? []) if (rows[s.index]) next.set(rows[s.index].i, s.name);
@@ -282,7 +325,9 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
   });
 
   function acceptSuggestions() {
-    setDrafts((ds) => ds.map((d, i) => (d.category ? d : { ...d, category: suggestions.get(i) ?? d.category })));
+    setDrafts((ds) =>
+      ds.map((d, i) => (d.category ? d : { ...d, category: suggestions.get(i) ?? d.category })),
+    );
     toast.success(t("suggestApplied", { count: suggestions.size }));
   }
 
@@ -309,8 +354,16 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
     mutationFn: () => importSheet(payload, false),
     onSuccess: (res) => {
       const refresh = () => {
-        for (const key of ["transactions", "summary", "home", "sheet-import-context", "sheet-import-check", "import-accounts", "budget"])
-          queryClient.invalidateQueries({ queryKey: [key] });
+        for (const key of [
+          "transactions",
+          "summary",
+          "home",
+          "sheet-import-context",
+          "sheet-import-check",
+          "import-accounts",
+          "budget",
+        ])
+          void queryClient.invalidateQueries({ queryKey: [key] });
       };
       refresh();
       setDrafts([]);
@@ -321,9 +374,17 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
       setManualInclude(new Set());
       setExcluded(new Set());
       setSuggestions(new Map());
-      toast.success(t("saved", { added: res.added, duplicates: res.duplicates, review: res.needsReview }), res.importId
-        ? { action: { label: t("undo"), onClick: () => void undoSheetImport(res.importId!).then(refresh) } }
-        : undefined);
+      toast.success(
+        t("saved", { added: res.added, duplicates: res.duplicates, review: res.needsReview }),
+        res.importId
+          ? {
+              action: {
+                label: t("undo"),
+                onClick: () => void undoSheetImport(res.importId!).then(refresh),
+              },
+            }
+          : undefined,
+      );
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : t("saveFailed")),
   });
@@ -379,7 +440,13 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                 <ClipboardPaste className="size-4" aria-hidden />
                 {t("loadRows")}
               </Button>
-              <Button type="button" variant="outline" onClick={() => void readWithAI()} disabled={!paste.trim() || reading} title={t("aiHint")}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void readWithAI()}
+                disabled={!paste.trim() || reading}
+                title={t("aiHint")}
+              >
                 <Sparkles className="size-4" aria-hidden />
                 {reading ? t("aiReading") : t("aiRead")}
               </Button>
@@ -403,31 +470,46 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
           <>
             <div className="flex flex-wrap items-end gap-2 rounded-xl bg-muted/30 px-3 py-2.5">
               <div className="min-w-40 flex-1 space-y-1">
-                <Label htmlFor="sheet-account" className="text-caption">{t("account")}</Label>
+                <Label htmlFor="sheet-account" className="text-caption">
+                  {t("account")}
+                </Label>
                 <Select
                   value={account || NONE}
                   onValueChange={(v) => {
                     const next = v === NONE ? "" : v!;
                     setAccount(next);
-                    if (next) setDrafts((ds) => ds.map((d) => ({ ...d, account: d.account || next })));
+                    if (next)
+                      setDrafts((ds) => ds.map((d) => ({ ...d, account: d.account || next })));
                   }}
                 >
                   <SelectTrigger id="sheet-account" className="w-full">
-                    <SelectValue>{(v: string) => (v === NONE ? t("accountNone") : accountOptions.find(([id]) => id === v)?.[1] ?? v)}</SelectValue>
+                    <SelectValue>
+                      {(v: string) =>
+                        v === NONE
+                          ? t("accountNone")
+                          : (accountOptions.find(([id]) => id === v)?.[1] ?? v)
+                      }
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={NONE}>{t("accountNone")}</SelectItem>
                     {accountOptions.map(([id, label]) => (
-                      <SelectItem key={id} value={id}>{label}</SelectItem>
+                      <SelectItem key={id} value={id}>
+                        {label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="sheet-date-order" className="text-caption">{t("dateOrder")}</Label>
+                <Label htmlFor="sheet-date-order" className="text-caption">
+                  {t("dateOrder")}
+                </Label>
                 <Select value={dateOrder} onValueChange={(v) => v && setDateOrder(v as DateOrder)}>
                   <SelectTrigger id="sheet-date-order" className="w-full">
-                    <SelectValue>{(v: string) => (v === "mdy" ? t("dateMdy") : t("dateDmy"))}</SelectValue>
+                    <SelectValue>
+                      {(v: string) => (v === "mdy" ? t("dateMdy") : t("dateDmy"))}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="dmy">{t("dateDmy")}</SelectItem>
@@ -443,28 +525,54 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                   onChange={(e) => setApplyDate(e.target.value)}
                   className="w-40"
                 />
-                <Button type="button" variant="outline" size="sm" disabled={!applyDate} onClick={setAllDates}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!applyDate}
+                  onClick={setAllDates}
+                >
                   {t("applyDateAll")}
                 </Button>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 text-caption text-muted-foreground">
-              <button type="button" className="rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70" onClick={() => setPositiveIsExpense((v) => !v)}>
+              <button
+                type="button"
+                className="rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70"
+                onClick={() => setPositiveIsExpense((v) => !v)}
+              >
                 {positiveIsExpense ? t("signExpense") : t("signIncome")}
               </button>
-              <button type="button" className="rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70" onClick={() => setShowExtra((v) => !v)}>
+              <button
+                type="button"
+                className="rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70"
+                onClick={() => setShowExtra((v) => !v)}
+              >
                 {showExtra ? t("hideExtra") : t("showExtra")}
               </button>
-              <button type="button" className="rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70" onClick={() => setShowMapping((v) => !v)}>
+              <button
+                type="button"
+                className="rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70"
+                onClick={() => setShowMapping((v) => !v)}
+              >
                 {showMapping ? t("hideMapping") : t("showMapping")}
               </button>
-              <button type="button" className="rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70" onClick={() => suggest.mutate()}>
+              <button
+                type="button"
+                className="rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70"
+                onClick={() => suggest.mutate()}
+              >
                 <Wand2 className="me-1 inline size-3.5" aria-hidden />
                 {suggest.isPending ? t("suggesting") : t("suggest")}
               </button>
               {suggestions.size > 0 && (
-                <button type="button" className="rounded-full bg-primary/10 px-2.5 py-1 text-primary hover:bg-primary/15" onClick={acceptSuggestions}>
+                <button
+                  type="button"
+                  className="rounded-full bg-primary/10 px-2.5 py-1 text-primary hover:bg-primary/15"
+                  onClick={acceptSuggestions}
+                >
                   {t("acceptAll", { count: suggestions.size })}
                 </button>
               )}
@@ -477,14 +585,25 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                   {SHEET_FIELDS.map((field) => (
                     <div key={field} className="space-y-1">
                       <Label className="text-caption">{t(`column_${field}`)}</Label>
-                      <Select value={map[field] == null ? NONE : String(map[field])} onValueChange={(v) => v && remap(field, v)}>
+                      <Select
+                        value={map[field] == null ? NONE : String(map[field])}
+                        onValueChange={(v) => v && remap(field, v)}
+                      >
                         <SelectTrigger className="w-full" aria-label={t(`column_${field}`)}>
-                          <SelectValue>{(v: string) => (v === NONE ? t("columnNone") : table[headerRow]?.[Number(v)] || `#${Number(v) + 1}`)}</SelectValue>
+                          <SelectValue>
+                            {(v: string) =>
+                              v === NONE
+                                ? t("columnNone")
+                                : table[headerRow]?.[Number(v)] || `#${Number(v) + 1}`
+                            }
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value={NONE}>{t("columnNone")}</SelectItem>
                           {(table[headerRow] ?? []).map((h, i) => (
-                            <SelectItem key={i} value={String(i)}>{h || `#${i + 1}`}</SelectItem>
+                            <SelectItem key={i} value={String(i)}>
+                              {h || `#${i + 1}`}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -499,22 +618,46 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                 <caption className="sr-only">{t("tableCaption")}</caption>
                 <thead className="bg-muted/40 text-muted-foreground">
                   <tr>
-                    <th scope="col" className="w-8 px-1 py-2"><span className="sr-only">{t("column_include")}</span></th>
-                    <th scope="col" className="px-2 py-2 text-start font-medium">{t("column_date")}</th>
-                    <th scope="col" className="px-2 py-2 text-start font-medium">{t("column_description")}</th>
-                    <th scope="col" className="px-2 py-2 text-start font-medium">{t("column_amount")}</th>
-                    <th scope="col" className="px-2 py-2 text-start font-medium">{t("column_kind")}</th>
-                    <th scope="col" className="px-2 py-2 text-start font-medium">{t("column_account")}</th>
-                    <th scope="col" className="px-2 py-2 text-start font-medium">{t("column_category")}</th>
+                    <th scope="col" className="w-8 px-1 py-2">
+                      <span className="sr-only">{t("column_include")}</span>
+                    </th>
+                    <th scope="col" className="px-2 py-2 text-start font-medium">
+                      {t("column_date")}
+                    </th>
+                    <th scope="col" className="px-2 py-2 text-start font-medium">
+                      {t("column_description")}
+                    </th>
+                    <th scope="col" className="px-2 py-2 text-start font-medium">
+                      {t("column_amount")}
+                    </th>
+                    <th scope="col" className="px-2 py-2 text-start font-medium">
+                      {t("column_kind")}
+                    </th>
+                    <th scope="col" className="px-2 py-2 text-start font-medium">
+                      {t("column_account")}
+                    </th>
+                    <th scope="col" className="px-2 py-2 text-start font-medium">
+                      {t("column_category")}
+                    </th>
                     {showExtra && (
                       <>
-                        <th scope="col" className="px-2 py-2 text-start font-medium">{t("column_tags")}</th>
-                        <th scope="col" className="px-2 py-2 text-start font-medium">{t("column_owner")}</th>
-                        <th scope="col" className="px-2 py-2 text-start font-medium">{t("column_business")}</th>
-                        <th scope="col" className="px-2 py-2 text-start font-medium">{t("column_memo")}</th>
+                        <th scope="col" className="px-2 py-2 text-start font-medium">
+                          {t("column_tags")}
+                        </th>
+                        <th scope="col" className="px-2 py-2 text-start font-medium">
+                          {t("column_owner")}
+                        </th>
+                        <th scope="col" className="px-2 py-2 text-start font-medium">
+                          {t("column_business")}
+                        </th>
+                        <th scope="col" className="px-2 py-2 text-start font-medium">
+                          {t("column_memo")}
+                        </th>
                       </>
                     )}
-                    <th scope="col" className="w-8 px-1 py-2"><span className="sr-only">{t("column_remove")}</span></th>
+                    <th scope="col" className="w-8 px-1 py-2">
+                      <span className="sr-only">{t("column_remove")}</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -526,7 +669,11 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                     const invalid = (field: SheetField) => fields.has(field);
                     const suggestionsForRow = suggestions.get(index);
                     return (
-                      <tr key={index} id={`sheet-row-${index}`} className={`border-t ${kept ? "" : "opacity-55"}`}>
+                      <tr
+                        key={index}
+                        id={`sheet-row-${index}`}
+                        className={`border-t ${kept ? "" : "opacity-55"}`}
+                      >
                         <td className="px-1 py-1 text-center align-top">
                           <input
                             type="checkbox"
@@ -571,9 +718,15 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                             aria-invalid={invalid("description")}
                             className={`${CELL} min-w-40 ${invalid("description") ? "border-[var(--status-over)]" : ""}`}
                           />
-                          {duplicate && <span className="px-1.5 text-caption text-muted-foreground">{t("duplicateRow")}</span>}
+                          {duplicate && (
+                            <span className="px-1.5 text-caption text-muted-foreground">
+                              {t("duplicateRow")}
+                            </span>
+                          )}
                           {suggestionsForRow && !draft.category && (
-                            <span className="px-1.5 text-caption text-primary">{t("suggestionChip", { name: suggestionsForRow })}</span>
+                            <span className="px-1.5 text-caption text-primary">
+                              {t("suggestionChip", { name: suggestionsForRow })}
+                            </span>
                           )}
                         </td>
                         <td className="px-1 py-1 align-top">
@@ -589,9 +742,19 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                           />
                         </td>
                         <td className="px-1 py-1 align-top">
-                          <Select value={row.values.kind} onValueChange={(v) => v && patch(index, "kind", v)}>
-                            <SelectTrigger className="h-8 w-24 border-transparent bg-transparent px-1.5" aria-label={t("column_kind")}>
-                              <SelectValue>{(v: string) => (v === "income" ? t("kindIncome") : t("kindExpense"))}</SelectValue>
+                          <Select
+                            value={row.values.kind}
+                            onValueChange={(v) => v && patch(index, "kind", v)}
+                          >
+                            <SelectTrigger
+                              className="h-8 w-24 border-transparent bg-transparent px-1.5"
+                              aria-label={t("column_kind")}
+                            >
+                              <SelectValue>
+                                {(v: string) =>
+                                  v === "income" ? t("kindIncome") : t("kindExpense")
+                                }
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="expense">{t("kindExpense")}</SelectItem>
@@ -600,33 +763,56 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                           </Select>
                         </td>
                         <td className="px-1 py-1 align-top">
-                          <Select value={draft.account || NONE} onValueChange={(v) => v && patch(index, "account", v === NONE ? "" : v)}>
+                          <Select
+                            value={draft.account || NONE}
+                            onValueChange={(v) => v && patch(index, "account", v === NONE ? "" : v)}
+                          >
                             <SelectTrigger
                               className={`h-8 w-32 border-transparent bg-transparent px-1.5 ${invalid("account") ? "border-[var(--status-over)]" : ""}`}
                               aria-label={t("column_account")}
                               aria-invalid={invalid("account")}
                             >
-                              <SelectValue>{(v: string) => (v === NONE ? t("accountNone") : accountOptions.find(([id]) => id === v)?.[1] ?? v)}</SelectValue>
+                              <SelectValue>
+                                {(v: string) =>
+                                  v === NONE
+                                    ? t("accountNone")
+                                    : (accountOptions.find(([id]) => id === v)?.[1] ?? v)
+                                }
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value={NONE}>{t("accountNone")}</SelectItem>
                               {accountOptions.map(([id, label]) => (
-                                <SelectItem key={id} value={id}>{label}</SelectItem>
+                                <SelectItem key={id} value={id}>
+                                  {label}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </td>
                         <td className="px-1 py-1 align-top">
-                          <Select value={draft.category || NONE} onValueChange={(v) => v && patch(index, "category", v === NONE ? "" : v)}>
-                            <SelectTrigger className="h-8 w-36 border-transparent bg-transparent px-1.5" aria-label={t("column_category")}>
-                              <SelectValue>{(v: string) => (v === NONE ? t("columnNone") : v)}</SelectValue>
+                          <Select
+                            value={draft.category || NONE}
+                            onValueChange={(v) =>
+                              v && patch(index, "category", v === NONE ? "" : v)
+                            }
+                          >
+                            <SelectTrigger
+                              className="h-8 w-36 border-transparent bg-transparent px-1.5"
+                              aria-label={t("column_category")}
+                            >
+                              <SelectValue>
+                                {(v: string) => (v === NONE ? t("columnNone") : v)}
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value={NONE}>{t("columnNone")}</SelectItem>
                               {(context.data?.categories ?? [])
                                 .filter((c) => c.kind === row.values.kind)
                                 .map((c) => (
-                                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                                  <SelectItem key={c.id} value={c.name}>
+                                    {c.name}
+                                  </SelectItem>
                                 ))}
                             </SelectContent>
                           </Select>
@@ -644,16 +830,34 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                               />
                             </td>
                             <td className="px-1 py-1 align-top">
-                              <Select value={draft.owner || NONE} onValueChange={(v) => v && patch(index, "owner", v === NONE ? "" : v)}>
-                                <SelectTrigger className="h-8 w-28 border-transparent bg-transparent px-1.5" aria-label={t("column_owner")}>
-                                  <SelectValue>{(v: string) =>
-                                                    v === NONE ? t("columnNone") : v === SHARED ? t("ownerShared") : context.data?.members.find((m) => m.id === v)?.name ?? v}</SelectValue>
+                              <Select
+                                value={draft.owner || NONE}
+                                onValueChange={(v) =>
+                                  v && patch(index, "owner", v === NONE ? "" : v)
+                                }
+                              >
+                                <SelectTrigger
+                                  className="h-8 w-28 border-transparent bg-transparent px-1.5"
+                                  aria-label={t("column_owner")}
+                                >
+                                  <SelectValue>
+                                    {(v: string) =>
+                                      v === NONE
+                                        ? t("columnNone")
+                                        : v === SHARED
+                                          ? t("ownerShared")
+                                          : (context.data?.members.find((m) => m.id === v)?.name ??
+                                            v)
+                                    }
+                                  </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value={NONE}>{t("columnNone")}</SelectItem>
                                   <SelectItem value={SHARED}>{t("ownerShared")}</SelectItem>
                                   {(context.data?.members ?? []).map((m) => (
-                                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                    <SelectItem key={m.id} value={m.id}>
+                                      {m.name}
+                                    </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
@@ -682,7 +886,13 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                           </>
                         )}
                         <td className="px-1 py-1 text-center align-top">
-                          <Button type="button" variant="ghost" size="icon" onClick={() => removeRow(index)} aria-label={t("removeRow", { row: index + 1 })}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeRow(index)}
+                            aria-label={t("removeRow", { row: index + 1 })}
+                          >
                             <Trash2 className="size-3.5" aria-hidden />
                           </Button>
                         </td>
@@ -703,15 +913,21 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
 
             <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted/30 px-3 py-2.5 text-center sm:grid-cols-4">
               <div>
-                <div className="text-body font-semibold tabular-nums">{ready.toLocaleString("he-IL")}</div>
+                <div className="text-body font-semibold tabular-nums">
+                  {ready.toLocaleString("he-IL")}
+                </div>
                 <div className="text-caption text-muted-foreground">{t("statsRows")}</div>
               </div>
               <div>
-                <div className="text-body font-semibold tabular-nums" dir="ltr">₪{summary.expenses.toLocaleString("he-IL")}</div>
+                <div className="text-body font-semibold tabular-nums" dir="ltr">
+                  ₪{summary.expenses.toLocaleString("he-IL")}
+                </div>
                 <div className="text-caption text-muted-foreground">{t("statsExpenses")}</div>
               </div>
               <div>
-                <div className="text-body font-semibold tabular-nums" dir="ltr">₪{summary.income.toLocaleString("he-IL")}</div>
+                <div className="text-body font-semibold tabular-nums" dir="ltr">
+                  ₪{summary.income.toLocaleString("he-IL")}
+                </div>
                 <div className="text-caption text-muted-foreground">{t("statsIncome")}</div>
               </div>
               <div>
@@ -726,13 +942,17 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
               <ul className="flex flex-wrap gap-x-4 gap-y-1 text-caption text-muted-foreground">
                 {summary.byAccount.map((a) => (
                   <li key={a.account}>
-                    {accountOptions.find(([id]) => id === a.account)?.[1] ?? a.account}: {a.count} · ₪{a.net.toLocaleString("he-IL")}
+                    {accountOptions.find(([id]) => id === a.account)?.[1] ?? a.account}: {a.count} ·
+                    ₪{a.net.toLocaleString("he-IL")}
                   </li>
                 ))}
               </ul>
             )}
 
-            <p className={`text-footnote ${badRows.length > 0 ? "text-[var(--status-over)]" : "text-muted-foreground"}`} aria-live="polite">
+            <p
+              className={`text-footnote ${badRows.length > 0 ? "text-[var(--status-over)]" : "text-muted-foreground"}`}
+              aria-live="polite"
+            >
               {badRows.length > 0
                 ? t("errorCount", { count: badRows.length })
                 : t("readyCount", { ready, duplicates: duplicateRows.size })}
@@ -746,15 +966,23 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                   variant="outline"
                   onClick={() => {
                     const first = badRows[0];
-                    document.getElementById(`sheet-row-${first}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    document
+                      .getElementById(`sheet-row-${first}`)
+                      ?.scrollIntoView({ behavior: "smooth", block: "center" });
                     focusCell(first, parsed[first].errors[0].field);
                   }}
                 >
                   {t("jumpToError")}
                 </Button>
               )}
-              <Button type="button" variant="outline" onClick={reset}>{t("cancel")}</Button>
-              <Button type="button" disabled={ready === 0 || badRows.length > 0 || save.isPending} onClick={() => save.mutate()}>
+              <Button type="button" variant="outline" onClick={reset}>
+                {t("cancel")}
+              </Button>
+              <Button
+                type="button"
+                disabled={ready === 0 || badRows.length > 0 || save.isPending}
+                onClick={() => save.mutate()}
+              >
                 {save.isPending ? t("saving") : t("save", { count: ready })}
               </Button>
             </div>
@@ -762,7 +990,9 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
         )}
 
         <datalist id="sheet-tags">
-          {(context.data?.tags ?? []).map((tag) => <option key={tag} value={tag} />)}
+          {(context.data?.tags ?? []).map((tag) => (
+            <option key={tag} value={tag} />
+          ))}
         </datalist>
       </div>
     </SettingCard>

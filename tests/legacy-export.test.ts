@@ -3,7 +3,10 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
-vi.mock("@/server/db/queries/settings", () => ({ getGlobalSetting: () => null, setGlobalSetting: () => {} }));
+vi.mock("@/server/db/queries/settings", () => ({
+  getGlobalSetting: () => null,
+  setGlobalSetting: () => {},
+}));
 vi.mock("@/server/lib/encryption", () => ({ isKeyLocked: () => false }));
 
 import { legacyFileName, validateDir, writeLegacyFile } from "@/server/lib/legacy-export";
@@ -27,7 +30,7 @@ describe("legacy auto-export files", () => {
       writeLegacyFile(dir, "<p>9</p>", new Date(2026, 2, 9));
       const files = fs.readdirSync(dir).sort();
       expect(files.filter((f) => f.endsWith(".html") && f.startsWith("legacy-"))).toEqual(
-        [4, 5, 6, 7, 8, 9].map((d) => `legacy-2026-03-0${d}.html`)
+        [4, 5, 6, 7, 8, 9].map((d) => `legacy-2026-03-0${d}.html`),
       );
       expect(files).toContain("notes.html");
       expect(files).toContain("legacy-2020-01-01.html.bak");

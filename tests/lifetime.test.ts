@@ -26,7 +26,13 @@ describe("lifetimeBalances", () => {
       { type: "fund", valueIls: 100_000 },
       { type: "pension", valueIls: 200_000, monthlyDeposit: 1_000, feeBalance: 0.5 },
       { type: "real_estate", valueIls: 2_000_000 },
-      { type: "mortgage", valueIls: 500_000, isLiability: true, interestRate: 4, monthlyPayment: 3_000 },
+      {
+        type: "mortgage",
+        valueIls: 500_000,
+        isLiability: true,
+        interestRate: 4,
+        monthlyPayment: 3_000,
+      },
     ]);
 
     expect(b.cash).toBe(50_000);
@@ -57,14 +63,20 @@ describe("simulateLifetime", () => {
   });
 
   it("reports the age the money runs out", () => {
-    const r = simulateLifetime(base({ monthlyIncome: 0, assets: [{ type: "cash", valueIls: 120_000 }] }));
+    const r = simulateLifetime(
+      base({ monthlyIncome: 0, assets: [{ type: "cash", valueIls: 120_000 }] }),
+    );
     expect(r.ranOutAge).toBe(41);
     expect(r.rows.find((row) => row.age === 41)?.liquid).toBe(0);
   });
 
   it("keeps the money to the end when salary and the old-age pension cover spending", () => {
     const r = simulateLifetime(
-      base({ monthlyIncome: 25_000, monthlyStatePension: 10_000, assets: [{ type: "cash", valueIls: 100_000 }] })
+      base({
+        monthlyIncome: 25_000,
+        monthlyStatePension: 10_000,
+        assets: [{ type: "cash", valueIls: 100_000 }],
+      }),
     );
     expect(r.ranOutAge).toBeNull();
     expect(r.rows.at(-1)?.liquid).toBeGreaterThan(1_000_000);
@@ -72,7 +84,7 @@ describe("simulateLifetime", () => {
 
   it("counts a home as wealth but not as spending money", () => {
     const r = simulateLifetime(
-      base({ monthlyIncome: 0, assets: [{ type: "real_estate", valueIls: 3_000_000 }] })
+      base({ monthlyIncome: 0, assets: [{ type: "real_estate", valueIls: 3_000_000 }] }),
     );
     expect(r.liquidNow).toBe(0);
     expect(r.illiquidNow).toBe(3_000_000);
@@ -85,7 +97,7 @@ describe("simulateLifetime", () => {
         monthlyIncome: 6_000,
         monthlyExpenses: 6_000,
         assets: [{ type: "pension", valueIls: 1_200_000 }],
-      })
+      }),
     );
     expect(withPension.annuityMonthly).toBe(6_000);
     expect(withPension.ranOutAge).toBeNull();
@@ -102,7 +114,7 @@ describe("simulateLifetime", () => {
         monthlyIncome: 0,
         monthlyExpenses: 6_000,
         assets: [{ type: "pension", valueIls: 1_200_000 }],
-      })
+      }),
     );
     expect(r.annuityMonthly).toBe(6_000);
     expect(r.rows[0]?.annuityMonthly).toBe(6_000);
@@ -116,9 +128,15 @@ describe("simulateLifetime", () => {
         monthlyExpenses: 5_000,
         assets: [
           { type: "cash", valueIls: 200_000 },
-          { type: "loan", valueIls: 120_000, isLiability: true, interestRate: 0, monthlyPayment: 10_000 },
+          {
+            type: "loan",
+            valueIls: 120_000,
+            isLiability: true,
+            interestRate: 0,
+            monthlyPayment: 10_000,
+          },
         ],
-      })
+      }),
     );
     expect(r.debtNow).toBe(120_000);
     expect(r.rows[0]?.debt).toBe(120_000);
@@ -129,7 +147,7 @@ describe("simulateLifetime", () => {
 
   it("applies a one-off life event in its year", () => {
     const r = simulateLifetime(
-      base({ events: [{ year: 2027, amount: -200_000, monthlyChange: 0 }] })
+      base({ events: [{ year: 2027, amount: -200_000, monthlyChange: 0 }] }),
     );
     expect(r.rows.find((row) => row.year === 2028)?.liquid).toBeCloseTo(40_000);
   });
@@ -141,7 +159,7 @@ describe("simulateLifetime", () => {
         monthlyIncome: 0,
         retirementSpendPct: 0.5,
         assets: [{ type: "cash", valueIls: 100_000 }],
-      })
+      }),
     );
     expect(r.ranOutAge).toBe(41);
   });

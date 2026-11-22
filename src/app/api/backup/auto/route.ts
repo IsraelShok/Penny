@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
-import { getAutoBackupConfig, runAutoBackup, updateAutoBackupConfig } from "@/server/lib/auto-backup";
+import {
+  getAutoBackupConfig,
+  runAutoBackup,
+  updateAutoBackupConfig,
+} from "@/server/lib/auto-backup";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 
 export const dynamic = "force-dynamic";
-const fail = (e: unknown) => NextResponse.json({ error: e instanceof Error ? e.message : "invalid" }, { status: 400 });
+const fail = (e: unknown) =>
+  NextResponse.json({ error: e instanceof Error ? e.message : "invalid" }, { status: 400 });
 
 /** Settings and last result; never the passphrase. */
 export async function GET() {
@@ -27,8 +32,15 @@ export async function POST(request: Request) {
   if (body.action === "open") {
     const dir = getAutoBackupConfig().dir;
     fs.mkdirSync(dir, { recursive: true });
-    const cmd = process.platform === "win32" ? "explorer" : process.platform === "darwin" ? "open" : "xdg-open";
-    spawn(cmd, [dir], { detached: true, stdio: "ignore" }).on("error", () => {}).unref();
+    const cmd =
+      process.platform === "win32"
+        ? "explorer"
+        : process.platform === "darwin"
+          ? "open"
+          : "xdg-open";
+    spawn(cmd, [dir], { detached: true, stdio: "ignore" })
+      .on("error", () => {})
+      .unref();
     return NextResponse.json(getAutoBackupConfig());
   }
   return fail(new Error("unknown action"));

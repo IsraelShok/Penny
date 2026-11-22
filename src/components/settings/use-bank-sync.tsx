@@ -68,9 +68,9 @@ export function useBankSync() {
             categorized: number;
           };
           toast.success(t("complete", data));
-          queryClient.invalidateQueries({ queryKey: ["integrations"] });
-          queryClient.invalidateQueries({ queryKey: ["summary"] });
-          queryClient.invalidateQueries({ queryKey: ["transactions"] });
+          void queryClient.invalidateQueries({ queryKey: ["integrations"] });
+          void queryClient.invalidateQueries({ queryKey: ["summary"] });
+          void queryClient.invalidateQueries({ queryKey: ["transactions"] });
         } else if (event.type === "error") {
           setState((prev) => ({
             ...prev,
@@ -83,7 +83,7 @@ export function useBankSync() {
         }
       });
     },
-    [queryClient, t]
+    [queryClient, t],
   );
 
   const stateFor = (credentialId: number): SyncState =>

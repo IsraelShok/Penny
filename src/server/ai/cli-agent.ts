@@ -9,7 +9,10 @@ import { join } from "node:path";
 export const CLI_AGENTS = {
   // Read-only sandbox, no approvals, no session files. Prompt from stdin ("-").
   // https://developers.openai.com/codex/noninteractive
-  codex: { bin: "codex", args: ["exec", "--skip-git-repo-check", "--ephemeral", "--sandbox", "read-only", "-"] },
+  codex: {
+    bin: "codex",
+    args: ["exec", "--skip-git-repo-check", "--ephemeral", "--sandbox", "read-only", "-"],
+  },
   // Non-TTY stdin triggers headless mode; default approval mode cannot run edit/shell tools without a human.
   // https://geminicli.com/docs/cli/headless/
   gemini: { bin: "gemini", args: ["--output-format", "json"] },
@@ -21,13 +24,24 @@ export const CLI_AGENTS = {
   kilo: { bin: "kilo", args: ["run", "--agent", "penny"] },
 } as const;
 
-const DENY_ALL = { "*": "deny", read: "deny", edit: "deny", bash: "deny", webfetch: "deny", websearch: "deny", task: "deny", external_directory: "deny" } as const;
+const DENY_ALL = {
+  "*": "deny",
+  read: "deny",
+  edit: "deny",
+  bash: "deny",
+  webfetch: "deny",
+  websearch: "deny",
+  task: "deny",
+  external_directory: "deny",
+} as const;
 
 /** OpenCode/Kilo config written into the empty cwd and passed inline: no tool may run, for the session default and our own agent. */
 export const OPENCODE_READONLY_CONFIG = {
   $schema: "https://opencode.ai/config.json",
   permission: DENY_ALL,
-  agent: { penny: { mode: "primary", description: "Penny text-only completer", permission: DENY_ALL } },
+  agent: {
+    penny: { mode: "primary", description: "Penny text-only completer", permission: DENY_ALL },
+  },
 };
 
 const usesOpenCodeConfig = (id: CliAgentId) => id === "opencode" || id === "kilo";
@@ -56,7 +70,12 @@ export function runCliAgent(id: CliAgentId, prompt: string, timeoutMs = 120_000)
   }
   return new Promise<string>((resolve, reject) => {
     // npm installs .cmd shims on Windows, which need a shell; argv is constants only, so this is safe.
-    const child = spawn(bin, [...args], { cwd, env, shell: process.platform === "win32", windowsHide: true });
+    const child = spawn(bin, [...args], {
+      cwd,
+      env,
+      shell: process.platform === "win32",
+      windowsHide: true,
+    });
     let out = "";
     let err = "";
     const timer = setTimeout(() => {
@@ -71,9 +90,15 @@ export function runCliAgent(id: CliAgentId, prompt: string, timeoutMs = 120_000)
     });
     child.on("close", (code) => {
       clearTimeout(timer);
-      if (code !== 0) return reject(new Error(`${bin} exited ${code}: ${err.trim().slice(-300) || "no output"} — run "${bin}" once in a terminal to sign in`));
+      if (code !== 0)
+        return reject(
+          new Error(
+            `${bin} exited ${code}: ${err.trim().slice(-300) || "no output"} — run "${bin}" once in a terminal to sign in`,
+          ),
+        );
       // Our locked agent wasn't loaded, so the CLI ran with its own defaults: don't trust that run.
-      if (usesOpenCodeConfig(id) && /falling back to default agent/i.test(err)) return reject(new Error(`${bin} ignored Penny's read-only config`));
+      if (usesOpenCodeConfig(id) && /falling back to default agent/i.test(err))
+        return reject(new Error(`${bin} ignored Penny's read-only config`));
       resolve(id === "gemini" ? parseGemini(out) : out.trim());
     });
     child.stdin.end(prompt);
@@ -81,7 +106,10 @@ export function runCliAgent(id: CliAgentId, prompt: string, timeoutMs = 120_000)
 }
 
 function parseGemini(out: string): string {
-  const data = JSON.parse(out.slice(out.indexOf("{"))) as { response?: string; error?: { message?: string } };
+  const data = JSON.parse(out.slice(out.indexOf("{"))) as {
+    response?: string;
+    error?: { message?: string };
+  };
   if (data.error) throw new Error(`gemini: ${data.error.message ?? "request failed"}`);
   return (data.response ?? "").trim();
 }

@@ -26,7 +26,7 @@ export function normalizeMerchant(description: string): string {
     .replace(/\s+/g, " ")
     .trim();
 
-  for (let previous = ""; previous !== s; ) {
+  for (let previous = ""; previous !== s;) {
     previous = s;
     for (const pattern of TRAILING) s = s.replace(pattern, "");
     s = s.trim();

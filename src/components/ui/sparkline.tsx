@@ -23,7 +23,13 @@ export function Sparkline({
   const y = (v: number) => 30 - ((v - min) / range) * 26;
   const last = values.length - 1;
   return (
-    <svg viewBox="-3 0 106 32" preserveAspectRatio="none" className={`${className} shrink-0 overflow-visible`} role="img" aria-label={label}>
+    <svg
+      viewBox="-3 0 106 32"
+      preserveAspectRatio="none"
+      className={`${className} shrink-0 overflow-visible`}
+      role="img"
+      aria-label={label}
+    >
       <polyline
         points={values.map((v, i) => `${i * step},${y(v)}`).join(" ")}
         fill="none"
@@ -34,7 +40,16 @@ export function Sparkline({
         vectorEffect="non-scaling-stroke"
       />
       {/* A zero-length round-capped line stays a circle when the SVG is stretched; a <circle> would not. */}
-      <line x1={last * step} y1={y(values[last])} x2={last * step} y2={y(values[last])} stroke={color} strokeWidth="5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      <line
+        x1={last * step}
+        y1={y(values[last])}
+        x2={last * step}
+        y2={y(values[last])}
+        stroke={color}
+        strokeWidth="5"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
     </svg>
   );
 }

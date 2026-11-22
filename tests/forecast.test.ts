@@ -4,50 +4,120 @@ import { findAnomalies } from "@/server/insights/anomalies";
 import type { Series } from "@/server/insights/recurring";
 
 const sub = (o: Partial<Series> = {}): Series => ({
-  merchant: "netflix", account: "1", currency: "ILS", cadence: "monthly", expectedAmount: 50,
-  occurrences: 4, status: "suggested", lastDate: "2026-10-05", ...o,
+  merchant: "netflix",
+  account: "1",
+  currency: "ILS",
+  cadence: "monthly",
+  expectedAmount: 50,
+  occurrences: 4,
+  status: "suggested",
+  lastDate: "2026-10-05",
+  ...o,
 });
 
 describe("forecastBill", () => {
   it("returns the next 3 billing dates with total equal to the sum of its parts", () => {
     const out = forecastBill({
-      billingDay: 10, today: "2026-11-04",
+      billingDay: 10,
+      today: "2026-11-04",
       series: [sub()],
-      installments: [{ merchant: "ikea", account: "1", date: "2026-11-10", month: "2026-11", amount: 100, number: 4, total: 12 }],
+      installments: [
+        {
+          merchant: "ikea",
+          account: "1",
+          date: "2026-11-10",
+          month: "2026-11",
+          amount: 100,
+          number: 4,
+          total: 12,
+        },
+      ],
       avgDiscretionary: 1000,
     });
     expect(out.map((f) => f.date)).toEqual(["2026-11-10", "2026-12-10", "2027-01-10"]);
-    expect(out[0].parts).toEqual({ posted: 0, recurring: 50, installments: 100, discretionary: 1000 });
-    for (const f of out) expect(f.total).toBe(f.parts.posted + f.parts.recurring + f.parts.installments + f.parts.discretionary);
+    expect(out[0].parts).toEqual({
+      posted: 0,
+      recurring: 50,
+      installments: 100,
+      discretionary: 1000,
+    });
+    for (const f of out)
+      expect(f.total).toBe(
+        f.parts.posted + f.parts.recurring + f.parts.installments + f.parts.discretionary,
+      );
   });
   it("bills a subscription where its own charges land, not where its charge date falls", () => {
     // Charged on the 5th, billed on the 10th of the next month (35 days later); today Dec 7, the Dec 5 charge is posted to Jan 10.
     const out = forecastBill({
-      billingDay: 10, today: "2026-12-07", series: [sub({ lastDate: "2026-12-05", billingLagDays: 36 })], installments: [],
-      avgDiscretionary: 0, posted: { "2027-01-10": 50 },
+      billingDay: 10,
+      today: "2026-12-07",
+      series: [sub({ lastDate: "2026-12-05", billingLagDays: 36 })],
+      installments: [],
+      avgDiscretionary: 0,
+      posted: { "2027-01-10": 50 },
     });
-    expect(out.map((f) => [f.date, f.total])).toEqual([["2026-12-10", 0], ["2027-01-10", 50], ["2027-02-10", 50]]);
+    expect(out.map((f) => [f.date, f.total])).toEqual([
+      ["2026-12-10", 0],
+      ["2027-01-10", 50],
+      ["2027-02-10", 50],
+    ]);
   });
   it("starts at the next month once the billing day has passed", () => {
-    const out = forecastBill({ billingDay: 10, today: "2026-11-15", series: [], installments: [], avgDiscretionary: 0 });
+    const out = forecastBill({
+      billingDay: 10,
+      today: "2026-11-15",
+      series: [],
+      installments: [],
+      avgDiscretionary: 0,
+    });
     expect(out[0].date).toBe("2026-12-10");
   });
   it("includes today when today is the billing day", () => {
-    const out = forecastBill({ billingDay: 10, today: "2026-11-10", series: [], installments: [], avgDiscretionary: 0 });
+    const out = forecastBill({
+      billingDay: 10,
+      today: "2026-11-10",
+      series: [],
+      installments: [],
+      avgDiscretionary: 0,
+    });
     expect(out[0].date).toBe("2026-11-10");
   });
   it("clamps billing day 31 to the last day of shorter months", () => {
-    const out = forecastBill({ billingDay: 31, today: "2026-11-04", series: [], installments: [], avgDiscretionary: 0 });
+    const out = forecastBill({
+      billingDay: 31,
+      today: "2026-11-04",
+      series: [],
+      installments: [],
+      avgDiscretionary: 0,
+    });
     expect(out.map((f) => f.date)).toEqual(["2026-11-30", "2026-12-31", "2027-01-31"]);
   });
   it("with no history yields only recurring and installments (discretionary 0)", () => {
-    const out = forecastBill({ billingDay: 10, today: "2026-11-04", series: [sub()], installments: [], avgDiscretionary: 0 });
+    const out = forecastBill({
+      billingDay: 10,
+      today: "2026-11-04",
+      series: [sub()],
+      installments: [],
+      avgDiscretionary: 0,
+    });
     expect(out[0].total).toBe(50);
   });
   it("ignores unconfirmed candidates and counts weekly series several times per cycle", () => {
-    const cand = forecastBill({ billingDay: 10, today: "2026-11-04", series: [sub({ status: "candidate" })], installments: [], avgDiscretionary: 0 });
+    const cand = forecastBill({
+      billingDay: 10,
+      today: "2026-11-04",
+      series: [sub({ status: "candidate" })],
+      installments: [],
+      avgDiscretionary: 0,
+    });
     expect(cand[0].parts.recurring).toBe(0);
-    const weekly = forecastBill({ billingDay: 10, today: "2026-11-04", series: [sub({ cadence: "weekly", expectedAmount: 20, lastDate: "2026-10-30" })], installments: [], avgDiscretionary: 0 });
+    const weekly = forecastBill({
+      billingDay: 10,
+      today: "2026-11-04",
+      series: [sub({ cadence: "weekly", expectedAmount: 20, lastDate: "2026-10-30" })],
+      installments: [],
+      avgDiscretionary: 0,
+    });
     expect(weekly[1].parts.recurring).toBeGreaterThanOrEqual(60);
   });
 });
@@ -55,8 +125,12 @@ describe("forecastBill", () => {
 describe("forecastBill with posted charges", () => {
   it("adds charges already posted to the bill and scales the remaining discretionary spend", () => {
     const out = forecastBill({
-      billingDay: 10, today: "2026-11-04", series: [], installments: [],
-      avgDiscretionary: 620, posted: { "2026-11-10": 300 },
+      billingDay: 10,
+      today: "2026-11-04",
+      series: [],
+      installments: [],
+      avgDiscretionary: 620,
+      posted: { "2026-11-10": 300 },
     });
     expect(out[0].parts.posted).toBe(300);
     expect(out[0].parts.discretionary).toBeGreaterThan(0);
@@ -66,7 +140,11 @@ describe("forecastBill with posted charges", () => {
   });
   it("does not forecast a subscription that stopped charging", () => {
     const out = forecastBill({
-      billingDay: 10, today: "2026-11-04", series: [sub({ lastDate: "2024-01-10" })], installments: [], avgDiscretionary: 0,
+      billingDay: 10,
+      today: "2026-11-04",
+      series: [sub({ lastDate: "2024-01-10" })],
+      installments: [],
+      avgDiscretionary: 0,
     });
     expect(out.every((f) => f.parts.recurring === 0)).toBe(true);
   });
@@ -74,7 +152,14 @@ describe("forecastBill with posted charges", () => {
 
 describe("forecastBill posted window", () => {
   it("counts a posted charge whose billing date is shifted off the nominal day", () => {
-    const out = forecastBill({ billingDay: 10, today: "2026-11-04", series: [], installments: [], avgDiscretionary: 0, posted: { "2026-11-09": 70, "2026-12-11": 30 } });
+    const out = forecastBill({
+      billingDay: 10,
+      today: "2026-11-04",
+      series: [],
+      installments: [],
+      avgDiscretionary: 0,
+      posted: { "2026-11-09": 70, "2026-12-11": 30 },
+    });
     expect(out[0].parts.posted).toBe(70);
     expect(out[1].parts.posted).toBe(30);
   });
@@ -89,7 +174,17 @@ describe("forecastCards", () => {
         { account: "B", billingDay: 10, posted: {}, avgDiscretionary: 0 },
       ],
       series: [sub({ account: "B", lastDate: "2026-10-05" })],
-      installments: [{ merchant: "ikea", account: "A", date: "2026-12-02", month: "2026-12", amount: 100, number: 4, total: 12 }],
+      installments: [
+        {
+          merchant: "ikea",
+          account: "A",
+          date: "2026-12-02",
+          month: "2026-12",
+          amount: 100,
+          number: 4,
+          total: 12,
+        },
+      ],
     });
     const a = out.filter((f) => f.account === "A");
     const b = out.filter((f) => f.account === "B");
@@ -103,7 +198,13 @@ describe("forecastCards", () => {
   });
 });
 
-const x = (date: string, amount: number, o: Record<string, unknown> = {}) => ({ merchant: "m", category: "Food", amount, date, ...o });
+const x = (date: string, amount: number, o: Record<string, unknown> = {}) => ({
+  merchant: "m",
+  category: "Food",
+  amount,
+  date,
+  ...o,
+});
 
 describe("findAnomalies", () => {
   it("flags a category spending far above its trailing 3-month mean", () => {
@@ -116,13 +217,17 @@ describe("findAnomalies", () => {
     expect(findAnomalies([...hist, x("2026-11-02", -450)], "2026-11-04")).toEqual([]);
   });
   it("flags a large charge from a merchant never seen before", () => {
-    const out = findAnomalies([x("2026-11-03", -2500, { merchant: "newshop", category: "Other" })], "2026-11-04");
+    const out = findAnomalies(
+      [x("2026-11-03", -2500, { merchant: "newshop", category: "Other" })],
+      "2026-11-04",
+    );
     expect(out.filter((a) => a.type === "new_large_merchant")).toHaveLength(1);
   });
   it("flags a same-day duplicate charge once", () => {
-    const out = findAnomalies([
-      x("2026-10-01", -30), x("2026-11-03", -75), x("2026-11-03", -75),
-    ], "2026-11-04");
+    const out = findAnomalies(
+      [x("2026-10-01", -30), x("2026-11-03", -75), x("2026-11-03", -75)],
+      "2026-11-04",
+    );
     expect(out.filter((a) => a.type === "duplicate_charge")).toHaveLength(1);
   });
 });

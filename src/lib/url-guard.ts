@@ -11,7 +11,7 @@ export const OLLAMA_URL_ERROR =
  */
 export function normalizeOllamaUrl(
   value: string,
-  allowRemote = pennyEnv("ALLOW_REMOTE_OLLAMA") === "1"
+  allowRemote = pennyEnv("ALLOW_REMOTE_OLLAMA") === "1",
 ): string | null {
   let url: URL;
   try {

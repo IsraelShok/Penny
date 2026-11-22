@@ -4,12 +4,24 @@ import path from "path";
 import fs from "fs";
 
 // Boundary bodies every mutating route must answer with 4xx (never 5xx): empty, broken JSON, JSON null, wrong shapes.
-const BAD_BODIES: (string | undefined)[] = [undefined, "not json", "null", "[]", "{}", '"x"', JSON.stringify({ categoryId: "abc", amount: "x" })];
+const BAD_BODIES: (string | undefined)[] = [
+  undefined,
+  "not json",
+  "null",
+  "[]",
+  "{}",
+  '"x"',
+  JSON.stringify({ categoryId: "abc", amount: "x" }),
+];
 const BAD_IDS = ["0", "-1", "999999", "abc", "1.5"];
 
 type Handler = (req: Request, ctx: { params: Promise<{ id: string }> }) => Promise<Response>;
 const req = (method: string, body?: string) =>
-  new Request("http://127.0.0.1/api/x", { method, headers: { "content-type": "application/json" }, body });
+  new Request("http://127.0.0.1/api/x", {
+    method,
+    headers: { "content-type": "application/json" },
+    body,
+  });
 
 beforeAll(() => {
   process.env.PENNY_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "penny-bounds-"));
@@ -47,7 +59,13 @@ describe("API boundaries: invalid bodies give 4xx, not 500", () => {
     for (const id of BAD_IDS) {
       const url = `http://127.0.0.1/api/transactions/manual?id=${id}`;
       for (const body of BAD_BODIES) {
-        const res = await m.PATCH(new Request(url, { method: "PATCH", headers: { "content-type": "application/json" }, body }));
+        const res = await m.PATCH(
+          new Request(url, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body,
+          }),
+        );
         expect(res.status, `PATCH id=${id} body=${body}`).toBeGreaterThanOrEqual(400);
         expect(res.status).toBeLessThan(500);
       }
@@ -67,7 +85,9 @@ describe("API boundaries: invalid bodies give 4xx, not 500", () => {
   it("settings PUT", async () => {
     const m = await import("@/app/api/settings/route");
     for (const body of [undefined, "not json", "null", "[]"]) {
-      const res = await (m.PUT as Handler)(req("PUT", body), { params: Promise.resolve({ id: "" }) });
+      const res = await (m.PUT as Handler)(req("PUT", body), {
+        params: Promise.resolve({ id: "" }),
+      });
       expect(res.status, String(body)).toBe(400);
     }
   });
@@ -76,8 +96,16 @@ describe("API boundaries: invalid bodies give 4xx, not 500", () => {
     await expect4xx("setup/ai", m.POST as Handler, "POST");
   });
   it("transactions cash/owners/exclude/[id]", async () => {
-    await expect4xx("transactions/cash", (await import("@/app/api/transactions/cash/route")).POST as Handler, "POST");
-    await expect4xx("transactions/owners", (await import("@/app/api/transactions/owners/route")).PUT as Handler, "PUT");
+    await expect4xx(
+      "transactions/cash",
+      (await import("@/app/api/transactions/cash/route")).POST as Handler,
+      "POST",
+    );
+    await expect4xx(
+      "transactions/owners",
+      (await import("@/app/api/transactions/owners/route")).PUT as Handler,
+      "PUT",
+    );
     const ex = (await import("@/app/api/transactions/[id]/exclude/route")).POST as Handler;
     const tx = await import("@/app/api/transactions/[id]/route");
     for (const id of BAD_IDS) {
@@ -90,7 +118,11 @@ describe("API boundaries: invalid bodies give 4xx, not 500", () => {
 
 describe("API boundaries: text, ids and profiles", () => {
   const json = (method: string, body: unknown, headers: Record<string, string> = {}) =>
-    new Request("http://127.0.0.1/api/x", { method, headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) });
+    new Request("http://127.0.0.1/api/x", {
+      method,
+      headers: { "content-type": "application/json", ...headers },
+      body: JSON.stringify(body),
+    });
 
   it("category names: 40 chars ok, 41 rejected, duplicate 409, markup stored as plain text", async () => {
     const { POST } = await import("@/app/api/categories/route");
@@ -104,24 +136,35 @@ describe("API boundaries: text, ids and profiles", () => {
     expect(xss.status).toBeLessThan(300);
     const x = (await xss.json()) as { id: number; name: string };
     expect(x.name).toBe("<img src=x onerror=alert(1)>");
-    for (const c of [created, x]) await DELETE(new Request("http://127.0.0.1/api/x", { method: "DELETE" }), { params: Promise.resolve({ id: String(c.id) }) });
+    for (const c of [created, x])
+      await DELETE(new Request("http://127.0.0.1/api/x", { method: "DELETE" }), {
+        params: Promise.resolve({ id: String(c.id) }),
+      });
   });
 
   it("profiles: invalid ids 404, the last profile cannot be deleted, a bad x-profile-id never 500s", async () => {
     const p = await import("@/app/api/profiles/[id]/route");
     for (const id of BAD_IDS) {
-      const res = await p.DELETE(new Request("http://127.0.0.1/api/x", { method: "DELETE" }), { params: Promise.resolve({ id }) });
+      const res = await p.DELETE(new Request("http://127.0.0.1/api/x", { method: "DELETE" }), {
+        params: Promise.resolve({ id }),
+      });
       expect(res.status, id).toBeGreaterThanOrEqual(400);
       expect(res.status, id).toBeLessThan(500);
     }
-    const list = (await (await (await import("@/app/api/profiles/route")).GET()).json()) as { id: number }[];
+    const list = (await (await (await import("@/app/api/profiles/route")).GET()).json()) as {
+      id: number;
+    }[];
     if (list.length === 1) {
-      const res = await p.DELETE(new Request("http://127.0.0.1/api/x", { method: "DELETE" }), { params: Promise.resolve({ id: String(list[0].id) }) });
+      const res = await p.DELETE(new Request("http://127.0.0.1/api/x", { method: "DELETE" }), {
+        params: Promise.resolve({ id: String(list[0].id) }),
+      });
       expect(res.status).toBe(409);
     }
     const s = await import("@/app/api/settings/route");
     for (const h of ["abc", "-1", "0", "999999", "1e400"]) {
-      const res = await s.GET(new Request("http://127.0.0.1/api/settings", { headers: { "x-profile-id": h } }));
+      const res = await s.GET(
+        new Request("http://127.0.0.1/api/settings", { headers: { "x-profile-id": h } }),
+      );
       expect(res.status, h).toBeLessThan(500);
     }
   });

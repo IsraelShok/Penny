@@ -7,13 +7,25 @@ import type { InsightsPayload } from "@/lib/api";
 import { addDays, chargesBetween, monthDay, nthCharge, sizeTier } from "@/lib/balance-forecast";
 import { shekels } from "@/lib/money";
 
-interface Item { name: string; amount: number; flag?: "late" | "up" }
+interface Item {
+  name: string;
+  amount: number;
+  flag?: "late" | "up";
+}
 
 const OVERDUE_DAYS = 5;
 const SIZES = ["small", "medium", "large"] as const;
 /** One hue, light to strong, by the charge's size within the month; the size is also in words for screen readers. */
-const TIER_EDGE = ["color-mix(in oklab, var(--chart-1) 30%, var(--card))", "color-mix(in oklab, var(--chart-1) 60%, var(--card))", "var(--chart-1)"];
-const TIER_BG = ["color-mix(in oklab, var(--chart-1) 6%, transparent)", "color-mix(in oklab, var(--chart-1) 14%, transparent)", "color-mix(in oklab, var(--chart-1) 24%, transparent)"];
+const TIER_EDGE = [
+  "color-mix(in oklab, var(--chart-1) 30%, var(--card))",
+  "color-mix(in oklab, var(--chart-1) 60%, var(--card))",
+  "var(--chart-1)",
+];
+const TIER_BG = [
+  "color-mix(in oklab, var(--chart-1) 6%, transparent)",
+  "color-mix(in oklab, var(--chart-1) 14%, transparent)",
+  "color-mix(in oklab, var(--chart-1) 24%, transparent)",
+];
 
 /** This month's expected recurring charges and card bills on a Sunday-first grid (RTL flows it right to left). */
 export function RecurringCalendar({ data, today }: { data: InsightsPayload; today: string }) {
@@ -31,11 +43,16 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
     const isLate = next < addDays(today, -OVERDUE_DAYS);
     if (isLate) late.push(s.merchant);
     for (const d of chargesBetween(s.cadence, s.lastDate, first, last)) {
-      put(d, { name: s.merchant, amount: s.expectedAmount, flag: isLate && d === next ? "late" : s.priceChange ? "up" : undefined });
+      put(d, {
+        name: s.merchant,
+        amount: s.expectedAmount,
+        flag: isLate && d === next ? "late" : s.priceChange ? "up" : undefined,
+      });
     }
   }
   for (const b of data.forecast) {
-    if (b.date >= first && b.date <= last) put(b.date, { name: t("cardBill", { last4: b.account?.slice(-4) ?? "" }), amount: b.total });
+    if (b.date >= first && b.date <= last)
+      put(b.date, { name: t("cardBill", { last4: b.account?.slice(-4) ?? "" }), amount: b.total });
   }
 
   const count = [...byDay.values()].reduce((n, items) => n + items.length, 0);
@@ -44,20 +61,33 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
   const days = Number(last.slice(8));
   const weekday = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" });
   const narrowDay = new Intl.DateTimeFormat(locale, { weekday: "narrow", timeZone: "UTC" });
-  const longDay = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone: "UTC" });
+  const longDay = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
   const money = (n: number) => shekels(Math.round(n), locale);
   const compact = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 });
-  const flagText = (f?: Item["flag"]) => (f === "late" ? t("late") : f === "up" ? t("pricierUp") : "");
+  const flagText = (f?: Item["flag"]) =>
+    f === "late" ? t("late") : f === "up" ? t("pricierUp") : "";
 
   return (
     <CardShell label={t("calendarTitle")}>
       <p className="text-base font-medium">{t("calendarSummary", { count })}</p>
-      {late.length > 0 && <p className="mt-1 text-sm text-[var(--status-heads-up)]">{t("lateSummary", { names: late.join(", ") })}</p>}
+      {late.length > 0 && (
+        <p className="mt-1 text-sm text-[var(--status-heads-up)]">
+          {t("lateSummary", { names: late.join(", ") })}
+        </p>
+      )}
       {count > 1 && (
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted-foreground">
           {SIZES.map((sz, i) => (
             <span key={sz} className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-sm border-s-[3px]" style={{ borderColor: TIER_EDGE[i], backgroundColor: TIER_BG[i] }} aria-hidden />
+              <span
+                className="h-3 w-3 rounded-sm border-s-[3px]"
+                style={{ borderColor: TIER_EDGE[i], backgroundColor: TIER_BG[i] }}
+                aria-hidden
+              />
               {t(`size_${sz}`)}
             </span>
           ))}
@@ -68,11 +98,17 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
           <div key={i} className="pb-1 text-center font-medium text-muted-foreground" aria-hidden>
             {/* 1 Nov 2026 is a Sunday. */}
             {/* Phones: one letter per day, so seven columns fit. */}
-            <span className="sm:hidden">{narrowDay.format(new Date(Date.UTC(2026, 10, 1 + i, 12)))}</span>
-            <span className="max-sm:hidden">{weekday.format(new Date(Date.UTC(2026, 10, 1 + i, 12)))}</span>
+            <span className="sm:hidden">
+              {narrowDay.format(new Date(Date.UTC(2026, 10, 1 + i, 12)))}
+            </span>
+            <span className="max-sm:hidden">
+              {weekday.format(new Date(Date.UTC(2026, 10, 1 + i, 12)))}
+            </span>
           </div>
         ))}
-        {Array.from({ length: lead }, (_, i) => <div key={`pad${i}`} aria-hidden />)}
+        {Array.from({ length: lead }, (_, i) => (
+          <div key={`pad${i}`} aria-hidden />
+        ))}
         {Array.from({ length: days }, (_, i) => {
           const d = monthDay(y, m - 1, i + 1);
           const items = byDay.get(d) ?? [];
@@ -88,14 +124,40 @@ export function RecurringCalendar({ data, today }: { data: InsightsPayload; toda
               aria-hidden={items.length ? undefined : true}
               className={`min-h-14 min-w-0 rounded-lg p-1 focus-visible:outline-2 focus-visible:outline-ring ${d === today ? "bg-primary/10" : items.length ? "bg-muted/60" : ""}`}
             >
-              <div className={`tabular-nums ${d === today ? "font-semibold text-primary" : "text-muted-foreground"}`} aria-hidden>{i + 1}</div>
+              <div
+                className={`tabular-nums ${d === today ? "font-semibold text-primary" : "text-muted-foreground"}`}
+                aria-hidden
+              >
+                {i + 1}
+              </div>
               <ul aria-hidden className="grid gap-0.5">
                 {items.map((it, k) => (
-                  <li key={k} className="min-w-0 rounded-sm border-s-[3px] ps-0.5" style={{ borderColor: TIER_EDGE[tier(it.amount)], backgroundColor: TIER_BG[tier(it.amount)] }}>
-                    <span className="flex min-w-0 items-center gap-0.5">{it.flag === "late" ? <AlertTriangle className="size-3.5 shrink-0" aria-hidden /> : it.flag === "up" ? <TrendingUp className="size-3.5 shrink-0" aria-hidden /> : null}<span className="truncate">{it.name}</span></span>
+                  <li
+                    key={k}
+                    className="min-w-0 rounded-sm border-s-[3px] ps-0.5"
+                    style={{
+                      borderColor: TIER_EDGE[tier(it.amount)],
+                      backgroundColor: TIER_BG[tier(it.amount)],
+                    }}
+                  >
+                    <span className="flex min-w-0 items-center gap-0.5">
+                      {it.flag === "late" ? (
+                        <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+                      ) : it.flag === "up" ? (
+                        <TrendingUp className="size-3.5 shrink-0" aria-hidden />
+                      ) : null}
+                      <span className="truncate">{it.name}</span>
+                    </span>
                     {/* Phones: a compact figure (1.3K) fits the narrow day; the full amount is in the day's label. */}
-                    <span className="block tabular-nums text-muted-foreground"><bdi className="sm:hidden">{compact.format(Math.round(it.amount))}</bdi><bdi className="max-sm:hidden">{money(it.amount)}</bdi></span>
-                    {it.flag && <span className="block text-[var(--status-heads-up)]">{flagText(it.flag)}</span>}
+                    <span className="block tabular-nums text-muted-foreground">
+                      <bdi className="sm:hidden">{compact.format(Math.round(it.amount))}</bdi>
+                      <bdi className="max-sm:hidden">{money(it.amount)}</bdi>
+                    </span>
+                    {it.flag && (
+                      <span className="block text-[var(--status-heads-up)]">
+                        {flagText(it.flag)}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

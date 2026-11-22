@@ -10,6 +10,8 @@ if ($LASTEXITCODE -ne 0) { Write-Host "Docker is not running. Start Docker Deskt
 $env:PENNY_COMMIT = (git rev-parse --short HEAD 2>$null)
 if (-not $env:PENNY_COMMIT) { $env:PENNY_COMMIT = "unknown" }
 
+New-Item -ItemType Directory -Force imports | Out-Null
+
 Write-Host "Building and starting Penny (the first build takes a few minutes)..."
 docker compose up -d --build --remove-orphans
 if ($LASTEXITCODE -ne 0) { Write-Host "Build failed. See the messages above."; exit 1 }

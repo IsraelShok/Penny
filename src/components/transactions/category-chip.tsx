@@ -6,7 +6,17 @@ import { cn } from "@/lib/utils";
  * category color pulled toward --foreground so it stays >=4.5:1 in light and dark (checked for every seeded color).
  * No color (uncategorized) falls back to the muted neutral pill.
  */
-export function CategoryChip({ color, children, className, title }: { color?: string | null; children: ReactNode; className?: string; title?: string }) {
+export function CategoryChip({
+  color,
+  children,
+  className,
+  title,
+}: {
+  color?: string | null;
+  children: ReactNode;
+  className?: string;
+  title?: string;
+}) {
   const style = color
     ? ({
         "--cat": color,
@@ -25,7 +35,13 @@ export function CategoryChip({ color, children, className, title }: { color?: st
         className,
       )}
     >
-      {color && <span aria-hidden className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: "var(--cat)" }} />}
+      {color && (
+        <span
+          aria-hidden
+          className="size-1.5 shrink-0 rounded-full"
+          style={{ backgroundColor: "var(--cat)" }}
+        />
+      )}
       <span className="truncate">{children}</span>
     </span>
   );

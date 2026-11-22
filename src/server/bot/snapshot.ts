@@ -17,19 +17,29 @@ export interface Snapshot {
 
 export function buildSnapshot(ws: number, today: string): Snapshot {
   const i = loadInsights(ws, today, Number(process.env.CARD_BILLING_DAY) || 10);
-  const bills = forecastCards({ today, cards: i.cards, series: i.series, installments: i.installments });
+  const bills = forecastCards({
+    today,
+    cards: i.cards,
+    series: i.series,
+    installments: i.installments,
+  });
   return {
     cash: computeCashAhead(ws, today),
     monthTotal: i.monthTotal,
     topCategories: i.topCategories,
     bills: bills.map((b) => ({ date: b.date, total: b.total, account: b.account })),
-    subs: i.series.filter((s) => s.status === "suggested" && s.cadence === "monthly").map((s) => ({ merchant: s.merchant, amount: s.expectedAmount })),
+    subs: i.series
+      .filter((s) => s.status === "suggested" && s.cadence === "monthly")
+      .map((s) => ({ merchant: s.merchant, amount: s.expectedAmount })),
     lastSync: getLastSyncRun(ws)?.startedAt ?? null,
   };
 }
 
 const showMoney = (n: number) => `₪${Math.round(Math.abs(n)).toLocaleString("he-IL")}`;
-const day = (iso: string) => new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso.slice(0, 10)}T12:00:00Z`));
+const day = (iso: string) =>
+  new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", timeZone: "UTC" }).format(
+    new Date(`${iso.slice(0, 10)}T12:00:00Z`),
+  );
 
 export function freeLine(c: CashAhead, money: (n: number) => string): string {
   if (c.safeToSpend == null) return "עוד אין יתרת בנק מסונכרנת, אז אין סכום פנוי.";
@@ -47,16 +57,33 @@ export function formatShort(s: Snapshot, hide = false): string {
     freeLine(s.cash, money),
     `הוצאות החודש: ${money(s.monthTotal)}`,
     next ? `חיוב אשראי הבא: ${money(next.total)} ב־${day(next.date)}` : null,
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function formatFull(s: Snapshot, hide = false): string {
   const money = moneyFor(hide);
   const sections = [
     `📊 תמונת מצב\n${formatShort(s, hide)}`,
-    s.topCategories.length ? `הקטגוריות הגדולות החודש:\n${s.topCategories.slice(0, 5).map((c) => `• ${c.name}: ${money(c.total)}`).join("\n")}` : null,
-    s.bills.length ? `חיובי אשראי צפויים:\n${s.bills.slice(0, 3).map((b) => `• ${day(b.date)}${b.account ? ` (כרטיס ${b.account.slice(-4)})` : ""}: ${money(b.total)}`).join("\n")}` : null,
-    s.subs.length ? `מנויים חודשיים: ${s.subs.length}, ביחד ${money(s.subs.reduce((t, x) => t + x.amount, 0))} בחודש` : null,
+    s.topCategories.length
+      ? `הקטגוריות הגדולות החודש:\n${s.topCategories
+          .slice(0, 5)
+          .map((c) => `• ${c.name}: ${money(c.total)}`)
+          .join("\n")}`
+      : null,
+    s.bills.length
+      ? `חיובי אשראי צפויים:\n${s.bills
+          .slice(0, 3)
+          .map(
+            (b) =>
+              `• ${day(b.date)}${b.account ? ` (כרטיס ${b.account.slice(-4)})` : ""}: ${money(b.total)}`,
+          )
+          .join("\n")}`
+      : null,
+    s.subs.length
+      ? `מנויים חודשיים: ${s.subs.length}, ביחד ${money(s.subs.reduce((t, x) => t + x.amount, 0))} בחודש`
+      : null,
     `סנכרון אחרון: ${s.lastSync ? s.lastSync.slice(0, 16).replace("T", " ") : "עוד לא היה"}`,
   ];
   return sections.filter(Boolean).join("\n\n");

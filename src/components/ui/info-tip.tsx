@@ -13,7 +13,10 @@ export function InfoTip({ text, className }: { text: ReactNode; className?: stri
     <Popover>
       <PopoverTrigger
         aria-label={t("moreInfo")}
-        className={cn("inline-grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring", className)}
+        className={cn(
+          "inline-grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
+          className,
+        )}
       >
         <Info className="size-4" aria-hidden />
       </PopoverTrigger>

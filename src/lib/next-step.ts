@@ -3,8 +3,29 @@ import type { Suggestion } from "./suggestions";
 import type { DetectableEvent, StageHint } from "./stage-detect";
 
 export type TodayState = ReturnType<typeof import("./today-state").todayState>;
-export type StepKind = "connect" | "sync" | "cash" | "stageAsk" | "buffer" | "stageItem" | "emergency" | "suggestion" | "invest" | "review" | "suggestions";
-export interface Step { key: string; kind: StepKind; href: string; amount?: number; months?: number | null; stageId?: string; itemId?: string; event?: DetectableEvent; dismissible: boolean }
+export type StepKind =
+  | "connect"
+  | "sync"
+  | "cash"
+  | "stageAsk"
+  | "buffer"
+  | "stageItem"
+  | "emergency"
+  | "suggestion"
+  | "invest"
+  | "review"
+  | "suggestions";
+export interface Step {
+  key: string;
+  kind: StepKind;
+  href: string;
+  amount?: number;
+  months?: number | null;
+  stageId?: string;
+  itemId?: string;
+  event?: DetectableEvent;
+  dismissible: boolean;
+}
 export interface NextStepInput {
   today: TodayState;
   month: string;
@@ -16,7 +37,13 @@ export interface NextStepInput {
   stageHints: StageHint[];
 }
 
-const HIGH_VALUE = new Set<Suggestion["type"]>(["fees", "idle", "taxRefund", "interest", "fxMarkup"]);
+const HIGH_VALUE = new Set<Suggestion["type"]>([
+  "fees",
+  "idle",
+  "taxRefund",
+  "interest",
+  "fxMarkup",
+]);
 const AHEAD = "/overview?tab=ahead";
 const FINDINGS = "/more#suggestions";
 
@@ -24,36 +51,73 @@ const FINDINGS = "/more#suggestions";
 export function nextStep(i: NextStepInput): Step | null {
   const { today, month, stage, stageItemId, alloc, dismissed } = i;
   if (today === "loading" || today === "error") return null;
-  if (today === "connect") return { key: "connect", kind: "connect", href: "/settings/bank", dismissible: false };
-  if (today === "sync") return { key: "sync", kind: "sync", href: "/settings/bank", dismissible: false };
+  if (today === "connect")
+    return { key: "connect", kind: "connect", href: "/settings/bank", dismissible: false };
+  if (today === "sync")
+    return { key: "sync", kind: "sync", href: "/settings/bank", dismissible: false };
   if (today === "cash") return { key: "cash", kind: "cash", href: AHEAD, dismissible: false };
 
   const m = alloc?.monthly;
   const gentle = !!stage?.gentle;
-  const stageItem: Step | null = stage && stageItemId
-    ? { key: `stage:${stage.stageId}:${stageItemId}:${month}`, kind: "stageItem", href: "/life", stageId: stage.stageId, itemId: stageItemId, dismissible: true }
-    : null;
+  const stageItem: Step | null =
+    stage && stageItemId
+      ? {
+          key: `stage:${stage.stageId}:${stageItemId}:${month}`,
+          kind: "stageItem",
+          href: "/life",
+          stageId: stage.stageId,
+          itemId: stageItemId,
+          dismissible: true,
+        }
+      : null;
   // Never asked in a gentle stage; "No" dismisses the key for good, so it has no "Not now".
   const hint = gentle ? undefined : i.stageHints.find((h) => !dismissed.has(h.key));
   const candidates: (Step | null)[] = [
-    hint ? { key: hint.key, kind: "stageAsk", href: "/life", event: hint.event, dismissible: false } : null,
-    m && m.liquid > 0 ? { key: `buffer:${month}`, kind: "buffer", href: AHEAD, amount: m.liquid, dismissible: true } : null,
+    hint
+      ? { key: hint.key, kind: "stageAsk", href: "/life", event: hint.event, dismissible: false }
+      : null,
+    m && m.liquid > 0
+      ? { key: `buffer:${month}`, kind: "buffer", href: AHEAD, amount: m.liquid, dismissible: true }
+      : null,
     gentle ? stageItem : null,
   ];
   // A gentle stage (loss, etc.) never gets money nudges, even with no item left.
   if (!gentle) {
-    const s = i.suggestions.find((x) => HIGH_VALUE.has(x.type) && !dismissed.has(`later:${x.key}:${month}`));
+    const s = i.suggestions.find(
+      (x) => HIGH_VALUE.has(x.type) && !dismissed.has(`later:${x.key}:${month}`),
+    );
     candidates.push(
-      m && m.moneyMarket > 0 ? { key: `emergency:${month}`, kind: "emergency", href: "/investments", amount: m.moneyMarket, months: alloc!.monthsToFull, dismissible: true } : null,
+      m && m.moneyMarket > 0
+        ? {
+            key: `emergency:${month}`,
+            kind: "emergency",
+            href: "/investments",
+            amount: m.moneyMarket,
+            months: alloc!.monthsToFull,
+            dismissible: true,
+          }
+        : null,
       stageItem,
-      s ? { key: `later:${s.key}:${month}`, kind: "suggestion", href: FINDINGS, dismissible: true } : null,
-      m && m.market > 0 ? { key: `invest:${month}`, kind: "invest", href: "/investments", amount: m.market, dismissible: true } : null,
+      s
+        ? { key: `later:${s.key}:${month}`, kind: "suggestion", href: FINDINGS, dismissible: true }
+        : null,
+      m && m.market > 0
+        ? {
+            key: `invest:${month}`,
+            kind: "invest",
+            href: "/investments",
+            amount: m.market,
+            dismissible: true,
+          }
+        : null,
     );
   }
   const hit = candidates.find((c) => c && !dismissed.has(c.key));
   if (hit) return hit;
 
-  if (today === "review") return { key: "review", kind: "review", href: "/transactions", dismissible: false };
-  if (today === "suggestions") return { key: "suggestions", kind: "suggestions", href: FINDINGS, dismissible: false };
+  if (today === "review")
+    return { key: "review", kind: "review", href: "/transactions", dismissible: false };
+  if (today === "suggestions")
+    return { key: "suggestions", kind: "suggestions", href: FINDINGS, dismissible: false };
   return null;
 }

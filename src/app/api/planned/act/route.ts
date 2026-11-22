@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { linkPlanned, matchPlanned, rejectCandidate, unlinkPlanned } from "@/server/db/queries/planned";
+import {
+  linkPlanned,
+  matchPlanned,
+  rejectCandidate,
+  unlinkPlanned,
+} from "@/server/db/queries/planned";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { israelToday } from "@/server/lib/date-utils";
 
@@ -14,7 +19,11 @@ const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
  */
 export async function POST(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json().catch(() => null)) as { action?: unknown; itemId?: unknown; txnId?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as {
+    action?: unknown;
+    itemId?: unknown;
+    txnId?: unknown;
+  } | null;
   const action = body?.action;
   const itemId = body?.itemId == null ? null : Number(body.itemId);
   const txnId = body?.txnId == null ? null : Number(body.txnId);
@@ -24,9 +33,16 @@ export async function POST(request: Request) {
   if (itemId == null || !Number.isInteger(itemId)) return bad("invalid item");
 
   if (action === "unlink") {
-    return unlinkPlanned(workspaceId, itemId) ? NextResponse.json({ success: true }) : NextResponse.json({ error: "not found" }, { status: 404 });
+    return unlinkPlanned(workspaceId, itemId)
+      ? NextResponse.json({ success: true })
+      : NextResponse.json({ error: "not found" }, { status: 404 });
   }
   if (txnId == null || !Number.isInteger(txnId)) return bad("invalid transaction");
-  const done = action === "link" ? linkPlanned(workspaceId, itemId, txnId) : rejectCandidate(workspaceId, itemId, txnId);
-  return done ? NextResponse.json({ success: true }) : NextResponse.json({ error: "not found" }, { status: 404 });
+  const done =
+    action === "link"
+      ? linkPlanned(workspaceId, itemId, txnId)
+      : rejectCandidate(workspaceId, itemId, txnId);
+  return done
+    ? NextResponse.json({ success: true })
+    : NextResponse.json({ error: "not found" }, { status: 404 });
 }

@@ -12,29 +12,46 @@ function freshDb() {
   runMigrations(db);
   return { db, dir };
 }
-const count = (db: Database.Database, sql: string, ...a: unknown[]) => (db.prepare(sql).get(...a) as { n: number }).n;
+const count = (db: Database.Database, sql: string, ...a: unknown[]) =>
+  (db.prepare(sql).get(...a) as { n: number }).n;
 
 describe("profiles migration", () => {
   it("makes empty workspaces profiles of the main household and keeps ones with data hidden and intact", () => {
     const { db } = freshDb();
     db.exec("DELETE FROM profiles");
     db.prepare("UPDATE workspaces SET name='Main', avatar_emoji=NULL WHERE id=1").run();
-    db.prepare("INSERT INTO workspaces (id, name, slug, avatar_emoji) VALUES (2, 'Empty', 'empty', '@alien'), (3, 'Full', 'full', NULL)").run();
-    db.prepare("INSERT INTO categories (workspace_id, name, color, icon) VALUES (2, 'Seeded', '#000', 'x')").run();
-    db.prepare("INSERT INTO excluded_merchants (workspace_id, provider, merchant_key) VALUES (3, 'max', 'a'), (3, 'max', 'b')").run();
-    db.prepare("INSERT INTO synced_preferences (workspace_id, profile, key, value) VALUES (2, 'local', 'studio', '{\"accent\":\"rose\"}')").run();
+    db.prepare(
+      "INSERT INTO workspaces (id, name, slug, avatar_emoji) VALUES (2, 'Empty', 'empty', '@alien'), (3, 'Full', 'full', NULL)",
+    ).run();
+    db.prepare(
+      "INSERT INTO categories (workspace_id, name, color, icon) VALUES (2, 'Seeded', '#000', 'x')",
+    ).run();
+    db.prepare(
+      "INSERT INTO excluded_merchants (workspace_id, provider, merchant_key) VALUES (3, 'max', 'a'), (3, 'max', 'b')",
+    ).run();
+    db.prepare(
+      "INSERT INTO synced_preferences (workspace_id, profile, key, value) VALUES (2, 'local', 'studio', '{\"accent\":\"rose\"}')",
+    ).run();
 
     const report = seedProfiles(db)!;
     expect(report.household).toBe(1);
     expect(report.profiles.map((p) => p.workspaceId)).toEqual([1, 2]);
-    expect(report.keptHidden).toEqual([{ workspaceId: 3, name: "Full", rows: { excluded_merchants: 2 } }]);
-    const profiles = db.prepare("SELECT workspace_id, name, avatar_emoji FROM profiles ORDER BY id").all();
+    expect(report.keptHidden).toEqual([
+      { workspaceId: 3, name: "Full", rows: { excluded_merchants: 2 } },
+    ]);
+    const profiles = db
+      .prepare("SELECT workspace_id, name, avatar_emoji FROM profiles ORDER BY id")
+      .all();
     expect(profiles).toEqual([
       { workspace_id: 1, name: "Main", avatar_emoji: "@fox" },
       { workspace_id: 1, name: "Empty", avatar_emoji: "@alien" },
     ]);
     const alien = report.profiles[1].profileId;
-    expect(db.prepare("SELECT value FROM synced_preferences WHERE workspace_id=1 AND profile=?").get(`p${alien}`)).toEqual({ value: '{"accent":"rose"}' });
+    expect(
+      db
+        .prepare("SELECT value FROM synced_preferences WHERE workspace_id=1 AND profile=?")
+        .get(`p${alien}`),
+    ).toEqual({ value: '{"accent":"rose"}' });
     // Nothing deleted anywhere.
     expect(count(db, "SELECT COUNT(*) AS n FROM workspaces")).toBe(3);
     expect(count(db, "SELECT COUNT(*) AS n FROM excluded_merchants WHERE workspace_id=3")).toBe(2);

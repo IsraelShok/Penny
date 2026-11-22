@@ -53,7 +53,8 @@ function Row({ item }: { item: HomeBankHealthItem }) {
   const tBanks = useTranslations("banks");
   const labels = useFormatterLabels();
   const { providerName, lastSyncAt, status, errorMessage, provider } = item;
-  const displayName = translateProviderName(provider, providerName, tBanks) + (item.label ? ` · ${item.label}` : "");
+  const displayName =
+    translateProviderName(provider, providerName, tBanks) + (item.label ? ` · ${item.label}` : "");
   const errorText = useSyncErrorText();
   const locale = useLocale();
 
@@ -65,12 +66,22 @@ function Row({ item }: { item: HomeBankHealthItem }) {
       <div className="flex min-w-0 items-center gap-2.5">
         <StatusDot status={status} />
         <div className="min-w-0">
-          <div className="truncate text-sm font-medium" title={displayName}>{displayName}</div>
+          <div className="truncate text-sm font-medium" title={displayName}>
+            {displayName}
+          </div>
           <div className="text-xs text-muted-foreground">
             {describeLastSync(lastSyncAt, status, labels, t)}
           </div>
-          {status === "error" && errorMessage && <div className="text-xs text-pretty text-[var(--status-over)]">{errorText(errorMessage).message}</div>}
-          {item.drift != null && <div className="text-xs text-[var(--status-heads-up)]">{t("balanceGap", { amount: shekels(Math.abs(item.drift), locale) })}</div>}
+          {status === "error" && errorMessage && (
+            <div className="text-xs text-pretty text-[var(--status-over)]">
+              {errorText(errorMessage).message}
+            </div>
+          )}
+          {item.drift != null && (
+            <div className="text-xs text-[var(--status-heads-up)]">
+              {t("balanceGap", { amount: shekels(Math.abs(item.drift), locale) })}
+            </div>
+          )}
         </div>
       </div>
       <StatusLabel status={status} />

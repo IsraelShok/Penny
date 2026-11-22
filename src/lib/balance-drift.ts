@@ -13,11 +13,12 @@ export function balanceDrift(
   txns: { day: string; amount: number; status: string }[],
   today: string,
   /** First day the scrape fetched. */
-  windowStart: string
+  windowStart: string,
 ): number | null {
   if (!prev || prev.day >= today || windowStart > prev.day) return null;
   const after = txns.filter((t) => t.day > prev.day);
-  if (txns.some((t) => t.day === prev.day) || after.some((t) => t.status !== "completed")) return null;
+  if (txns.some((t) => t.day === prev.day) || after.some((t) => t.status !== "completed"))
+    return null;
   const moved = after.reduce((s, t) => s + t.amount, 0);
   return Math.round((balance - prev.balance - moved) * 100) / 100;
 }

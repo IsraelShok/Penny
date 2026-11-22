@@ -1,6 +1,13 @@
 import "server-only";
 
-import { addDays, monthDay, projectAccounts, type AccountEventInput, type BalanceForecastPayload, type CardBankLink } from "@/lib/balance-forecast";
+import {
+  addDays,
+  monthDay,
+  projectAccounts,
+  type AccountEventInput,
+  type BalanceForecastPayload,
+  type CardBankLink,
+} from "@/lib/balance-forecast";
 import { BANK_PROVIDERS } from "@/lib/types";
 import { getDb } from "@/server/db";
 import { listAccountBalances } from "@/server/db/queries/assets";
@@ -34,8 +41,10 @@ interface CardAccount {
 
 const providerName = (id: string) => BANK_PROVIDERS.find((p) => p.id === id)?.name ?? id;
 const last4 = (account: string) => (account.length > 4 ? account.slice(-4) : account);
-const bankName = (provider: string, account: string) => `${providerName(provider)} · ${last4(account)}`;
-const cardName = (provider: string, account: string) => `${providerName(provider)} · ${last4(account)}`;
+const bankName = (provider: string, account: string) =>
+  `${providerName(provider)} · ${last4(account)}`;
+const cardName = (provider: string, account: string) =>
+  `${providerName(provider)} · ${last4(account)}`;
 
 /** Card brand words that identify the card in a bank's debit description. */
 const CARD_PATTERNS: Record<string, RegExp> = {
@@ -44,7 +53,8 @@ const CARD_PATTERNS: Record<string, RegExp> = {
   max: /מקסימום|מקס|\bMAX\b/i,
   amex: /אמריקן\s*אקספרס|\bAMEX\b|\bAMERICAN\s+EXPRESS\b/i,
 };
-const ANY_CARD_PAYMENT = /ויזה|ישראכרט|ישרא[\s־-]?כארד|כ[\s.\-־]?א[\s.\-־]?ל|מקסימום|מאסטרקארד|אמריקן\s*אקספרס|דיינרס|תשלום\s*אשראי|כרטיס\s*אשראי|חיוב\s*כרטיס|חיוב\s*לכרטיס|\bISRACARD\b|\bVISA\b|\bMASTERCARD\b|\bCAL\b|\bMAX\b|\bDINERS\b|\bAMEX\b/i;
+const ANY_CARD_PAYMENT =
+  /ויזה|ישראכרט|ישרא[\s־-]?כארד|כ[\s.\-־]?א[\s.\-־]?ל|מקסימום|מאסטרקארד|אמריקן\s*אקספרס|דיינרס|תשלום\s*אשראי|כרטיס\s*אשראי|חיוב\s*כרטיס|חיוב\s*לכרטיס|\bISRACARD\b|\bVISA\b|\bMASTERCARD\b|\bCAL\b|\bMAX\b|\bDINERS\b|\bAMEX\b/i;
 
 /** The bank accounts money actually moves through: synced balances of bank providers. */
 function bankAccounts(workspaceId: number): BankAccount[] {
@@ -65,25 +75,38 @@ function cardAccounts(workspaceId: number): CardAccount[] {
   const rows = getDb()
     .prepare(
       `SELECT account_number AS account, provider FROM transactions
-       WHERE workspace_id = ? GROUP BY account_number, provider ORDER BY provider, account_number`
+       WHERE workspace_id = ? GROUP BY account_number, provider ORDER BY provider, account_number`,
     )
     .all(workspaceId) as { account: string; provider: string }[];
   return rows
     .filter((r) => isCardProvider(r.provider))
-    .map((r) => ({ account: r.account, provider: r.provider, name: cardName(r.provider, r.account) }));
+    .map((r) => ({
+      account: r.account,
+      provider: r.provider,
+      name: cardName(r.provider, r.account),
+    }));
 }
 
 /** User-chosen card→bank links, ignoring entries whose bank no longer exists. */
 function savedMapping(workspaceId: number, banks: Set<string>): Record<string, string> {
   try {
-    const raw = JSON.parse(getWorkspaceSetting(workspaceId, MAPPING_KEY) ?? "{}") as Record<string, unknown>;
-    return Object.fromEntries(Object.entries(raw).filter(([, v]) => typeof v === "string" && banks.has(v))) as Record<string, string>;
+    const raw = JSON.parse(getWorkspaceSetting(workspaceId, MAPPING_KEY) ?? "{}") as Record<
+      string,
+      unknown
+    >;
+    return Object.fromEntries(
+      Object.entries(raw).filter(([, v]) => typeof v === "string" && banks.has(v)),
+    ) as Record<string, string>;
   } catch {
     return {};
   }
 }
 
-export function saveCardBankMapping(workspaceId: number, card: string, bank: string | null): boolean {
+export function saveCardBankMapping(
+  workspaceId: number,
+  card: string,
+  bank: string | null,
+): boolean {
   const banks = new Set(bankAccounts(workspaceId).map((b) => b.account));
   if (bank !== null && !banks.has(bank)) return false;
   const cards = new Set(cardAccounts(workspaceId).map((c) => c.account));
@@ -99,13 +122,18 @@ export function saveCardBankMapping(workspaceId: number, card: string, bank: str
  * Which bank pays each card's statement. A saved link wins; otherwise we look for the bank's
  * card-payment transfers that name the card brand. That is a guess, so it is marked inferred.
  */
-function cardBankLinks(workspaceId: number, banks: BankAccount[], cards: CardAccount[], primary: BankAccount | null): CardBankLink[] {
+function cardBankLinks(
+  workspaceId: number,
+  banks: BankAccount[],
+  cards: CardAccount[],
+  primary: BankAccount | null,
+): CardBankLink[] {
   const saved = savedMapping(workspaceId, new Set(banks.map((b) => b.account)));
   const since = addDays(israelToday(), -180);
   const transfers = getDb()
     .prepare(
       `SELECT account_number AS account, description FROM transactions
-       WHERE workspace_id = ? AND kind = 'transfer' AND date >= ?`
+       WHERE workspace_id = ? AND kind = 'transfer' AND date >= ?`,
     )
     .all(workspaceId, since) as { account: string; description: string }[];
   const bankSet = new Set(banks.map((b) => b.account));
@@ -125,7 +153,8 @@ function cardBankLinks(workspaceId: number, banks: BankAccount[], cards: CardAcc
   if (cards.length === 1) {
     const perBank = counts.get(cards[0].account)!;
     for (const t of own) {
-      if (ANY_CARD_PAYMENT.test(t.description)) perBank.set(t.account, (perBank.get(t.account) ?? 0) + 1);
+      if (ANY_CARD_PAYMENT.test(t.description))
+        perBank.set(t.account, (perBank.get(t.account) ?? 0) + 1);
     }
   }
 
@@ -140,7 +169,11 @@ function cardBankLinks(workspaceId: number, banks: BankAccount[], cards: CardAcc
 }
 
 /** Average monthly income that lands directly in each bank account, from the last 3 complete months. */
-function incomeByAccount(workspaceId: number, today: string, banks: BankAccount[]): Map<string, number> {
+function incomeByAccount(
+  workspaceId: number,
+  today: string,
+  banks: BankAccount[],
+): Map<string, number> {
   const [y, m] = today.split("-").map(Number);
   const from = new Date(Date.UTC(y, m - 1 - 3, 1)).toISOString().slice(0, 10);
   const to = `${today.slice(0, 7)}-01`;
@@ -149,12 +182,13 @@ function incomeByAccount(workspaceId: number, today: string, banks: BankAccount[
       `SELECT account_number AS account, SUM(charged_amount) AS amount FROM transactions
        WHERE workspace_id = ? AND kind = 'income' AND status = 'completed' AND is_excluded = 0
          AND date >= ? AND date < ?
-       GROUP BY account_number`
+       GROUP BY account_number`,
     )
     .all(workspaceId, from, to) as { account: string; amount: number }[];
   const bankSet = new Set(banks.map((b) => b.account));
   const out = new Map<string, number>();
-  for (const r of rows) if (bankSet.has(r.account) && r.amount > 0) out.set(r.account, r.amount / 3);
+  for (const r of rows)
+    if (bankSet.has(r.account) && r.amount > 0) out.set(r.account, r.amount / 3);
   return out;
 }
 
@@ -162,20 +196,30 @@ function incomeByAccount(workspaceId: number, today: string, banks: BankAccount[
  * Everyday spend per day on each bank account: cash, Bit, debit purchases and one-off debits,
  * after taking out the recurring items that are forecast separately.
  */
-function dailyRates(workspaceId: number, today: string, banks: BankAccount[], series: { account: string; status: string; cadence: string; expectedAmount: number }[]): Map<string, number> {
+function dailyRates(
+  workspaceId: number,
+  today: string,
+  banks: BankAccount[],
+  series: { account: string; status: string; cadence: string; expectedAmount: number }[],
+): Map<string, number> {
   const from = addDays(today, -WINDOW_DAYS);
   const rows = getDb()
     .prepare(
       `SELECT account_number AS account, SUM(-charged_amount) AS amount FROM transactions
        WHERE workspace_id = ? AND kind = 'expense' AND status = 'completed' AND is_excluded = 0 AND date >= ?
-       GROUP BY account_number`
+       GROUP BY account_number`,
     )
     .all(workspaceId, from) as { account: string; amount: number }[];
   const bankSet = new Set(banks.map((b) => b.account));
   const recurring = new Map<string, number>();
   for (const s of series) {
     if (s.status !== "suggested") continue;
-    const perMonth = s.cadence === "weekly" ? s.expectedAmount * (52 / 12) : s.cadence === "yearly" ? s.expectedAmount / 12 : s.expectedAmount;
+    const perMonth =
+      s.cadence === "weekly"
+        ? s.expectedAmount * (52 / 12)
+        : s.cadence === "yearly"
+          ? s.expectedAmount / 12
+          : s.expectedAmount;
     recurring.set(s.account, (recurring.get(s.account) ?? 0) + perMonth);
   }
   const out = new Map<string, number>();
@@ -191,7 +235,11 @@ function dailyRates(workspaceId: number, today: string, banks: BankAccount[], se
  * The 90-day balance of every bank account: salary, card statements mapped to the bank that pays
  * them, recurring debits, planned purchases and everyday spending, each with a low/high band.
  */
-export function buildAccountsForecast(workspaceId: number, today = israelToday(), days = WINDOW_DAYS): BalanceForecastPayload | null {
+export function buildAccountsForecast(
+  workspaceId: number,
+  today = israelToday(),
+  days = WINDOW_DAYS,
+): BalanceForecastPayload | null {
   const banks = bankAccounts(workspaceId);
   if (!banks.length) return null;
 
@@ -222,11 +270,23 @@ export function buildAccountsForecast(workspaceId: number, today = israelToday()
   for (const o of bankObligations(workspaceId, insights.series, tomorrow, horizonEnd)) {
     const account = o.account && bankSet.has(o.account) ? o.account : primary?.account;
     if (!account) continue;
-    events.push({ date: o.date, account, name: o.name, amount: -o.total, kind: "recurring", estimated: true });
+    events.push({
+      date: o.date,
+      account,
+      name: o.name,
+      amount: -o.total,
+      kind: "recurring",
+      estimated: true,
+    });
   }
 
   // Card statements land in the bank that pays the card.
-  for (const bill of forecastCards({ today, cards: insights.cards, series: insights.series, installments: insights.installments })) {
+  for (const bill of forecastCards({
+    today,
+    cards: insights.cards,
+    series: insights.series,
+    installments: insights.installments,
+  })) {
     if (!bill.account || bill.date < tomorrow || bill.date > horizonEnd) continue;
     const account = bankOf.get(bill.account) ?? primary?.account;
     if (!account) continue;
@@ -245,7 +305,12 @@ export function buildAccountsForecast(workspaceId: number, today = israelToday()
   // Planned purchases: a bank item leaves its own account, a card item leaves with the statement.
   for (const p of plannedPaymentsForForecast(workspaceId, today, billingDay)) {
     if (!p.account) continue;
-    const account = p.accountKind === "bank" ? (bankSet.has(p.account) ? p.account : primary?.account) : (bankOf.get(p.account) ?? primary?.account);
+    const account =
+      p.accountKind === "bank"
+        ? bankSet.has(p.account)
+          ? p.account
+          : primary?.account
+        : (bankOf.get(p.account) ?? primary?.account);
     if (!account) continue;
     // A date that passed without the row arriving is still expected, from tomorrow.
     const date = p.chargeDate < tomorrow ? tomorrow : p.chargeDate;

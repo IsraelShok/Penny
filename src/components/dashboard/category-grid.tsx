@@ -6,23 +6,17 @@ import { CategoryCard } from "./category-card";
 import dynamic from "next/dynamic";
 
 // recharts lives in the sheet; it is an overlay, so no placeholder is needed.
-const BudgetDetailSheet = dynamic(() => import("./budget-detail-sheet").then((m) => m.BudgetDetailSheet), { ssr: false });
+const BudgetDetailSheet = dynamic(
+  () => import("./budget-detail-sheet").then((m) => m.BudgetDetailSheet),
+  { ssr: false },
+);
 import { MoveFrom, MovedIn } from "./move-from";
 import { moveTarget, type BudgetMove } from "@/lib/budget-moves";
 import { Skeleton } from "@/components/ui/skeleton";
-import type {
-  BudgetStatus,
-  CategoryViewMode,
-  CategoryWithData,
-} from "@/lib/types";
+import type { BudgetStatus, CategoryViewMode, CategoryWithData } from "@/lib/types";
 
 type Filter = "all" | "needs-action" | BudgetStatus;
-type Sort =
-  | "budgeted-first"
-  | "most-spent"
-  | "least-spent"
-  | "alphabetical"
-  | "over-pace";
+type Sort = "budgeted-first" | "most-spent" | "least-spent" | "alphabetical" | "over-pace";
 
 interface CategoryGridProps {
   categories: CategoryWithData[];
@@ -88,20 +82,17 @@ export function CategoryGrid({
   ];
 
   const activeCategories = useMemo(
-    () =>
-      categories.filter(
-        (c) => c.spent > 0 || (!c.isAutoBudget && c.budget > 0)
-      ),
-    [categories]
+    () => categories.filter((c) => c.spent > 0 || (!c.isAutoBudget && c.budget > 0)),
+    [categories],
   );
 
   const visible = useMemo(() => {
     if (viewMode === "collapsed") {
       const parentIds = new Set(
-        activeCategories.filter((c) => c.isParent).map((c) => c.categoryId)
+        activeCategories.filter((c) => c.isParent).map((c) => c.categoryId),
       );
       return activeCategories.filter(
-        (c) => c.isParent || c.parentId == null || !parentIds.has(c.parentId)
+        (c) => c.isParent || c.parentId == null || !parentIds.has(c.parentId),
       );
     }
     return activeCategories.filter((c) => !c.isParent);
@@ -169,19 +160,13 @@ export function CategoryGrid({
             </div>
             {hasUncategorized ? (
               <>
-                <h3 className="font-semibold text-2xl">
-                  {t("emptyUncategorizedTitle")}
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {t("emptyUncategorizedBody")}
-                </p>
+                <h3 className="font-semibold text-2xl">{t("emptyUncategorizedTitle")}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{t("emptyUncategorizedBody")}</p>
               </>
             ) : (
               <>
                 <h3 className="font-semibold text-2xl">{t("emptyNoSpendTitle")}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {t("emptyNoSpendBody")}
-                </p>
+                <p className="mt-2 text-sm text-muted-foreground">{t("emptyNoSpendBody")}</p>
               </>
             )}
           </div>
@@ -196,24 +181,26 @@ export function CategoryGrid({
         <div className="flex min-w-0 max-w-full items-center gap-3">
           <h2 className="text-title font-semibold">{t("budgetsHeading")}</h2>
           <div className="no-scrollbar flex min-w-0 gap-1.5 overflow-x-auto sm:flex-wrap">
-            {filterLabels.filter((f) => f.id === "all" || counts[f.id] > 0 || filter === f.id).map((f) => {
-              const active = filter === f.id;
-              const count = counts[f.id];
-              return (
-                <button
-                  key={f.id}
-                  onClick={() => setFilter(f.id)}
-                  className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring ${
-                    active
-                      ? "bg-primary/10 font-semibold text-primary"
-                      : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-                  }`}
-                >
-                  {f.label}
-                  <span className="tabular-nums">{count}</span>
-                </button>
-              );
-            })}
+            {filterLabels
+              .filter((f) => f.id === "all" || counts[f.id] > 0 || filter === f.id)
+              .map((f) => {
+                const active = filter === f.id;
+                const count = counts[f.id];
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => setFilter(f.id)}
+                    className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring ${
+                      active
+                        ? "bg-primary/10 font-semibold text-primary"
+                        : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                    }`}
+                  >
+                    {f.label}
+                    <span className="tabular-nums">{count}</span>
+                  </button>
+                );
+              })}
           </div>
         </div>
       </div>
@@ -234,7 +221,15 @@ export function CategoryGrid({
                 return (
                   <>
                     <MovedIn card={c} rows={categories} month={month} moves={moves} />
-                    {target && <MoveFrom target={target} card={c} rows={categories} month={month} moves={moves} />}
+                    {target && (
+                      <MoveFrom
+                        target={target}
+                        card={c}
+                        rows={categories}
+                        month={month}
+                        moves={moves}
+                      />
+                    )}
                   </>
                 );
               })()}

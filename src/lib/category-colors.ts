@@ -4,13 +4,17 @@
  * distinguishable but read as one family. Pure, shared by the server and the client.
  */
 
-export interface Oklch { l: number; c: number; h: number }
+export interface Oklch {
+  l: number;
+  c: number;
+  h: number;
+}
 
 const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
 const toGamma = (v: number) => (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055);
 
 export function hexToOklch(hex: string): Oklch {
-  const n = parseInt(hex.replace("#", "").slice(0, 6), 16);
+  const n = Number.parseInt(hex.replace("#", "").slice(0, 6), 16);
   const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => toLinear(v / 255));
   const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
   const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
@@ -22,7 +26,8 @@ export function hexToOklch(hex: string): Oklch {
 }
 
 function oklchToRgb({ l: L, c, h }: Oklch): [number, number, number] {
-  const A = c * Math.cos((h * Math.PI) / 180), B = c * Math.sin((h * Math.PI) / 180);
+  const A = c * Math.cos((h * Math.PI) / 180),
+    B = c * Math.sin((h * Math.PI) / 180);
   const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
   const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
   const s = (L - 0.0894841775 * A - 1.291485548 * B) ** 3;
@@ -35,9 +40,21 @@ function oklchToRgb({ l: L, c, h }: Oklch): [number, number, number] {
 
 /** #RRGGBB for an OKLCH color; chroma is lowered until it fits sRGB so the hue holds. */
 export function oklchToHex(color: Oklch): string {
-  let c = color.c, rgb = oklchToRgb(color);
-  while (c > 0 && rgb.some((v) => v < -1e-4 || v > 1 + 1e-4)) rgb = oklchToRgb({ ...color, c: (c = Math.max(0, c - 0.005)) });
-  return "#" + rgb.map((v) => Math.round(Math.min(1, Math.max(0, toGamma(Math.max(0, v)))) * 255).toString(16).padStart(2, "0")).join("").toUpperCase();
+  let c = color.c,
+    rgb = oklchToRgb(color);
+  while (c > 0 && rgb.some((v) => v < -1e-4 || v > 1 + 1e-4))
+    rgb = oklchToRgb({ ...color, c: (c = Math.max(0, c - 0.005)) });
+  return (
+    "#" +
+    rgb
+      .map((v) =>
+        Math.round(Math.min(1, Math.max(0, toGamma(Math.max(0, v)))) * 255)
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+      .toUpperCase()
+  );
 }
 
 /** Subcategory lightness bands: 0.60-0.84 reads as a pastel dot on white and on the dark card. */
@@ -48,7 +65,11 @@ const CHILD_H = [0, 14, -14];
 export function childColor(parentHex: string, index: number): string {
   const p = hexToOklch(parentHex);
   const i = Math.max(0, Math.floor(index));
-  return oklchToHex({ l: CHILD_L[i % CHILD_L.length], c: p.c, h: p.h + CHILD_H[Math.floor(i / CHILD_L.length) % CHILD_H.length] });
+  return oklchToHex({
+    l: CHILD_L[i % CHILD_L.length],
+    c: p.c,
+    h: p.h + CHILD_H[Math.floor(i / CHILD_L.length) % CHILD_H.length],
+  });
 }
 
 /** Swatches offered when creating a subcategory: the group's family. */

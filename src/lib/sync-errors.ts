@@ -29,7 +29,13 @@ export type SyncErrorKey = keyof typeof SYNC_ERRORS;
 export function parseSyncError(message: string): { key: SyncErrorKey | null; detail: string } {
   for (const [key, text] of Object.entries(SYNC_ERRORS) as [SyncErrorKey, string][]) {
     if (message.startsWith(text)) {
-      return { key, detail: message.slice(text.length).trim().replace(/^\(([\s\S]*)\)$/, "$1") };
+      return {
+        key,
+        detail: message
+          .slice(text.length)
+          .trim()
+          .replace(/^\(([\s\S]*)\)$/, "$1"),
+      };
     }
   }
   return { key: null, detail: message };

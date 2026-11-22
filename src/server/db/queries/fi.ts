@@ -21,7 +21,7 @@ export function getMonthlyAverages(workspaceId: number, today = new Date()) {
       `SELECT substr(t.date, 1, 7) as month,
          COALESCE(SUM(CASE WHEN t.kind = 'income' THEN t.personal_amount END), 0) as income,
          COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN -t.personal_amount END), 0) as expenses
-       FROM transactions t WHERE ${BASE} GROUP BY month`
+       FROM transactions t WHERE ${BASE} GROUP BY month`,
     )
     .all(workspaceId, w.from, w.to) as { income: number; expenses: number }[];
   const n = rows.length;
@@ -33,17 +33,22 @@ export function getMonthlyAverages(workspaceId: number, today = new Date()) {
 }
 
 /** Personal inflation: how each top-level category's spend changed year on year, weighted by this year's share. */
-export function getPersonalInflation(workspaceId: number, today = new Date()): FiPayload["inflation"] {
+export function getPersonalInflation(
+  workspaceId: number,
+  today = new Date(),
+): FiPayload["inflation"] {
   const db = getDb();
   const sum = (from: string, to: string) =>
     new Map(
-      (db
-        .prepare(
-          `SELECT COALESCE(c.parent_id, c.id) as key, SUM(-t.personal_amount) as amount
+      (
+        db
+          .prepare(
+            `SELECT COALESCE(c.parent_id, c.id) as key, SUM(-t.personal_amount) as amount
            FROM category_transactions t JOIN categories c ON c.id = t.category_id
-           WHERE ${BASE} AND t.kind = 'expense' GROUP BY key`
-        )
-        .all(workspaceId, from, to) as { key: number; amount: number }[]).map((r) => [r.key, r.amount])
+           WHERE ${BASE} AND t.kind = 'expense' GROUP BY key`,
+          )
+          .all(workspaceId, from, to) as { key: number; amount: number }[]
+      ).map((r) => [r.key, r.amount]),
     );
   const cur = window(today, 0, 12);
   const prev = window(today, 12, 12);
@@ -60,7 +65,15 @@ export function getPersonalInflation(workspaceId: number, today = new Date()): F
     .map((c) => {
       const cv = current.get(c.id)!;
       const pv = previous.get(c.id)!;
-      return { categoryId: c.id, name: c.name, color: c.color, previous: pv, current: cv, change: cv / pv - 1, weight: cv / total };
+      return {
+        categoryId: c.id,
+        name: c.name,
+        color: c.color,
+        previous: pv,
+        current: cv,
+        change: cv / pv - 1,
+        weight: cv / total,
+      };
     })
     .sort((a, b) => b.weight - a.weight);
   return {

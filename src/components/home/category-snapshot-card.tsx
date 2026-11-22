@@ -50,10 +50,7 @@ function Row({ item }: { item: HomeCategorySnapshotItem }) {
     <div className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span
-            className="h-2.5 w-2.5 shrink-0 rounded-sm"
-            style={{ backgroundColor: color }}
-          />
+          <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: color }} />
           <span className="truncate text-sm font-medium">{name}</span>
         </div>
         <div className="shrink-0 text-end">

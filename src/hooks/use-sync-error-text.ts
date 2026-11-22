@@ -9,7 +9,8 @@ export function useSyncErrorText() {
     const { key, detail } = parseSyncError(message);
     if (key) return { message: t(key), detail: detail || null };
     // Unmapped scraper text is English; in Hebrew show a generic line and keep the raw text as detail.
-    if (locale === "he" && !/[֐-׿]/.test(message)) return { message: t("unknown"), detail: message || null };
+    if (locale === "he" && !/[֐-׿]/.test(message))
+      return { message: t("unknown"), detail: message || null };
     return { message, detail: null };
   };
 }

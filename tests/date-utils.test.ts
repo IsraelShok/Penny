@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { addDays, addMonths, daysBetween, israelDay, israelToday, monthKey } from "@/server/lib/date-utils";
+import {
+  addDays,
+  addMonths,
+  daysBetween,
+  israelDay,
+  israelToday,
+  monthKey,
+} from "@/server/lib/date-utils";
 
 describe("date helpers", () => {
   it("addMonths clamps to the month length and rolls the year", () => {

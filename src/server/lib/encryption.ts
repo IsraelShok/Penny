@@ -18,7 +18,7 @@ export function legacyKeyPath(): string {
   return path.join(process.cwd(), "data", ".encryption-key");
 }
 
-function assertKeyFileMode(stat: fs.Stats, file: string): void {
+export function assertKeyFileMode(stat: fs.Stats, file: string): void {
   // POSIX-only. Windows NTFS ACLs don't map to mode bits meaningfully,
   // so skip there and rely on the default user profile permissions.
   if (process.platform === "win32") return;
@@ -29,6 +29,18 @@ function assertKeyFileMode(stat: fs.Stats, file: string): void {
       `Refusing to read encryption key: ${file} has mode ${mode.toString(8).padStart(3, "0")}, expected 600. ` +
         `Fix with: chmod 600 ${file}`,
     );
+  }
+}
+
+/** SECURITY.md: a key file readable by others stops the server at startup, not at first use. */
+export function checkKeyFileAtStartup(): void {
+  const file = keyPath();
+  if (!fs.existsSync(file)) return;
+  try {
+    assertKeyFileMode(fs.statSync(file), file);
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err);
+    process.exit(1);
   }
 }
 
@@ -103,10 +115,7 @@ export function encrypt(plaintext: string): EncryptedData {
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
-  const encrypted = Buffer.concat([
-    cipher.update(plaintext, "utf-8"),
-    cipher.final(),
-  ]);
+  const encrypted = Buffer.concat([cipher.update(plaintext, "utf-8"), cipher.final()]);
   const authTag = cipher.getAuthTag();
 
   return { encrypted, iv, authTag };
@@ -114,11 +123,8 @@ export function encrypt(plaintext: string): EncryptedData {
 
 export function decrypt(data: EncryptedData): string {
   const key = getKey();
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, data.iv);
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, data.iv, { authTagLength: 16 });
   decipher.setAuthTag(data.authTag);
 
-  return Buffer.concat([
-    decipher.update(data.encrypted),
-    decipher.final(),
-  ]).toString("utf-8");
+  return Buffer.concat([decipher.update(data.encrypted), decipher.final()]).toString("utf-8");
 }

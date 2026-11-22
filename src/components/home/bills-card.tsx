@@ -6,31 +6,51 @@ import { CreditCard, Repeat } from "lucide-react";
 import { CardShell, CardAction } from "./card-shell";
 import type { InsightsPayload } from "@/lib/api";
 
-
 const monthly = (s: InsightsPayload["series"][number]) =>
-  s.cadence === "weekly" ? s.expectedAmount * 4.33 : s.cadence === "yearly" ? s.expectedAmount / 12 : s.expectedAmount;
+  s.cadence === "weekly"
+    ? s.expectedAmount * 4.33
+    : s.cadence === "yearly"
+      ? s.expectedAmount / 12
+      : s.expectedAmount;
 
 /** The soonest card bill (all cards billed that day), from the insights forecast. */
 export function NextBillCard({ data }: { data: InsightsPayload }) {
   const t = useTranslations("home");
   const tIns = useTranslations("insights");
   const locale = useLocale();
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  const first = data.forecast.filter(f => f.date >= today).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jerusalem",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const first = data.forecast
+    .filter((f) => f.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
   const sameDay = first ? data.forecast.filter((f) => f.date === first.date) : [];
   const total = sameDay.reduce((s, f) => s + f.total, 0);
 
   return (
-    <CardShell label={t("nextBill")} action={<CardAction href="/insights">{tIns("title")}</CardAction>}>
+    <CardShell
+      label={t("nextBill")}
+      action={<CardAction href="/insights">{tIns("title")}</CardAction>}
+    >
       {first ? (
         <div className="flex items-center gap-3">
-          <IconTile><CreditCard className="size-5" aria-hidden /></IconTile>
+          <IconTile>
+            <CreditCard className="size-5" aria-hidden />
+          </IconTile>
           <div className="min-w-0">
             <p className="figure text-[1.75rem] leading-tight">{shekels(total, locale)}</p>
             <p className="text-footnote text-pretty text-muted-foreground">
               {t("nextBillDetail", {
-                card: sameDay.map((f) => f.account?.slice(-4)).filter(Boolean).join(", "),
-                date: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(new Date(`${first.date}T12:00:00`)),
+                card: sameDay
+                  .map((f) => f.account?.slice(-4))
+                  .filter(Boolean)
+                  .join(", "),
+                date: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(
+                  new Date(`${first.date}T12:00:00`),
+                ),
               })}
             </p>
           </div>
@@ -50,10 +70,15 @@ export function SubscriptionsCard({ data }: { data: InsightsPayload }) {
   const total = active.reduce((s, x) => s + monthly(x), 0);
 
   return (
-    <CardShell label={t("subscriptionsTitle")} action={<CardAction href="/insights">{tIns("title")}</CardAction>}>
+    <CardShell
+      label={t("subscriptionsTitle")}
+      action={<CardAction href="/insights">{tIns("title")}</CardAction>}
+    >
       {active.length ? (
         <div className="flex items-center gap-3">
-          <IconTile><Repeat className="size-5" aria-hidden /></IconTile>
+          <IconTile>
+            <Repeat className="size-5" aria-hidden />
+          </IconTile>
           <div className="min-w-0">
             <p className="figure text-[1.75rem] leading-tight">{shekels(total, locale)}</p>
             <p className="text-footnote text-pretty text-muted-foreground">

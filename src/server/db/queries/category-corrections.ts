@@ -9,7 +9,7 @@ export function recordCorrection(
   description: string,
   aiCategoryId: number,
   userCategoryId: number,
-  kind: "expense" | "income"
+  kind: "expense" | "income",
 ): void {
   const key = normalizeMerchant(description);
   if (!key) return;
@@ -24,7 +24,7 @@ export function recordCorrection(
          user_category_id = excluded.user_category_id,
          description = excluded.description,
          kind = excluded.kind,
-         created_at = datetime('now')`
+         created_at = datetime('now')`,
     )
     .run(workspaceId, key, description, aiCategoryId, userCategoryId, kind);
 }
@@ -32,7 +32,7 @@ export function recordCorrection(
 export function getRecentCorrections(
   workspaceId: number,
   kind: "expense" | "income",
-  limit = 30
+  limit = 30,
 ): PastCorrection[] {
   const rows = getDb()
     .prepare(
@@ -44,7 +44,7 @@ export function getRecentCorrections(
          JOIN categories r ON r.id = cc.user_category_id
         WHERE cc.workspace_id = ? AND cc.kind = ?
         ORDER BY cc.created_at DESC
-        LIMIT ?`
+        LIMIT ?`,
     )
     .all(workspaceId, kind, limit) as PastCorrection[];
   return rows;

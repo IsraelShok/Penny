@@ -1,7 +1,4 @@
-import {
-  ensureOllamaRunning,
-  pullOllamaModel,
-} from "@/server/ai/ollama-manager";
+import { ensureOllamaRunning, pullOllamaModel } from "@/server/ai/ollama-manager";
 import { getGlobalSetting } from "@/server/db/queries/settings";
 import { demoBlockedResponse } from "@/server/demo/guard";
 
@@ -21,10 +18,7 @@ export async function POST(request: Request) {
     return new Response("model is required", { status: 400 });
   }
 
-  const url =
-    body.url ??
-    getGlobalSetting("ai_ollama_url") ??
-    "http://localhost:11434";
+  const url = body.url ?? getGlobalSetting("ai_ollama_url") ?? "http://localhost:11434";
   const model = body.model;
 
   const encoder = new TextEncoder();
@@ -55,8 +49,7 @@ export async function POST(request: Request) {
           const completed = progress.completed ?? 0;
           const total = progress.total;
           const speed = elapsed > 0 ? completed / elapsed : 0;
-          const remaining =
-            total && speed > 0 ? (total - completed) / speed : null;
+          const remaining = total && speed > 0 ? (total - completed) / speed : null;
 
           // Throttle progress events to ~4/sec to avoid overwhelming the client
           const now = Date.now();
@@ -75,8 +68,7 @@ export async function POST(request: Request) {
       } catch (err) {
         console.error("[ollama-pull] error:", err);
         send("error", {
-          message:
-            err instanceof Error ? err.message : "Failed to pull model",
+          message: err instanceof Error ? err.message : "Failed to pull model",
         });
       }
 

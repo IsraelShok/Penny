@@ -8,16 +8,8 @@ import { useTranslations } from "next-intl";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  RECOMMENDED_OLLAMA_MODELS,
-  type OllamaModelInfo,
-} from "@/lib/types";
-import {
-  listOllamaModels,
-  pullOllamaModel,
-  saveAIConfig,
-  type PullEvent,
-} from "@/lib/api";
+import { RECOMMENDED_OLLAMA_MODELS, type OllamaModelInfo } from "@/lib/types";
+import { listOllamaModels, pullOllamaModel, saveAIConfig, type PullEvent } from "@/lib/api";
 
 type AIChoice = "claude" | "ollama" | "none";
 
@@ -35,18 +27,23 @@ interface PullState {
 }
 
 const TINTS = {
-  claude: { bg: "var(--tint-claude-bg)", mid: "var(--tint-claude-mid)", ink: "var(--tint-claude-ink)" },
-  ollama: { bg: "var(--tint-ollama-bg)", mid: "var(--tint-ollama-mid)", ink: "var(--tint-ollama-ink)" },
+  claude: {
+    bg: "var(--tint-claude-bg)",
+    mid: "var(--tint-claude-mid)",
+    ink: "var(--tint-claude-ink)",
+  },
+  ollama: {
+    bg: "var(--tint-ollama-bg)",
+    mid: "var(--tint-ollama-mid)",
+    ink: "var(--tint-ollama-ink)",
+  },
   none: { bg: "var(--tint-none-bg)", mid: "var(--tint-none-mid)", ink: "var(--tint-none-ink)" },
 } as const;
 
 interface ProviderMeta {
   id: AIChoice;
   titleKey: "aiProviderClaudeTitle" | "aiProviderOllamaTitle" | "aiProviderManualTitle";
-  taglineKey:
-    | "aiProviderClaudeTagline"
-    | "aiProviderOllamaTagline"
-    | "aiProviderManualTagline";
+  taglineKey: "aiProviderClaudeTagline" | "aiProviderOllamaTagline" | "aiProviderManualTagline";
   icon: string;
   recommended?: boolean;
 }
@@ -90,7 +87,7 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
   useEffect(() => {
     if (choice !== "ollama") return;
     let cancelled = false;
-    (async () => {
+    void (async () => {
       try {
         const { models, error } = await listOllamaModels(ollamaUrl);
         if (cancelled) return;
@@ -124,29 +121,23 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
       speed: 0,
       etaSeconds: null,
     });
-    const { cancel } = pullOllamaModel(
-      ollamaModel,
-      ollamaUrl,
-      (event: PullEvent) => {
-        if (event.type === "progress") {
-          setPullState({
-            status: event.data.status,
-            completed: event.data.completed ?? 0,
-            total: event.data.total ?? 0,
-            speed: event.data.speed ?? 0,
-            etaSeconds: event.data.etaSeconds ?? null,
-          });
-        } else if (event.type === "complete") {
-          setPullState(null);
-          setInstalledModels((prev) =>
-            prev.includes(ollamaModel) ? prev : [...prev, ollamaModel]
-          );
-        } else if (event.type === "error") {
-          setPullError(event.data.message ?? t("aiOllamaFailedDownload"));
-          setPullState(null);
-        }
+    const { cancel } = pullOllamaModel(ollamaModel, ollamaUrl, (event: PullEvent) => {
+      if (event.type === "progress") {
+        setPullState({
+          status: event.data.status,
+          completed: event.data.completed ?? 0,
+          total: event.data.total ?? 0,
+          speed: event.data.speed ?? 0,
+          etaSeconds: event.data.etaSeconds ?? null,
+        });
+      } else if (event.type === "complete") {
+        setPullState(null);
+        setInstalledModels((prev) => (prev.includes(ollamaModel) ? prev : [...prev, ollamaModel]));
+      } else if (event.type === "error") {
+        setPullError(event.data.message ?? t("aiOllamaFailedDownload"));
+        setPullState(null);
       }
-    );
+    });
     pullCancelRef.current = cancel;
   };
 
@@ -171,22 +162,14 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
         <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           {t("aiStepLabel")}
         </div>
-        <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight">
-          {t("aiTitle")}
-        </h1>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {t("aiDescription")}
-        </p>
+        <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight">{t("aiTitle")}</h1>
+        <p className="text-sm leading-relaxed text-muted-foreground">{t("aiDescription")}</p>
       </header>
 
       <div className="flex flex-col gap-1.5">
         {PROVIDERS.map((p) => (
           <Fragment key={p.id}>
-            <ProviderRow
-              provider={p}
-              selected={choice === p.id}
-              onClick={() => setChoice(p.id)}
-            />
+            <ProviderRow provider={p} selected={choice === p.id} onClick={() => setChoice(p.id)} />
             <AnimatePresence initial={false}>
               {choice === p.id && (
                 <motion.div
@@ -236,7 +219,13 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
         <IconButton showLabel label={t("aiBackButton")} variant="outline" onClick={onBack}>
           <Back />
         </IconButton>
-        <IconButton showLabel label={saving ? t("aiSavingButton") : t("aiContinueButton")} variant="default" onClick={handleSave} disabled={!canContinue || saving}>
+        <IconButton
+          showLabel
+          label={saving ? t("aiSavingButton") : t("aiContinueButton")}
+          variant="default"
+          onClick={handleSave}
+          disabled={!canContinue || saving}
+        >
           <Forward />
         </IconButton>
       </footer>
@@ -262,9 +251,7 @@ function ProviderRow({
       className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5 text-start transition-colors hover:bg-accent/40"
       style={{
         borderColor: selected ? tint.mid : "var(--border)",
-        background: selected
-          ? `color-mix(in oklch, ${tint.bg} 35%, var(--card))`
-          : undefined,
+        background: selected ? `color-mix(in oklch, ${tint.bg} 35%, var(--card))` : undefined,
         borderWidth: 1.5,
       }}
     >
@@ -276,9 +263,7 @@ function ProviderRow({
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-bold tracking-tight">
-            {t(provider.titleKey)}
-          </span>
+          <span className="text-sm font-bold tracking-tight">{t(provider.titleKey)}</span>
           {provider.recommended && (
             <span
               className="rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.06em] text-white"
@@ -321,7 +306,10 @@ function ClaudeConfig({
   return (
     <div className="space-y-2 rounded-xl bg-card/60 p-4">
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor="claude-api-key" className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
+        <Label
+          htmlFor="claude-api-key"
+          className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+        >
           {t("aiClaudeKeyLabel")}
         </Label>
         <a
@@ -339,7 +327,8 @@ function ClaudeConfig({
           type={showKey ? "text" : "password"}
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
-          placeholder="sk-ant-api03-…" dir="ltr"
+          placeholder="sk-ant-api03-…"
+          dir="ltr"
           className="font-mono pe-14"
         />
         <button
@@ -350,9 +339,7 @@ function ClaudeConfig({
           {showKey ? t("aiClaudeHide") : t("aiClaudeShow")}
         </button>
       </div>
-      <p className="text-xs text-muted-foreground">
-        {t("aiClaudeEncryptedNote")}
-      </p>
+      <p className="text-xs text-muted-foreground">{t("aiClaudeEncryptedNote")}</p>
     </div>
   );
 }
@@ -388,9 +375,7 @@ function OllamaConfig({
         className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium"
         style={{
           background:
-            reachable === false
-              ? "rgba(232, 153, 104, 0.18)"
-              : "rgba(168, 209, 141, 0.22)",
+            reachable === false ? "rgba(232, 153, 104, 0.18)" : "rgba(168, 209, 141, 0.22)",
           color: reachable === false ? "var(--tint-warn-ink)" : "var(--tint-ollama-ink)",
         }}
       >
@@ -418,7 +403,10 @@ function OllamaConfig({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="ollama-url" className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
+        <Label
+          htmlFor="ollama-url"
+          className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+        >
           {t("aiOllamaServerUrl")}
         </Label>
         <Input
@@ -446,18 +434,14 @@ function OllamaConfig({
               }`}
             >
               <div className="flex items-baseline justify-between gap-1">
-                <span className="truncate text-xs font-bold tracking-tight">
-                  {m.name}
-                </span>
+                <span className="truncate text-xs font-bold tracking-tight">{m.name}</span>
                 {m.recommended && (
                   <span className="rounded-full bg-primary/10 px-1 py-0 text-[8px] font-bold uppercase tracking-wider text-primary">
                     {t("aiRecShort")}
                   </span>
                 )}
               </div>
-              <div className="mt-0.5 font-mono text-xs text-muted-foreground">
-                {m.sizeGb} GB
-              </div>
+              <div className="mt-0.5 font-mono text-xs text-muted-foreground">{m.sizeGb} GB</div>
               <p className="mt-1 text-xs leading-snug text-muted-foreground">
                 {tModels.has(m.name.replace(/[^a-zA-Z0-9]/g, "_"))
                   ? tModels(m.name.replace(/[^a-zA-Z0-9]/g, "_"))
@@ -513,9 +497,7 @@ function OllamaPullCTA({
 }) {
   const t = useTranslations("setup");
   const tCommon = useTranslations("common");
-  const info: OllamaModelInfo | undefined = RECOMMENDED_OLLAMA_MODELS.find(
-    (m) => m.name === model
-  );
+  const info: OllamaModelInfo | undefined = RECOMMENDED_OLLAMA_MODELS.find((m) => m.name === model);
 
   if (installed) {
     return (
@@ -527,16 +509,12 @@ function OllamaPullCTA({
 
   if (pullState) {
     const percent =
-      pullState.total > 0
-        ? Math.round((pullState.completed / pullState.total) * 100)
-        : 0;
+      pullState.total > 0 ? Math.round((pullState.completed / pullState.total) * 100) : 0;
     return (
       <div className="space-y-2 rounded-lg border border-border bg-background/50 p-2.5">
         <div className="flex items-center justify-between text-[12px]">
           <span className="font-medium">
-            {pullState.status === "starting"
-              ? t("aiOllamaStartingDownload")
-              : pullState.status}
+            {pullState.status === "starting" ? t("aiOllamaStartingDownload") : pullState.status}
           </span>
           <button
             type="button"
@@ -556,8 +534,7 @@ function OllamaPullCTA({
         </div>
         <div className="flex items-center justify-between text-xs tabular-nums text-muted-foreground">
           <span>
-            {formatBytes(pullState.completed)} / {formatBytes(pullState.total)}{" "}
-            ({percent}%)
+            {formatBytes(pullState.completed)} / {formatBytes(pullState.total)} ({percent}%)
           </span>
           <span>
             {pullState.speed > 0 ? `${formatBytes(pullState.speed)}/s` : ""}
@@ -584,9 +561,7 @@ function OllamaPullCTA({
       >
         <Download className="size-4" aria-hidden />
       </IconButton>
-      {pullError && (
-        <p className="text-xs text-destructive">{pullError}</p>
-      )}
+      {pullError && <p className="text-xs text-destructive">{pullError}</p>}
     </div>
   );
 }

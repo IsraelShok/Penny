@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import {
-  getAppSettings,
-  updateAppSettings,
-} from "@/server/db/queries/settings";
+import { getAppSettings, updateAppSettings } from "@/server/db/queries/settings";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { profileFromRequest } from "@/server/db/queries/profiles";
 import { LOCALE_COOKIE } from "@/i18n/routing";
 
 export async function GET(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  return NextResponse.json(getAppSettings(workspaceId, profileFromRequest(request, workspaceId)?.name));
+  return NextResponse.json(
+    getAppSettings(workspaceId, profileFromRequest(request, workspaceId)?.name),
+  );
 }
 
 export async function PUT(request: Request) {

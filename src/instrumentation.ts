@@ -1,5 +1,7 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  const { checkKeyFileAtStartup } = await import("@/server/lib/encryption");
+  checkKeyFileAtStartup();
   const { initScheduler } = await import("@/server/sync/scheduler");
   initScheduler();
   const { initLegacyExportSchedule } = await import("@/server/lib/legacy-export");

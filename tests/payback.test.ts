@@ -26,16 +26,27 @@ describe("paybackPair", () => {
   });
 
   it("refuses transfers and hidden rows", () => {
-    expect(paybackPair(expense, side({ id: 2, kind: "transfer" }))).toEqual({ ok: false, code: "transfer" });
-    expect(paybackPair(expense, side({ id: 2, kind: "income", amount: 100, isExcluded: true }))).toEqual({
+    expect(paybackPair(expense, side({ id: 2, kind: "transfer" }))).toEqual({
+      ok: false,
+      code: "transfer",
+    });
+    expect(
+      paybackPair(expense, side({ id: 2, kind: "income", amount: 100, isExcluded: true })),
+    ).toEqual({
       ok: false,
       code: "excluded",
     });
   });
 
   it("refuses two expenses or two credits", () => {
-    expect(paybackPair(expense, side({ id: 2, amount: -100 }))).toEqual({ ok: false, code: "not-pair" });
-    expect(paybackPair(credit, side({ id: 3, amount: 90, kind: "income" }))).toEqual({ ok: false, code: "not-pair" });
+    expect(paybackPair(expense, side({ id: 2, amount: -100 }))).toEqual({
+      ok: false,
+      code: "not-pair",
+    });
+    expect(paybackPair(credit, side({ id: 3, amount: 90, kind: "income" }))).toEqual({
+      ok: false,
+      code: "not-pair",
+    });
   });
 
   it("refuses a card refund as the credit: it already nets against its own charge", () => {

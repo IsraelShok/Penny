@@ -37,12 +37,8 @@ export function MonthlyTargetStep({ onComplete, onBack }: MonthlyTargetStepProps
         <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           {t("targetStep")}
         </div>
-        <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight">
-          {t("targetTitle")}
-        </h1>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {t("targetDescription")}
-        </p>
+        <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight">{t("targetTitle")}</h1>
+        <p className="text-sm leading-relaxed text-muted-foreground">{t("targetDescription")}</p>
       </header>
 
       <div className="flex items-start gap-3 rounded-xl bg-card/60 p-3">
@@ -77,16 +73,21 @@ export function MonthlyTargetStep({ onComplete, onBack }: MonthlyTargetStepProps
             autoFocus
           />
         </InputGroup>
-        <p className="text-xs text-muted-foreground">
-          {t("targetChangeHint")}
-        </p>
+        <p className="text-xs text-muted-foreground">{t("targetChangeHint")}</p>
       </div>
 
       <footer className="flex items-center justify-between pt-2">
-        <IconButton showLabel label={t("aiBackButton")} variant="outline" onClick={onBack} disabled={saving}>
+        <IconButton
+          showLabel
+          label={t("aiBackButton")}
+          variant="outline"
+          onClick={onBack}
+          disabled={saving}
+        >
           <Back />
         </IconButton>
-        <IconButton showLabel
+        <IconButton
+          showLabel
           label={saving ? t("aiSavingButton") : t("aiContinueButton")}
           variant="default"
           onClick={() => save(valid ? parsed : null)}

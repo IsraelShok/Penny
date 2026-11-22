@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { systemBin } from "../lib/system-bin.mjs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -28,7 +29,7 @@ function removeLegacyUnit() {
 }
 
 function whichNode() {
-  const r = spawnSync("which", ["node"], { encoding: "utf-8" });
+  const r = spawnSync(systemBin("which"), ["node"], { encoding: "utf-8" });
   if (r.status !== 0) throw new Error("Cannot find `node` on PATH.");
   return r.stdout.trim();
 }
@@ -57,18 +58,14 @@ function writeUnit() {
 }
 
 function systemctl(args, opts = {}) {
-  return spawnSync("systemctl", ["--user", ...args], {
+  return spawnSync(systemBin("systemctl"), ["--user", ...args], {
     encoding: "utf-8",
     stdio: opts.stdio ?? "inherit",
   });
 }
 
 function checkPortBinding() {
-  const r = spawnSync(
-    "ss",
-    ["-Hltn", `sport = :${PORT}`],
-    { encoding: "utf-8" },
-  );
+  const r = spawnSync(systemBin("ss"), ["-Hltn", `sport = :${PORT}`], { encoding: "utf-8" });
   if (r.status !== 0) {
     return { listening: false };
   }
@@ -76,14 +73,12 @@ function checkPortBinding() {
   const onLoopback = lines.some(
     (l) => l.includes(`127.0.0.1:${PORT}`) || l.includes(`[::1]:${PORT}`),
   );
-  const onWildcard = lines.some(
-    (l) => l.includes(`0.0.0.0:${PORT}`) || l.includes(`*:${PORT}`),
-  );
+  const onWildcard = lines.some((l) => l.includes(`0.0.0.0:${PORT}`) || l.includes(`*:${PORT}`));
   return { listening: lines.length > 0, onLoopback, onWildcard };
 }
 
 function ensureSystemdAvailable() {
-  const r = spawnSync("systemctl", ["--user", "is-system-running"], {
+  const r = spawnSync(systemBin("systemctl"), ["--user", "is-system-running"], {
     encoding: "utf-8",
   });
   if (r.error || (r.status !== 0 && !r.stdout)) {
@@ -97,9 +92,7 @@ function ensureSystemdAvailable() {
 
 function preflight() {
   if (!fs.existsSync(path.join(REPO_ROOT, ".next"))) {
-    console.warn(
-      "WARNING: .next/ not found. Run `npm run build` before installing the service.",
-    );
+    console.warn("WARNING: .next/ not found. Run `npm run build` before installing the service.");
   }
 }
 
@@ -158,23 +151,19 @@ export async function run(cmd, { friendlyUrl }) {
       const port = checkPortBinding();
       console.log(
         `\nPort ${PORT}: ${
-          port.onLoopback
-            ? "127.0.0.1 (ok)"
-            : port.onWildcard
-              ? "WILDCARD (NOT OK)"
-              : "not bound"
+          port.onLoopback ? "127.0.0.1 (ok)" : port.onWildcard ? "WILDCARD (NOT OK)" : "not bound"
         }`,
       );
       return;
     }
     case "logs": {
-      spawnSync("journalctl", ["--user", "-u", UNIT_NAME, "-f"], {
+      spawnSync(systemBin("journalctl"), ["--user", "-u", UNIT_NAME, "-f"], {
         stdio: "inherit",
       });
       return;
     }
     case "open": {
-      spawnSync("xdg-open", [friendlyUrl], { stdio: "inherit" });
+      spawnSync(systemBin("xdg-open"), [friendlyUrl], { stdio: "inherit" });
       return;
     }
   }

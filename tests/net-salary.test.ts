@@ -29,6 +29,9 @@ describe("netSalary", () => {
   });
 
   it("extra credit points lower the tax", () => {
-    expect(netSalary({ gross: 15_000, sex: "man", extraPoints: 1 }).incomeTax).toBeCloseTo(netSalary({ gross: 15_000, sex: "man" }).incomeTax - 242, 5);
+    expect(netSalary({ gross: 15_000, sex: "man", extraPoints: 1 }).incomeTax).toBeCloseTo(
+      netSalary({ gross: 15_000, sex: "man" }).incomeTax - 242,
+      5,
+    );
   });
 });

@@ -30,8 +30,18 @@ import { childColor, familySwatches } from "@/lib/category-colors";
 import type { Category, CategoryKind } from "@/lib/types";
 
 export const CATEGORY_COLORS = [
-  "#81B482", "#E89B80", "#65AFD2", "#DCB87A", "#E499A4", "#75BCA3",
-  "#94A0DD", "#AB9DDB", "#D5A4D7", "#E5D080", "#A57B5B", "#A2AAC2",
+  "#81B482",
+  "#E89B80",
+  "#65AFD2",
+  "#DCB87A",
+  "#E499A4",
+  "#75BCA3",
+  "#94A0DD",
+  "#AB9DDB",
+  "#D5A4D7",
+  "#E5D080",
+  "#A57B5B",
+  "#A2AAC2",
 ];
 const NO_GROUP = "none";
 
@@ -68,10 +78,10 @@ export function NewCategoryDialog({
   const duplicate = categories.some(
     (c) =>
       c.name.toLowerCase() === trimmed.toLowerCase() ||
-      translateCategoryName(c.name, tCat).toLowerCase() === trimmed.toLowerCase()
+      translateCategoryName(c.name, tCat).toLowerCase() === trimmed.toLowerCase(),
   );
   const groups = categories.filter(
-    (c) => c.kind === k && c.parentId == null && categories.some((x) => x.parentId === c.id)
+    (c) => c.kind === k && c.parentId == null && categories.some((x) => x.parentId === c.id),
   );
   const parent = groups.find((g) => String(g.id) === group);
   // Under a group, offer its color family and preselect the next shade.
@@ -79,7 +89,11 @@ export function NewCategoryDialog({
   const pickGroup = (v: string) => {
     setGroup(v);
     const p = groups.find((g) => String(g.id) === v);
-    setColor(p ? childColor(p.color, categories.filter((c) => c.parentId === p.id).length) : CATEGORY_COLORS[0]);
+    setColor(
+      p
+        ? childColor(p.color, categories.filter((c) => c.parentId === p.id).length)
+        : CATEGORY_COLORS[0],
+    );
   };
 
   const mutation = useMutation({
@@ -92,8 +106,8 @@ export function NewCategoryDialog({
         parentId: group === NO_GROUP ? null : Number(group),
       }),
     onSuccess: (cat) => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["summary"] });
       toast.success(t("createdToast", { name: cat.name }));
       setName("");
       onOpenChange(false);
@@ -175,7 +189,7 @@ export function NewCategoryDialog({
                         ? t("newCategoryNoGroup")
                         : translateCategoryName(
                             groups.find((g) => String(g.id) === v)?.name ?? "",
-                            tCat
+                            tCat,
                           )
                     }
                   </SelectValue>
@@ -203,10 +217,14 @@ export function NewCategoryDialog({
                   onClick={() => setIcon(key)}
                   className={cn(
                     "grid size-9 place-items-center rounded-lg border border-transparent text-muted-foreground hover:bg-accent",
-                    icon === key && "border-foreground/40 bg-accent text-foreground"
+                    icon === key && "border-foreground/40 bg-accent text-foreground",
                   )}
                 >
-                  <Icon aria-hidden className="size-4" style={icon === key ? { color } : undefined} />
+                  <Icon
+                    aria-hidden
+                    className="size-4"
+                    style={icon === key ? { color } : undefined}
+                  />
                 </button>
               ))}
             </div>
@@ -223,7 +241,7 @@ export function NewCategoryDialog({
                   onClick={() => setColor(c)}
                   className={cn(
                     "size-7 rounded-full ring-offset-2 ring-offset-background",
-                    color === c && "ring-2 ring-foreground"
+                    color === c && "ring-2 ring-foreground",
                   )}
                   style={{ backgroundColor: c }}
                 />

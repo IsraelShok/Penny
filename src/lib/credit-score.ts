@@ -1,4 +1,10 @@
-export interface CreditScore { id: number; date: string; bureau: string; score: number; note: string }
+export interface CreditScore {
+  id: number;
+  date: string;
+  bureau: string;
+  score: number;
+  note: string;
+}
 
 /** The newest score, its change from the one before, and whether a year has passed so a new free report is due. */
 export function creditTrend(entries: CreditScore[], today: string) {

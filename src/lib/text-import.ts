@@ -17,16 +17,28 @@ export function parseExtractedRows(raw: string): ExtractedRow[] {
   const end = raw.lastIndexOf("]");
   if (start < 0 || end <= start) return [];
   let data: unknown;
-  try { data = JSON.parse(raw.slice(start, end + 1)); } catch { return []; }
+  try {
+    data = JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    return [];
+  }
   if (!Array.isArray(data)) return [];
   const out: ExtractedRow[] = [];
   for (const r of data) {
     if (!r || typeof r !== "object") continue;
     const { date, description, amount, kind } = r as Record<string, unknown>;
-    const n = typeof amount === "number" ? amount : Number(String(amount ?? "").replace(/[,₪\s]/g, ""));
-    if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) continue;
-    if (typeof description !== "string" || !description.trim() || !Number.isFinite(n) || n === 0) continue;
-    const k = kind === "income" ? "income" : kind === "expense" ? "expense" : n < 0 ? "expense" : "income";
+    const n =
+      typeof amount === "number" ? amount : Number(String(amount ?? "").replace(/[,₪\s]/g, ""));
+    if (
+      typeof date !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+      Number.isNaN(Date.parse(date))
+    )
+      continue;
+    if (typeof description !== "string" || !description.trim() || !Number.isFinite(n) || n === 0)
+      continue;
+    const k =
+      kind === "income" ? "income" : kind === "expense" ? "expense" : n < 0 ? "expense" : "income";
     out.push({ date, description: description.trim().slice(0, 120), amount: Math.abs(n), kind: k });
     if (out.length >= MAX_ROWS) break;
   }
@@ -35,5 +47,8 @@ export function parseExtractedRows(raw: string): ExtractedRow[] {
 
 /** The rows as a pasted sheet: a header the column guesser knows, then one line per row. */
 export function extractedToTable(rows: ExtractedRow[]): string[][] {
-  return [["date", "description", "amount", "type"], ...rows.map((r) => [r.date, r.description, String(r.amount), r.kind])];
+  return [
+    ["date", "description", "amount", "type"],
+    ...rows.map((r) => [r.date, r.description, String(r.amount), r.kind]),
+  ];
 }

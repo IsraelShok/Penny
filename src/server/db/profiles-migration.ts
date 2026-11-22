@@ -6,7 +6,16 @@ import { AVATAR_ART } from "@/lib/profile-avatar";
 export const PROFILES_MIGRATION = "046_profiles.sql";
 
 // Seeded or derived on workspace creation; rows here alone don't make a workspace "have data".
-const NOT_DATA = new Set(["categories", "workspace_settings", "synced_preferences", "net_worth_daily", "profiles", "workspace_members", "access_audit", "control_audit"]);
+const NOT_DATA = new Set([
+  "categories",
+  "workspace_settings",
+  "synced_preferences",
+  "net_worth_daily",
+  "profiles",
+  "workspace_members",
+  "access_audit",
+  "control_audit",
+]);
 
 export type ProfilesReport = {
   household: number;
@@ -15,14 +24,25 @@ export type ProfilesReport = {
 };
 
 /** Rows per table (with any rows) that belong to a workspace, excluding seeded/derived tables. */
-export function workspaceDataCounts(db: Database.Database, workspaceId: number): Record<string, number> {
-  const tables = (db.prepare(
-    "SELECT m.name FROM sqlite_master m WHERE m.type='table' AND EXISTS (SELECT 1 FROM pragma_table_info(m.name) WHERE name='workspace_id')"
-  ).all() as { name: string }[]).map((r) => r.name);
+export function workspaceDataCounts(
+  db: Database.Database,
+  workspaceId: number,
+): Record<string, number> {
+  const tables = (
+    db
+      .prepare(
+        "SELECT m.name FROM sqlite_master m WHERE m.type='table' AND EXISTS (SELECT 1 FROM pragma_table_info(m.name) WHERE name='workspace_id')",
+      )
+      .all() as { name: string }[]
+  ).map((r) => r.name);
   const counts: Record<string, number> = {};
   for (const t of tables) {
     if (NOT_DATA.has(t)) continue;
-    const n = (db.prepare(`SELECT COUNT(*) AS n FROM "${t}" WHERE workspace_id = ?`).get(workspaceId) as { n: number }).n;
+    const n = (
+      db.prepare(`SELECT COUNT(*) AS n FROM "${t}" WHERE workspace_id = ?`).get(workspaceId) as {
+        n: number;
+      }
+    ).n;
     if (n) counts[t] = n;
   }
   return counts;
@@ -35,14 +55,22 @@ export function workspaceDataCounts(db: Database.Database, workspaceId: number):
  */
 export function seedProfiles(db: Database.Database): ProfilesReport | null {
   if ((db.prepare("SELECT COUNT(*) AS n FROM profiles").get() as { n: number }).n > 0) return null;
-  const workspaces = db.prepare("SELECT id, name, avatar_emoji, avatar_color FROM workspaces ORDER BY id").all() as
-    { id: number; name: string; avatar_emoji: string | null; avatar_color: string | null }[];
+  const workspaces = db
+    .prepare("SELECT id, name, avatar_emoji, avatar_color FROM workspaces ORDER BY id")
+    .all() as {
+    id: number;
+    name: string;
+    avatar_emoji: string | null;
+    avatar_color: string | null;
+  }[];
   if (!workspaces.length) return null;
   const household = workspaces[0].id;
   const report: ProfilesReport = { household, profiles: [], keptHidden: [] };
-  const insert = db.prepare("INSERT INTO profiles (workspace_id, name, avatar_emoji, avatar_color) VALUES (?, ?, ?, ?)");
+  const insert = db.prepare(
+    "INSERT INTO profiles (workspace_id, name, avatar_emoji, avatar_color) VALUES (?, ?, ?, ?)",
+  );
   const copyPrefs = db.prepare(
-    "INSERT OR IGNORE INTO synced_preferences (workspace_id, profile, key, value, revision) SELECT ?, ?, key, value, 1 FROM synced_preferences WHERE workspace_id = ? AND profile = 'local'"
+    "INSERT OR IGNORE INTO synced_preferences (workspace_id, profile, key, value, revision) SELECT ?, ?, key, value, 1 FROM synced_preferences WHERE workspace_id = ? AND profile = 'local'",
   );
   db.transaction(() => {
     for (const ws of workspaces) {
@@ -52,7 +80,9 @@ export function seedProfiles(db: Database.Database): ProfilesReport | null {
         continue;
       }
       // Keep the look the UI derived from the workspace id when no avatar was picked.
-      const emoji = ws.avatar_emoji ?? (ws.avatar_color ? null : `@${AVATAR_ART[Math.abs(ws.id - 1) % AVATAR_ART.length]}`);
+      const emoji =
+        ws.avatar_emoji ??
+        (ws.avatar_color ? null : `@${AVATAR_ART[Math.abs(ws.id - 1) % AVATAR_ART.length]}`);
       const id = Number(insert.run(household, ws.name, emoji, ws.avatar_color).lastInsertRowid);
       copyPrefs.run(household, `p${id}`, ws.id);
       report.profiles.push({ workspaceId: ws.id, profileId: id, name: ws.name });
@@ -65,15 +95,27 @@ export function seedProfiles(db: Database.Database): ProfilesReport | null {
 export function backupBeforeProfiles(db: Database.Database): string | null {
   if (!db.name || db.memory) return null;
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const target = path.join(path.dirname(db.name), `${path.basename(db.name)}.${stamp}.before-profiles.bak`);
+  const target = path.join(
+    path.dirname(db.name),
+    `${path.basename(db.name)}.${stamp}.before-profiles.bak`,
+  );
   db.prepare("VACUUM INTO ?").run(target);
   return target;
 }
 
-export function writeProfilesReport(db: Database.Database, report: ProfilesReport, backup: string | null): void {
+export function writeProfilesReport(
+  db: Database.Database,
+  report: ProfilesReport,
+  backup: string | null,
+): void {
   console.info("[profiles migration]", JSON.stringify({ ...report, backup }));
   if (!db.name || db.memory) return;
   try {
-    fs.writeFileSync(path.join(path.dirname(db.name), "profiles-migration-report.json"), JSON.stringify({ ...report, backup, at: new Date().toISOString() }, null, 2));
-  } catch { /* the console line above still records it */ }
+    fs.writeFileSync(
+      path.join(path.dirname(db.name), "profiles-migration-report.json"),
+      JSON.stringify({ ...report, backup, at: new Date().toISOString() }, null, 2),
+    );
+  } catch {
+    /* the console line above still records it */
+  }
 }

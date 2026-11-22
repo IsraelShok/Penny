@@ -46,7 +46,8 @@ export function isSafeRegex(pattern: string): boolean {
       open.push(i);
     } else if (c === ")") {
       const from = open.pop() ?? 0;
-      if (/[+*{]/.test(pattern[i + 1] ?? "") && /[+*{|]/.test(pattern.slice(from + 1, i))) return false;
+      if (/[+*{]/.test(pattern[i + 1] ?? "") && /[+*{|]/.test(pattern.slice(from + 1, i)))
+        return false;
     }
   }
   return true;
@@ -60,7 +61,8 @@ function matches(rule: Rule, txn: RuleTxn): boolean {
     return rule.op === "gt" ? amount > limit : rule.op === "lt" ? amount < limit : false;
   }
 
-  const subject = rule.field === "merchant" ? normalizeMerchant(txn.description) : txn.accountNumber;
+  const subject =
+    rule.field === "merchant" ? normalizeMerchant(txn.description) : txn.accountNumber;
   switch (rule.op) {
     case "contains":
       return subject.includes(normalizeMerchant(rule.value));

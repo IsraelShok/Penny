@@ -2,16 +2,23 @@ import { describe, expect, it } from "vitest";
 import { monthlyGrowth, wealthGroups } from "@/lib/wealth-growth";
 import type { Asset } from "@/lib/types";
 
-const asset = (p: Partial<Asset>) => ({ isLiability: false, valueIls: 1000, quote: null, fund: null, ...p }) as Asset;
+const asset = (p: Partial<Asset>) =>
+  ({ isLiability: false, valueIls: 1000, quote: null, fund: null, ...p }) as Asset;
 
 describe("wealth growth", () => {
   it("uses the close 4 weeks back for quoted assets", () => {
-    const a = asset({ type: "stock", quote: { series: [80, 100, 0, 0, 0, 125] } as Asset["quote"] });
+    const a = asset({
+      type: "stock",
+      quote: { series: [80, 100, 0, 0, 0, 125] } as Asset["quote"],
+    });
     expect(monthlyGrowth(a)).toBeCloseTo(200); // 1000 * (1 - 100/125)
   });
 
   it("spreads fund YTD over reported months", () => {
-    const a = asset({ type: "pension", fund: { fund: { ytd: 10, period: 202610 } } as Asset["fund"] });
+    const a = asset({
+      type: "pension",
+      fund: { fund: { ytd: 10, period: 202610 } } as Asset["fund"],
+    });
     expect(monthlyGrowth(a)).toBeCloseTo(1000 * (0.01 / 1.01));
   });
 

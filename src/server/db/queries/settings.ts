@@ -11,9 +11,8 @@ import { EMPTY_HOUSEHOLD, parseHousehold, type Household } from "@/lib/household
 // Currently: ai_provider, ai_ollama_url, ai_ollama_model, plus the encrypted
 // Claude API key triple (ai_api_key_encrypted/iv/auth_tag).
 export function getGlobalSetting(key: string): string | null {
-  const row = getDb()
-    .prepare("SELECT value FROM settings WHERE key = ?")
-    .get(key) as { value: string } | undefined;
+  const row = getDb().prepare("SELECT value FROM settings WHERE key = ?").get(key) as
+    { value: string } | undefined;
   return row?.value ?? null;
 }
 
@@ -21,7 +20,7 @@ export function setGlobalSetting(key: string, value: string): void {
   getDb()
     .prepare(
       `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
-       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
     )
     .run(key, value);
 }
@@ -32,30 +31,21 @@ export function deleteGlobalSetting(key: string): void {
 
 // Per-workspace settings live in `workspace_settings`.
 // Currently: months_to_sync, payday_day, scraper_show_browser.
-export function getWorkspaceSetting(
-  workspaceId: number,
-  key: string
-): string | null {
+export function getWorkspaceSetting(workspaceId: number, key: string): string | null {
   const row = getDb()
-    .prepare(
-      "SELECT value FROM workspace_settings WHERE workspace_id = ? AND key = ?"
-    )
+    .prepare("SELECT value FROM workspace_settings WHERE workspace_id = ? AND key = ?")
     .get(workspaceId, key) as { value: string } | undefined;
   return row?.value ?? null;
 }
 
-export function setWorkspaceSetting(
-  workspaceId: number,
-  key: string,
-  value: string
-): void {
+export function setWorkspaceSetting(workspaceId: number, key: string, value: string): void {
   getDb()
     .prepare(
       `INSERT INTO workspace_settings (workspace_id, key, value, updated_at)
        VALUES (?, ?, ?, datetime('now'))
        ON CONFLICT(workspace_id, key) DO UPDATE SET
          value = excluded.value,
-         updated_at = excluded.updated_at`
+         updated_at = excluded.updated_at`,
     )
     .run(workspaceId, key, value);
 }
@@ -70,7 +60,7 @@ const AUTO_SYNC_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 /** profileName: the active profile (X-Profile-ID); its name is the greeting. */
 export function getAppSettings(workspaceId: number, profileName?: string): AppSettings {
   const targetRaw = getWorkspaceSetting(workspaceId, "monthly_target");
-  const target = targetRaw != null ? Number(targetRaw) : NaN;
+  const target = targetRaw != null ? Number(targetRaw) : Number.NaN;
   const storedTime = getGlobalSetting("auto_sync_time");
   const storedLang = getGlobalSetting("language");
   return {
@@ -82,10 +72,10 @@ export function getAppSettings(workspaceId: number, profileName?: string): AppSe
     paydayDay: Number(getWorkspaceSetting(workspaceId, "payday_day") ?? "1"),
     monthlyTarget: Number.isFinite(target) && target > 0 ? target : null,
     autoSyncEnabled: getGlobalSetting("auto_sync_enabled") !== "false",
-    autoSyncTime:
-      storedTime && AUTO_SYNC_TIME_RE.test(storedTime) ? storedTime : "06:00",
+    autoSyncTime: storedTime && AUTO_SYNC_TIME_RE.test(storedTime) ? storedTime : "06:00",
     language: storedLang === "en" ? "en" : "he",
-    displayName: profileName && profileName !== "Default" ? profileName : profileDisplayName(workspaceId),
+    displayName:
+      profileName && profileName !== "Default" ? profileName : profileDisplayName(workspaceId),
     household: readHousehold(workspaceId),
   };
 }
@@ -119,7 +109,7 @@ function readHousehold(workspaceId: number): Household {
 export function updateAppSettings(
   workspaceId: number,
   settings: Partial<AppSettings>,
-  profile?: { id: number; name: string } | null
+  profile?: { id: number; name: string } | null,
 ): AppSettings {
   const db = getDb();
   const update = db.transaction(() => {
@@ -145,7 +135,7 @@ export function updateAppSettings(
       setWorkspaceSetting(
         workspaceId,
         "scraper_show_browser",
-        settings.showBrowser ? "true" : "false"
+        settings.showBrowser ? "true" : "false",
       );
     }
     if (settings.paydayDay !== undefined) {
@@ -163,19 +153,14 @@ export function updateAppSettings(
       }
       if (t == null || t <= 0) {
         getDb()
-          .prepare(
-            "DELETE FROM workspace_settings WHERE workspace_id = ? AND key = ?"
-          )
+          .prepare("DELETE FROM workspace_settings WHERE workspace_id = ? AND key = ?")
           .run(workspaceId, "monthly_target");
       } else {
         setWorkspaceSetting(workspaceId, "monthly_target", String(Math.round(t)));
       }
     }
     if (settings.autoSyncEnabled !== undefined) {
-      setGlobalSetting(
-        "auto_sync_enabled",
-        settings.autoSyncEnabled ? "true" : "false"
-      );
+      setGlobalSetting("auto_sync_enabled", settings.autoSyncEnabled ? "true" : "false");
     }
     if (settings.autoSyncTime !== undefined) {
       if (!AUTO_SYNC_TIME_RE.test(settings.autoSyncTime)) {
@@ -191,14 +176,15 @@ export function updateAppSettings(
     }
     if (settings.displayName !== undefined) {
       const name = String(settings.displayName).trim().slice(0, 40);
-      if (name && profile) profile = updateProfile(profile.id, name); // the display name is the profile name
+      if (name && profile)
+        profile = updateProfile(profile.id, name); // the display name is the profile name
       else if (name) updateWorkspace(workspaceId, name);
     }
     if (settings.household !== undefined) {
       setWorkspaceSetting(
         workspaceId,
         "household",
-        JSON.stringify(parseHousehold(settings.household))
+        JSON.stringify(parseHousehold(settings.household)),
       );
     }
   });

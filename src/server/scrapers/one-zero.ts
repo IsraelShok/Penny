@@ -56,33 +56,31 @@ function buildScraper(startDate: Date) {
 }
 
 function mapAccounts(
-  scrapeResult: Awaited<ReturnType<ReturnType<typeof buildScraper>["scrape"]>>
+  scrapeResult: Awaited<ReturnType<ReturnType<typeof buildScraper>["scrape"]>>,
 ): ScrapeResult["accounts"] {
   return (scrapeResult.accounts ?? []).map((account) => ({
     accountNumber: account.accountNumber,
-    transactions: account.txns.map(
-      (txn): ScrapedTransaction => ({
-        type: txn.type === "installments" ? "installments" : "normal",
-        identifier: txn.identifier ?? undefined,
-        date: txn.date,
-        processedDate: txn.processedDate,
-        originalAmount: txn.originalAmount,
-        originalCurrency: txn.originalCurrency,
-        chargedAmount: txn.chargedAmount,
-        chargedCurrency: txn.chargedCurrency ?? undefined,
-        description: txn.description,
-        memo: txn.memo ?? undefined,
-        installments: txn.installments
-          ? { number: txn.installments.number, total: txn.installments.total }
-          : undefined,
-        status: txn.status === "completed" ? "completed" : "pending",
-      })
-    ),
+    transactions: account.txns.map((txn): ScrapedTransaction => ({
+      type: txn.type === "installments" ? "installments" : "normal",
+      identifier: txn.identifier ?? undefined,
+      date: txn.date,
+      processedDate: txn.processedDate,
+      originalAmount: txn.originalAmount,
+      originalCurrency: txn.originalCurrency,
+      chargedAmount: txn.chargedAmount,
+      chargedCurrency: txn.chargedCurrency ?? undefined,
+      description: txn.description,
+      memo: txn.memo ?? undefined,
+      installments: txn.installments
+        ? { number: txn.installments.number, total: txn.installments.total }
+        : undefined,
+      status: txn.status === "completed" ? "completed" : "pending",
+    })),
   }));
 }
 
 export async function scrapeOneZeroFirstTime(
-  opts: OneZeroFirstSyncOptions
+  opts: OneZeroFirstSyncOptions,
 ): Promise<OneZeroFirstSyncResult> {
   const scraper = buildScraper(opts.startDate);
 
@@ -91,8 +89,7 @@ export async function scrapeOneZeroFirstTime(
     return {
       success: false,
       accounts: [],
-      errorMessage:
-        trigger.errorMessage ?? "Failed to send 2FA code to your phone.",
+      errorMessage: trigger.errorMessage ?? "Failed to send 2FA code to your phone.",
     };
   }
 
@@ -103,8 +100,7 @@ export async function scrapeOneZeroFirstTime(
     return {
       success: false,
       accounts: [],
-      errorMessage:
-        err instanceof Error ? err.message : "OTP entry was cancelled.",
+      errorMessage: err instanceof Error ? err.message : "OTP entry was cancelled.",
     };
   }
   opts.onOtpSubmitted?.();
@@ -114,9 +110,7 @@ export async function scrapeOneZeroFirstTime(
     return {
       success: false,
       accounts: [],
-      errorMessage:
-        tokenResult.errorMessage ??
-        "The one-time code was rejected by One Zero.",
+      errorMessage: tokenResult.errorMessage ?? "The one-time code was rejected by One Zero.",
     };
   }
 
@@ -145,7 +139,7 @@ export async function scrapeOneZeroFirstTime(
 }
 
 export async function scrapeOneZeroWithToken(
-  opts: OneZeroSubsequentSyncOptions
+  opts: OneZeroSubsequentSyncOptions,
 ): Promise<ScrapeResult> {
   const scraper = buildScraper(opts.startDate);
   const scrapeResult = await scraper.scrape({

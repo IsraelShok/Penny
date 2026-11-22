@@ -6,7 +6,14 @@ import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePlan } from "@/hooks/use-plan";
-import { CONFIDENCE, DETAIL, GOALS, SITUATIONS, profileEffects, type UserProfile } from "@/lib/plan";
+import {
+  CONFIDENCE,
+  DETAIL,
+  GOALS,
+  SITUATIONS,
+  profileEffects,
+  type UserProfile,
+} from "@/lib/plan";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useHousehold } from "@/hooks/use-household";
@@ -43,7 +50,8 @@ export function WelcomeFlow() {
   const { plan, loaded, update: updatePlan } = usePlan();
   const [prof, setProf] = useState<UserProfile | null>(null);
 
-  if (loading || !loaded) return <p className="text-footnote text-muted-foreground">{t("loading")}</p>;
+  if (loading || !loaded)
+    return <p className="text-footnote text-muted-foreground">{t("loading")}</p>;
 
   const list = members ?? household.members;
   const incomeShape = income === undefined ? household.incomeShape : income;
@@ -51,21 +59,40 @@ export function WelcomeFlow() {
   const profile = prof ?? plan.profile;
   const setP = (patch: Partial<UserProfile>) => setProf({ ...profile, ...patch });
   // Tap the chosen chip again to clear it.
-  const toggle = <K extends keyof UserProfile>(k: K, v: UserProfile[K]) => setP({ [k]: profile[k] === v ? null : v } as Partial<UserProfile>);
+  const toggle = <K extends keyof UserProfile>(k: K, v: UserProfile[K]) =>
+    setP({ [k]: profile[k] === v ? null : v } as Partial<UserProfile>);
 
   function next(patch: Partial<Household>, finish = step === STEPS - 1) {
     // Send every answer so far: an earlier save may not have landed yet.
-    save({ members: saveMembers(), incomeShape, moneyStyle, ...patch, ...(finish && { welcomeDismissed: true }) });
+    save({
+      members: saveMembers(),
+      incomeShape,
+      moneyStyle,
+      ...patch,
+      ...(finish && { welcomeDismissed: true }),
+    });
     const done = { ...profile, onboarded: profile.onboarded || finish };
-    updatePlan({ profile: done, ...(finish && profileEffects(done)) }).catch(() => toast.error(t("saveFailed")));
+    updatePlan({ profile: done, ...(finish && profileEffects(done)) }).catch(() =>
+      toast.error(t("saveFailed")),
+    );
     if (finish) router.push("/");
     else setStep(step + 1);
   }
 
-  const chips = <T extends string | number>(k: keyof UserProfile, list: readonly T[], label: (v: T) => string) => (
+  const chips = <T extends string | number>(
+    k: keyof UserProfile,
+    list: readonly T[],
+    label: (v: T) => string,
+  ) => (
     <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t(`${k}Label`)}>
       {list.map((v) => (
-        <button key={v} type="button" aria-pressed={profile[k] === v} className={cn(chip, "min-h-11", profile[k] === v ? chipOn : chipOff)} onClick={() => toggle(k, v as UserProfile[typeof k])}>
+        <button
+          key={v}
+          type="button"
+          aria-pressed={profile[k] === v}
+          className={cn(chip, "min-h-11", profile[k] === v ? chipOn : chipOff)}
+          onClick={() => toggle(k, v as UserProfile[typeof k])}
+        >
           {label(v)}
         </button>
       ))}
@@ -88,18 +115,28 @@ export function WelcomeFlow() {
         <p className="text-footnote text-muted-foreground" aria-live="polite">
           {t("stepOf", { step: step + 1, total: STEPS })}
         </p>
-        <Button variant="ghost" disabled={saving} onClick={() => next({}, true)}>{t("skipAll")}</Button>
+        <Button variant="ghost" disabled={saving} onClick={() => next({}, true)}>
+          {t("skipAll")}
+        </Button>
       </div>
       <div className="mt-2 flex gap-1.5" aria-hidden>
         {Array.from({ length: STEPS }, (_, i) => (
-          <span key={i} className={cn("h-1 flex-1 rounded-full", i <= step ? "bg-primary" : "bg-muted")} />
+          <span
+            key={i}
+            className={cn("h-1 flex-1 rounded-full", i <= step ? "bg-primary" : "bg-muted")}
+          />
         ))}
       </div>
 
-      <section className="mt-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6" aria-labelledby="welcome-step">
+      <section
+        className="mt-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6"
+        aria-labelledby="welcome-step"
+      >
         {step === 0 && (
           <>
-            <h2 id="welcome-step" className="text-title font-semibold">{t("aboutTitle")}</h2>
+            <h2 id="welcome-step" className="text-title font-semibold">
+              {t("aboutTitle")}
+            </h2>
             <p className="mt-1 text-footnote text-muted-foreground">{t("aboutHint")}</p>
             {chips("situation", SITUATIONS, (v) => t(`situation.${v}`))}
             <p className="mt-5 text-footnote font-medium">{t("householdSizeLabel")}</p>
@@ -109,7 +146,9 @@ export function WelcomeFlow() {
 
         {step === 4 && (
           <>
-            <h2 id="welcome-step" className="text-title font-semibold">{t("goalTitle")}</h2>
+            <h2 id="welcome-step" className="text-title font-semibold">
+              {t("goalTitle")}
+            </h2>
             <p className="mt-1 text-footnote text-muted-foreground">{t("goalHint")}</p>
             {chips("goal", GOALS, (v) => t(`goal.${v}`))}
             {profile.goal === "save" && (
@@ -127,7 +166,9 @@ export function WelcomeFlow() {
 
         {step === 5 && (
           <>
-            <h2 id="welcome-step" className="text-title font-semibold">{t("levelTitle")}</h2>
+            <h2 id="welcome-step" className="text-title font-semibold">
+              {t("levelTitle")}
+            </h2>
             <p className="mt-1 text-footnote text-muted-foreground">{t("levelHint")}</p>
             {chips("confidence", CONFIDENCE, (v) => t(`confidence.${v}`))}
             <p className="mt-5 text-footnote font-medium">{t("detailLabel")}</p>
@@ -137,7 +178,9 @@ export function WelcomeFlow() {
 
         {step === 1 && (
           <>
-            <h2 id="welcome-step" className="text-title font-semibold">{t("whoTitle")}</h2>
+            <h2 id="welcome-step" className="text-title font-semibold">
+              {t("whoTitle")}
+            </h2>
             <p className="mt-1 text-footnote text-muted-foreground">{t("whoHint")}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {MEMBER_ROLES.map((r) => (
@@ -145,7 +188,9 @@ export function WelcomeFlow() {
                   key={r}
                   type="button"
                   className={cn(chip, chipOff, "inline-flex items-center gap-1")}
-                  onClick={() => setMembers([...list, { id: newId(), name: "", role: r, birthYear: null }])}
+                  onClick={() =>
+                    setMembers([...list, { id: newId(), name: "", role: r, birthYear: null }])
+                  }
                 >
                   <Plus className="size-4" aria-hidden />
                   {tH(`role.${r}`)}
@@ -156,7 +201,9 @@ export function WelcomeFlow() {
               <ul className="mt-5 space-y-3">
                 {list.map((m) => (
                   <li key={m.id} className="flex flex-wrap items-center gap-2">
-                    <span className="w-24 text-footnote text-muted-foreground">{tH(`role.${m.role}`)}</span>
+                    <span className="w-24 text-footnote text-muted-foreground">
+                      {tH(`role.${m.role}`)}
+                    </span>
                     <Input
                       aria-label={t("nameFor", { role: tH(`role.${m.role}`) })}
                       placeholder={t("namePlaceholder")}
@@ -177,7 +224,9 @@ export function WelcomeFlow() {
                         value={m.birthYear ?? ""}
                         onChange={(e) => {
                           const y = Number(e.target.value);
-                          update(m.id, { birthYear: e.target.value && y > 1900 && y <= thisYear ? y : null });
+                          update(m.id, {
+                            birthYear: e.target.value && y > 1900 && y <= thisYear ? y : null,
+                          });
                         }}
                       />
                     )}
@@ -198,7 +247,9 @@ export function WelcomeFlow() {
 
         {step === 2 && (
           <>
-            <h2 id="welcome-step" className="text-title font-semibold">{t("incomeTitle")}</h2>
+            <h2 id="welcome-step" className="text-title font-semibold">
+              {t("incomeTitle")}
+            </h2>
             <p className="mt-1 text-footnote text-muted-foreground">{t("incomeHint")}</p>
             <div className="mt-4 flex flex-wrap gap-2" role="group" aria-labelledby="welcome-step">
               {INCOME_SHAPES.map((s) => (
@@ -218,7 +269,9 @@ export function WelcomeFlow() {
 
         {step === 3 && (
           <>
-            <h2 id="welcome-step" className="text-title font-semibold">{t("styleTitle")}</h2>
+            <h2 id="welcome-step" className="text-title font-semibold">
+              {t("styleTitle")}
+            </h2>
             <p className="mt-1 text-footnote text-muted-foreground">{t("styleHint")}</p>
             <div className="mt-4 grid gap-2" role="group" aria-labelledby="welcome-step">
               {MONEY_STYLES.map((s) => (
@@ -226,11 +279,20 @@ export function WelcomeFlow() {
                   key={s}
                   type="button"
                   aria-pressed={moneyStyle === s}
-                  className={cn(chip, "rounded-2xl text-start", moneyStyle === s ? chipOn : chipOff)}
+                  className={cn(
+                    chip,
+                    "rounded-2xl text-start",
+                    moneyStyle === s ? chipOn : chipOff,
+                  )}
                   onClick={() => setStyle(moneyStyle === s ? null : s)}
                 >
                   <span className="block font-medium">{tH(`style.${s}`)}</span>
-                  <span className={cn("block text-footnote", moneyStyle === s ? "opacity-90" : "text-muted-foreground")}>
+                  <span
+                    className={cn(
+                      "block text-footnote",
+                      moneyStyle === s ? "opacity-90" : "text-muted-foreground",
+                    )}
+                  >
                     {t(`styleExplain.${s}`)}
                   </span>
                 </button>

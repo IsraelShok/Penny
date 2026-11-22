@@ -6,7 +6,10 @@ import fs from "fs";
 vi.mock("@/server/sync/scheduler", () => ({ reschedule: () => undefined }));
 
 const post = (body: unknown) =>
-  new Request("http://127.0.0.1:3000/api/data/wipe", { method: "POST", body: JSON.stringify(body) });
+  new Request("http://127.0.0.1:3000/api/data/wipe", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 
 describe("full wipe", () => {
   it("needs the word, then removes the database, key and logs and starts fresh", async () => {
@@ -28,6 +31,8 @@ describe("full wipe", () => {
     expect(fs.existsSync(path.join(dir, ".encryption-key"))).toBe(false);
     expect(fs.existsSync(path.join(dir, "sync.log"))).toBe(false);
     expect(getGlobalSetting("telegram_chat_id")).toBeNull();
-    expect((getDb().prepare("SELECT COUNT(*) c FROM categories").get() as { c: number }).c).toBeGreaterThan(0);
+    expect(
+      (getDb().prepare("SELECT COUNT(*) c FROM categories").get() as { c: number }).c,
+    ).toBeGreaterThan(0);
   });
 });

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import crypto from "node:crypto";
 import os from "os";
 import path from "path";
 import fs from "fs";
@@ -13,7 +14,10 @@ async function fresh() {
   globalThis.__pennyDataKey = undefined;
   globalThis.__pennySessions = undefined;
   globalThis.__pennyUnlockFails = undefined;
-  return { enc: await import("@/server/lib/encryption"), lock: await import("@/server/lib/app-lock") };
+  return {
+    enc: await import("@/server/lib/encryption"),
+    lock: await import("@/server/lib/app-lock"),
+  };
 }
 
 beforeEach(() => {
@@ -54,8 +58,14 @@ describe("app lock and key wrapping", () => {
     const t0 = 1_000_000;
     expect(await lock.checkSecret("nope", t0)).toMatchObject({ reason: "wrong", retryAfter: 1 });
     expect(await lock.checkSecret("12345678", t0 + 500)).toMatchObject({ reason: "wait" });
-    expect(await lock.checkSecret("nope", t0 + 1_000)).toMatchObject({ reason: "wrong", retryAfter: 2 });
-    expect(await lock.checkSecret("nope", t0 + 3_000)).toMatchObject({ reason: "wrong", retryAfter: 4 });
+    expect(await lock.checkSecret("nope", t0 + 1_000)).toMatchObject({
+      reason: "wrong",
+      retryAfter: 2,
+    });
+    expect(await lock.checkSecret("nope", t0 + 3_000)).toMatchObject({
+      reason: "wrong",
+      retryAfter: 4,
+    });
   });
 
   it("change re-wraps; disable restores the plaintext key file", async () => {
@@ -84,18 +94,60 @@ describe("app lock and key wrapping", () => {
     expect(lock.touchSession("made-up")).toBe(false);
   });
 
-  it("accepts 8+ characters or a 6+ digit PIN", async () => {
+  it("accepts a passphrase or PIN of 8+ characters", async () => {
     const { lock } = await fresh();
-    expect(lock.isValidSecret("1234567")).toBe(true);
+    expect(lock.isValidSecret("1234567")).toBe(false);
+    expect(lock.isValidSecret("12345678")).toBe(true);
     expect(lock.isValidSecret("abcdefg")).toBe(false);
     expect(lock.isValidSecret("12345")).toBe(false);
     expect(lock.isValidSecret("abcdefgh")).toBe(true);
+  });
+
+  it("writes the stronger scrypt cost, and keeps opening a lock file from before the bump", async () => {
+    let { enc, lock } = await fresh();
+    const key = enc.getKey();
+    await lock.enableLock("12345678", 15);
+    const written = JSON.parse(fs.readFileSync(lockFile(), "utf8")) as { n?: number };
+    expect(written.n).toBe(2 ** 17);
+
+    // Rebuild the same key wrap the way the old code did it: no `n`, cost 2^15.
+    const oldOpts = { N: 2 ** 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+    const hashSalt = crypto.randomBytes(16);
+    const kekSalt = crypto.randomBytes(16);
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv(
+      "aes-256-gcm",
+      crypto.scryptSync("12345678", kekSalt, 32, oldOpts),
+      iv,
+    );
+    const wrapped = Buffer.concat([cipher.update(key), cipher.final()]);
+    fs.writeFileSync(
+      lockFile(),
+      JSON.stringify({
+        v: 1,
+        hashSalt: hashSalt.toString("hex"),
+        hash: crypto.scryptSync("12345678", hashSalt, 32, oldOpts).toString("hex"),
+        kekSalt: kekSalt.toString("hex"),
+        iv: iv.toString("hex"),
+        tag: cipher.getAuthTag().toString("hex"),
+        wrapped: wrapped.toString("hex"),
+        idleMinutes: 15,
+      }),
+    );
+    fs.rmSync(keyFile(), { force: true });
+    enc.setKeyInMemory(undefined);
+    ({ enc, lock } = await fresh());
+    expect(await lock.checkSecret("12345678", Date.now() + 1_000)).toEqual({ ok: true });
+    await lock.unlock("12345678");
+    expect(enc.decrypt(enc.encrypt("ok"))).toBe("ok");
   });
 });
 
 describe("proxy with the lock on", () => {
   const req = (p: string, cookie?: string) =>
-    new NextRequest(`http://127.0.0.1:3000${p}`, { headers: { host: "127.0.0.1:3000", ...(cookie ? { cookie } : {}) } });
+    new NextRequest(`http://127.0.0.1:3000${p}`, {
+      headers: { host: "127.0.0.1:3000", ...(cookie ? { cookie } : {}) },
+    });
 
   it("redirects pages to /lock, answers APIs with 401, lets the lock screen and assets through", async () => {
     const { lock } = await fresh();

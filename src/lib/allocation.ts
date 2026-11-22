@@ -31,7 +31,12 @@ export interface Allocation {
   monthsToFull: number | null;
 }
 
-export function allocate({ income, expenses, liquidNow, emergencyMonths = EMERGENCY_MONTHS }: AllocationInput): Allocation {
+export function allocate({
+  income,
+  expenses,
+  liquidNow,
+  emergencyMonths = EMERGENCY_MONTHS,
+}: AllocationInput): Allocation {
   const surplus = Math.max(0, income - expenses);
   const liquid = expenses * BUFFER_MONTHS;
   const emergency = expenses * emergencyMonths;
@@ -51,10 +56,16 @@ export function allocate({ income, expenses, liquidNow, emergencyMonths = EMERGE
 }
 
 /** Money already on hand for emergencies: cash, deposits, and money-market funds (spotted by name). */
-export function liquidCash(assets: { type: string; name: string; isLiability: boolean; valueIls: number | null }[]): number {
+export function liquidCash(
+  assets: { type: string; name: string; isLiability: boolean; valueIls: number | null }[],
+): number {
   // shortcut: there is no money-market asset type, so a fund counts when its name says so.
   const mm = /כספית|money.?market/i;
   return assets
-    .filter((a) => !a.isLiability && (a.type === "cash" || a.type === "deposit" || (a.type === "fund" && mm.test(a.name))))
+    .filter(
+      (a) =>
+        !a.isLiability &&
+        (a.type === "cash" || a.type === "deposit" || (a.type === "fund" && mm.test(a.name))),
+    )
     .reduce((s, a) => s + (a.valueIls ?? 0), 0);
 }

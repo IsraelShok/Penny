@@ -11,16 +11,32 @@ export async function GET(request: Request) {
   const q = new URL(request.url).searchParams;
   const member = q.get("member");
   const month = q.get("month") ?? "";
-  const child = getAppSettings(workspaceId).household.members.find((m) => m.id === member && m.role === "child");
-  if (!child || !/^\d{4}-\d{2}$/.test(month)) return NextResponse.json({ error: "child member and month required" }, { status: 400 });
+  const child = getAppSettings(workspaceId).household.members.find(
+    (m) => m.id === member && m.role === "child",
+  );
+  if (!child || !/^\d{4}-\d{2}$/.test(month))
+    return NextResponse.json({ error: "child member and month required" }, { status: 400 });
   let accountOwners: AccountOwners = {};
-  try { accountOwners = JSON.parse(getWorkspaceSetting(workspaceId, "account_owners") ?? "{}"); } catch { /* none */ }
+  try {
+    accountOwners = JSON.parse(getWorkspaceSetting(workspaceId, "account_owners") ?? "{}");
+  } catch {
+    /* none */
+  }
   const year = month.slice(0, 4);
-  const rows = getChildRows(workspaceId, `${year}-01-01`, `${year}-12-31`)
-    .filter((r) => effectiveOwner(r.owner, r.accountNumber, accountOwners) === child.id);
+  const rows = getChildRows(workspaceId, `${year}-01-01`, `${year}-12-31`).filter(
+    (r) => effectiveOwner(r.owner, r.accountNumber, accountOwners) === child.id,
+  );
   return NextResponse.json({
     child,
     summary: childSummary(rows, month),
-    transactions: rows.filter((r) => r.date.startsWith(month)).map(({ id, date, amount, description, category }) => ({ id, date, amount, description, category })),
+    transactions: rows
+      .filter((r) => r.date.startsWith(month))
+      .map(({ id, date, amount, description, category }) => ({
+        id,
+        date,
+        amount,
+        description,
+        category,
+      })),
   });
 }
