@@ -9,7 +9,7 @@ import { RefreshCw, Loader2, CircleCheck, CircleAlert, Landmark } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Segmented } from "@/components/ui/segmented";
-import { SectionShell } from "@/components/settings/section-shell";
+import { BetaBadge, SectionShell } from "@/components/settings/section-shell";
 import { InstitutionGrid, InstitutionTile } from "@/components/settings/institution-grid";
 import { ManualImport } from "@/components/settings/manual-import";
 import { ScraperDisclaimer } from "@/components/settings/scraper-disclaimer";
@@ -101,6 +101,7 @@ export default function BankSettingsPage() {
         title={t("title")}
         description={t("description")}
         icon={<Landmark aria-hidden />}
+        badge={<BetaBadge label={t("beta")} />}
       >
         <div className="space-y-2 px-4">
           <Segmented<Mode>

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { ExternalLink, ShieldAlert } from "lucide-react";
-import { SettingCard } from "@/components/settings/section-shell";
+import { BetaBadge, SettingCard } from "@/components/settings/section-shell";
 
 /** The open-source scrapers behind the automatic connection, linked so the reader can inspect them. */
 const LIBRARIES = [
@@ -21,7 +21,7 @@ const LIBRARIES = [
 export function ScraperDisclaimer() {
   const t = useTranslations("settings.bank");
   return (
-    <SettingCard title={t("disclaimerTitle")}>
+    <SettingCard title={t("disclaimerTitle")} aside={<BetaBadge label={t("beta")} />}>
       <div className="space-y-3 text-footnote">
         <p className="flex items-start gap-2">
           <ShieldAlert
@@ -31,6 +31,7 @@ export function ScraperDisclaimer() {
           <span>{t("disclaimerBody")}</span>
         </p>
         <ul className="list-disc space-y-1 ps-5 text-muted-foreground">
+          <li>{t("disclaimerPointBeta")}</li>
           <li>{t("disclaimerPointLogin")}</li>
           <li>{t("disclaimerPointBreak")}</li>
           <li>{t("disclaimerPointLocal")}</li>

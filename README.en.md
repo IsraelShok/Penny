@@ -78,7 +78,7 @@ Plus a **knowledge center** of short original guides in Hebrew and English, and 
 - **Demo mode** with a complete made-up household, including connected banks, cards, open banking and investment houses: see every screen without a bank connection and without touching real data.
 
 ### Getting data in
-- **Automatic:** 18 Israeli banks and card companies via [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), on a daily schedule.
+- **Automatic (beta):** 18 Israeli banks and card companies via [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), on a daily schedule. Beta: a bank can change its site and break a connection until the scraper is fixed; statement files always work.
 - **Manual:** drop a CSV, XLSX or XLS statement into the app or into a watched import folder. A transaction that comes from both is stored once.
 - **Smart sheet:** paste a table from any source, from Excel or Google Sheets to a bank file or a list you typed, and fix each cell in the grid itself: date, amount, type, account, category, tags, owner and business percentage. Duplicates are found per account before saving, and the whole import can be undone.
 - **Onboarding** walks a new user through profile and picture, connecting or importing, a monthly target, budgets, an optional AI provider and a short tour. It can be skipped, resumed and reopened.

@@ -790,6 +790,8 @@
       "manualOther": "Another institution / none",
       "manualImportCta": "Choose a file",
       "manualAccountNote": "The choice sets the account the rows land in, so the same statement is never counted twice even while the automatic connection is on.",
+      "beta": "Beta",
+      "disclaimerPointBeta": "Bank sync is in beta: a bank can change its site at any time and a connection may stop working until it is fixed. Import a file meanwhile; your data is never lost.",
       "disclaimerTitle": "Before you connect",
       "disclaimerBody": "An automatic connection signs in to the bank's site on your behalf through an open-source library and runs a scraper in a local browser. It is not an official bank service.",
       "disclaimerPointLogin": "Credentials are stored encrypted on this computer only; the password goes to the library and never to an external server.",
