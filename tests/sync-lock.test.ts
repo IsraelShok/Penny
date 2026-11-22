@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { isSyncRunning, SyncBusyError, tryAcquireSync } from "@/server/sync/lock";
 
 afterEach(() => {
-  globalThis.__spentSyncLock = undefined;
+  globalThis.__pennySyncLock = undefined;
 });
 
 describe("sync lock", () => {
@@ -28,7 +28,7 @@ describe("sync lock", () => {
   });
 
   it("takes over a lock older than the stale window", () => {
-    globalThis.__spentSyncLock = { kind: "manual", since: Date.now() - 46 * 60_000 };
+    globalThis.__pennySyncLock = { kind: "manual", since: Date.now() - 46 * 60_000 };
     expect(isSyncRunning()).toBe(false);
     expect(tryAcquireSync("manual")).not.toBeNull();
   });
