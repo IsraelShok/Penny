@@ -189,14 +189,18 @@ flowchart LR
 <div dir="ltr">
 
 ```bash
-git clone https://github.com/Sergey-Bar/Penny.git
-cd Penny
-./Penny-docker.sh        # Windows: Penny-docker.bat
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/Sergey-Bar/Penny/main/install-docker.sh | bash
+```
+
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/Sergey-Bar/Penny/main/install-docker.ps1 | iex
 ```
 
 </div>
 
-הסקריפט בונה, מפעיל ופותח את `http://127.0.0.1:41234`. אפשר גם ישירות: `docker compose up -d --build`.
+המתקין בודק ש-Docker מותקן ורץ (ב-Windows מציע להתקין את Docker Desktop דרך winget, ב-Mac דרך Homebrew), מוריד את הגרסה האחרונה לתיקייה `~/Penny` (אפשר לשנות עם `PENNY_DIR`), בונה, מפעיל ופותח את `http://127.0.0.1:41234`. הרצה חוזרת של אותה פקודה: אם יש גרסה חדשה היא מציעה לעדכן (גיבוי קודם, וחזרה לגרסה הקודמת אם החדשה לא עולה תקין), ואחרת פשוט מפעילה. מתוך שכפול של המאגר אפשר גם `./Penny-docker.sh` (ב-Windows: `Penny-docker.bat`) או `docker compose up -d --build`.
 
 - זמין רק בכתובת `127.0.0.1`. מסד הנתונים ומפתח ההצפנה נשמרים בווליום ושורדים עדכונים.
 - הגדרות נכנסות ל-`.env` (העתיקו מ-`.env.example`).

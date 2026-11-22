@@ -182,12 +182,16 @@ Data lives in `%APPDATA%\Penny\data` (Windows) or `~/Library/Application Support
 Runs Penny, its scrapers and Chromium in a container, isolated from your machine. Works on Windows, Mac and Linux with [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 ```bash
-git clone https://github.com/Sergey-Bar/Penny.git
-cd Penny
-./Penny-docker.sh        # Windows: Penny-docker.bat
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/Sergey-Bar/Penny/main/install-docker.sh | bash
 ```
 
-The script builds, starts and opens `http://127.0.0.1:41234`. Or directly: `docker compose up -d --build`.
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/Sergey-Bar/Penny/main/install-docker.ps1 | iex
+```
+
+The installer checks that Docker is installed and running (on Windows it offers to install Docker Desktop with winget, on a Mac with Homebrew), downloads the newest release into `~/Penny` (`PENNY_DIR` to change), builds, starts and opens `http://127.0.0.1:41234`. Run the same command again later: if a newer release exists it offers to update (backup first, rollback if the new version isn't healthy), otherwise it just starts Penny. From a clone, `./Penny-docker.sh` (Windows: `Penny-docker.bat`) or `docker compose up -d --build` work too.
 
 - Published on `127.0.0.1` only. The database and encryption key live in the data volume and survive updates.
 - Settings go in `.env` (copy `.env.example`).
