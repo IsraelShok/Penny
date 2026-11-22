@@ -5,13 +5,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { FileUp, Upload } from "lucide-react";
-import { importStatement, undoStatementImport } from "@/lib/api";
+import { importStatement, listStatementImports, undoStatementImport } from "@/lib/api";
+import { loadPreference, storePreference } from "@/lib/preference-sync";
 import {
   buildImportRows,
   detectDateOrder,
   fallbackHeaderRow,
   findHeaderRow,
   guessColumns,
+  headerFingerprint,
+  type ImportProfile,
   IMPORT_EXTS,
   IMPORT_FIELDS,
   inferPositiveIsExpense,
@@ -115,7 +118,13 @@ export function StatementImportCard({ defaultAccount = "" }: { defaultAccount?: 
 
   const save = useMutation({
     mutationFn: () =>
-      importStatement(account.trim(), rows, false, positiveIsExpense ? "card" : "bank"),
+      importStatement(
+        account.trim(),
+        rows,
+        false,
+        positiveIsExpense ? "card" : "bank",
+        fileName || undefined,
+      ),
     onSuccess: (res) => {
       const refresh = () => {
         for (const key of [
@@ -124,10 +133,12 @@ export function StatementImportCard({ defaultAccount = "" }: { defaultAccount?: 
           "home",
           "file-import-check",
           "import-accounts",
+          "import-history",
         ])
           void queryClient.invalidateQueries({ queryKey: [key] });
       };
       refresh();
+      rememberLayout();
       reset();
       const batchId = res.batchId;
       toast.success(
@@ -151,13 +162,26 @@ export function StatementImportCard({ defaultAccount = "" }: { defaultAccount?: 
     onError: (err) => toast.error(err instanceof Error ? err.message : t("saveFailed")),
   });
 
-  function applyTable(parsed: string[][]) {
-    const found = findHeaderRow(parsed);
-    const headerIndex = found >= 0 ? found : fallbackHeaderRow(parsed);
-    const guessed = guessColumns(parsed[headerIndex] ?? []);
+  // Saved column layouts, keyed by the header's fingerprint: a mapping fixed once applies next time.
+  const profiles = useQuery({
+    queryKey: ["import-profiles"],
+    queryFn: async () =>
+      ((await loadPreference("import-profiles")) ?? {}) as Record<string, ImportProfile>,
+  });
+  const [profileApplied, setProfileApplied] = useState(false);
+
+  function applyLayout(parsed: string[][], headerIndex: number, store = profiles.data) {
     const body = parsed.slice(headerIndex + 1);
-    setTable(parsed);
+    const saved = store?.[headerFingerprint(parsed[headerIndex] ?? [])];
     setHeaderRow(headerIndex);
+    setProfileApplied(!!saved);
+    if (saved) {
+      setMap(saved.map);
+      setDateOrder(saved.dateOrder);
+      setPositiveIsExpense(saved.positiveIsExpense);
+      return;
+    }
+    const guessed = guessColumns(parsed[headerIndex] ?? []);
     setMap(guessed);
     setDateOrder(
       detectDateOrder(guessed.date == null ? [] : body.map((r) => r[guessed.date!] ?? "")),
@@ -165,15 +189,32 @@ export function StatementImportCard({ defaultAccount = "" }: { defaultAccount?: 
     setPositiveIsExpense(inferPositiveIsExpense(scanAmounts(body, guessed)));
   }
 
+  function saveProfile(next: Record<string, ImportProfile>) {
+    queryClient.setQueryData(["import-profiles"], next);
+    void storePreference("import-profiles", next).catch(() => {});
+  }
+
+  function rememberLayout() {
+    const fp = headerFingerprint(header);
+    if (!fp || !map) return;
+    saveProfile({ ...profiles.data, [fp]: { map, dateOrder, positiveIsExpense } });
+  }
+
+  function forgetLayout() {
+    const rest = { ...profiles.data };
+    delete rest[headerFingerprint(header)];
+    saveProfile(rest);
+    applyLayout(table, headerRow, rest);
+  }
+
+  function applyTable(parsed: string[][]) {
+    const found = findHeaderRow(parsed);
+    setTable(parsed);
+    applyLayout(parsed, found >= 0 ? found : fallbackHeaderRow(parsed));
+  }
+
   function changeHeaderRow(next: number) {
-    const guessed = guessColumns(table[next] ?? []);
-    const body = table.slice(next + 1);
-    setHeaderRow(next);
-    setMap(guessed);
-    setDateOrder(
-      detectDateOrder(guessed.date == null ? [] : body.map((r) => r[guessed.date!] ?? "")),
-    );
-    setPositiveIsExpense(inferPositiveIsExpense(scanAmounts(body, guessed)));
+    applyLayout(table, next);
   }
 
   async function onFile(file: File | undefined) {
@@ -351,6 +392,15 @@ export function StatementImportCard({ defaultAccount = "" }: { defaultAccount?: 
               </div>
             )}
 
+            {profileApplied && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2">
+                <span className="text-footnote text-muted-foreground">{t("profileApplied")}</span>
+                <Button type="button" variant="ghost" size="sm" onClick={forgetLayout}>
+                  {t("profileReset")}
+                </Button>
+              </div>
+            )}
+
             {mappingIncomplete && (
               <p
                 className="rounded-xl bg-[color-mix(in_oklch,var(--status-over)_8%,transparent)] px-3 py-2 text-footnote"
@@ -517,7 +567,63 @@ export function StatementImportCard({ defaultAccount = "" }: { defaultAccount?: 
             {error}
           </p>
         )}
+
+        <ImportHistory />
       </div>
     </SettingCard>
+  );
+}
+
+/** Past statement imports (file and folder), each with its own undo. */
+function ImportHistory() {
+  const t = useTranslations("fileImport");
+  const queryClient = useQueryClient();
+  const history = useQuery({ queryKey: ["import-history"], queryFn: listStatementImports });
+  const undo = useMutation({
+    mutationFn: undoStatementImport,
+    onSuccess: (res) => {
+      for (const key of ["import-history", "transactions", "summary", "home", "file-import-check"])
+        void queryClient.invalidateQueries({ queryKey: [key] });
+      toast.success(t("historyUndone", { count: res.removed }));
+    },
+    onError: () => toast.error(t("saveFailed")),
+  });
+  const imports = history.data?.imports ?? [];
+  return (
+    <details className="rounded-xl border">
+      <summary className="cursor-pointer px-3 py-2 text-footnote font-medium text-muted-foreground">
+        {t("historyTitle")}
+      </summary>
+      <ul className="divide-y border-t">
+        {imports.length === 0 && (
+          <li className="px-3 py-2 text-footnote text-muted-foreground">{t("historyEmpty")}</li>
+        )}
+        {imports.map((imp) => (
+          <li key={imp.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+            <div className="min-w-0">
+              <div className="truncate text-footnote font-medium" dir="auto">
+                {imp.fileName || "—"}
+              </div>
+              <div className="text-caption text-muted-foreground">
+                {t("historyRow", {
+                  date: shortDate(imp.createdAt.slice(0, 10)),
+                  account: imp.account,
+                  rows: imp.rows,
+                })}
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={undo.isPending}
+              onClick={() => undo.mutate(imp.id)}
+            >
+              {t("historyUndo")}
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

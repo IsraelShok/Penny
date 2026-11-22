@@ -689,6 +689,16 @@ export async function fetchReceipt(id: number) {
   return res.blob();
 }
 
+/** Rows read from a PDF or a statement image by the user's AI provider. Nothing is saved. */
+export function extractDocumentRows(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return fetchJSON<{ rows: import("./text-import").ExtractedRow[] }>(`/api/import/document`, {
+    method: "POST",
+    body: form,
+  });
+}
+
 /** Rows read from pasted text by the user's AI provider, for the sheet import preview. Nothing is saved. */
 export function extractTextRows(text: string) {
   return fetchJSON<{ rows: import("./text-import").ExtractedRow[] }>(`/api/import/text`, {
@@ -1528,6 +1538,7 @@ export function importStatement(
   rows: { date: string; description: string; amount: number }[],
   dryRun = false,
   source: ImportSource = "bank",
+  fileName?: string,
 ) {
   return fetchJSON<{
     ready: number;
@@ -1539,8 +1550,20 @@ export function importStatement(
   }>(`/api/import`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ account, rows, dryRun, source }),
+    body: JSON.stringify({ account, rows, dryRun, source, fileName }),
   });
+}
+
+export function listStatementImports() {
+  return fetchJSON<{
+    imports: {
+      id: number;
+      createdAt: string;
+      fileName: string | null;
+      account: string;
+      rows: number;
+    }[];
+  }>(`/api/import`);
 }
 
 export function undoStatementImport(batchId: number) {

@@ -10,8 +10,23 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ClipboardPaste, Copy, Download, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
-import { extractTextRows, importSheet, undoSheetImport, type SheetRowInput } from "@/lib/api";
+import {
+  ClipboardPaste,
+  Copy,
+  Download,
+  FileText,
+  Plus,
+  Sparkles,
+  Trash2,
+  Wand2,
+} from "lucide-react";
+import {
+  extractDocumentRows,
+  extractTextRows,
+  importSheet,
+  undoSheetImport,
+  type SheetRowInput,
+} from "@/lib/api";
 import { extractedToTable, MAX_TEXT_IMPORT } from "@/lib/text-import";
 import {
   buildSheetDrafts,
@@ -226,6 +241,34 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
     } catch (e) {
       const status = (e as { status?: number }).status;
       toast.error(status === 503 ? t("aiNoProvider") : t("aiFailed"));
+    } finally {
+      setReading(false);
+    }
+  }
+
+  // A PDF statement (text read on this machine) or a photo of one (vision providers only).
+  async function readDocument(file: File) {
+    setReading(true);
+    try {
+      const { rows } = await extractDocumentRows(file);
+      if (rows.length === 0) toast.error(t("aiNoRows"));
+      else {
+        loadTable(extractedToTable(rows));
+        toast.success(t("aiFound", { count: rows.length }));
+      }
+    } catch (e) {
+      const status = (e as { status?: number }).status;
+      toast.error(
+        status === 503
+          ? t("aiNoProvider")
+          : status === 415
+            ? t(file.type.startsWith("image/") ? "docNeedsVision" : "docUnsupported")
+            : status === 422
+              ? t("docNoText")
+              : status === 413
+                ? t("aiTooLong")
+                : t("aiFailed"),
+      );
     } finally {
       setReading(false);
     }
@@ -450,6 +493,26 @@ export function SheetImportCard({ defaultAccount = "" }: { defaultAccount?: stri
                 <Sparkles className="size-4" aria-hidden />
                 {reading ? t("aiReading") : t("aiRead")}
               </Button>
+              <label
+                htmlFor="sheet-document"
+                title={t("docHint")}
+                className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-input px-3 text-sm font-medium hover:bg-muted/50 has-[:disabled]:pointer-events-none has-[:disabled]:opacity-50"
+              >
+                <FileText className="size-4" aria-hidden />
+                {reading ? t("aiReading") : t("docRead")}
+                <input
+                  id="sheet-document"
+                  type="file"
+                  accept=".pdf,application/pdf,image/png,image/jpeg,image/webp,image/gif"
+                  className="sr-only"
+                  disabled={reading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (file) void readDocument(file);
+                  }}
+                />
+              </label>
               <Button type="button" variant="outline" onClick={() => void pasteFromClipboard()}>
                 {t("fromClipboard")}
               </Button>

@@ -118,6 +118,20 @@ const iso = (y: number, m: number, d: number) => {
 
 export type DateOrder = "dmy" | "mdy";
 
+/** A saved column layout for one statement format, keyed by headerFingerprint. */
+export interface ImportProfile {
+  map: ImportMap;
+  dateOrder: DateOrder;
+  positiveIsExpense: boolean;
+}
+
+/** Same header cells (ignoring case, spacing and trailing empty cells) = same file layout. "" when there is no header. */
+export function headerFingerprint(header: string[]): string {
+  const cells = header.map((c) => c.replace(/\s+/g, " ").trim().toLowerCase());
+  while (cells.length && !cells[cells.length - 1]) cells.pop();
+  return cells.some(Boolean) ? cells.join("|") : "";
+}
+
 /**
  * dd/mm/yyyy, dd.mm.yy, dd-mm-yyyy, yyyy-mm-dd, mm/dd/yyyy (with `order`) or an Excel date
  * serial -> "yyyy-mm-dd", or null.

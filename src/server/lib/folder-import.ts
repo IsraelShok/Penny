@@ -31,6 +31,7 @@ export function saveStatementImport(
   rows: ImportRow[],
   dryRun = false,
   source: "bank" | "card" = "bank",
+  fileName: string | null = null,
 ) {
   const dates = rows.map((r) => r.date).sort((a, b) => a.localeCompare(b));
   const marked = markDuplicates(
@@ -49,7 +50,7 @@ export function saveStatementImport(
       needsReview: 0,
     };
   }
-  const { batchId, added } = insertFileImport(workspaceId, account, fresh, source);
+  const { batchId, added } = insertFileImport(workspaceId, account, fresh, source, fileName);
   applyMerchantRulesToSyncRun(workspaceId, batchId);
   applyRulesToSyncRun(workspaceId, batchId);
   // Whatever the rules did not cover waits in the review queue instead of sitting invisible.
@@ -261,7 +262,7 @@ export async function scanImportFolder(now = false): Promise<FolderImportConfig>
           );
           if (rows.length === 0) throw new Error("noRows");
           if (rows.length > MAX_IMPORT_ROWS) throw new Error("tooMany");
-          const r = saveStatementImport(workspaceId, account, rows, false, source);
+          const r = saveStatementImport(workspaceId, account, rows, false, source, name);
           moveInto(folder, name, "imported");
           c.history.unshift({
             at,
