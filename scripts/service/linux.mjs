@@ -19,15 +19,6 @@ const LOG_DIR = path.join(
   "log",
 );
 
-// legacy: spent.service from installs before the Penny rename
-function removeLegacyUnit() {
-  const legacyPath = path.join(UNIT_DIR, "spent.service");
-  if (!fs.existsSync(legacyPath)) return;
-  systemctl(["disable", "--now", "spent.service"]);
-  fs.unlinkSync(legacyPath);
-  systemctl(["daemon-reload"]);
-}
-
 function whichNode() {
   const r = spawnSync(systemBin("which"), ["node"], { encoding: "utf-8" });
   if (r.status !== 0) throw new Error("Cannot find `node` on PATH.");
@@ -101,7 +92,6 @@ export async function run(cmd, { friendlyUrl }) {
     case "install": {
       preflight();
       ensureSystemdAvailable();
-      removeLegacyUnit();
       ensureLogDir();
       writeUnit();
       systemctl(["daemon-reload"]);
@@ -128,7 +118,6 @@ export async function run(cmd, { friendlyUrl }) {
     case "uninstall": {
       systemctl(["disable", "--now", UNIT_NAME]);
       if (fs.existsSync(UNIT_PATH)) fs.unlinkSync(UNIT_PATH);
-      removeLegacyUnit();
       systemctl(["daemon-reload"]);
       try {
         removeManagedBlock();

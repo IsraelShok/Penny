@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   globalThis._db = undefined;
 
   const dir = dataDir();
-  const dbFiles = ["penny.db", "spent.db"].flatMap((db) => [db, `${db}-wal`, `${db}-shm`]); // legacy: spent.db from installs before the Penny rename
+  const dbFiles = ["penny.db", "penny.db-wal", "penny.db-shm"];
   const files = [...dbFiles, ".app-lock.json.tmp"].map((f) => path.join(dir, f));
   for (const f of [...files, keyPath(), legacyKeyPath(), lockFilePath()]) shred(f);
   if (fs.existsSync(dir)) {

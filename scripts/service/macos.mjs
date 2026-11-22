@@ -56,14 +56,6 @@ function bootout() {
   return launchctl(["bootout", `gui/${uid}/${LABEL}`]);
 }
 
-// legacy: com.spent.app from installs before the Penny rename
-function removeLegacyAgent() {
-  const legacyPlist = path.join(os.homedir(), "Library", "LaunchAgents", "com.spent.app.plist");
-  if (!fs.existsSync(legacyPlist)) return;
-  launchctl(["bootout", `gui/${process.getuid()}/com.spent.app`]);
-  fs.unlinkSync(legacyPlist);
-}
-
 function kickstart() {
   const uid = process.getuid();
   return launchctl(["kickstart", "-k", `gui/${uid}/${LABEL}`]);
@@ -90,7 +82,6 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
   switch (cmd) {
     case "install": {
       preflight();
-      removeLegacyAgent();
       ensureLogDir();
       writePlist();
       try {
@@ -121,7 +112,6 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
     case "uninstall": {
       bootout();
       if (fs.existsSync(PLIST_PATH)) fs.unlinkSync(PLIST_PATH);
-      removeLegacyAgent();
       try {
         removeManagedBlock();
       } catch (err) {

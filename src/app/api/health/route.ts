@@ -20,9 +20,8 @@ let cached: { at: number; check: DatabaseCheck } | null = null;
 
 function databaseFile(): string | undefined {
   const dir = dataDir();
-  return ["penny.db", "spent.db"] // legacy: spent.db from installs before the Penny rename
-    .map((f) => path.join(dir, f))
-    .find((f) => fs.existsSync(f));
+  const file = path.join(dir, "penny.db");
+  return fs.existsSync(file) ? file : undefined;
 }
 
 /**

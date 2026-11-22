@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const port = process.argv[2] ?? "41234";
-const dir = process.env.PENNY_DATA_DIR ?? process.env.SPENT_DATA_DIR;
+const dir = process.env.PENNY_DATA_DIR;
 const data = dir ? path.resolve(dir) : path.join(root, "data");
 const flag = path.join(data, "lan-access.json");
 // Phone access only behind the app lock: a leftover flag without a lock never opens the network.

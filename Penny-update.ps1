@@ -28,15 +28,14 @@ if (git remote) {
 }
 
 # 2. Back up the database and encryption key inside the data volume (newest five are kept).
-# legacy: "spent" container and image from installs before the Penny rename
-$running = @("penny", "spent") | Where-Object { (docker inspect --format "{{.State.Running}}" $_ 2>$null) -eq "true" } | Select-Object -First 1
+$running = @("penny") | Where-Object { (docker inspect --format "{{.State.Running}}" $_ 2>$null) -eq "true" } | Select-Object -First 1
 if ($running) {
     docker exec $running node scripts/backup-data.mjs /data
     if ($LASTEXITCODE -ne 0) { Write-Host "Backup failed. Nothing was changed."; exit 1 }
 }
 
 # 3. Keep the current image so we can go back to it.
-$current = @("penny:latest", "spent:latest") | Where-Object { docker image inspect $_ *> $null; $LASTEXITCODE -eq 0 } | Select-Object -First 1
+$current = @("penny:latest") | Where-Object { docker image inspect $_ *> $null; $LASTEXITCODE -eq 0 } | Select-Object -First 1
 $hadPrevious = [bool]$current
 if ($hadPrevious) { docker tag $current penny:previous }
 

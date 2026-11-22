@@ -129,11 +129,9 @@ async function main() {
   switch (process.platform) {
     case "darwin":
       await macUninstall();
-      await macUninstall("Spent"); // legacy: Spent.app from installs before the Penny rename
       break;
     case "win32":
       windowsUninstall();
-      windowsUninstall("Spent"); // legacy: Spent.exe and Spent.lnk from installs before the Penny rename
       break;
     case "linux":
       linuxUninstall();
