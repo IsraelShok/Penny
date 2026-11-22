@@ -7,8 +7,8 @@ import { readAccountOwners } from "@/server/lib/account-owners";
 
 const KEY = "account_owners";
 
-
-const memberIdsOf = (workspaceId: number) => getAppSettings(workspaceId).household.members.map((m) => m.id);
+const memberIdsOf = (workspaceId: number) =>
+  getAppSettings(workspaceId).household.members.map((m) => m.id);
 
 /** Owner summary for ?from&to, the default owner per account, and the accounts to pick from. */
 export async function GET(request: Request) {
@@ -21,20 +21,35 @@ export async function GET(request: Request) {
   return NextResponse.json({
     accountOwners,
     accounts: getAccountNumbers(workspaceId),
-    summary: ownerSummary(rows, accountOwners, memberIds, members.filter((m) => m.role !== "child").map((m) => m.id)),
+    summary: ownerSummary(
+      rows,
+      accountOwners,
+      memberIds,
+      members.filter((m) => m.role !== "child").map((m) => m.id),
+    ),
   });
 }
 
 /** Sets (or clears, with owner null) the default owner of one account: { accountNumber, owner }. */
 export async function PUT(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = ((await request.json().catch(() => null)) ?? {}) as { accountNumber?: unknown; owner?: unknown };
+  const body = ((await request.json().catch(() => null)) ?? {}) as {
+    accountNumber?: unknown;
+    owner?: unknown;
+  };
   const memberIds = memberIdsOf(workspaceId);
-  if (typeof body.accountNumber !== "string" || body.accountNumber.length === 0 || body.accountNumber.length > 64) {
+  if (
+    typeof body.accountNumber !== "string" ||
+    body.accountNumber.length === 0 ||
+    body.accountNumber.length > 64
+  ) {
     return NextResponse.json({ error: "accountNumber is required" }, { status: 400 });
   }
   if (body.owner !== null && !isValidOwner(body.owner, memberIds)) {
-    return NextResponse.json({ error: "owner must be a household member, shared, or null" }, { status: 400 });
+    return NextResponse.json(
+      { error: "owner must be a household member, shared, or null" },
+      { status: 400 },
+    );
   }
   const next = { ...readAccountOwners(workspaceId, memberIds) };
   if (body.owner === null) delete next[body.accountNumber];

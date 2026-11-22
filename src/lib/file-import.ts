@@ -6,20 +6,66 @@ import { readXlsx } from "@/lib/xlsx";
 export const IMPORT_FIELDS = ["date", "description", "amount", "debit", "credit"] as const;
 export type ImportField = (typeof IMPORT_FIELDS)[number];
 export type ImportMap = Record<ImportField, number | null>;
-export interface ImportRow { date: string; description: string; amount: number }
+export interface ImportRow {
+  date: string;
+  description: string;
+  amount: number;
+}
 export const MAX_IMPORT_ROWS = 5000;
 
 // Most specific first: the first keyword that matches a column wins for that field.
 const KEYWORDS: Record<ImportField, string[]> = {
-  date: ["תאריך עסקה", "תאריך רכישה", "תאריך תנועה", "תאריך פעולה", "תאריך", "תאריך ערך", "תאריך חיוב", "transaction date", "posting date", "date"],
-  description: ["שם בית העסק", "בית עסק", "שם בית עסק", "שם העסק", "תיאור התנועה", "תאור התנועה", "תיאור הפעולה", "פרטי התנועה", "תיאור", "תאור", "פרטים", "merchant name", "description", "merchant", "payee", "details"],
-  amount: ["סכום חיוב", "סכום החיוב", "סכום עסקה", "סכום העסקה", "סכום התנועה", "סכום", "charge amount", "transaction amount", "amount"],
+  date: [
+    "תאריך עסקה",
+    "תאריך רכישה",
+    "תאריך תנועה",
+    "תאריך פעולה",
+    "תאריך",
+    "תאריך ערך",
+    "תאריך חיוב",
+    "transaction date",
+    "posting date",
+    "date",
+  ],
+  description: [
+    "שם בית העסק",
+    "בית עסק",
+    "שם בית עסק",
+    "שם העסק",
+    "תיאור התנועה",
+    "תאור התנועה",
+    "תיאור הפעולה",
+    "פרטי התנועה",
+    "תיאור",
+    "תאור",
+    "פרטים",
+    "merchant name",
+    "description",
+    "merchant",
+    "payee",
+    "details",
+  ],
+  amount: [
+    "סכום חיוב",
+    "סכום החיוב",
+    "סכום עסקה",
+    "סכום העסקה",
+    "סכום התנועה",
+    "סכום",
+    "charge amount",
+    "transaction amount",
+    "amount",
+  ],
   debit: ["חובה", "בחובה", "חיוב", "debit", "withdrawal"],
   credit: ["זכות", "בזכות", "credit", "deposit"],
 };
 const HEADER_WORDS = [...Object.values(KEYWORDS).flat(), "יתרה", "balance"];
 
-const norm = (s: string) => s.replace(/[\s"'׳״:*()₪]+/g, " ").trim().toLowerCase();
+const norm = (s: string) =>
+  s
+    .replace(/[\s"'׳״:*()₪]+/g, " ")
+    .trim()
+    .toLowerCase();
 
 const headerHits = (row: string[]) =>
   row.filter((c) => {
@@ -40,20 +86,34 @@ export function guessColumns(header: string[]): ImportMap {
     let found: number | null = null;
     for (const k of KEYWORDS[f]) {
       const exact = cols.findIndex((c, i) => !used.has(i) && c === k);
-      const loose = exact >= 0 ? exact : cols.findIndex((c, i) => !used.has(i) && c.includes(k) && !c.includes("יתרה"));
-      if (loose >= 0) { found = loose; break; }
+      const loose =
+        exact >= 0
+          ? exact
+          : cols.findIndex((c, i) => !used.has(i) && c.includes(k) && !c.includes("יתרה"));
+      if (loose >= 0) {
+        found = loose;
+        break;
+      }
     }
     if (found != null) used.add(found);
     map[f] = found;
   }
   // "סכום חובה" style headers: separate debit/credit columns win over a single amount.
-  if (map.debit != null && map.credit != null && map.amount != null && [map.debit, map.credit].includes(map.amount)) map.amount = null;
+  if (
+    map.debit != null &&
+    map.credit != null &&
+    map.amount != null &&
+    [map.debit, map.credit].includes(map.amount)
+  )
+    map.amount = null;
   return map;
 }
 
 const iso = (y: number, m: number, d: number) => {
   const dt = new Date(Date.UTC(y, m - 1, d));
-  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d ? dt.toISOString().slice(0, 10) : null;
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
+    ? dt.toISOString().slice(0, 10)
+    : null;
 };
 
 export type DateOrder = "dmy" | "mdy";
@@ -127,13 +187,24 @@ export function fallbackHeaderRow(table: string[][]): number {
  * statement lists spending as positive, so `positiveIsExpense` flips it. A later header row
  * (card exports list domestic, then abroad, each with its own header) re-maps the columns below it.
  */
-export function buildImportRows(body: string[][], map: ImportMap, positiveIsExpense: boolean, dateOrder: DateOrder = "dmy"): { rows: ImportRow[]; skipped: number } {
+export function buildImportRows(
+  body: string[][],
+  map: ImportMap,
+  positiveIsExpense: boolean,
+  dateOrder: DateOrder = "dmy",
+): { rows: ImportRow[]; skipped: number } {
   const rows: ImportRow[] = [];
   let skipped = 0;
   for (const r of body) {
-    if (headerHits(r) >= 2) { map = guessColumns(r); continue; }
+    if (headerHits(r) >= 2) {
+      map = guessColumns(r);
+      continue;
+    }
     const date = map.date == null ? null : parseImportDate(r[map.date], dateOrder);
-    const description = map.description == null ? "" : (r[map.description] ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
+    const description =
+      map.description == null
+        ? ""
+        : (r[map.description] ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
     let amount: number | null = null;
     if (map.amount != null) {
       const a = parseAmount(r[map.amount]);
@@ -143,7 +214,10 @@ export function buildImportRows(body: string[][], map: ImportMap, positiveIsExpe
       const c = map.credit == null ? null : parseAmount(r[map.credit]);
       amount = d == null && c == null ? null : (c ?? 0) - Math.abs(d ?? 0);
     }
-    if (!date || !description || amount == null || amount === 0) { skipped++; continue; }
+    if (!date || !description || amount == null || amount === 0) {
+      skipped++;
+      continue;
+    }
     rows.push({ date, description, amount: roundCents(amount) });
   }
   return { rows, skipped };
@@ -183,9 +257,17 @@ export function markDuplicates(rows: ImportRow[], stored: { date: string; amount
 // shortcut: regex parsing, no nested tables or rowspan; fine for bank exports, switch to DOMParser if one breaks.
 export function parseHtmlTable(html: string): string[][] {
   const text = (s: string) =>
-    s.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "")
-      .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
-      .replace(/\s+/g, " ").trim();
+    s
+      .replace(/<br\s*\/?>/gi, " ")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
+      .replace(/\s+/g, " ")
+      .trim();
   const rows: string[][] = [];
   for (const tr of html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
     const row: string[] = [];

@@ -13,10 +13,36 @@ export interface QuickStartState {
 }
 
 export const QUICK_START = [
-  { group: "start", tasks: [{ id: "connect", href: "/settings/bank" }, { id: "budget", href: "/budget" }] },
-  { group: "organize", tasks: [{ id: "categorize", href: "/transactions?review=1" }, { id: "tag", href: "/transactions" }, { id: "view", href: "/transactions" }] },
-  { group: "plan", tasks: [{ id: "goal", href: "/journey" }, { id: "tracker", href: "/trackers" }, { id: "asset", href: "/investments" }] },
-  { group: "explore", tasks: [{ id: "analytics", href: "/overview" }, { id: "focus", href: "/focus" }] },
+  {
+    group: "start",
+    tasks: [
+      { id: "connect", href: "/settings/bank" },
+      { id: "budget", href: "/budget" },
+    ],
+  },
+  {
+    group: "organize",
+    tasks: [
+      { id: "categorize", href: "/transactions?review=1" },
+      { id: "tag", href: "/transactions" },
+      { id: "view", href: "/transactions" },
+    ],
+  },
+  {
+    group: "plan",
+    tasks: [
+      { id: "goal", href: "/journey" },
+      { id: "tracker", href: "/trackers" },
+      { id: "asset", href: "/investments" },
+    ],
+  },
+  {
+    group: "explore",
+    tasks: [
+      { id: "analytics", href: "/overview" },
+      { id: "focus", href: "/focus" },
+    ],
+  },
 ] as const;
 
 export type QuickStartTaskId = (typeof QUICK_START)[number]["tasks"][number]["id"];

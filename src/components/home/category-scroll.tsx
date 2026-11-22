@@ -9,7 +9,6 @@ import { translateCategoryName } from "@/lib/i18n-data";
 import { Sparkline } from "@/components/ui/sparkline";
 import type { HomeCategoryBlock } from "@/lib/types";
 
-
 /** One block per category, each with a header that sticks under the page header while its block scrolls by. */
 export function CategoryScroll({ items }: { items: HomeCategoryBlock[] }) {
   const t = useTranslations("home");
@@ -17,7 +16,9 @@ export function CategoryScroll({ items }: { items: HomeCategoryBlock[] }) {
   return (
     <section aria-labelledby="category-scroll-title">
       <div className="mb-3 px-1">
-        <h2 id="category-scroll-title" className="text-title font-semibold">{t("categoriesTitle")}</h2>
+        <h2 id="category-scroll-title" className="text-title font-semibold">
+          {t("categoriesTitle")}
+        </h2>
         <p className="text-footnote text-muted-foreground">{t("categoriesSubtitle")}</p>
       </div>
       {items.length === 0 ? (
@@ -66,8 +67,14 @@ function CategoryBlock({ item }: { item: HomeCategoryBlock }) {
           <Icon className="size-[18px] text-foreground" />
         </span>
         <span className="flex min-w-0 flex-1 items-center gap-2">
-          <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: item.color }} aria-hidden />
-          <h3 id={headingId} className="truncate text-headline font-semibold">{name}</h3>
+          <span
+            className="size-2 shrink-0 rounded-full"
+            style={{ backgroundColor: item.color }}
+            aria-hidden
+          />
+          <h3 id={headingId} className="truncate text-headline font-semibold">
+            {name}
+          </h3>
         </span>
         <span className="shrink-0 text-end tabular-nums">
           <span className="block text-headline font-semibold">{shekels(item.spent, locale)}</span>
@@ -97,7 +104,9 @@ function CategoryBlock({ item }: { item: HomeCategoryBlock }) {
                   }}
                 />
               </div>
-              <p className={`text-footnote tabular-nums ${isOver ? "text-[var(--status-over)]" : "text-muted-foreground"}`}>
+              <p
+                className={`text-footnote tabular-nums ${isOver ? "text-[var(--status-over)]" : "text-muted-foreground"}`}
+              >
                 {isOver
                   ? t("overBudgetBy", { amount: shekels(item.spent - item.budget, locale) })
                   : t("leftInBudget", { amount: shekels(item.budget - item.spent, locale) })}
@@ -107,19 +116,28 @@ function CategoryBlock({ item }: { item: HomeCategoryBlock }) {
           <div className="flex items-end gap-3">
             <Sparkline values={item.trend} color={item.color} label={t("trendLabel")} />
             <p className="min-w-0 text-footnote text-muted-foreground">
-              {avg > 0 ? t("trendVsAverage", { percent: Math.round((item.spent / avg) * 100) }) : t("trendNoHistory")}
+              {avg > 0
+                ? t("trendVsAverage", { percent: Math.round((item.spent / avg) * 100) })
+                : t("trendNoHistory")}
             </p>
           </div>
         </div>
 
         {item.topMerchants.length > 0 && (
           <div className="min-w-0">
-            <p className="mb-1.5 text-caption font-medium text-muted-foreground">{t("topMerchantsIn")}</p>
+            <p className="mb-1.5 text-caption font-medium text-muted-foreground">
+              {t("topMerchantsIn")}
+            </p>
             <ul className="divide-y divide-border">
               {item.topMerchants.map((m) => (
-                <li key={m.merchant} className="flex items-baseline justify-between gap-3 py-1.5 text-footnote">
+                <li
+                  key={m.merchant}
+                  className="flex items-baseline justify-between gap-3 py-1.5 text-footnote"
+                >
                   <span className="min-w-0 truncate">{m.merchant}</span>
-                  <span className="shrink-0 tabular-nums text-muted-foreground">{shekels(m.amount, locale)}</span>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">
+                    {shekels(m.amount, locale)}
+                  </span>
                 </li>
               ))}
             </ul>

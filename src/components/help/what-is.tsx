@@ -13,7 +13,10 @@ export function WhatIs({ concept, className }: { concept: Concept; className?: s
     <Popover>
       <PopoverTrigger
         aria-label={t("whatIs", { term: t(`${concept}.term`) })}
-        className={cn("-my-3 inline-grid size-11 place-items-center rounded-full align-middle hover:bg-accent/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", className)}
+        className={cn(
+          "-my-3 inline-grid size-11 place-items-center rounded-full align-middle hover:bg-accent/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+          className,
+        )}
       >
         <CircleHelp className="size-4" aria-hidden />
       </PopoverTrigger>

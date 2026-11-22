@@ -7,10 +7,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { startSync, submitSyncOtp } from "@/lib/api";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
-import {
-  SyncProgressDialog,
-  type ProviderRow,
-} from "./sync-progress-dialog";
+import { SyncProgressDialog, type ProviderRow } from "./sync-progress-dialog";
 
 interface SyncButtonProps {
   /** Off in the collapsed sidebar, where only the icon fits. */
@@ -48,12 +45,9 @@ export function SyncButton({ onComplete, autoStart = false, showLabel = true }: 
     setDialogOpen(false);
   }, []);
 
-  const handleSubmitOtp = useCallback(
-    async (syncRunId: number, code: string) => {
-      await submitSyncOtp(syncRunId, code);
-    },
-    []
-  );
+  const handleSubmitOtp = useCallback(async (syncRunId: number, code: string) => {
+    await submitSyncOtp(syncRunId, code);
+  }, []);
 
   const handleSync = () => {
     setSyncing(true);
@@ -70,15 +64,11 @@ export function SyncButton({ onComplete, autoStart = false, showLabel = true }: 
       if (event.type === "plan") {
         const list = (event.data.providers as string[]) ?? [];
         setProviders(list);
-        setRows(
-          list.map((p) => ({ provider: p, status: "idle", added: 0, updated: 0 }))
-        );
+        setRows(list.map((p) => ({ provider: p, status: "idle", added: 0, updated: 0 })));
       } else if (event.type === "provider-start") {
         const provider = event.data.provider as string;
         setRows((prev) =>
-          prev.map((r) =>
-            r.provider === provider ? { ...r, status: "running" } : r
-          )
+          prev.map((r) => (r.provider === provider ? { ...r, status: "running" } : r)),
         );
       } else if (event.type === "provider-2fa-needed") {
         const provider = event.data.provider as string;
@@ -86,25 +76,19 @@ export function SyncButton({ onComplete, autoStart = false, showLabel = true }: 
         awaitingOtpRef.current.add(provider);
         setRows((prev) =>
           prev.map((r) =>
-            r.provider === provider
-              ? { ...r, status: "awaiting-otp", syncRunId }
-              : r
-          )
+            r.provider === provider ? { ...r, status: "awaiting-otp", syncRunId } : r,
+          ),
         );
       } else if (event.type === "provider-2fa-submitted") {
         const provider = event.data.provider as string;
         awaitingOtpRef.current.delete(provider);
         setRows((prev) =>
-          prev.map((r) =>
-            r.provider === provider ? { ...r, status: "running" } : r
-          )
+          prev.map((r) => (r.provider === provider ? { ...r, status: "running" } : r)),
         );
       } else if (event.type === "provider-2fa-manual") {
         const provider = event.data.provider as string;
         setRows((prev) =>
-          prev.map((r) =>
-            r.provider === provider ? { ...r, status: "manual-2fa" } : r
-          )
+          prev.map((r) => (r.provider === provider ? { ...r, status: "manual-2fa" } : r)),
         );
       } else if (event.type === "provider-done") {
         const provider = event.data.provider as string;
@@ -123,8 +107,8 @@ export function SyncButton({ onComplete, autoStart = false, showLabel = true }: 
                   updated,
                   errorMessage,
                 }
-              : r
-          )
+              : r,
+          ),
         );
         if (!ok && errorMessage) {
           toast.error(`${provider}: ${errorText(errorMessage).message}`, {

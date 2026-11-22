@@ -2,7 +2,8 @@
  * Cash-flow warning signs: three or more mean a real cash-flow problem,
  * even on a good salary. Pure: the server feeds it facts from transactions and assets.
  */
-export type CashflowSign = "overdraft" | "installments" | "loans" | "lateFees" | "noBuffer" | "deficit";
+export type CashflowSign =
+  "overdraft" | "installments" | "loans" | "lateFees" | "noBuffer" | "deficit";
 
 export interface CashflowFacts {
   /** Months (of the last 3) with overdraft interest charged. */
@@ -33,4 +34,5 @@ export function cashflowSigns(f: CashflowFacts): CashflowSign[] {
 }
 
 export type CashflowLevel = "healthy" | "watch" | "problem";
-export const cashflowLevel = (signs: CashflowSign[]): CashflowLevel => (signs.length >= 3 ? "problem" : signs.length > 0 ? "watch" : "healthy");
+export const cashflowLevel = (signs: CashflowSign[]): CashflowLevel =>
+  signs.length >= 3 ? "problem" : signs.length > 0 ? "watch" : "healthy";

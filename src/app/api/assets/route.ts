@@ -24,7 +24,10 @@ export async function POST(request: Request) {
   }
   const list = (body as { assets?: unknown })?.assets;
   if (!Array.isArray(list) || list.length === 0 || list.length > MAX_IMPORT) {
-    return NextResponse.json({ error: `assets must be a list of 1-${MAX_IMPORT}` }, { status: 400 });
+    return NextResponse.json(
+      { error: `assets must be a list of 1-${MAX_IMPORT}` },
+      { status: 400 },
+    );
   }
   const parsed: AssetInput[] = [];
   for (const [i, raw] of list.entries()) {

@@ -80,7 +80,8 @@ const MAX_INSURANCE = 50;
 const MAX_AMOUNT = 1e10;
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-const text = (v: unknown, max: number): string | null => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);
+const text = (v: unknown, max: number): string | null =>
+  typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null;
 
 /** A number, null when absent, undefined when it is not a usable amount. */
 function optNum(v: unknown): number | null | undefined {
@@ -105,13 +106,20 @@ export function reportAssetKey(p: PensionProduct): string {
 }
 
 export function reportAssetType(p: PensionProduct): "pension" | "study_fund" | "provident" {
-  return p.type === "keren_hishtalmut" ? "study_fund" : p.type === "kupat_gemel" ? "provident" : "pension";
+  return p.type === "keren_hishtalmut"
+    ? "study_fund"
+    : p.type === "kupat_gemel"
+      ? "provident"
+      : "pension";
 }
 
 /** The name seen in the investments list: provider product, employer when the report names one, last digits of the number. */
 export function reportAssetName(p: PensionProduct): string {
   const tail = p.policyNumber.replace(/\D/g, "").slice(-4);
-  return `${p.name}${p.employer ? ` — ${p.employer}` : ""}${tail ? ` ···${tail}` : ""}`.slice(0, 100);
+  return `${p.name}${p.employer ? ` — ${p.employer}` : ""}${tail ? ` ···${tail}` : ""}`.slice(
+    0,
+    100,
+  );
 }
 
 /** What the report adds beyond the asset columns: tracks, components, cover, expected annuity. */
@@ -137,13 +145,16 @@ export function reportDetails(p: PensionProduct, asOf: string): Record<string, u
 
 /** Yearly, quarterly or monthly premium → the monthly figure Penny stores. */
 function monthlyPremium(premium: number, frequency: unknown): number {
-  const f = String(frequency ?? "monthly").trim().toLowerCase();
+  const f = String(frequency ?? "monthly")
+    .trim()
+    .toLowerCase();
   if (f.startsWith("year") || f.startsWith("annual")) return round2(premium / 12);
   if (f.startsWith("quarter")) return round2(premium / 3);
   return round2(premium);
 }
 
-const isKind = (v: string): v is InsurancePolicy["kind"] => (POLICY_KINDS as readonly string[]).includes(v);
+const isKind = (v: string): v is InsurancePolicy["kind"] =>
+  (POLICY_KINDS as readonly string[]).includes(v);
 
 function parseTracks(v: unknown): PensionTrack[] {
   if (!Array.isArray(v)) return [];
@@ -162,7 +173,9 @@ function parseTracks(v: unknown): PensionTrack[] {
   return out;
 }
 
-function parseCoverages(v: unknown): { name: string; pct: number | null; monthly: number | null }[] {
+function parseCoverages(
+  v: unknown,
+): { name: string; pct: number | null; monthly: number | null }[] {
   if (!Array.isArray(v)) return [];
   return v.slice(0, 20).flatMap((entry) => {
     const c = (entry ?? {}) as Record<string, unknown>;
@@ -173,7 +186,8 @@ function parseCoverages(v: unknown): { name: string; pct: number | null; monthly
 
 function parseProduct(entry: unknown, index: number): PensionProduct | string {
   const p = entry as Record<string, unknown> | null;
-  if (!p || typeof p !== "object" || Array.isArray(p)) return `product ${index + 1} must be an object`;
+  if (!p || typeof p !== "object" || Array.isArray(p))
+    return `product ${index + 1} must be an object`;
 
   const type = typeof p.type === "string" ? p.type.trim().toLowerCase() : "";
   if (!(PENSION_PRODUCT_TYPES as readonly string[]).includes(type)) {
@@ -187,8 +201,10 @@ function parseProduct(entry: unknown, index: number): PensionProduct | string {
   if (balance == null) return `product ${index + 1}: balance is required`;
   const feeDeposit = optNum(p.feeDeposit);
   const feeBalance = optNum(p.feeBalance);
-  if (feeDeposit === undefined || (feeDeposit ?? 0) > 10) return `product ${index + 1}: feeDeposit must be a percentage up to 10`;
-  if (feeBalance === undefined || (feeBalance ?? 0) > 10) return `product ${index + 1}: feeBalance must be a percentage up to 10`;
+  if (feeDeposit === undefined || (feeDeposit ?? 0) > 10)
+    return `product ${index + 1}: feeDeposit must be a percentage up to 10`;
+  if (feeBalance === undefined || (feeBalance ?? 0) > 10)
+    return `product ${index + 1}: feeBalance must be a percentage up to 10`;
 
   const status = p.status === "inactive" ? "inactive" : "active";
   const components = (p.components ?? null) as Record<string, unknown> | null;
@@ -197,7 +213,9 @@ function parseProduct(entry: unknown, index: number): PensionProduct | string {
     type: type as PensionProductType,
     name,
     provider,
-    policyNumber: text(p.policyNumber, 40) ?? (typeof p.policyNumber === "number" ? String(p.policyNumber) : ""),
+    policyNumber:
+      text(p.policyNumber, 40) ??
+      (typeof p.policyNumber === "number" ? String(p.policyNumber) : ""),
     balance,
     feeDeposit: feeDeposit ?? null,
     feeBalance: feeBalance ?? null,
@@ -205,25 +223,35 @@ function parseProduct(entry: unknown, index: number): PensionProduct | string {
     status,
     joinDate: isReportDate(p.joinDate) ? p.joinDate : null,
     lastDeposit: isReportDate(p.lastDeposit) ? p.lastDeposit : null,
-    regularDeposit: status === "active" ? optNum(p.regularDeposit) ?? null : null,
+    regularDeposit: status === "active" ? (optNum(p.regularDeposit) ?? null) : null,
     insuredSalary: optNum(p.insuredSalary) ?? null,
     expectedAnnuity: optNum(p.expectedAnnuity) ?? null,
     expectedAnnuityWithDeposits: optNum(p.expectedAnnuityWithDeposits) ?? null,
     agentOfRecord: text(p.agentOfRecord, 80),
     tracks: parseTracks(p.tracks),
-    components: components && typeof components === "object"
-      ? { pitzuyim: optNum(components.pitzuyim) ?? null, tagmulim: optNum(components.tagmulim) ?? null, capital: optNum(components.capital) ?? null }
-      : null,
+    components:
+      components && typeof components === "object"
+        ? {
+            pitzuyim: optNum(components.pitzuyim) ?? null,
+            tagmulim: optNum(components.tagmulim) ?? null,
+            capital: optNum(components.capital) ?? null,
+          }
+        : null,
     coverages: parseCoverages(p.coverages),
-    coverageCost: coverageCost && typeof coverageCost === "object"
-      ? { disability: optNum(coverageCost.disability) ?? null, survivors: optNum(coverageCost.survivors) ?? null }
-      : null,
+    coverageCost:
+      coverageCost && typeof coverageCost === "object"
+        ? {
+            disability: optNum(coverageCost.disability) ?? null,
+            survivors: optNum(coverageCost.survivors) ?? null,
+          }
+        : null,
   };
 }
 
 function parseInsurance(entry: unknown, index: number): PensionReportInsurance | string {
   const o = entry as Record<string, unknown> | null;
-  if (!o || typeof o !== "object" || Array.isArray(o)) return `insurance ${index + 1} must be an object`;
+  if (!o || typeof o !== "object" || Array.isArray(o))
+    return `insurance ${index + 1} must be an object`;
   const name = text(o.name, 80);
   if (!name) return `insurance ${index + 1}: name is required`;
   const provider = text(o.insurer ?? o.provider, 60);
@@ -236,7 +264,9 @@ function parseInsurance(entry: unknown, index: number): PensionReportInsurance |
     name,
     kind: isKind(kind) ? kind : "other",
     provider,
-    policyNumber: text(o.policyNumber, 40) ?? (typeof o.policyNumber === "number" ? String(o.policyNumber) : ""),
+    policyNumber:
+      text(o.policyNumber, 40) ??
+      (typeof o.policyNumber === "number" ? String(o.policyNumber) : ""),
     premium: monthlyPremium(premium, o.premiumFrequency),
     startDate: isReportDate(o.startDate) ? o.startDate : null,
     matchPattern: text(o.matchPattern, 60),
@@ -252,9 +282,11 @@ export function parsePensionReport(raw: unknown): PensionReport | string {
   if (!isReportDate(r.asOf)) return "asOf must be a real date like 2026-06-30";
 
   const summary = r.summary as Record<string, unknown> | null;
-  if (!summary || typeof summary !== "object" || Array.isArray(summary)) return "summary is required";
+  if (!summary || typeof summary !== "object" || Array.isArray(summary))
+    return "summary is required";
   const totalSavings = optNum(summary.totalSavings);
-  if (totalSavings == null) return "summary.totalSavings is required, to check the products against";
+  if (totalSavings == null)
+    return "summary.totalSavings is required, to check the products against";
 
   const list = r.products;
   if (!Array.isArray(list) || list.length === 0) return "products must be a non-empty list";
@@ -266,7 +298,8 @@ export function parsePensionReport(raw: unknown): PensionReport | string {
     const p = parseProduct(entry, i);
     if (typeof p === "string") return p;
     const key = reportAssetKey(p);
-    if (keys.has(key)) return `two products share the same provider, policy number and type (${p.name})`;
+    if (keys.has(key))
+      return `two products share the same provider, policy number and type (${p.name})`;
     keys.add(key);
     products.push(p);
   }
@@ -280,7 +313,8 @@ export function parsePensionReport(raw: unknown): PensionReport | string {
   const insurance: PensionReportInsurance[] = [];
   if (r.insurance != null) {
     if (!Array.isArray(r.insurance)) return "insurance must be a list";
-    if (r.insurance.length > MAX_INSURANCE) return `a report can hold at most ${MAX_INSURANCE} insurance policies`;
+    if (r.insurance.length > MAX_INSURANCE)
+      return `a report can hold at most ${MAX_INSURANCE} insurance policies`;
     for (const [i, entry] of r.insurance.entries()) {
       const ins = parseInsurance(entry, i);
       if (typeof ins === "string") return ins;
@@ -295,9 +329,15 @@ export function parsePensionReport(raw: unknown): PensionReport | string {
     source: text(r.source, 120) ?? "",
     file: text(r.file, 200),
     issuedAt: isReportDate(r.issuedAt) ? r.issuedAt : null,
-    agent: agent && typeof agent === "object"
-      ? { name: text(agent.name, 80) ?? "", agency: text(agent.agency, 80), phone: text(agent.phone, 40), email: text(agent.email, 120) }
-      : null,
+    agent:
+      agent && typeof agent === "object"
+        ? {
+            name: text(agent.name, 80) ?? "",
+            agency: text(agent.agency, 80),
+            phone: text(agent.phone, 40),
+            email: text(agent.email, 120),
+          }
+        : null,
     totalSavings,
     summary,
     products,

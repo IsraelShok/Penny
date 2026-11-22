@@ -10,13 +10,31 @@ import { getKey, keyPath, legacyKeyPath, lockFilePath, setKeyInMemory } from "./
  * data key wrapped (AES-256-GCM) with a separate scrypt-derived key. Sessions live only in memory.
  */
 
-const scrypt = promisify(crypto.scrypt) as (pw: string, salt: Buffer, len: number, opts: crypto.ScryptOptions) => Promise<Buffer>;
-const SCRYPT = { N: 2 ** 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+const scrypt = promisify(crypto.scrypt) as (
+  pw: string,
+  salt: Buffer,
+  len: number,
+  opts: crypto.ScryptOptions,
+) => Promise<Buffer>;
+// New locks use N=2^17: about 128 MB and a quarter second per guess, which is the whole
+// defence once the data directory has been copied and the attack is offline. Lock files
+// written before this change keep the N they carry, so an existing PIN still unlocks.
+const SCRYPT_NEW = 2 ** 17;
+const SCRYPT_LEGACY = 2 ** 15;
+const scryptOptions = (n: number): crypto.ScryptOptions => ({
+  N: n,
+  r: 8,
+  p: 1,
+  // scrypt needs about 128 * N * r bytes; leave a wide margin.
+  maxmem: 128 * n * 8 * 2,
+});
 export const IDLE_CHOICES = [5, 15, 60] as const;
 export const SESSION_COOKIE = "penny_session";
 
 interface LockFile {
   v: 1;
+  /** scrypt cost this lock was built with; absent in files written before the bump. */
+  n?: number;
   hashSalt: string;
   hash: string;
   kekSalt: string;
@@ -50,21 +68,22 @@ export function idleMinutes(): number {
   return readLock()?.idleMinutes ?? 15;
 }
 
-/** Passphrase of 8+ characters, or a PIN of 6+ digits (a PIN is also 6+ characters, so: 8+, or 6-7 digits). */
+/** Passphrase or PIN of 8+ characters. A 6-digit PIN leaves only a million offline guesses. */
 export function isValidSecret(secret: unknown): secret is string {
-  return typeof secret === "string" && (secret.length >= 8 || /^\d{6,}$/.test(secret));
+  return typeof secret === "string" && secret.length >= 8;
 }
 
 async function build(secret: string, key: Buffer, idle: number): Promise<LockFile> {
   const hashSalt = crypto.randomBytes(16);
   const kekSalt = crypto.randomBytes(16);
-  const hash = await scrypt(secret, hashSalt, 32, SCRYPT);
-  const kek = await scrypt(secret, kekSalt, 32, SCRYPT);
+  const hash = await scrypt(secret, hashSalt, 32, scryptOptions(SCRYPT_NEW));
+  const kek = await scrypt(secret, kekSalt, 32, scryptOptions(SCRYPT_NEW));
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv("aes-256-gcm", kek, iv);
   const wrapped = Buffer.concat([cipher.update(key), cipher.final()]);
   return {
     v: 1,
+    n: SCRYPT_NEW,
     hashSalt: hashSalt.toString("hex"),
     hash: hash.toString("hex"),
     kekSalt: kekSalt.toString("hex"),
@@ -97,23 +116,35 @@ export function shred(file: string): void {
 }
 
 async function verify(lock: LockFile, secret: string): Promise<boolean> {
-  const hash = await scrypt(secret, Buffer.from(lock.hashSalt, "hex"), 32, SCRYPT);
+  const hash = await scrypt(
+    secret,
+    Buffer.from(lock.hashSalt, "hex"),
+    32,
+    scryptOptions(lock.n ?? SCRYPT_LEGACY),
+  );
   return crypto.timingSafeEqual(hash, Buffer.from(lock.hash, "hex"));
 }
 
 async function unwrap(lock: LockFile, secret: string): Promise<Buffer> {
-  const kek = await scrypt(secret, Buffer.from(lock.kekSalt, "hex"), 32, SCRYPT);
+  const kek = await scrypt(
+    secret,
+    Buffer.from(lock.kekSalt, "hex"),
+    32,
+    scryptOptions(lock.n ?? SCRYPT_LEGACY),
+  );
   const decipher = crypto.createDecipheriv("aes-256-gcm", kek, Buffer.from(lock.iv, "hex"));
   decipher.setAuthTag(Buffer.from(lock.tag, "hex"));
   return Buffer.concat([decipher.update(Buffer.from(lock.wrapped, "hex")), decipher.final()]);
 }
 
-export type CheckResult = { ok: true } | { ok: false; reason: "wrong" | "wait"; retryAfter?: number };
+export type CheckResult =
+  { ok: true } | { ok: false; reason: "wrong" | "wait"; retryAfter?: number };
 
 /** Verifies the current passphrase, with exponential backoff after failures (1s, 2s, 4s ... up to 15 min). */
 export async function checkSecret(secret: unknown, now = Date.now()): Promise<CheckResult> {
   const f = fails();
-  if (now < f.until) return { ok: false, reason: "wait", retryAfter: Math.ceil((f.until - now) / 1000) };
+  if (now < f.until)
+    return { ok: false, reason: "wait", retryAfter: Math.ceil((f.until - now) / 1000) };
   const lock = readLock();
   if (!lock || typeof secret !== "string" || !(await verify(lock, secret))) {
     f.count += 1;
@@ -143,7 +174,11 @@ export async function unlock(secret: string): Promise<string> {
 }
 
 /** New passphrase and/or idle time; re-wraps with fresh salts. */
-export async function changeLock(current: string, next: string | null, idle: number): Promise<void> {
+export async function changeLock(
+  current: string,
+  next: string | null,
+  idle: number,
+): Promise<void> {
   const lock = readLock();
   if (!lock) throw new Error("not_enabled");
   const key = await unwrap(lock, current);

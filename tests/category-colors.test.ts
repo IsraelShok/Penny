@@ -28,15 +28,22 @@ describe("color family derivation", () => {
   });
 
   it("gives every colored group its own hue", () => {
-    const hues = CATEGORY_PARENTS.map((p) => hexToOklch(p.color)).filter((o) => o.c > 0.05).map((o) => o.h);
+    const hues = CATEGORY_PARENTS.map((p) => hexToOklch(p.color))
+      .filter((o) => o.c > 0.05)
+      .map((o) => o.h);
     for (let i = 0; i < hues.length; i++)
-      for (let j = i + 1; j < hues.length; j++) expect(hueGap(hues[i], hues[j])).toBeGreaterThanOrEqual(20);
+      for (let j = i + 1; j < hues.length; j++)
+        expect(hueGap(hues[i], hues[j])).toBeGreaterThanOrEqual(20);
   });
 });
 
 describe("family colors migration", () => {
   const color = (db: Database.Database, name: string) =>
-    (db.prepare("SELECT color FROM categories WHERE workspace_id = 1 AND name = ?").get(name) as { color: string }).color;
+    (
+      db.prepare("SELECT color FROM categories WHERE workspace_id = 1 AND name = ?").get(name) as {
+        color: string;
+      }
+    ).color;
 
   it("recolors seeded defaults only and leaves user-chosen colors untouched", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "penny-catcolor-"));
@@ -53,7 +60,9 @@ describe("family colors migration", () => {
     db.exec("UPDATE categories SET color = '#123456' WHERE name = 'Restaurants'");
     db.exec("UPDATE categories SET color = '#3366CC' WHERE name = 'Transportation'");
     db.exec("UPDATE categories SET color = '#65C1D1' WHERE name = 'Fuel'");
-    db.prepare("INSERT INTO categories (workspace_id, parent_id, name, color, kind) VALUES (1, (SELECT id FROM categories WHERE workspace_id = 1 AND name = 'Food'), 'My Snacks', '#81B482', 'expense')").run();
+    db.prepare(
+      "INSERT INTO categories (workspace_id, parent_id, name, color, kind) VALUES (1, (SELECT id FROM categories WHERE workspace_id = 1 AND name = 'Food'), 'My Snacks', '#81B482', 'expense')",
+    ).run();
 
     runMigrations(db);
 
@@ -77,7 +86,9 @@ describe("family colors migration", () => {
     // Back to the 050 state: pastel Food family, plus one user-picked leaf.
     db.exec("DELETE FROM _migrations WHERE name = '051_category_colors_saturated.sql'");
     db.exec("UPDATE categories SET color = '#E99C70' WHERE name = 'Food'");
-    db.prepare("UPDATE categories SET color = ? WHERE name = 'Groceries'").run(childColor("#E99C70", 0));
+    db.prepare("UPDATE categories SET color = ? WHERE name = 'Groceries'").run(
+      childColor("#E99C70", 0),
+    );
     db.exec("UPDATE categories SET color = '#123456' WHERE name = 'Restaurants'");
     runMigrations(db);
     const food = CATEGORY_PARENTS.find((p) => p.name === "Food")!.color;

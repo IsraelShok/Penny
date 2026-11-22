@@ -24,7 +24,7 @@ export function cashBetween(workspaceId: number, from: string, to: string): Cash
       `SELECT COALESCE(SUM(CASE WHEN flow_type = 'income' THEN cash_amount END), 0) AS income,
               COALESCE(SUM(CASE WHEN flow_type <> 'income' THEN -cash_amount END), 0) AS spend
        FROM v_cash_rows
-       WHERE workspace_id = ? AND date >= ? AND date <= ?${o.sql}`
+       WHERE workspace_id = ? AND date >= ? AND date <= ?${o.sql}`,
     )
     .get(workspaceId, from, to, ...o.params) as { income: number; spend: number };
   return { income: row.income, spend: row.spend, net: row.income - row.spend };
@@ -34,7 +34,7 @@ export function spendBetween(workspaceId: number, from: string, to: string): num
   const row = getDb()
     .prepare(
       `SELECT COALESCE(SUM(spend), 0) AS total FROM v_spend_rows
-       WHERE workspace_id = ? AND date >= ? AND date <= ?`
+       WHERE workspace_id = ? AND date >= ? AND date <= ?`,
     )
     .get(workspaceId, from, to) as { total: number };
   return row.total;
@@ -44,7 +44,7 @@ export function incomeBetween(workspaceId: number, from: string, to: string): nu
   const row = getDb()
     .prepare(
       `SELECT COALESCE(SUM(cash_amount), 0) AS total FROM v_cash_rows
-       WHERE workspace_id = ? AND flow_type = 'income' AND date >= ? AND date <= ?`
+       WHERE workspace_id = ? AND flow_type = 'income' AND date >= ? AND date <= ?`,
     )
     .get(workspaceId, from, to) as { total: number };
   return row.total;
@@ -53,14 +53,14 @@ export function incomeBetween(workspaceId: number, from: string, to: string): nu
 export function spendByCategory(
   workspaceId: number,
   from: string,
-  to: string
+  to: string,
 ): { categoryId: number; amount: number }[] {
   return getDb()
     .prepare(
       `SELECT category_id AS categoryId, SUM(spend) AS amount
        FROM v_spend_rows
        WHERE workspace_id = ? AND date >= ? AND date <= ? AND category_id IS NOT NULL
-       GROUP BY category_id`
+       GROUP BY category_id`,
     )
     .all(workspaceId, from, to) as { categoryId: number; amount: number }[];
 }
@@ -76,7 +76,7 @@ export function flowTotals(workspaceId: number): FlowTotal[] {
   return getDb()
     .prepare(
       `SELECT flow_type AS flowType, COUNT(*) AS count, COALESCE(SUM(charged_amount), 0) AS total
-       FROM transactions WHERE workspace_id = ? GROUP BY flow_type ORDER BY flow_type`
+       FROM transactions WHERE workspace_id = ? GROUP BY flow_type ORDER BY flow_type`,
     )
     .all(workspaceId) as FlowTotal[];
 }
@@ -84,7 +84,9 @@ export function flowTotals(workspaceId: number): FlowTotal[] {
 /** Sum of every stored amount, the other side of the flowTotals invariant. */
 export function transactionsTotal(workspaceId: number): number {
   const row = getDb()
-    .prepare(`SELECT COALESCE(SUM(charged_amount), 0) AS total FROM transactions WHERE workspace_id = ?`)
+    .prepare(
+      `SELECT COALESCE(SUM(charged_amount), 0) AS total FROM transactions WHERE workspace_id = ?`,
+    )
     .get(workspaceId) as { total: number };
   return row.total;
 }

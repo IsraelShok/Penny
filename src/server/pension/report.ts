@@ -1,7 +1,13 @@
 import "server-only";
 
 import { getDb } from "@/server/db";
-import { reportAssetKey, reportAssetName, reportAssetType, reportDetails, type PensionReport } from "@/lib/pension-report";
+import {
+  reportAssetKey,
+  reportAssetName,
+  reportAssetType,
+  reportDetails,
+  type PensionReport,
+} from "@/lib/pension-report";
 
 export interface PensionImportResult {
   /** Products in the report. */
@@ -33,7 +39,10 @@ export interface PensionReportRecord {
  * duplicates them. What the user changed themselves — the asset's name, a policy's match text,
  * notes, agent or paying account — is left alone.
  */
-export function importPensionReport(workspaceId: number, report: PensionReport): PensionImportResult {
+export function importPensionReport(
+  workspaceId: number,
+  report: PensionReport,
+): PensionImportResult {
   const db = getDb();
   let created = 0;
   let updated = 0;
@@ -44,15 +53,15 @@ export function importPensionReport(workspaceId: number, report: PensionReport):
     const insertAsset = db.prepare(
       `INSERT INTO assets (workspace_id, name, type, currency, manual_value, liquid, is_liability, note,
          fee_deposit, fee_balance, monthly_deposit, details)
-       VALUES (?, ?, ?, 'ILS', ?, 0, 0, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, 'ILS', ?, 0, 0, ?, ?, ?, ?, ?)`,
     );
     const updateAsset = db.prepare(
       `UPDATE assets SET manual_value = ?, is_liability = 0, fee_deposit = ?, fee_balance = ?, monthly_deposit = ?, details = ?
-       WHERE workspace_id = ? AND id = ?`
+       WHERE workspace_id = ? AND id = ?`,
     );
     const snapshot = db.prepare(
       `INSERT INTO asset_snapshots (asset_id, date, value_ils) VALUES (?, ?, ?)
-       ON CONFLICT(asset_id, date) DO UPDATE SET value_ils = excluded.value_ils`
+       ON CONFLICT(asset_id, date) DO UPDATE SET value_ils = excluded.value_ils`,
     );
 
     for (const p of report.products) {
@@ -61,13 +70,30 @@ export function importPensionReport(workspaceId: number, report: PensionReport):
       const existing = findAsset.get(workspaceId, key) as { id: number } | undefined;
       let id: number;
       if (existing) {
-        updateAsset.run(p.balance, p.feeDeposit, p.feeBalance, p.regularDeposit, details, workspaceId, existing.id);
+        updateAsset.run(
+          p.balance,
+          p.feeDeposit,
+          p.feeBalance,
+          p.regularDeposit,
+          details,
+          workspaceId,
+          existing.id,
+        );
         id = existing.id;
         updated++;
       } else {
         id = Number(
-          insertAsset.run(workspaceId, reportAssetName(p), reportAssetType(p), p.balance, key, p.feeDeposit, p.feeBalance, p.regularDeposit, details)
-            .lastInsertRowid
+          insertAsset.run(
+            workspaceId,
+            reportAssetName(p),
+            reportAssetType(p),
+            p.balance,
+            key,
+            p.feeDeposit,
+            p.feeBalance,
+            p.regularDeposit,
+            details,
+          ).lastInsertRowid,
         );
         created++;
       }
@@ -77,12 +103,12 @@ export function importPensionReport(workspaceId: number, report: PensionReport):
     const findPolicy = db.prepare(
       `SELECT id, notes, match_pattern AS matchPattern, agent_name AS agentName, agent_phone AS agentPhone, coverage
        FROM insurance_policies
-       WHERE workspace_id = ? AND name = ? AND COALESCE(provider, '') = ? AND COALESCE(policy_number, '') = ?`
+       WHERE workspace_id = ? AND name = ? AND COALESCE(provider, '') = ? AND COALESCE(policy_number, '') = ?`,
     );
     const insertPolicy = db.prepare(
       `INSERT INTO insurance_policies (workspace_id, name, kind, provider, monthly_premium, policy_number, start_date,
          match_pattern, coverage, notes, agent_name, agent_phone, insured, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
     );
     const updatePolicy = db.prepare(
       `UPDATE insurance_policies SET
@@ -94,21 +120,51 @@ export function importPensionReport(workspaceId: number, report: PensionReport):
          agent_name = CASE WHEN agent_name IS NULL OR agent_name = '' THEN ? ELSE agent_name END,
          agent_phone = CASE WHEN agent_phone IS NULL OR agent_phone = '' THEN ? ELSE agent_phone END,
          updated_at = datetime('now')
-       WHERE workspace_id = ? AND id = ?`
+       WHERE workspace_id = ? AND id = ?`,
     );
     const agent = report.agent?.name ?? null;
     const phone = report.agent?.phone ?? null;
 
     for (const ins of report.insurance) {
       const existing = findPolicy.get(workspaceId, ins.name, ins.provider, ins.policyNumber) as
-        | { id: number; notes: string | null; matchPattern: string | null; agentName: string | null; agentPhone: string | null; coverage: number | null }
+        | {
+            id: number;
+            notes: string | null;
+            matchPattern: string | null;
+            agentName: string | null;
+            agentPhone: string | null;
+            coverage: number | null;
+          }
         | undefined;
       if (existing) {
-        updatePolicy.run(ins.kind, ins.premium, ins.startDate, existing.coverage != null ? null : ins.coverage, ins.notes, ins.matchPattern,
-          agent, phone, workspaceId, existing.id);
+        updatePolicy.run(
+          ins.kind,
+          ins.premium,
+          ins.startDate,
+          existing.coverage != null ? null : ins.coverage,
+          ins.notes,
+          ins.matchPattern,
+          agent,
+          phone,
+          workspaceId,
+          existing.id,
+        );
       } else {
-        insertPolicy.run(workspaceId, ins.name, ins.kind, ins.provider, ins.premium, ins.policyNumber, ins.startDate,
-          ins.matchPattern, ins.coverage, ins.notes, agent, phone, report.member || null);
+        insertPolicy.run(
+          workspaceId,
+          ins.name,
+          ins.kind,
+          ins.provider,
+          ins.premium,
+          ins.policyNumber,
+          ins.startDate,
+          ins.matchPattern,
+          ins.coverage,
+          ins.notes,
+          agent,
+          phone,
+          report.member || null,
+        );
         policiesCreated++;
       }
     }
@@ -120,7 +176,7 @@ export function importPensionReport(workspaceId: number, report: PensionReport):
          ON CONFLICT(workspace_id, as_of, member, source) DO UPDATE SET
            file_name = excluded.file_name, issued_at = excluded.issued_at, total_savings = excluded.total_savings,
            products = excluded.products, summary = excluded.summary, imported_at = datetime('now')
-         RETURNING id`
+         RETURNING id`,
       )
       .get(
         workspaceId,
@@ -131,7 +187,7 @@ export function importPensionReport(workspaceId: number, report: PensionReport):
         report.issuedAt,
         report.totalSavings,
         report.products.length,
-        JSON.stringify({ ...report.summary, agent: report.agent })
+        JSON.stringify({ ...report.summary, agent: report.agent }),
       ) as { id: number };
     return saved.id;
   })();
@@ -152,7 +208,7 @@ export function listPensionReports(workspaceId: number, limit = 6): PensionRepor
     .prepare(
       `SELECT id, as_of AS asOf, member, source, file_name AS fileName, issued_at AS issuedAt,
          total_savings AS totalSavings, products, imported_at AS importedAt
-       FROM pension_reports WHERE workspace_id = ? ORDER BY as_of DESC, id DESC LIMIT ?`
+       FROM pension_reports WHERE workspace_id = ? ORDER BY as_of DESC, id DESC LIMIT ?`,
     )
     .all(workspaceId, Math.min(Math.max(limit, 1), 50)) as PensionReportRecord[];
 }

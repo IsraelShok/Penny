@@ -7,7 +7,12 @@ beforeAll(() => {
   process.env.PENNY_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "penny-textimport-"));
 });
 
-const post = (body: unknown) => new Request("http://127.0.0.1/api/import/text", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+const post = (body: unknown) =>
+  new Request("http://127.0.0.1/api/import/text", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
 describe("POST /api/import/text", () => {
   it("refuses empty and oversized text, and says when no AI provider is set up", async () => {

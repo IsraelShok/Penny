@@ -72,10 +72,20 @@ export function BudgetHistoryCard() {
           <ul className="row-grid mt-1.5 text-sm">
             {history.map((h) => (
               <li key={h.period.key} className="flex items-baseline justify-between gap-3 py-1.5">
-                <bdi className="tabular-nums text-muted-foreground">{/^\d{4}-\d{2}$/.test(h.period.key) ? new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(`${h.period.key}-15T12:00:00`)) : h.period.key}</bdi>
+                <bdi className="tabular-nums text-muted-foreground">
+                  {/^\d{4}-\d{2}$/.test(h.period.key)
+                    ? new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
+                        new Date(`${h.period.key}-15T12:00:00`),
+                      )
+                    : h.period.key}
+                </bdi>
                 <bdi className="tabular-nums">
                   {money(h.spent)} / {money(h.planned)}
-                  <span className={h.leftover < 0 ? "ms-2 text-destructive" : "ms-2 text-muted-foreground"}>
+                  <span
+                    className={
+                      h.leftover < 0 ? "ms-2 text-destructive" : "ms-2 text-muted-foreground"
+                    }
+                  >
                     {money(h.leftover)}
                   </span>
                 </bdi>
@@ -90,14 +100,20 @@ export function BudgetHistoryCard() {
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t("rulesLede")}</p>
             <ul className="mt-2 grid gap-2">
               {budgeted.map((line) => (
-                <li key={line.categoryId} className="flex flex-wrap items-center justify-between gap-2">
+                <li
+                  key={line.categoryId}
+                  className="flex flex-wrap items-center justify-between gap-2"
+                >
                   <span className="text-sm">{line.name}</span>
                   <select
                     aria-label={`${t("rules")}: ${line.name}`}
                     value={line.rollover}
                     disabled={rollover.isPending}
                     onChange={(e) =>
-                      rollover.mutate({ categoryId: line.categoryId, rule: e.target.value as RolloverRule })
+                      rollover.mutate({
+                        categoryId: line.categoryId,
+                        rule: e.target.value as RolloverRule,
+                      })
                     }
                     className="h-9 rounded-md border border-border bg-background px-2 text-sm"
                   >

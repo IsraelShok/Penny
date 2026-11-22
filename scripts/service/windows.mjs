@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { systemBin } from "../lib/system-bin.mjs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -10,7 +11,7 @@ const LAUNCHER_DIR = path.join(os.homedir(), "AppData", "Local", "Penny");
 const LAUNCHER_VBS = path.join(LAUNCHER_DIR, "penny-launcher.vbs");
 
 function whichNode() {
-  const r = spawnSync("where", ["node"], { encoding: "utf-8", shell: false });
+  const r = spawnSync(systemBin("where"), ["node"], { encoding: "utf-8", shell: false });
   if (r.status !== 0) throw new Error("Cannot find `node` on PATH.");
   return r.stdout.split(/\r?\n/).filter(Boolean)[0].trim();
 }
@@ -52,7 +53,7 @@ function userId() {
 }
 
 function isAdmin() {
-  const r = spawnSync("net", ["session"], { encoding: "utf-8" });
+  const r = spawnSync(systemBin("net"), ["session"], { encoding: "utf-8" });
   return r.status === 0;
 }
 
@@ -70,27 +71,25 @@ function writeTaskXml() {
 }
 
 function schtasks(args) {
-  return spawnSync("schtasks", args, { encoding: "utf-8" });
+  return spawnSync(systemBin("schtasks"), args, { encoding: "utf-8" });
 }
 
 function checkPortBinding() {
-  const r = spawnSync("netstat", ["-ano", "-p", "TCP"], { encoding: "utf-8" });
+  const r = spawnSync(systemBin("netstat"), ["-ano", "-p", "TCP"], { encoding: "utf-8" });
   if (r.status !== 0) return { listening: false };
   const lines = r.stdout.split(/\r?\n/);
   const portStr = `:${PORT}`;
   const matches = lines.filter((l) => l.includes(portStr) && l.includes("LISTENING"));
   const onLoopback = matches.some((l) => l.includes(`127.0.0.1${portStr}`));
-  const onWildcard = matches.some(
-    (l) => l.includes(`0.0.0.0${portStr}`) || /\s\[::\]:/.test(l) ? l.includes(portStr) : false,
+  const onWildcard = matches.some((l) =>
+    l.includes(`0.0.0.0${portStr}`) || /\s\[::\]:/.test(l) ? l.includes(portStr) : false,
   );
   return { listening: matches.length > 0, onLoopback, onWildcard };
 }
 
 function preflight() {
   if (!fs.existsSync(path.join(REPO_ROOT, ".next"))) {
-    console.warn(
-      "WARNING: .next/ not found. Run `npm run build` before installing the service.",
-    );
+    console.warn("WARNING: .next/ not found. Run `npm run build` before installing the service.");
   }
   if (!isAdmin()) {
     console.warn(
@@ -126,7 +125,7 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
         addManagedBlock();
         // Windows caches negative DNS lookups, so even a fresh `penny.localhost`
         // entry can still resolve as NXDOMAIN until the cache is cleared.
-        spawnSync("ipconfig", ["/flushdns"], { stdio: "ignore" });
+        spawnSync(systemBin("ipconfig"), ["/flushdns"], { stdio: "ignore" });
       } catch (err) {
         console.error(`Hosts file edit failed: ${err.message}`);
         console.error("Task is still installed. You can bookmark " + loopbackUrl);
@@ -174,26 +173,18 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
       const port = checkPortBinding();
       console.log(
         `Port ${PORT}: ${
-          port.onLoopback
-            ? "127.0.0.1 (ok)"
-            : port.onWildcard
-              ? "WILDCARD (NOT OK)"
-              : "not bound"
+          port.onLoopback ? "127.0.0.1 (ok)" : port.onWildcard ? "WILDCARD (NOT OK)" : "not bound"
         }`,
       );
       return;
     }
     case "logs": {
-      console.log(
-        "Windows Task Scheduler does not capture stdout/stderr by default.",
-      );
-      console.log(
-        "Run the server manually with `npm run start` to see logs interactively.",
-      );
+      console.log("Windows Task Scheduler does not capture stdout/stderr by default.");
+      console.log("Run the server manually with `npm run start` to see logs interactively.");
       return;
     }
     case "open": {
-      spawnSync("cmd", ["/c", "start", "", friendlyUrl], { stdio: "inherit" });
+      spawnSync(systemBin("cmd"), ["/c", "start", "", friendlyUrl], { stdio: "inherit" });
       return;
     }
   }

@@ -17,6 +17,7 @@ const eslintConfig = defineConfig([
     ".playwright-mcp/**",
     "dist-desktop/**",
     ".std/**",
+    "coverage/**",
   ]),
   // A leading underscore marks a value dropped on purpose.
   { rules: { "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }] } },

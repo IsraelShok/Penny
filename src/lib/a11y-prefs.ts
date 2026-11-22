@@ -22,23 +22,51 @@ export type A11yPrefs = {
   readingGuide: boolean;
 };
 
-export const A11Y_TOGGLES = ["spacing", "readableFont", "links", "headings", "bigCursor", "stopMotion", "focus", "hideImages", "readingGuide"] as const;
+export const A11Y_TOGGLES = [
+  "spacing",
+  "readableFont",
+  "links",
+  "headings",
+  "bigCursor",
+  "stopMotion",
+  "focus",
+  "hideImages",
+  "readingGuide",
+] as const;
 export type A11yToggle = (typeof A11Y_TOGGLES)[number];
 
 export const DEFAULT_A11Y: A11yPrefs = {
-  textScale: 100, contrast: "off", spacing: false, readableFont: false, links: false, headings: false,
-  bigCursor: false, stopMotion: false, focus: false, hideImages: false, readingGuide: false,
+  textScale: 100,
+  contrast: "off",
+  spacing: false,
+  readableFont: false,
+  links: false,
+  headings: false,
+  bigCursor: false,
+  stopMotion: false,
+  focus: false,
+  hideImages: false,
+  readingGuide: false,
 };
 
 const TOGGLE_CLASS: Record<A11yToggle, string> = {
-  spacing: "a11y-spacing", readableFont: "a11y-font", links: "a11y-links", headings: "a11y-headings",
-  bigCursor: "a11y-cursor", stopMotion: "a11y-no-motion", focus: "a11y-focus", hideImages: "a11y-no-images", readingGuide: "a11y-guide",
+  spacing: "a11y-spacing",
+  readableFont: "a11y-font",
+  links: "a11y-links",
+  headings: "a11y-headings",
+  bigCursor: "a11y-cursor",
+  stopMotion: "a11y-no-motion",
+  focus: "a11y-focus",
+  hideImages: "a11y-no-images",
+  readingGuide: "a11y-guide",
 };
 
 /** Every class this menu can set, so turning an option off removes exactly what it added. */
 export const ALL_A11Y_CLASSES = [
   ...TEXT_SCALES.filter((s) => s !== 100).map((s) => `a11y-text-${s}`),
-  "a11y-hc", "a11y-hc-light", "a11y-hc-dark",
+  "a11y-hc",
+  "a11y-hc-light",
+  "a11y-hc-dark",
   ...Object.values(TOGGLE_CLASS),
 ];
 
@@ -53,7 +81,13 @@ export function a11yClasses(p: A11yPrefs): string[] {
 /** Tolerates missing, old or hand-edited values: anything unknown falls back to the default. */
 export function parseA11y(raw: unknown): A11yPrefs {
   let v: unknown = raw;
-  if (typeof raw === "string") { try { v = JSON.parse(raw); } catch { v = null; } }
+  if (typeof raw === "string") {
+    try {
+      v = JSON.parse(raw);
+    } catch {
+      v = null;
+    }
+  }
   if (!v || typeof v !== "object") return { ...DEFAULT_A11Y };
   const o = v as Record<string, unknown>;
   const out: A11yPrefs = { ...DEFAULT_A11Y };
@@ -71,5 +105,8 @@ export function applyA11yClasses(root: HTMLElement, p: A11yPrefs) {
 /** True when motion should stop: the OS setting or the menu's "Stop animations". */
 export function motionReduced(): boolean {
   if (typeof window === "undefined") return false;
-  return document.documentElement.classList.contains("a11y-no-motion") || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return (
+    document.documentElement.classList.contains("a11y-no-motion") ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }

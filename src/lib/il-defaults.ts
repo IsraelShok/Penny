@@ -26,7 +26,15 @@ export const IL = {
    * widened the 20% bracket to ₪19,000 and the 31% bracket to ₪25,100. Top 50% includes the 3% surtax.
    * Sources (checked Nov 2026): simplecalc.co.il/guides/tax-brackets, mechushav.co.il/guide-madregot-mas.html.
    */
-  taxBracketsMonthly: [[7_010, 0.1], [10_060, 0.14], [19_000, 0.2], [25_100, 0.31], [46_690, 0.35], [60_130, 0.47], [Infinity, 0.5]],
+  taxBracketsMonthly: [
+    [7_010, 0.1],
+    [10_060, 0.14],
+    [19_000, 0.2],
+    [25_100, 0.31],
+    [46_690, 0.35],
+    [60_130, 0.47],
+    [Infinity, 0.5],
+  ],
   /** Credit points for a resident: 2.25 (man), 2.75 (woman). Income Tax Ordinance §34, §36. */
   creditPoints: { man: 2.25, woman: 2.75 },
   /**
@@ -53,7 +61,14 @@ export const IL = {
    * pension 16.5% of qualifying income up to ₪232,800/yr (first 5.5% → 35% credit, next 11% → deduction);
    * study fund deduction 4.5% of income up to ₪293,397/yr; deposits up to ₪20,566/yr keep gains tax-free.
    */
-  selfEmployedDeposits: { pensionIncomeCap: 232_800, pensionCreditPct: 0.055, pensionDeductPct: 0.11, studyIncomeCap: 293_397, studyDeductPct: 0.045, studyGainsFreeCap: 20_566 },
+  selfEmployedDeposits: {
+    pensionIncomeCap: 232_800,
+    pensionCreditPct: 0.055,
+    pensionDeductPct: 0.11,
+    studyIncomeCap: 293_397,
+    studyDeductPct: 0.045,
+    studyGainsFreeCap: 20_566,
+  },
   /** Credit for employee pension deposits: 35% of up to 7% of salary, salary capped (ITA, 2025 figure). */
   pensionCredit: { rate: 0.35, ofSalary: 0.07, salaryCeiling: 9_700 },
   /**
@@ -77,7 +92,13 @@ export const IL = {
    * (not indexed). Checked Nov 2026 against secondary sources, not the ITA page itself:
    * bizportal.co.il/realestates/news/article/20038028, bscpa.co.il (מס רכישה 2026). Editable in the calculator.
    */
-  purchaseTaxSingleHome: [[1_978_745, 0], [2_347_040, 0.035], [6_055_070, 0.05], [20_183_565, 0.08], [Infinity, 0.1]],
+  purchaseTaxSingleHome: [
+    [1_978_745, 0],
+    [2_347_040, 0.035],
+    [6_055_070, 0.05],
+    [20_183_565, 0.08],
+    [Infinity, 0.1],
+  ],
   /**
    * Amendment 190 (תיקון 190): from age 60, with a "qualifying pension" (קצבה מזכה) above the minimum,
    * a provident fund for investment can pay a tax-free annuity; a lump sum pays 15% on the real gain.
@@ -91,7 +112,10 @@ export const IL = {
    * From 1 Jul 2027 both are replaced by one "account management" fee (BoI circular 2851, up to ₪10 for 100 actions).
    * Sources (checked Nov 2026): supermarker.themarker.com/Account/BankFeesReform2027.aspx (BoI data Q4 2025), boi.org.il.
    */
-  bankFeeTracks: { basic: { price: 10, direct: 10, teller: 1 }, extended: { price: 25, direct: 50, teller: 10 } },
+  bankFeeTracks: {
+    basic: { price: 10, direct: 10, teller: 1 },
+    extended: { price: 25, direct: 50, teller: 10 },
+  },
   /** Legal retirement age (men; women rise gradually from 62 to 65). Old-age Bituach Leumi and most pension annuities start here. */
   pensionAge: 67,
   /**

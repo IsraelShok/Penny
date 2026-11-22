@@ -36,7 +36,10 @@ export function getDb(): Database.Database {
   if (!globalThis._db) {
     globalThis._db = createDatabase();
   }
-  if (migratedConnection !== globalThis._db) { runMigrations(globalThis._db); migratedConnection = globalThis._db; }
+  if (migratedConnection !== globalThis._db) {
+    runMigrations(globalThis._db);
+    migratedConnection = globalThis._db;
+  }
   return globalThis._db;
 }
 

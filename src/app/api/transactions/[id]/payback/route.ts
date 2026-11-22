@@ -17,7 +17,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const id = await idOf(params);
   if (id == null) return invalid();
   const state = getPaybackState(workspaceId, id);
-  return state ? NextResponse.json(state) : NextResponse.json({ error: "not-found" }, { status: 404 });
+  return state
+    ? NextResponse.json(state)
+    : NextResponse.json({ error: "not-found" }, { status: 404 });
 }
 
 /** Links this row with `targetId`; either one may be the credit. */
@@ -44,6 +46,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const workspaceId = getWorkspaceIdFromRequest(request);
   const id = await idOf(params);
   if (id == null) return invalid();
-  if (!unlinkPayback(workspaceId, id)) return NextResponse.json({ error: "not-found" }, { status: 404 });
+  if (!unlinkPayback(workspaceId, id))
+    return NextResponse.json({ error: "not-found" }, { status: 404 });
   return NextResponse.json({ success: true });
 }

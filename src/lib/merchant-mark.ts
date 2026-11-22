@@ -3,7 +3,10 @@
  * well-known Israeli merchants, a steady colour from the name for the rest. Nothing is fetched, so no merchant name
  * ever leaves the computer.
  */
-export interface MerchantMark { letter: string; color: string }
+export interface MerchantMark {
+  letter: string;
+  color: string;
+}
 
 const BRANDS: [RegExp, string, string][] = [
   [/שופרסל|shufersal/i, "ש", "#e2001a"],
@@ -34,7 +37,18 @@ const BRANDS: [RegExp, string, string][] = [
   [/aliexpress|עליאקספרס/i, "A", "#ff4747"],
 ];
 
-const PALETTE = ["#7c5cff", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#14b8a6", "#8b5cf6", "#f97316", "#64748b"];
+const PALETTE = [
+  "#7c5cff",
+  "#0ea5e9",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#ec4899",
+  "#14b8a6",
+  "#8b5cf6",
+  "#f97316",
+  "#64748b",
+];
 
 /** First letter or digit of the name, for a mark with no brand. */
 const initial = (name: string) => (name.trim().match(/[\p{L}\p{N}]/u)?.[0] ?? "•").toUpperCase();

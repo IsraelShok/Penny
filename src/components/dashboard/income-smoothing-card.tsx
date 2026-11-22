@@ -15,7 +15,15 @@ export function IncomeSmoothingCard() {
   const s = data?.smoothing;
   if (!s) return null;
   return (
-    <CardShell label={t("label")} action={<InfoTip text={`${t("sentence", { steady: shekels(s.steady, locale) })} ${t("how")}`} className="-my-3" />}>
+    <CardShell
+      label={t("label")}
+      action={
+        <InfoTip
+          text={`${t("sentence", { steady: shekels(s.steady, locale) })} ${t("how")}`}
+          className="-my-3"
+        />
+      }
+    >
       <dl className="grid grid-cols-2 gap-3 text-center">
         <div className="rounded-xl bg-muted/60 p-3">
           <dt className="text-xs text-muted-foreground">{t("steady")}</dt>
@@ -23,7 +31,9 @@ export function IncomeSmoothingCard() {
         </div>
         <div className="rounded-xl bg-muted/60 p-3">
           <dt className="text-xs text-muted-foreground">{t("buffer")}</dt>
-          <dd className="mt-1 text-lg font-semibold tabular-nums">{shekels(s.bufferTarget, locale)}</dd>
+          <dd className="mt-1 text-lg font-semibold tabular-nums">
+            {shekels(s.bufferTarget, locale)}
+          </dd>
         </div>
       </dl>
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">

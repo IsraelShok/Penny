@@ -15,7 +15,12 @@ import {
 } from "@/components/ui/select";
 import { Input, InputGroup } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { SectionShell, SettingCard, SettingList, SettingRow } from "@/components/settings/section-shell";
+import {
+  SectionShell,
+  SettingCard,
+  SettingList,
+  SettingRow,
+} from "@/components/settings/section-shell";
 import { StarBanner } from "@/components/settings/star-banner";
 import { DataState } from "@/components/ui/data-state";
 import { getOwners, getSettings, getSummary, updateSettings } from "@/lib/api";
@@ -45,13 +50,17 @@ function useAutosave(extraKeys: string[] = []) {
   return useMutation({
     mutationFn: (patch: Partial<AppSettings>) => updateSettings(patch),
     // Optimistic, so a switch or picker moves at once; a failure refetches the truth.
-    onMutate: (patch) => queryClient.setQueryData<AppSettings>(["settings"], (old) => (old ? { ...old, ...patch } : old)),
+    onMutate: (patch) =>
+      queryClient.setQueryData<AppSettings>(["settings"], (old) =>
+        old ? { ...old, ...patch } : old,
+      ),
     onSuccess: () => {
-      for (const key of ["settings", ...extraKeys]) queryClient.invalidateQueries({ queryKey: [key] });
+      for (const key of ["settings", ...extraKeys])
+        void queryClient.invalidateQueries({ queryKey: [key] });
       toast.success(tCommon("saved"));
     },
     onError: (err) => {
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      void queryClient.invalidateQueries({ queryKey: ["settings"] });
       toast.error(err instanceof Error ? err.message : t("failedToSave"));
     },
   });
@@ -60,7 +69,11 @@ function useAutosave(extraKeys: string[] = []) {
 export default function GeneralSettingsPage() {
   const t = useTranslations("settings.general");
   const tCommon = useTranslations("common");
-  const { data: settings, isError, refetch } = useQuery({
+  const {
+    data: settings,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["settings"],
     queryFn: getSettings,
   });
@@ -71,7 +84,11 @@ export default function GeneralSettingsPage() {
   });
 
   return (
-    <SectionShell title={t("title")} description={t("description")} icon={<SlidersHorizontal aria-hidden />}>
+    <SectionShell
+      title={t("title")}
+      description={t("description")}
+      icon={<SlidersHorizontal aria-hidden />}
+    >
       {settings ? (
         <>
           <MonthlyTargetCard
@@ -109,7 +126,8 @@ function MonthlyTargetCard({
   const parsed = value.trim() === "" ? null : Number(value);
   const valid = parsed == null || (Number.isFinite(parsed) && parsed >= 0);
   const commit = () => {
-    if (valid && (parsed ?? null) !== (initialTarget ?? null) && !mutation.isPending) mutation.mutate({ monthlyTarget: parsed });
+    if (valid && (parsed ?? null) !== (initialTarget ?? null) && !mutation.isPending)
+      mutation.mutate({ monthlyTarget: parsed });
   };
 
   return (
@@ -118,7 +136,11 @@ function MonthlyTargetCard({
         <SettingRow
           label={t("monthlyTargetLabel")}
           htmlFor="monthly-target"
-          hint={typicalMonthly != null ? t("typicalLast3", { amount: shekels(typicalMonthly, locale) }) : t("noPriorHistory")}
+          hint={
+            typicalMonthly != null
+              ? t("typicalLast3", { amount: shekels(typicalMonthly, locale) })
+              : t("noPriorHistory")
+          }
         >
           <InputGroup prefix="₪" className="w-40">
             <Input
@@ -133,7 +155,9 @@ function MonthlyTargetCard({
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onBlur={commit}
-              onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commit();
+              }}
             />
           </InputGroup>
         </SettingRow>
@@ -157,9 +181,14 @@ function SyncCard({ settings }: { settings: AppSettings }) {
       <SettingCard title={t("syncWindowTitle")} description={t("syncWindowDescription")}>
         <SettingList>
           <SettingRow label={t("monthsToSync")} labelId="sync-months-label" hint={t("banksLimit")}>
-            <Select value={String(settings.monthsToSync)} onValueChange={(v) => v && mutation.mutate({ monthsToSync: Number(v) })}>
+            <Select
+              value={String(settings.monthsToSync)}
+              onValueChange={(v) => v && mutation.mutate({ monthsToSync: Number(v) })}
+            >
               <SelectTrigger aria-labelledby="sync-months-label" className="w-40">
-                <SelectValue>{(v: string) => `${v} ${v === "1" ? tCommon("month") : tCommon("months")}`}</SelectValue>
+                <SelectValue>
+                  {(v: string) => `${v} ${v === "1" ? tCommon("month") : tCommon("months")}`}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {[1, 2, 3, 6, 12].map((m) => (
@@ -171,7 +200,10 @@ function SyncCard({ settings }: { settings: AppSettings }) {
             </Select>
           </SettingRow>
           <SettingRow label={t("payday")} labelId="payday-label" hint={t("paydayHint")}>
-            <Select value={String(settings.paydayDay)} onValueChange={(v) => v && mutation.mutate({ paydayDay: Number(v) })}>
+            <Select
+              value={String(settings.paydayDay)}
+              onValueChange={(v) => v && mutation.mutate({ paydayDay: Number(v) })}
+            >
               <SelectTrigger aria-labelledby="payday-label" className="w-40">
                 <SelectValue>{(v: string) => t("ordinalOfMonth", { ordinal: v })}</SelectValue>
               </SelectTrigger>
@@ -189,7 +221,11 @@ function SyncCard({ settings }: { settings: AppSettings }) {
 
       <SettingCard title={t("autoSyncTitle")} description={t("autoSyncDescription")}>
         <SettingList>
-          <SettingRow label={t("dailyAutoSync")} htmlFor="auto-sync-toggle" hint={t("runsInIsraelTime")}>
+          <SettingRow
+            label={t("dailyAutoSync")}
+            htmlFor="auto-sync-toggle"
+            hint={t("runsInIsraelTime")}
+          >
             <Switch
               id="auto-sync-toggle"
               checked={settings.autoSyncEnabled}
@@ -222,22 +258,46 @@ function TransactionDefaultsCard() {
   const t = useTranslations("settings.general");
   const tBanks = useTranslations("banks");
   const qc = useQueryClient();
-  const pref = useQuery({ queryKey: ["preference", "transaction-defaults"], queryFn: () => loadPreference("transaction-defaults") });
-  const accounts = useQuery({ queryKey: ["owners", "accounts"], queryFn: () => getOwners(todayLocalISO(), todayLocalISO()) }).data?.accounts ?? [];
+  const pref = useQuery({
+    queryKey: ["preference", "transaction-defaults"],
+    queryFn: () => loadPreference("transaction-defaults"),
+  });
+  const accounts =
+    useQuery({
+      queryKey: ["owners", "accounts"],
+      queryFn: () => getOwners(todayLocalISO(), todayLocalISO()),
+    }).data?.accounts ?? [];
   const current = (pref.data as { account?: unknown } | null)?.account;
   const value = typeof current === "string" ? current : "cash";
   function save(account: string) {
     const next = { account };
     qc.setQueryData(["preference", "transaction-defaults"], next);
-    void storePreference("transaction-defaults", next).then(() => toast.success(t("defaultAccountSaved")), () => toast.error(t("defaultAccountFailed")));
+    void storePreference("transaction-defaults", next).then(
+      () => toast.success(t("defaultAccountSaved")),
+      () => toast.error(t("defaultAccountFailed")),
+    );
   }
   return (
     <SettingCard title={t("defaultsTitle")} description={t("defaultsDescription")}>
-      <SettingRow label={t("defaultAccount")} labelId="default-account-label" hint={t("defaultAccountHint")}>
-        <select aria-labelledby="default-account-label" value={value} onChange={(e) => save(e.target.value)} disabled={!pref.isFetched}
-          className="h-10 min-w-48 rounded-lg border border-border bg-background px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring">
+      <SettingRow
+        label={t("defaultAccount")}
+        labelId="default-account-label"
+        hint={t("defaultAccountHint")}
+      >
+        <select
+          aria-labelledby="default-account-label"
+          value={value}
+          onChange={(e) => save(e.target.value)}
+          disabled={!pref.isFetched}
+          className="h-10 min-w-48 rounded-lg border border-border bg-background px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring"
+        >
           <option value="cash">{t("defaultAccountCash")}</option>
-          {accounts.map((a) => <option key={a.accountNumber} value={a.accountNumber}>{`${a.label ?? translateProviderName(a.provider, a.provider, tBanks)} · ${a.accountNumber.slice(-4)}`}</option>)}
+          {accounts.map((a) => (
+            <option
+              key={a.accountNumber}
+              value={a.accountNumber}
+            >{`${a.label ?? translateProviderName(a.provider, a.provider, tBanks)} · ${a.accountNumber.slice(-4)}`}</option>
+          ))}
         </select>
       </SettingRow>
     </SettingCard>

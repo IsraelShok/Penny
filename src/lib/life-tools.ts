@@ -6,8 +6,15 @@ import { IL } from "./il-defaults";
 export type FeeTrack = keyof typeof IL.bankFeeTracks;
 
 /** The cheapest legally required track that fits your monthly actions, and the yearly saving against what you pay now. */
-export function bankFeeAudit(p: { monthlyPaid: number; direct: number; teller: number }): { track: FeeTrack | null; price: number; yearlySaving: number } {
-  const track = (Object.keys(IL.bankFeeTracks) as FeeTrack[]).find((k) => p.direct <= IL.bankFeeTracks[k].direct && p.teller <= IL.bankFeeTracks[k].teller) ?? null;
+export function bankFeeAudit(p: { monthlyPaid: number; direct: number; teller: number }): {
+  track: FeeTrack | null;
+  price: number;
+  yearlySaving: number;
+} {
+  const track =
+    (Object.keys(IL.bankFeeTracks) as FeeTrack[]).find(
+      (k) => p.direct <= IL.bankFeeTracks[k].direct && p.teller <= IL.bankFeeTracks[k].teller,
+    ) ?? null;
   const price = track ? IL.bankFeeTracks[track].price : 0;
   return { track, price, yearlySaving: track ? Math.max(0, (p.monthlyPaid - price) * 12) : 0 };
 }
@@ -46,7 +53,16 @@ export interface RightsAnswers {
   disability: boolean;
 }
 
-export const RIGHTS = ["workGrant", "reserveTax", "reserveGrant", "childAllowance", "childSavings", "arnona", "rent", "unemployment"] as const;
+export const RIGHTS = [
+  "workGrant",
+  "reserveTax",
+  "reserveGrant",
+  "childAllowance",
+  "childSavings",
+  "arnona",
+  "rent",
+  "unemployment",
+] as const;
 export type Right = (typeof RIGHTS)[number];
 
 /**

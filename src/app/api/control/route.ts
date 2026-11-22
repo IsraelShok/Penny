@@ -9,8 +9,8 @@ export async function GET(request: Request) {
     return NextResponse.json(
       controlPayload(
         getWorkspaceIdFromRequest(request),
-        new URL(request.url).searchParams.get("month") ?? undefined
-      )
+        new URL(request.url).searchParams.get("month") ?? undefined,
+      ),
     );
   } catch (error) {
     // A bad month is the caller's mistake (400); anything else is logged and answered as a 500.
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   }
   try {
     return NextResponse.json(
-      controlCommand(getWorkspaceIdFromRequest(request), body, currentUser(request)?.id ?? null)
+      controlCommand(getWorkspaceIdFromRequest(request), body, currentUser(request)?.id ?? null),
     );
   } catch (error) {
     return errorResponse("control", error);

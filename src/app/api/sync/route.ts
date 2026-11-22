@@ -1,23 +1,13 @@
 import { NextResponse } from "next/server";
 import { redact, redactError } from "@/server/lib/redact";
-import {
-  runAllWorkspaces,
-  syncWorkspace,
-  type WorkspaceSummary,
-} from "@/server/sync/orchestrator";
-import {
-  getWorkspaceIdFromRequest,
-  hasWorkspaceHeader,
-} from "@/server/lib/workspace-context";
+import { runAllWorkspaces, syncWorkspace, type WorkspaceSummary } from "@/server/sync/orchestrator";
+import { getWorkspaceIdFromRequest, hasWorkspaceHeader } from "@/server/lib/workspace-context";
 import { cancelOtpRequest } from "@/server/sync/otp-bridge";
 import { markSyncEnd, markSyncStart } from "@/server/sync/activity";
 import { tryAcquireSync } from "@/server/sync/lock";
 import { DEMO_BLOCKED_MESSAGE, isDemoMode } from "@/server/demo/mode";
 
-function sseEvent(
-  event: string,
-  data: Record<string, unknown>
-): string {
+function sseEvent(event: string, data: Record<string, unknown>): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
@@ -34,7 +24,7 @@ export async function POST(request: Request) {
   if (!releaseSync) {
     return NextResponse.json(
       { error: "sync-running", message: "A sync is already running. Wait for it to finish." },
-      { status: 409 }
+      { status: 409 },
     );
   }
 
@@ -42,13 +32,11 @@ export async function POST(request: Request) {
     credentialId?: number;
   };
   const filterCredentialId =
-    body.credentialId != null && Number.isFinite(body.credentialId)
-      ? body.credentialId
-      : undefined;
+    body.credentialId != null && Number.isFinite(body.credentialId) ? body.credentialId : undefined;
 
   // When the request includes X-Workspace-ID we sync only that workspace
   // (the in-app "Sync now" button). When it's absent we treat it as a
-  // multi-workspace trigger from the menubar and sync every workspace.
+  // multi-workspace trigger from the desktop shell and sync every workspace.
   const headerPresent = hasWorkspaceHeader(request);
 
   const encoder = new TextEncoder();
@@ -80,21 +68,16 @@ export async function POST(request: Request) {
         const summaries: WorkspaceSummary[] = [];
         if (headerPresent) {
           const workspaceId = getWorkspaceIdFromRequest(request);
-          summaries.push(
-            await syncWorkspace(workspaceId, filterCredentialId, send)
-          );
+          summaries.push(await syncWorkspace(workspaceId, filterCredentialId, send));
         } else {
           summaries.push(
-            ...(await runAllWorkspaces(filterCredentialId, send, "manual", { lockHeld: true }))
+            ...(await runAllWorkspaces(filterCredentialId, send, "manual", { lockHeld: true })),
           );
         }
 
         const totalAdded = summaries.reduce((s, w) => s + w.added, 0);
         const totalUpdated = summaries.reduce((s, w) => s + w.updated, 0);
-        const totalCategorized = summaries.reduce(
-          (s, w) => s + w.categorized,
-          0
-        );
+        const totalCategorized = summaries.reduce((s, w) => s + w.categorized, 0);
         const firstWarning = summaries.find((w) => w.aiWarning)?.aiWarning ?? null;
 
         if (headerPresent && summaries.length === 1) {
@@ -121,9 +104,7 @@ export async function POST(request: Request) {
       } catch (error) {
         console.error("[sync] unexpected error in sync route:", redactError(error));
         const message =
-          error instanceof Error
-            ? redact(error.message)
-            : "An unexpected error occurred";
+          error instanceof Error ? redact(error.message) : "An unexpected error occurred";
         send("error", { message });
       } finally {
         if (headerPathTracking) markSyncEnd();

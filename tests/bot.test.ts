@@ -17,18 +17,43 @@ beforeAll(async () => {
   const { insertTransactions } = await import("@/server/db/queries/transactions");
   ws = (db.prepare("SELECT id FROM workspaces LIMIT 1").get() as { id: number }).id;
   const cred = db
-    .prepare("INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, 'isracard', 'T', x'00', x'00', x'00')")
+    .prepare(
+      "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, 'isracard', 'T', x'00', x'00', x'00')",
+    )
     .run(ws).lastInsertRowid as number;
   const run = createSyncRun(ws, "isracard", cred, "2026-08-01");
-  const b = { accountNumber: "1", type: "normal" as const, originalCurrency: "ILS", status: "completed" as const };
+  const b = {
+    accountNumber: "1",
+    type: "normal" as const,
+    originalCurrency: "ILS",
+    status: "completed" as const,
+  };
   const row = (date: string, amount: number, description: string, extra = {}) => ({
-    ...b, date: `${date}T00:00:00.000Z`, processedDate: `${date}T00:00:00.000Z`, originalAmount: amount, chargedAmount: amount, description, ...extra,
+    ...b,
+    date: `${date}T00:00:00.000Z`,
+    processedDate: `${date}T00:00:00.000Z`,
+    originalAmount: amount,
+    chargedAmount: amount,
+    description,
+    ...extra,
   });
-  insertTransactions(ws, [
-    row("2026-08-05", -50, "Netflix"), row("2026-09-05", -50, "Netflix"), row("2026-10-05", -50, "Netflix"),
-    row("2026-11-02", -300, "שופרסל"),
-    row("2026-10-10", -100, "IKEA", { type: "installments" as const, installmentNumber: 1, installmentTotal: 4 }),
-  ], "isracard", cred, run);
+  insertTransactions(
+    ws,
+    [
+      row("2026-08-05", -50, "Netflix"),
+      row("2026-09-05", -50, "Netflix"),
+      row("2026-10-05", -50, "Netflix"),
+      row("2026-11-02", -300, "שופרסל"),
+      row("2026-10-10", -100, "IKEA", {
+        type: "installments" as const,
+        installmentNumber: 1,
+        installmentTotal: 4,
+      }),
+    ],
+    "isracard",
+    cred,
+    run,
+  );
 });
 
 describe("splitMessage", () => {
@@ -85,7 +110,10 @@ describe("handleCommand", () => {
     const out = await cmd.handleCommand("/sync", 42, cfg, {
       ...deps(),
       isSyncRunning: () => true,
-      runSync: async () => { called = true; return "synced"; },
+      runSync: async () => {
+        called = true;
+        return "synced";
+      },
     });
     expect(out).toContain("סנכרון כבר רץ");
     expect(called).toBe(false);
@@ -147,10 +175,16 @@ describe("spend feedback after sync", () => {
   it("shows new expenses with budget left, and nothing when no new rows", async () => {
     const { spendFeedback } = await import("@/server/bot/feedback");
     const db = (await import("@/server/db/index")).getDb();
-    const tx = db.prepare("SELECT id, category_id FROM transactions WHERE description = 'שופרסל'").get() as { id: number; category_id: number | null };
-    const catId = tx.category_id ?? (db.prepare("SELECT id FROM categories LIMIT 1").get() as { id: number }).id;
+    const tx = db
+      .prepare("SELECT id, category_id FROM transactions WHERE description = 'שופרסל'")
+      .get() as { id: number; category_id: number | null };
+    const catId =
+      tx.category_id ??
+      (db.prepare("SELECT id FROM categories LIMIT 1").get() as { id: number }).id;
     db.prepare("UPDATE transactions SET category_id = ? WHERE id = ?").run(catId, tx.id);
-    db.prepare("INSERT OR REPLACE INTO budgets (workspace_id, category_id, monthly_amount, is_auto) VALUES (?, ?, 1000, 0)").run(ws, catId);
+    db.prepare(
+      "INSERT OR REPLACE INTO budgets (workspace_id, category_id, monthly_amount, is_auto) VALUES (?, ?, 1000, 0)",
+    ).run(ws, catId);
 
     const out = spendFeedback(ws, "2000-01-01 00:00:00", "2026-11-04")!;
     expect(out).toContain("שופרסל");
@@ -167,7 +201,9 @@ describe("inline menu", () => {
     expect(rows.find((b) => b.callback_data === "m:/month")!.text).toContain("·");
     for (const b of rows) expect(Buffer.byteLength(b.callback_data)).toBeLessThanOrEqual(64);
     for (const c of ["/menu", "/start", cmd.MENU_LABEL])
-      expect(await cmd.handleCommand(c, 42, cfg, deps())).toBe(await cmd.handleCommand("/short", 42, cfg, deps()));
+      expect(await cmd.handleCommand(c, 42, cfg, deps())).toBe(
+        await cmd.handleCommand("/short", 42, cfg, deps()),
+      );
   });
 });
 
@@ -175,18 +211,33 @@ describe("categorize in chat", () => {
   it("walks the queue, assigns, and turns a tap into a rule", async () => {
     const { categorizeCard, categorizeAction } = await import("@/server/bot/categorize");
     const db = (await import("@/server/db/index")).getDb();
-    db.prepare("UPDATE transactions SET category_id = NULL, category_source = NULL WHERE description = 'IKEA'").run();
+    db.prepare(
+      "UPDATE transactions SET category_id = NULL, category_source = NULL WHERE description = 'IKEA'",
+    ).run();
     const first = categorizeCard(ws);
     expect(first.text).toContain("🏷 סיווג");
-    const all = first.markup.inline_keyboard.flat().find((b) => b.callback_data.startsWith("c:m:"))!;
+    const all = first.markup.inline_keyboard
+      .flat()
+      .find((b) => b.callback_data.startsWith("c:m:"))!;
     const picker = categorizeAction(ws, all.callback_data)!;
-    const pick = picker.markup.inline_keyboard.flat().find((b) => b.callback_data.startsWith("c:a:"))!;
-    for (const b of picker.markup.inline_keyboard.flat()) expect(Buffer.byteLength(b.callback_data)).toBeLessThanOrEqual(64);
+    const pick = picker.markup.inline_keyboard
+      .flat()
+      .find((b) => b.callback_data.startsWith("c:a:"))!;
+    for (const b of picker.markup.inline_keyboard.flat())
+      expect(Buffer.byteLength(b.callback_data)).toBeLessThanOrEqual(64);
 
-    const before = db.prepare("SELECT COUNT(*) n FROM transactions WHERE category_id IS NULL AND kind = 'expense'").get() as { n: number };
+    const before = db
+      .prepare("SELECT COUNT(*) n FROM transactions WHERE category_id IS NULL AND kind = 'expense'")
+      .get() as { n: number };
     const after = categorizeAction(ws, pick.callback_data)!;
     expect(after.text).toContain("✓");
-    const n = (db.prepare("SELECT COUNT(*) n FROM transactions WHERE category_id IS NULL AND kind = 'expense'").get() as { n: number }).n;
+    const n = (
+      db
+        .prepare(
+          "SELECT COUNT(*) n FROM transactions WHERE category_id IS NULL AND kind = 'expense'",
+        )
+        .get() as { n: number }
+    ).n;
     expect(n).toBe(before.n - 1);
 
     const ruleBtn = after.markup.inline_keyboard[0][0];

@@ -30,11 +30,7 @@ export function WidgetsRow({ summary, loading }: WidgetsRowProps) {
       </div>
       <div className="flex flex-col gap-4">
         <PendingReview count={pendingReviewCount} loading={loading} />
-        <Outliers
-          largestIncome={largestIncome}
-          largestExpense={largestExpense}
-          loading={loading}
-        />
+        <Outliers largestIncome={largestIncome} largestExpense={largestExpense} loading={loading} />
       </div>
     </div>
   );
@@ -50,9 +46,7 @@ function TopMerchants({ merchants, loading }: TopMerchantsProps) {
   const locale = useLocale() as Locale;
   return (
     <div className="card-surface h-full">
-      <div className="card-title">
-        {t("topMerchants")}
-      </div>
+      <div className="card-title">{t("topMerchants")}</div>
       <div className="mt-3 space-y-2">
         {loading ? (
           <div className="text-sm text-muted-foreground">{t("loadingShort")}</div>
@@ -60,10 +54,7 @@ function TopMerchants({ merchants, loading }: TopMerchantsProps) {
           <div className="text-sm text-muted-foreground">{t("noMerchantsYet")}</div>
         ) : (
           merchants.map((m, idx) => (
-            <div
-              key={m.description}
-              className="flex items-center justify-between gap-3 py-1"
-            >
+            <div key={m.description} className="flex items-center justify-between gap-3 py-1">
               <div className="flex min-w-0 items-center gap-3">
                 <span className="w-4 text-end text-xs tabular-nums text-muted-foreground">
                   {idx + 1}
@@ -109,21 +100,15 @@ function PendingReview({ count, loading }: PendingReviewProps) {
       setPreview(data);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof Error ? err.message : tDash("categorizationFailed")
-      );
+      toast.error(err instanceof Error ? err.message : tDash("categorizationFailed"));
     },
   });
 
   if (!loading && count === 0) {
     return (
       <div className="card-surface">
-        <div className="card-title">
-          {t("pendingReview")}
-        </div>
-        <div className="mt-2 text-sm text-muted-foreground">
-          {t("nothingFlagged")}
-        </div>
+        <div className="card-title">{t("pendingReview")}</div>
+        <div className="mt-2 text-sm text-muted-foreground">{t("nothingFlagged")}</div>
       </div>
     );
   }
@@ -132,14 +117,11 @@ function PendingReview({ count, loading }: PendingReviewProps) {
     <>
       <div className="card-surface">
         <div className="flex items-center justify-between">
-          <div className="card-title">
-            {t("pendingReview")}
-          </div>
+          <div className="card-title">{t("pendingReview")}</div>
           <div
             className="flex h-7 w-7 items-center justify-center rounded-full"
             style={{
-              backgroundColor:
-                "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
+              backgroundColor: "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
               color: "var(--status-heads-up)",
             }}
           >
@@ -160,7 +142,11 @@ function PendingReview({ count, loading }: PendingReviewProps) {
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending || loading || count === 0}
         >
-          {mutation.isPending ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Tags className="size-3.5" aria-hidden />}
+          {mutation.isPending ? (
+            <Loader2 className="size-3.5 animate-spin" aria-hidden />
+          ) : (
+            <Tags className="size-3.5" aria-hidden />
+          )}
         </IconButton>
       </div>
 
@@ -170,12 +156,12 @@ function PendingReview({ count, loading }: PendingReviewProps) {
           onClose={() => setPreview(null)}
           onApplied={() => {
             setPreview(null);
-            queryClient.invalidateQueries({ queryKey: ["summary"] });
-            queryClient.invalidateQueries({ queryKey: ["transactions"] });
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({ queryKey: ["summary"] });
+            void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            void queryClient.invalidateQueries({
               queryKey: ["transactions-summary"],
             });
-            queryClient.invalidateQueries({ queryKey: ["categories"] });
+            void queryClient.invalidateQueries({ queryKey: ["categories"] });
           }}
         />
       )}
@@ -193,9 +179,7 @@ function Outliers({ largestIncome, largestExpense, loading }: OutliersProps) {
   const t = useTranslations("transactions");
   return (
     <div className="card-surface">
-      <div className="card-title">
-        {t("outliers")}
-      </div>
+      <div className="card-title">{t("outliers")}</div>
       <div className="mt-3 space-y-3">
         <OutlierRow
           label={t("largestExpense")}
@@ -245,10 +229,7 @@ function OutlierRow({
           <div className="min-w-0 truncate text-sm font-medium" title={txn.description}>
             {txn.description}
           </div>
-          <div
-            className="shrink-0 font-semibold text-base tabular-nums"
-            style={{ color }}
-          >
+          <div className="shrink-0 font-semibold text-base tabular-nums" style={{ color }}>
             {formatCurrency(txn.chargedAmount, "ILS", locale)}
           </div>
         </div>

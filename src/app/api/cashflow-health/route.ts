@@ -18,15 +18,24 @@ export async function GET(request: Request) {
   const ws = getWorkspaceIdFromRequest(request);
   const today = israelToday();
   const db = getDb();
-  const one = <T,>(sql: string, ...args: unknown[]) => db.prepare(sql).get(ws, today, ...args) as T;
+  const one = <T>(sql: string, ...args: unknown[]) => db.prepare(sql).get(ws, today, ...args) as T;
 
-  const overdraft = one<{ n: number }>(`SELECT COUNT(DISTINCT substr(date, 1, 7)) as n FROM transactions WHERE ${BASE} AND kind = 'expense' AND ${OVERDRAFT}`, "-3 months");
+  const overdraft = one<{ n: number }>(
+    `SELECT COUNT(DISTINCT substr(date, 1, 7)) as n FROM transactions WHERE ${BASE} AND kind = 'expense' AND ${OVERDRAFT}`,
+    "-3 months",
+  );
   const inst = one<{ inst: number | null; total: number | null }>(
     `SELECT SUM(CASE WHEN type = 'installments' THEN -charged_amount END) as inst, SUM(-charged_amount) as total FROM transactions WHERE ${BASE} AND kind = 'expense'`,
     "-90 days",
   );
-  const loans = one<{ n: number }>(`SELECT COUNT(*) as n FROM transactions WHERE ${BASE} AND kind IN ('income', 'transfer') AND charged_amount > 0 AND ${LOAN_IN}`, "-6 months");
-  const late = one<{ n: number }>(`SELECT COUNT(*) as n FROM transactions WHERE ${BASE} AND kind = 'expense' AND ${LATE}`, "-6 months");
+  const loans = one<{ n: number }>(
+    `SELECT COUNT(*) as n FROM transactions WHERE ${BASE} AND kind IN ('income', 'transfer') AND charged_amount > 0 AND ${LOAN_IN}`,
+    "-6 months",
+  );
+  const late = one<{ n: number }>(
+    `SELECT COUNT(*) as n FROM transactions WHERE ${BASE} AND kind = 'expense' AND ${LATE}`,
+    "-6 months",
+  );
   const months = db
     .prepare(
       `SELECT substr(date, 1, 7) as m,
@@ -49,6 +58,14 @@ export async function GET(request: Request) {
   const signs = cashflowSigns(facts);
   // No transactions yet means nothing to judge.
   const hasData = months.length > 0 || (inst.total ?? 0) > 0;
-  const avg = (key: "income" | "expenses") => (months.length ? months.reduce((s, m) => s + m[key], 0) / months.length : 0);
-  return NextResponse.json({ hasData, facts, signs, level: cashflowLevel(signs), avgIncome: avg("income"), avgExpenses: avg("expenses") });
+  const avg = (key: "income" | "expenses") =>
+    months.length ? months.reduce((s, m) => s + m[key], 0) / months.length : 0;
+  return NextResponse.json({
+    hasData,
+    facts,
+    signs,
+    level: cashflowLevel(signs),
+    avgIncome: avg("income"),
+    avgExpenses: avg("expenses"),
+  });
 }

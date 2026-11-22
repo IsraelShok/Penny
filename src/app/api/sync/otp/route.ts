@@ -9,10 +9,7 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as typeof body;
   } catch {
-    return NextResponse.json(
-      { success: false, message: "Invalid JSON body." },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, message: "Invalid JSON body." }, { status: 400 });
   }
 
   const syncRunId = Number(body.syncRunId);
@@ -21,21 +18,18 @@ export async function POST(request: Request) {
   if (!Number.isFinite(syncRunId) || syncRunId <= 0) {
     return NextResponse.json(
       { success: false, message: "syncRunId is required." },
-      { status: 400 }
+      { status: 400 },
     );
   }
   if (!code) {
-    return NextResponse.json(
-      { success: false, message: "code is required." },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, message: "code is required." }, { status: 400 });
   }
 
   const result = deliverOtp(syncRunId, workspaceId, code);
   if (!result.ok) {
     return NextResponse.json(
       { success: false, message: result.reason ?? "Could not deliver OTP." },
-      { status: 410 }
+      { status: 410 },
     );
   }
 

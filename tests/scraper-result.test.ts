@@ -13,7 +13,11 @@ const txn = {
 } as const;
 
 const covered = { status: "covered", requestedStart: "2026-08-01", oldest: "2026-08-01" } as const;
-const unproven = { status: "unproven", reason: "boundDidNotMove", requestedStart: "2026-08-01" } as const;
+const unproven = {
+  status: "unproven",
+  reason: "boundDidNotMove",
+  requestedStart: "2026-08-01",
+} as const;
 
 describe("toScrapeResult", () => {
   it("maps a covered account and its transactions", () => {
@@ -47,10 +51,19 @@ describe("toScrapeResult", () => {
   it("maps pending status and installments", () => {
     const r = toScrapeResult({
       success: true,
-      accounts: [{
-        accountNumber: "1",
-        txns: [{ ...txn, status: "pending", type: "installments", installments: { number: 2, total: 6 } }],
-      }],
+      accounts: [
+        {
+          accountNumber: "1",
+          txns: [
+            {
+              ...txn,
+              status: "pending",
+              type: "installments",
+              installments: { number: 2, total: 6 },
+            },
+          ],
+        },
+      ],
     });
     const t = r.accounts[0].transactions[0];
     expect(t.status).toBe("pending");
@@ -71,16 +84,43 @@ describe("toScrapeResult", () => {
   });
 
   it("fails when the fork reports lost rows, but tolerates unavailable audits", () => {
-    const lost = { status: "lowerBoundReached", requestedStart: "2026-08-01", oldest: "2026-08-01", caveats: ["declaredRowShortfall"] };
-    const audit = { status: "lowerBoundReached", requestedStart: "2026-08-01", oldest: "2026-08-01", caveats: ["extractionAuditUnavailable"] };
-    expect(toScrapeResult({ success: true, accounts: [{ accountNumber: "1", txns: [txn], windowCoverage: lost }] }).success).toBe(false);
-    expect(toScrapeResult({ success: true, accounts: [{ accountNumber: "1", txns: [txn], windowCoverage: audit }] }).success).toBe(true);
+    const lost = {
+      status: "lowerBoundReached",
+      requestedStart: "2026-08-01",
+      oldest: "2026-08-01",
+      caveats: ["declaredRowShortfall"],
+    };
+    const audit = {
+      status: "lowerBoundReached",
+      requestedStart: "2026-08-01",
+      oldest: "2026-08-01",
+      caveats: ["extractionAuditUnavailable"],
+    };
+    expect(
+      toScrapeResult({
+        success: true,
+        accounts: [{ accountNumber: "1", txns: [txn], windowCoverage: lost }],
+      }).success,
+    ).toBe(false);
+    expect(
+      toScrapeResult({
+        success: true,
+        accounts: [{ accountNumber: "1", txns: [txn], windowCoverage: audit }],
+      }).success,
+    ).toBe(true);
   });
 
   it("stores dates exactly as the scraper returned them, so dedup hashes of existing rows still match", () => {
     const r = toScrapeResult({
       success: true,
-      accounts: [{ accountNumber: "1", txns: [{ ...txn, date: "2026-09-30T21:00:00.000Z", processedDate: "2026-10-09T21:00:00.000Z" }] }],
+      accounts: [
+        {
+          accountNumber: "1",
+          txns: [
+            { ...txn, date: "2026-09-30T21:00:00.000Z", processedDate: "2026-10-09T21:00:00.000Z" },
+          ],
+        },
+      ],
     });
     const t = r.accounts[0].transactions[0];
     expect(t.date).toBe("2026-09-30T21:00:00.000Z");

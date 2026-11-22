@@ -22,21 +22,17 @@ export async function POST(request: Request) {
 
   const credentials =
     body.credentials ??
-    (body.credentialId != null
-      ? getBankCredentials(workspaceId, body.credentialId)
-      : null);
+    (body.credentialId != null ? getBankCredentials(workspaceId, body.credentialId) : null);
 
   if (!credentials) {
     return NextResponse.json(
       { success: false, message: "No credentials found for this account" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const manualTwoFactor =
-    body.credentialId != null
-      ? getRequiresManualTwoFactor(workspaceId, body.credentialId)
-      : false;
+    body.credentialId != null ? getRequiresManualTwoFactor(workspaceId, body.credentialId) : false;
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -44,13 +40,9 @@ export async function POST(request: Request) {
   const result =
     body.provider === "openBanking"
       ? await connectOpenBanking(credentials, sevenDaysAgo)
-      : await scrapeBank(
-          workspaceId,
-          body.provider as BankProvider,
-          credentials,
-          sevenDaysAgo,
-          { manualTwoFactor }
-        );
+      : await scrapeBank(workspaceId, body.provider as BankProvider, credentials, sevenDaysAgo, {
+          manualTwoFactor,
+        });
 
   if (!result.success) {
     return NextResponse.json({

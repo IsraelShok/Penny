@@ -11,8 +11,14 @@ describe("parseCsv", () => {
   });
 
   it("detects semicolon and tab delimiters", () => {
-    expect(parseCsv("a;b\n1;2")).toEqual([["a", "b"], ["1", "2"]]);
-    expect(parseCsv("a\tb\n1\t2")).toEqual([["a", "b"], ["1", "2"]]);
+    expect(parseCsv("a;b\n1;2")).toEqual([
+      ["a", "b"],
+      ["1", "2"],
+    ]);
+    expect(parseCsv("a\tb\n1\t2")).toEqual([
+      ["a", "b"],
+      ["1", "2"],
+    ]);
   });
 });
 

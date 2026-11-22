@@ -34,9 +34,11 @@ function occurrences(s: Series, after: string, until: string): number {
   let count = 0;
   for (let k = 1; k < 400; k++) {
     const date =
-      s.cadence === "weekly" ? addDays(s.lastDate, 7 * k)
-      : s.cadence === "monthly" ? addMonths(s.lastDate, k)
-      : addMonths(s.lastDate, 12 * k);
+      s.cadence === "weekly"
+        ? addDays(s.lastDate, 7 * k)
+        : s.cadence === "monthly"
+          ? addMonths(s.lastDate, k)
+          : addMonths(s.lastDate, 12 * k);
     if (date > until) break;
     if (date > after) count++;
   }
@@ -124,7 +126,7 @@ export function forecastCards(opts: {
         avgDiscretionary: card.avgDiscretionary,
         posted: card.posted,
         lagDays: card.lagDays,
-      }).map((f) => ({ ...f, account: card.account }))
+      }).map((f) => ({ ...f, account: card.account })),
     )
     .sort((a, b) => a.date.localeCompare(b.date));
 }

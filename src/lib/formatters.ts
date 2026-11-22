@@ -7,11 +7,7 @@ function bcp47(locale: Locale | "en-IL" | "he-IL" | undefined): string {
   return locale;
 }
 
-export function formatCurrency(
-  amount: number,
-  currency = "ILS",
-  locale?: Locale,
-): string {
+export function formatCurrency(amount: number, currency = "ILS", locale?: Locale): string {
   const bcp = bcp47(locale);
   if (currency === "ILS") {
     return `₪${Math.abs(amount).toLocaleString(bcp, {

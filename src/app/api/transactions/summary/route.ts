@@ -10,16 +10,10 @@ export async function GET(request: Request) {
 
   const ISO = /^\d{4}-\d{2}-\d{2}$/;
   if (!from || !to) {
-    return NextResponse.json(
-      { error: "from and to are required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "from and to are required" }, { status: 400 });
   }
   if (!ISO.test(from) || !ISO.test(to)) {
-    return NextResponse.json(
-      { error: "from and to must be YYYY-MM-DD" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "from and to must be YYYY-MM-DD" }, { status: 400 });
   }
 
   const credentialIds = searchParams
@@ -30,6 +24,6 @@ export async function GET(request: Request) {
   return NextResponse.json(
     getTransactionsSummary(workspaceId, from, to, {
       credentialIds: credentialIds.length > 0 ? credentialIds : undefined,
-    })
+    }),
   );
 }

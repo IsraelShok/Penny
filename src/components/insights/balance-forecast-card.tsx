@@ -22,7 +22,9 @@ export function BalanceForecastCard() {
   const low = { amount: money(f.low.balance), date: date(f.low.date) };
   const sentence = f.firstNegative
     ? t("overdraft", { ...low, when: date(f.firstNegative) })
-    : f.nextPayday ? t("lowBeforeSalary", low) : t("low", low);
+    : f.nextPayday
+      ? t("lowBeforeSalary", low)
+      : t("low", low);
 
   const values = f.points.map((p) => p.balance);
   const max = Math.max(0, ...values);
@@ -38,10 +40,37 @@ export function BalanceForecastCard() {
 
   return (
     <CardShell label={t("forecastTitle")}>
-      <p className={`mb-4 text-base font-medium ${f.firstNegative && !gentle ? "text-[var(--status-over)]" : ""}`}>{sentence}</p>
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-32 w-full overflow-visible" role="img" aria-label={`${sentence} ${endText}`}>
-        {min < 0 && !gentle && <rect x="0" y={y(0)} width={W} height={H - y(0)} fill="var(--status-over)" opacity="0.1" />}
-        <line x1="0" x2={W} y1={y(0)} y2={y(0)} stroke="currentColor" strokeOpacity="0.2" vectorEffect="non-scaling-stroke" />
+      <p
+        className={`mb-4 text-base font-medium ${f.firstNegative && !gentle ? "text-[var(--status-over)]" : ""}`}
+      >
+        {sentence}
+      </p>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        className="h-32 w-full overflow-visible"
+        role="img"
+        aria-label={`${sentence} ${endText}`}
+      >
+        {min < 0 && !gentle && (
+          <rect
+            x="0"
+            y={y(0)}
+            width={W}
+            height={H - y(0)}
+            fill="var(--status-over)"
+            opacity="0.1"
+          />
+        )}
+        <line
+          x1="0"
+          x2={W}
+          y1={y(0)}
+          y2={y(0)}
+          stroke="currentColor"
+          strokeOpacity="0.2"
+          vectorEffect="non-scaling-stroke"
+        />
         <polyline
           points={values.map((v, i) => `${x(i)},${y(v)}`).join(" ")}
           fill="none"
@@ -63,7 +92,11 @@ export function BalanceForecastCard() {
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <div dir="ltr" className="mt-2 flex justify-between text-xs text-muted-foreground tabular-nums" aria-hidden>
+      <div
+        dir="ltr"
+        className="mt-2 flex justify-between text-xs text-muted-foreground tabular-nums"
+        aria-hidden
+      >
         <span>{t("today")}</span>
         <span>{date(end.date)}</span>
       </div>

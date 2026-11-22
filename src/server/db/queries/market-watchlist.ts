@@ -19,5 +19,7 @@ export function addWatchedSymbol(workspaceId: number, symbol: string): boolean {
 }
 
 export function removeWatchedSymbol(workspaceId: number, symbol: string): void {
-  getDb().prepare("DELETE FROM market_watchlist WHERE workspace_id = ? AND symbol = ?").run(workspaceId, symbol);
+  getDb()
+    .prepare("DELETE FROM market_watchlist WHERE workspace_id = ? AND symbol = ?")
+    .run(workspaceId, symbol);
 }

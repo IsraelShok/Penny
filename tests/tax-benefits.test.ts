@@ -1,9 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { creditCheck, depositPlan, lossOffset, marginalRate, type CreditAnswers } from "@/lib/tax-benefits";
+import {
+  creditCheck,
+  depositPlan,
+  lossOffset,
+  marginalRate,
+  type CreditAnswers,
+} from "@/lib/tax-benefits";
 
 const base: CreditAnswers = {
-  sex: "woman", children: [0, 0, 0, 0, 0, 0], singleParent: false, degree: "none", service: "none", aliyahYear: 0,
-  monthlyGross: 15_000, donations: 0, lifeInsurance: 0, privatePension: 0, changedJobs: false, qualifyingTown: false,
+  sex: "woman",
+  children: [0, 0, 0, 0, 0, 0],
+  singleParent: false,
+  degree: "none",
+  service: "none",
+  aliyahYear: 0,
+  monthlyGross: 15_000,
+  donations: 0,
+  lifeInsurance: 0,
+  privatePension: 0,
+  changedJobs: false,
+  qualifyingTown: false,
 };
 
 describe("marginalRate", () => {
@@ -43,14 +59,25 @@ describe("creditCheck", () => {
   });
 
   it("refund never exceeds the tax actually paid", () => {
-    const r = creditCheck({ ...base, monthlyGross: 6_000, degree: "ba", service: "full", aliyahYear: 2 });
+    const r = creditCheck({
+      ...base,
+      monthlyGross: 6_000,
+      degree: "ba",
+      service: "full",
+      aliyahYear: 2,
+    });
     expect(r.refund).toBe(0); // 2.75 points already wipe out tax on ₪6,000
   });
 });
 
 describe("depositPlan", () => {
   it("salaried: pension credit up to 7% of the capped salary, study fund up to the ceiling", () => {
-    const r = depositPlan({ selfEmployed: false, monthlyIncome: 20_000, pensionMonthly: 600, studyMonthly: 1_000 });
+    const r = depositPlan({
+      selfEmployed: false,
+      monthlyIncome: 20_000,
+      pensionMonthly: 600,
+      studyMonthly: 1_000,
+    });
     expect(r.pension.max).toBeCloseTo(0.07 * 9_700 * 12, 5);
     expect(r.pension.unused).toBeCloseTo(0.07 * 9_700 * 12 - 7_200, 5);
     expect(r.pension.benefitMax).toBeCloseTo(0.35 * 0.07 * 9_700 * 12, 5);
@@ -59,7 +86,12 @@ describe("depositPlan", () => {
   });
 
   it("self-employed: 16.5% pension split into credit and deduction, 4.5% study fund", () => {
-    const r = depositPlan({ selfEmployed: true, monthlyIncome: 15_000, pensionMonthly: 0, studyMonthly: 0 });
+    const r = depositPlan({
+      selfEmployed: true,
+      monthlyIncome: 15_000,
+      pensionMonthly: 0,
+      studyMonthly: 0,
+    });
     const q = 180_000;
     expect(r.pension.max).toBeCloseTo(0.165 * q, 5);
     expect(r.pension.benefitMax).toBeCloseTo(0.35 * 0.055 * q + 0.2 * 0.11 * q, 5);
@@ -68,13 +100,30 @@ describe("depositPlan", () => {
   });
 
   it("caps qualifying income", () => {
-    expect(depositPlan({ selfEmployed: true, monthlyIncome: 100_000, pensionMonthly: 0, studyMonthly: 0 }).pension.max).toBeCloseTo(38_412, 0);
+    expect(
+      depositPlan({
+        selfEmployed: true,
+        monthlyIncome: 100_000,
+        pensionMonthly: 0,
+        studyMonthly: 0,
+      }).pension.max,
+    ).toBeCloseTo(38_412, 0);
   });
 });
 
 describe("lossOffset", () => {
   it("saves 25% of the smaller of gains and losses, carries the rest", () => {
-    expect(lossOffset(40_000, 10_000)).toEqual({ taxBefore: 10_000, taxAfter: 7_500, saved: 2_500, carryForward: 0 });
-    expect(lossOffset(5_000, 8_000)).toEqual({ taxBefore: 1_250, taxAfter: 0, saved: 1_250, carryForward: 3_000 });
+    expect(lossOffset(40_000, 10_000)).toEqual({
+      taxBefore: 10_000,
+      taxAfter: 7_500,
+      saved: 2_500,
+      carryForward: 0,
+    });
+    expect(lossOffset(5_000, 8_000)).toEqual({
+      taxBefore: 1_250,
+      taxAfter: 0,
+      saved: 1_250,
+      carryForward: 3_000,
+    });
   });
 });

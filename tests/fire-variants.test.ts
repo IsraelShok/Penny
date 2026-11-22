@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 import { fireVariants } from "@/lib/fi";
 
 describe("fireVariants", () => {
-  const base = { monthlySpend: 10_000, savings: 500_000, monthlySaving: 5_000, annualReturn: 0.05, withdrawalRate: 0.04 };
+  const base = {
+    monthlySpend: 10_000,
+    savings: 500_000,
+    monthlySaving: 5_000,
+    annualReturn: 0.05,
+    withdrawalRate: 0.04,
+  };
   it("scales the target with the lifestyle and orders the years", () => {
     const v = fireVariants({ ...base, yearsToRetirement: null });
     expect(v.regular.target).toBe(3_000_000);

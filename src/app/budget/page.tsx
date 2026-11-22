@@ -11,7 +11,9 @@ export default function BudgetPage() {
       <Dashboard />
       <div className="mx-auto w-full max-w-[1920px] px-4 pb-8 md:px-6 lg:px-8">
         <BudgetHistoryCard />
-        <div className="mt-4"><ContextTips categories={["debt", "emergency", "budget"]} limit={1} /></div>
+        <div className="mt-4">
+          <ContextTips categories={["debt", "emergency", "budget"]} limit={1} />
+        </div>
       </div>
     </AppShell>
   );

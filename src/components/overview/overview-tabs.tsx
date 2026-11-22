@@ -42,14 +42,21 @@ export function OverviewTabs() {
     try {
       saved = localStorage.getItem(KEY);
     } catch {}
-    if (saved && saved !== "period" && TABS.includes(saved as Tab)) router.replace(`${pathname}?tab=${saved}`, { scroll: false });
+    if (saved && saved !== "period" && TABS.includes(saved as Tab))
+      router.replace(`${pathname}?tab=${saved}`, { scroll: false });
   }, [fromUrl, pathname, router]);
 
   return (
     <div className="space-y-4 md:space-y-6">
       {/* The view tabs live in the Budget area's tab row; only the rare tag report gets a link here. */}
       {hasTags && tab !== "tags" && (
-        <button type="button" onClick={() => go("tags")} className="print-hidden min-h-11 text-footnote font-medium text-primary">{t("tab_tags")}</button>
+        <button
+          type="button"
+          onClick={() => go("tags")}
+          className="print-hidden min-h-11 text-footnote font-medium text-primary"
+        >
+          {t("tab_tags")}
+        </button>
       )}
       <div role="region" aria-label={t(`tab_${tab}`)}>
         {tab === "period" && <OverviewView />}

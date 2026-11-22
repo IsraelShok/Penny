@@ -1,11 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
 import { PageWheelNav } from "./page-wheel-nav";
 import { AlertNotifier } from "./alert-notifier";
@@ -30,7 +26,13 @@ import { A11yButton } from "@/components/a11y/a11y-menu";
 import { AnalyticsNav } from "@/components/analytics/analytics-nav";
 
 /** Lives in the root layout so the collapsed state survives page changes. */
-export function SidebarRoot({ defaultOpen, children }: { defaultOpen: boolean; children: ReactNode }) {
+export function SidebarRoot({
+  defaultOpen,
+  children,
+}: {
+  defaultOpen: boolean;
+  children: ReactNode;
+}) {
   return <SidebarProvider defaultOpen={defaultOpen}>{children}</SidebarProvider>;
 }
 
@@ -45,20 +47,40 @@ export function PersistentShell({ children }: { children: ReactNode }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   if (FRAMELESS.some((p) => pathname === p || pathname.startsWith(p + "/"))) return <>{children}</>;
-  const inHub = NAVIGATION_GROUPS.find((g) => g.key === "analytics")!.items.some((i) => i.match(pathname));
+  const inHub = NAVIGATION_GROUPS.find((g) => g.key === "analytics")!.items.some((i) =>
+    i.match(pathname),
+  );
   // Settings animate inside their own frame (see SettingsFrame), so the frame itself is not re-keyed per section.
   const key = pathname.startsWith("/settings") ? "/settings" : pathname;
   return (
     <>
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-background focus:px-5 focus:py-3 focus:outline-2">{t("skipToContent")}</a>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-background focus:px-5 focus:py-3 focus:outline-2"
+      >
+        {t("skipToContent")}
+      </a>
       <AppSidebar />
       <SidebarInset id="main-content" tabIndex={-1} className="mobile-dock-content">
         <UpdateBanner />
         <TopBar />
-        {inHub
-          ? <div className="flex items-start gap-2 md:ps-6 lg:ps-8"><div className="pt-[4.5rem]"><AnalyticsNav /></div><div key={key} className="page-in min-w-0 flex-1">{children}</div></div>
-          : <div key={key} className="page-in">{children}</div>}
-        <Suspense fallback={null}><PageWheelNav /></Suspense>
+        {inHub ? (
+          <div className="flex items-start gap-2 md:ps-6 lg:ps-8">
+            <div className="pt-[4.5rem]">
+              <AnalyticsNav />
+            </div>
+            <div key={key} className="page-in min-w-0 flex-1">
+              {children}
+            </div>
+          </div>
+        ) : (
+          <div key={key} className="page-in">
+            {children}
+          </div>
+        )}
+        <Suspense fallback={null}>
+          <PageWheelNav />
+        </Suspense>
         <AlertNotifier />
         <BottomBar />
         <PrivacyHotkey />
@@ -95,23 +117,38 @@ export function PageHeader({
   const tRoot = useTranslations();
   const tSettings = useTranslations("settings.sidebar");
   // The title is always the name the menu uses: a settings section's own name, the dashboard for both of its views.
-  const settingsItem = pathname.startsWith("/settings/") ? [...SETTINGS_GROUPS.flatMap((g) => g.items), SETTINGS_HELP].find((i) => i.match(pathname)) : undefined;
-  const group = settingsItem ? undefined : NAVIGATION_GROUPS.find(g => g.items.some(item => item.match(pathname)));
-  const page = group?.items.find(item => item.href === pathname);
+  const settingsItem = pathname.startsWith("/settings/")
+    ? [...SETTINGS_GROUPS.flatMap((g) => g.items), SETTINGS_HELP].find((i) => i.match(pathname))
+    : undefined;
+  const group = settingsItem
+    ? undefined
+    : NAVIGATION_GROUPS.find((g) => g.items.some((item) => item.match(pathname)));
+  const page = group?.items.find((item) => item.href === pathname);
   const heading = settingsItem
-    ? (settingsItem.labelKey.includes(".") ? tRoot(settingsItem.labelKey) : tSettings(settingsItem.labelKey))
-    : pathname === "/" || pathname === "/focus" ? tNavGroups("groups.dashboard")
-    : page ? tNavGroups(`pages.${page.key}`) : title;
+    ? settingsItem.labelKey.includes(".")
+      ? tRoot(settingsItem.labelKey)
+      : tSettings(settingsItem.labelKey)
+    : pathname === "/" || pathname === "/focus"
+      ? tNavGroups("groups.dashboard")
+      : page
+        ? tNavGroups(`pages.${page.key}`)
+        : title;
   // The dashboard speaks for itself: its title is kept for screen readers and the tab, not shown.
   const hideTitle = pathname === "/" || pathname === "/focus";
-  const eyebrow = settingsItem ? tSettings("title") : group && group.items.length > 1 ? tNavGroups(`groups.${group.key}`) : null;
+  const eyebrow = settingsItem
+    ? tSettings("title")
+    : group && group.items.length > 1
+      ? tNavGroups(`groups.${group.key}`)
+      : null;
   const { plan } = usePlan();
   // One plain line on what this page is for, only for those who asked for more explanations.
   const key = wantsExplanations(plan) ? pagePurposeKey(pathname) : null;
   const purpose = key && largeTitle && tPurpose.has(key) ? tPurpose(key) : null;
   const [scrolled, setScrolled] = useState(false);
   // Every page sets its own tab title, so tabs, history and screen readers can tell pages apart.
-  useEffect(() => { document.title = `${heading} · Penny`; }, [heading]);
+  useEffect(() => {
+    document.title = `${heading} · Penny`;
+  }, [heading]);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -132,9 +169,14 @@ export function PageHeader({
   }, []);
 
   return (
-    <header ref={headerRef} className={`sticky top-0 z-20 transition-[box-shadow,background-color] duration-150 ${scrolled ? "header-bar shadow-[0_0.5px_0_var(--border)]" : "bg-transparent"}`}>
+    <header
+      ref={headerRef}
+      className={`sticky top-0 z-20 transition-[box-shadow,background-color] duration-150 ${scrolled ? "header-bar shadow-[0_0.5px_0_var(--border)]" : "bg-transparent"}`}
+    >
       {/* Nothing to show on desktop folds the row away, but the menu keeps its corner: it is the only way around in Simple mode. */}
-      <div className={`mx-auto grid min-h-16 max-w-[1920px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3 md:px-6 lg:px-8 ${hideTitle && !actions ? "md:min-h-0 md:py-0" : ""}`}>
+      <div
+        className={`mx-auto grid min-h-16 max-w-[1920px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3 md:px-6 lg:px-8 ${hideTitle && !actions ? "md:min-h-0 md:py-0" : ""}`}
+      >
         {/* The menu sits at the page's top corner: Simple mode's own hamburger, or the side menu's trigger on phones. */}
         <div className="col-start-1 row-start-1 -ms-1 flex items-center gap-1 self-center justify-self-start">
           <div className="flex items-center gap-1 md:hidden">
@@ -146,7 +188,16 @@ export function PageHeader({
         <div className="col-start-2 row-start-1 flex min-w-0 flex-col items-start text-start">
           {eyebrow && <p className="mb-0.5 text-xs text-muted-foreground">{eyebrow}</p>}
           <div className="relative min-w-0 max-w-full">
-            <h1 title={heading} className={hideTitle ? "sr-only" : "truncate text-[1.625rem] leading-8 font-bold tracking-tight"}>{heading}</h1>
+            <h1
+              title={heading}
+              className={
+                hideTitle
+                  ? "sr-only"
+                  : "truncate text-[1.625rem] leading-8 font-bold tracking-tight"
+              }
+            >
+              {heading}
+            </h1>
             {/* The "i" hangs off the title's end so the title itself stays on the center line. */}
             <span className="absolute start-full top-1/2 flex -translate-y-1/2 items-center">
               {meta && meta.length > 24 && <InfoTip text={meta} />}
@@ -154,13 +205,22 @@ export function PageHeader({
             </span>
           </div>
           {/* Short context (a month) on its own line under the title. */}
-          {meta && meta.length <= 24 && <p className="truncate text-footnote text-muted-foreground">{meta}</p>}
+          {meta && meta.length <= 24 && (
+            <p className="truncate text-footnote text-muted-foreground">{meta}</p>
+          )}
         </div>
         {/* Accessibility menu on phones (the sidebar footer has it on larger screens). */}
-        <A11yButton size="icon" className="col-start-3 row-start-1 self-center justify-self-end sm:hidden" />
-        <div className="col-start-3 row-start-1 flex flex-wrap items-center justify-end gap-2 max-sm:col-span-3 max-sm:col-start-1 max-sm:row-start-2 max-sm:justify-center">{actions}</div>
+        <A11yButton
+          size="icon"
+          className="col-start-3 row-start-1 self-center justify-self-end sm:hidden"
+        />
+        <div className="col-start-3 row-start-1 flex flex-wrap items-center justify-end gap-2 max-sm:col-span-3 max-sm:col-start-1 max-sm:row-start-2 max-sm:justify-center">
+          {actions}
+        </div>
       </div>
-      <Suspense fallback={null}><SectionTabs /></Suspense>
+      <Suspense fallback={null}>
+        <SectionTabs />
+      </Suspense>
     </header>
   );
 }

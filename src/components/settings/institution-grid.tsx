@@ -5,8 +5,18 @@ import { ProviderBadge } from "@/components/setup/provider-badge";
 import { cn } from "@/lib/utils";
 
 /** Two columns on a phone, three on a tablet, four on a wide screen: one rhythm for every institution list. */
-export function InstitutionGrid({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4", className)}>{children}</div>;
+export function InstitutionGrid({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4", className)}>
+      {children}
+    </div>
+  );
 }
 
 /**
@@ -38,7 +48,12 @@ export function InstitutionTile({
   const head = (
     <>
       <ProviderBadge color={color} name={label} domain={domain} size={30} radius={8} />
-      <span title={label} className="min-w-0 flex-1 truncate text-footnote font-medium leading-tight">{label}</span>
+      <span
+        title={label}
+        className="min-w-0 flex-1 truncate text-footnote font-medium leading-tight"
+      >
+        {label}
+      </span>
     </>
   );
   return (

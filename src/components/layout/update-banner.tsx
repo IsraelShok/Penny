@@ -20,7 +20,8 @@ export function UpdateBanner() {
   const t = useTranslations("update");
   const { data } = useQuery({
     queryKey: ["update"],
-    queryFn: async () => ((await (await fetch("/api/update")).json()) as { update: Update | null }).update,
+    queryFn: async () =>
+      ((await (await fetch("/api/update")).json()) as { update: Update | null }).update,
     staleTime: 6 * 60 * 60 * 1000,
     retry: false,
   });
@@ -41,11 +42,19 @@ export function UpdateBanner() {
   };
 
   return (
-    <div role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-primary/10 px-4 py-2 text-footnote md:px-6">
+    <div
+      role="status"
+      className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-primary/10 px-4 py-2 text-footnote md:px-6"
+    >
       <Download className="size-4 shrink-0 text-primary" aria-hidden />
       <span className="font-semibold">{t("title", { version: data.latest })}</span>
       <span className="min-w-0 flex-1 text-muted-foreground">{t(`how_${data.install}`)}</span>
-      <a href={data.url} target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">
+      <a
+        href={data.url}
+        target="_blank"
+        rel="noreferrer"
+        className="font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+      >
         {t(data.install === "desktop" ? "download" : "whatsNew")}
       </a>
       <IconButton label={t("dismiss")} size="icon-sm" variant="ghost" onClick={hide}>

@@ -73,7 +73,7 @@ export function detectKind(
   description: string,
   provider: string,
   chargedAmount: number,
-  options: KindOptions = {}
+  options: KindOptions = {},
 ): TransactionKind {
   if (isBankProvider(provider) && matchesTransferPattern(description)) {
     return options.cardExplainsBill ? "transfer" : "expense";

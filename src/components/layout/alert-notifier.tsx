@@ -15,10 +15,15 @@ const LEGACY_SEEN_KEY = "spent-notified-suggestions"; // legacy: spent-notified-
  */
 export function AlertNotifier() {
   const t = useTranslations("suggestions");
-  const { data } = useQuery({ queryKey: ["suggestions"], queryFn: getSuggestions, refetchInterval: 30 * 60 * 1000 });
+  const { data } = useQuery({
+    queryKey: ["suggestions"],
+    queryFn: getSuggestions,
+    refetchInterval: 30 * 60 * 1000,
+  });
 
   useEffect(() => {
-    if (!data || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    if (!data || typeof Notification === "undefined" || Notification.permission !== "granted")
+      return;
     let seen: string[] = [];
     try {
       seen = JSON.parse(readStored(SEEN_KEY, LEGACY_SEEN_KEY) ?? "[]");
@@ -26,9 +31,15 @@ export function AlertNotifier() {
     const fresh = data.suggestions.filter((s) => !seen.includes(s.key));
     if (fresh.length === 0) return;
     // One notification, not a burst: the count and where to look.
-    new Notification(t("notifyTitle"), { body: t("notifyBody", { count: fresh.length }), tag: "penny-suggestions" });
+    new Notification(t("notifyTitle"), {
+      body: t("notifyBody", { count: fresh.length }),
+      tag: "penny-suggestions",
+    });
     try {
-      localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, ...fresh.map((s) => s.key)].slice(-300)));
+      localStorage.setItem(
+        SEEN_KEY,
+        JSON.stringify([...seen, ...fresh.map((s) => s.key)].slice(-300)),
+      );
     } catch {}
   }, [data, t]);
 

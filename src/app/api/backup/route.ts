@@ -13,7 +13,8 @@ export async function GET() {
 export async function POST(request: Request) {
   const body = ((await request.json().catch(() => null)) ?? {}) as { passphrase?: unknown };
   const passphrase = typeof body.passphrase === "string" ? body.passphrase : "";
-  if (passphrase.length < MIN_PASSPHRASE) return NextResponse.json({ error: "weakPassphrase" }, { status: 400 });
+  if (passphrase.length < MIN_PASSPHRASE)
+    return NextResponse.json({ error: "weakPassphrase" }, { status: 400 });
   try {
     const { bytes, fileName } = createBackup(passphrase);
     return new Response(new Uint8Array(bytes), {

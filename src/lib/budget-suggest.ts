@@ -24,8 +24,16 @@ export function friendlyRound(n: number): number {
 export function suggestBudgets(rows: CategoryHistory[]): BudgetSuggestion[] {
   return rows
     .map((r) => {
-      const average = r.monthly.length ? r.monthly.reduce((s, v) => s + v, 0) / r.monthly.length : 0;
-      return { categoryId: r.categoryId, name: r.name, average: Math.round(average), suggested: friendlyRound(average), currentBudget: r.currentBudget };
+      const average = r.monthly.length
+        ? r.monthly.reduce((s, v) => s + v, 0) / r.monthly.length
+        : 0;
+      return {
+        categoryId: r.categoryId,
+        name: r.name,
+        average: Math.round(average),
+        suggested: friendlyRound(average),
+        currentBudget: r.currentBudget,
+      };
     })
     .filter((s) => s.average > 0)
     .sort((a, b) => b.average - a.average);

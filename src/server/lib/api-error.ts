@@ -10,7 +10,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number = 400,
-    readonly code?: string
+    readonly code?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -26,7 +26,7 @@ export function errorResponse(scope: string, error: unknown): NextResponse {
   if (error instanceof ApiError) {
     return NextResponse.json(
       error.code ? { error: error.message, code: error.code } : { error: error.message },
-      { status: error.status }
+      { status: error.status },
     );
   }
   console.error(`[${scope}]`, error instanceof Error ? (error.stack ?? error.message) : error);

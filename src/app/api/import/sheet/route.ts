@@ -14,7 +14,12 @@ import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { markDuplicates } from "@/lib/file-import";
 import { isValidOwner, normalizeTag } from "@/lib/tags";
 import { roundCents } from "@/lib/money";
-import { MAX_SHEET_AMOUNT, MAX_SHEET_ROWS, SHEET_CASH_ACCOUNT, signedSheetAmount } from "@/lib/sheet-import";
+import {
+  MAX_SHEET_AMOUNT,
+  MAX_SHEET_ROWS,
+  SHEET_CASH_ACCOUNT,
+  signedSheetAmount,
+} from "@/lib/sheet-import";
 
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });
 
@@ -30,7 +35,11 @@ export async function GET(request: Request) {
          UNION ALL SELECT account_number, 'cash', 'מזומן' FROM transactions WHERE workspace_id = ? AND account_number = 'cash'
        ) GROUP BY account_number ORDER BY account_number`,
     )
-    .all(workspaceId, workspaceId) as { accountNumber: string; provider: string; label: string | null }[];
+    .all(workspaceId, workspaceId) as {
+    accountNumber: string;
+    provider: string;
+    label: string | null;
+  }[];
   const categories = db
     .prepare(
       `SELECT id, name, kind, color FROM categories
@@ -38,9 +47,14 @@ export async function GET(request: Request) {
        ORDER BY kind, name`,
     )
     .all(workspaceId) as { id: number; name: string; kind: string; color: string | null }[];
-  const members = getAppSettings(workspaceId).household.members.map((m) => ({ id: m.id, name: m.name }));
+  const members = getAppSettings(workspaceId).household.members.map((m) => ({
+    id: m.id,
+    name: m.name,
+  }));
   const tags = db
-    .prepare("SELECT DISTINCT tag FROM transaction_tags WHERE workspace_id = ? ORDER BY tag LIMIT 200")
+    .prepare(
+      "SELECT DISTINCT tag FROM transaction_tags WHERE workspace_id = ? ORDER BY tag LIMIT 200",
+    )
     .all(workspaceId) as { tag: string }[];
   return NextResponse.json({ accounts, categories, members, tags: tags.map((t) => t.tag) });
 }
@@ -61,15 +75,18 @@ function readRow(
   memberIds: string[],
 ): { row: IncomingRow; code: null } | { row: null; code: string } {
   const date = typeof raw.date === "string" ? raw.date.trim() : "";
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`))) return { row: null, code: "dateInvalid" };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`)))
+    return { row: null, code: "dateInvalid" };
   if (date < "1990-01-01" || date > "2100-01-01") return { row: null, code: "dateInvalid" };
 
-  const description = typeof raw.description === "string" ? raw.description.replace(/\s+/g, " ").trim() : "";
+  const description =
+    typeof raw.description === "string" ? raw.description.replace(/\s+/g, " ").trim() : "";
   if (!description) return { row: null, code: "descriptionRequired" };
   if (description.length > 120) return { row: null, code: "descriptionTooLong" };
 
   const amount = raw.amount;
-  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) return { row: null, code: "amountRequired" };
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0)
+    return { row: null, code: "amountRequired" };
   if (amount > MAX_SHEET_AMOUNT) return { row: null, code: "amountRange" };
 
   const kind = raw.kind === "income" ? "income" : raw.kind === "expense" ? "expense" : null;
@@ -81,7 +98,8 @@ function readRow(
   const categoryName = typeof raw.category === "string" ? raw.category.trim().slice(0, 40) : "";
 
   const business = raw.businessSharePct === undefined ? 0 : raw.businessSharePct;
-  if (typeof business !== "number" || !Number.isInteger(business) || business < 0 || business > 100) return { row: null, code: "businessRange" };
+  if (typeof business !== "number" || !Number.isInteger(business) || business < 0 || business > 100)
+    return { row: null, code: "businessRange" };
 
   const owner = raw.owner == null || raw.owner === "" ? null : String(raw.owner);
   if (owner !== null && !isValidOwner(owner, memberIds)) return { row: null, code: "ownerInvalid" };
@@ -96,15 +114,27 @@ function readRow(
     }
   }
 
-  const memo = typeof raw.memo === "string" && raw.memo.trim() ? raw.memo.trim().slice(0, 500) : null;
-  if (typeof raw.memo === "string" && raw.memo.length > 500) return { row: null, code: "memoTooLong" };
+  const memo =
+    typeof raw.memo === "string" && raw.memo.trim() ? raw.memo.trim().slice(0, 500) : null;
+  if (typeof raw.memo === "string" && raw.memo.length > 500)
+    return { row: null, code: "memoTooLong" };
 
   return {
     row: {
       index,
       account,
       categoryName,
-      values: { date, description, amount: roundCents(amount), kind, categoryId: null, tags: [...new Set(tags)], owner, businessSharePct: business, memo },
+      values: {
+        date,
+        description,
+        amount: roundCents(amount),
+        kind,
+        categoryId: null,
+        tags: [...new Set(tags)],
+        owner,
+        businessSharePct: business,
+        memo,
+      },
     },
     code: null,
   };
@@ -117,7 +147,10 @@ function readRow(
  */
 export async function POST(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = ((await request.json().catch(() => null)) ?? {}) as { rows?: unknown; dryRun?: unknown };
+  const body = ((await request.json().catch(() => null)) ?? {}) as {
+    rows?: unknown;
+    dryRun?: unknown;
+  };
   if (!Array.isArray(body.rows) || body.rows.length === 0) return bad("rows are required");
   if (body.rows.length > MAX_SHEET_ROWS) return bad(`at most ${MAX_SHEET_ROWS} rows`);
 
@@ -135,7 +168,10 @@ export async function POST(request: Request) {
   });
 
   // Category names resolve on the server so a renamed or deleted category fails the row, not the save.
-  const categories = categoryIdsByName(workspaceId, valid.map((r) => r.categoryName).filter(Boolean));
+  const categories = categoryIdsByName(
+    workspaceId,
+    valid.map((r) => r.categoryName).filter(Boolean),
+  );
   const ready: IncomingRow[] = [];
   for (const row of valid) {
     if (row.categoryName) {
@@ -163,7 +199,7 @@ export async function POST(request: Request) {
   const fresh: IncomingRow[] = [];
   let duplicates = 0;
   for (const [account, rows] of byAccount) {
-    const dates = rows.map((r) => r.values.date).sort();
+    const dates = rows.map((r) => r.values.date).sort((a, b) => a.localeCompare(b));
     const stored = storedForImport(workspaceId, account, dates[0], dates[dates.length - 1]);
     const mine = rows.map((r) => ({
       date: r.values.date,
@@ -218,14 +254,21 @@ export async function POST(request: Request) {
 
   let batchId: number | null = null;
   for (const [account, rows] of groupBy(accountRows, (r) => r.account)) {
-    const inserted = insertSheetRows(workspaceId, account, rows.map((r) => r.values));
+    const inserted = insertSheetRows(
+      workspaceId,
+      account,
+      rows.map((r) => r.values),
+    );
     batchId ??= inserted.batchId;
     transactionIds.push(...inserted.ids);
     // A hash collision inside one batch (two identical rows already in the sheet) inserts once.
-    rows.forEach((row, i) => statuses.push({ index: row.index, status: inserted.flags[i] ? "added" : "duplicate" }));
+    rows.forEach((row, i) =>
+      statuses.push({ index: row.index, status: inserted.flags[i] ? "added" : "duplicate" }),
+    );
   }
 
-  const importId = transactionIds.length > 0 ? recordSheetImport(workspaceId, transactionIds, duplicates) : null;
+  const importId =
+    transactionIds.length > 0 ? recordSheetImport(workspaceId, transactionIds, duplicates) : null;
   const categorized = fresh.filter((r) => r.values.categoryId != null).length;
   return NextResponse.json({
     dryRun: false,

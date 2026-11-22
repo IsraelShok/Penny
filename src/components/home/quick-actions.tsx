@@ -26,7 +26,11 @@ export function QuickActions() {
         <Wallet className="size-4" aria-hidden />
         {t("budget")}
       </Link>
-      <button type="button" className="quick-chip press" onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE))}>
+      <button
+        type="button"
+        className="quick-chip press"
+        onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE))}
+      >
         <Search className="size-4" aria-hidden />
         {t("search")}
       </button>

@@ -29,13 +29,19 @@ describe("upgrading an existing database", () => {
     runMigrations(db);
 
     expect(count("SELECT COUNT(*) AS n FROM _migrations")).toBe(migrationsBefore);
-    expect(count("SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name = 'sheet_imports'")).toBe(1);
+    expect(
+      count(
+        "SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name = 'sheet_imports'",
+      ),
+    ).toBe(1);
     // The upgrade must not lose or duplicate user data on the way.
     expect(count("SELECT COUNT(*) AS n FROM categories")).toBe(categoriesBefore);
 
     const copies = fs.readdirSync(backupDir()).filter((f) => f.endsWith(".db"));
     expect(copies.length).toBeGreaterThan(0);
-    const newest = copies.map((f) => fs.statSync(path.join(backupDir(), f)).mtimeMs).sort((a, b) => b - a)[0];
+    const newest = copies
+      .map((f) => fs.statSync(path.join(backupDir(), f)).mtimeMs)
+      .sort((a, b) => b - a)[0];
     expect(Date.now() - newest).toBeLessThan(60_000);
   });
 

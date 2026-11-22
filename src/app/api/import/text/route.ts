@@ -18,7 +18,8 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { text?: unknown } | null;
   const text = typeof body?.text === "string" ? body.text.trim() : "";
   if (!text) return NextResponse.json({ error: "empty" }, { status: 400 });
-  if (text.length > MAX_TEXT_IMPORT) return NextResponse.json({ error: "tooLong" }, { status: 413 });
+  if (text.length > MAX_TEXT_IMPORT)
+    return NextResponse.json({ error: "tooLong" }, { status: 413 });
   const today = israelToday();
   let reply: string | null;
   try {

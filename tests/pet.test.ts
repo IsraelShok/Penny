@@ -1,8 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { petLines, petMood, petNeedsCare, petTodo, petKey, petSnooze, petSnoozeUntil, parsePet, PET_ACTION, type PetInputs } from "@/lib/pet";
+import {
+  petLines,
+  petMood,
+  petNeedsCare,
+  petTodo,
+  petKey,
+  petSnooze,
+  petSnoozeUntil,
+  parsePet,
+  PET_ACTION,
+  type PetInputs,
+} from "@/lib/pet";
 import { DEFAULT_PLAN, parsePlan } from "@/lib/plan";
 
-const base: PetInputs = { spent: 4000, budget: 10000, elapsed: 0.5, emergencyMonths: 6, targetMonths: 6, savingsRate: 0.2, overdraft: false, uncategorized: 0 };
+const base: PetInputs = {
+  spent: 4000,
+  budget: 10000,
+  elapsed: 0.5,
+  emergencyMonths: 6,
+  targetMonths: 6,
+  savingsRate: 0.2,
+  overdraft: false,
+  uncategorized: 0,
+};
 const mood = (i: Partial<PetInputs>) => petMood(petLines({ ...base, ...i }));
 
 describe("pet", () => {
@@ -12,7 +32,12 @@ describe("pet", () => {
   });
   it("gets hungry when spending runs ahead of the month", () => {
     expect(mood({ spent: 7000 })).toBe("hungry");
-    expect(petLines({ ...base, spent: 7000 })[1]).toEqual({ stat: "food", ok: false, reason: "overPace", vars: { pct: 40 } });
+    expect(petLines({ ...base, spent: 7000 })[1]).toEqual({
+      stat: "food",
+      ok: false,
+      reason: "overPace",
+      vars: { pct: 40 },
+    });
   });
   it("is ok with one small thing to do", () => expect(mood({ uncategorized: 3 })).toBe("ok"));
   it("looks in with care (never sleeps) with an overdraft or several issues", () => {
@@ -21,7 +46,12 @@ describe("pet", () => {
   });
   it("names the overdraft to pay off first, with the amount", () => {
     const lines = petLines({ ...base, overdraftAmount: 1234.4, uncategorized: 2 });
-    expect(petTodo(lines, {}, "2026-11-14")[0]).toEqual({ stat: "health", ok: false, reason: "overdraftAmount", vars: { amount: 1234 } });
+    expect(petTodo(lines, {}, "2026-11-14")[0]).toEqual({
+      stat: "health",
+      ok: false,
+      reason: "overdraftAmount",
+      vars: { amount: 1234 },
+    });
   });
   it("maps every mood to a face action, none of them sleep", () => {
     expect(PET_ACTION).toEqual({ happy: "success", ok: "idle", hungry: "wary", caring: "inspect" });
@@ -39,8 +69,14 @@ describe("pet", () => {
     expect(petSnoozeUntil("day", now)).toBe("2026-12-31");
     expect(petSnoozeUntil("week", now)).toBe("2027-01-06");
     expect(petSnoozeUntil("dismiss", now)).toBe("2027-01-01");
-    expect(petSnooze({ "tidy:messy": "2026-12-01", "food:overPace": "2027-01-01" }, "joy:saving", "2027-01-06", "2026-12-30"))
-      .toEqual({ "food:overPace": "2027-01-01", "joy:saving": "2027-01-06" });
+    expect(
+      petSnooze(
+        { "tidy:messy": "2026-12-01", "food:overPace": "2027-01-01" },
+        "joy:saving",
+        "2027-01-06",
+        "2026-12-30",
+      ),
+    ).toEqual({ "food:overPace": "2027-01-01", "joy:saving": "2027-01-06" });
   });
   it("counts the stats needing care for the badge", () => {
     expect(petNeedsCare(petLines(base))).toBe(0);
@@ -53,9 +89,21 @@ describe("pet", () => {
     expect(parsePlan({ pet: { enabled: false } }).pet.enabled).toBe(false);
   });
   it("keeps only valid looks", () => {
-    expect(parsePet({ color: "#ABCDEF", size: "l", skin: "301" })).toMatchObject({ color: "#abcdef", size: "l", skin: "301" });
-    expect(parsePet({ color: "red;x", size: "toString", skin: "999" })).toMatchObject({ color: "", size: "m", skin: "" });
-    expect(parsePet({ snooze: { "tidy:messy": "2026-12-01", "x y": "2026-12-01", "food:overPace": "soon" } }).snooze).toEqual({ "tidy:messy": "2026-12-01" });
+    expect(parsePet({ color: "#ABCDEF", size: "l", skin: "301" })).toMatchObject({
+      color: "#abcdef",
+      size: "l",
+      skin: "301",
+    });
+    expect(parsePet({ color: "red;x", size: "toString", skin: "999" })).toMatchObject({
+      color: "",
+      size: "m",
+      skin: "",
+    });
+    expect(
+      parsePet({
+        snooze: { "tidy:messy": "2026-12-01", "x y": "2026-12-01", "food:overPace": "soon" },
+      }).snooze,
+    ).toEqual({ "tidy:messy": "2026-12-01" });
   });
 });
 

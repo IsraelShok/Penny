@@ -21,11 +21,7 @@ export function CardShell({ label, wallet, action, children, className, id }: Ca
   return (
     <div
       id={id}
-      className={cn(
-        "card-surface flex h-full min-w-0 flex-col",
-        wallet && "wallet",
-        className
-      )}
+      className={cn("card-surface flex h-full min-w-0 flex-col", wallet && "wallet", className)}
     >
       {(label || action) && (
         <div className="card-head items-center">

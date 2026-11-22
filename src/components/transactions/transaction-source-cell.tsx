@@ -12,7 +12,7 @@ interface TransactionSourceCellProps {
 
 export function getAccountDisplayLabel(
   providerName: string,
-  accountLabel: string | null
+  accountLabel: string | null,
 ): { primary: string; secondary: string | null } {
   const labelDistinct =
     accountLabel != null &&
@@ -24,17 +24,10 @@ export function getAccountDisplayLabel(
   };
 }
 
-export function TransactionSourceCell({
-  provider,
-  accountLabel,
-}: TransactionSourceCellProps) {
+export function TransactionSourceCell({ provider, accountLabel }: TransactionSourceCellProps) {
   const tBanks = useTranslations("banks");
   const info = BANK_PROVIDERS.find((b) => b.id === provider);
-  const providerName = translateProviderName(
-    provider,
-    info?.name ?? provider,
-    tBanks
-  );
+  const providerName = translateProviderName(provider, info?.name ?? provider, tBanks);
 
   const { primary, secondary } = getAccountDisplayLabel(providerName, accountLabel);
   const tooltip = secondary ? `${primary} · ${secondary}` : primary;
@@ -53,9 +46,13 @@ export function TransactionSourceCell({
         <div className="h-5 w-5 shrink-0 rounded-md bg-muted" aria-hidden />
       )}
       <div className="min-w-0">
-        <div className="truncate text-sm leading-tight" title={primary}>{primary}</div>
+        <div className="truncate text-sm leading-tight" title={primary}>
+          {primary}
+        </div>
         {secondary ? (
-          <div className="truncate text-xs text-muted-foreground" title={secondary}>{secondary}</div>
+          <div className="truncate text-xs text-muted-foreground" title={secondary}>
+            {secondary}
+          </div>
         ) : null}
       </div>
     </div>

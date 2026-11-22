@@ -15,11 +15,20 @@ describe("projectInstallments", () => {
   it("projects the remaining payments monthly on the same day", () => {
     const out = projectInstallments([t()], "2026-11-04");
     expect(out).toHaveLength(9);
-    expect(out[0]).toMatchObject({ date: "2026-11-10", month: "2026-11", amount: 100, merchant: "ikea", account: "1" });
+    expect(out[0]).toMatchObject({
+      date: "2026-11-10",
+      month: "2026-11",
+      amount: 100,
+      merchant: "ikea",
+      account: "1",
+    });
     expect(out[8].date).toBe("2027-07-10");
   });
   it("uses only the latest payment of a plan", () => {
-    const out = projectInstallments([t({ number: 2, date: "2026-09-10" }), t({ number: 3 })], "2026-11-04");
+    const out = projectInstallments(
+      [t({ number: 2, date: "2026-09-10" }), t({ number: 3 })],
+      "2026-11-04",
+    );
     expect(out).toHaveLength(9);
   });
   it("returns nothing for total of 1 or a finished plan", () => {
@@ -35,7 +44,10 @@ describe("projectInstallments", () => {
     expect(projectInstallments([t({ amount: -100 })], "2026-11-04")[0].amount).toBe(100);
   });
   it("clamps the day to the month length and rolls the year", () => {
-    const out = projectInstallments([t({ number: 10, total: 12, date: "2026-12-31" })], "2026-12-31");
+    const out = projectInstallments(
+      [t({ number: 10, total: 12, date: "2026-12-31" })],
+      "2026-12-31",
+    );
     expect(out.map((p) => p.date)).toEqual(["2027-01-31", "2027-02-28"]);
   });
   it("drops projected payments already in the past", () => {
@@ -50,7 +62,10 @@ describe("projectInstallments", () => {
 
 describe("openInstallments", () => {
   it("sums what is still owed per plan and per month", () => {
-    const projected = projectInstallments([t(), t({ merchant: "ace", amount: 50, number: 1, total: 3 })], "2026-11-04");
+    const projected = projectInstallments(
+      [t(), t({ merchant: "ace", amount: 50, number: 1, total: 3 })],
+      "2026-11-04",
+    );
     const out = openInstallments(projected, "2026-11-04");
     expect(out.total).toBe(9 * 100 + 2 * 50);
     expect(out.plans[0]).toMatchObject({ merchant: "ikea", paid: 3, total: 12, remaining: 900 });
@@ -59,14 +74,23 @@ describe("openInstallments", () => {
     expect(out.months.at(-1)).toEqual({ month: "2027-07", total: 100 });
   });
   it("keeps only the next 12 months in the runoff", () => {
-    const out = openInstallments(projectInstallments([t({ number: 1, total: 36 })], "2026-11-04"), "2026-11-04");
+    const out = openInstallments(
+      projectInstallments([t({ number: 1, total: 36 })], "2026-11-04"),
+      "2026-11-04",
+    );
     expect(out.months).toHaveLength(12);
     expect(out.total).toBe(35 * 100);
   });
 
   it("treats a first payment an agora apart as the same plan", () => {
     const base = { merchant: "KSP", account: "4580", total: 3 };
-    const out = projectInstallments([{ ...base, amount: -333.34, number: 1, date: "2026-11-10" }, { ...base, amount: -333.33, number: 2, date: "2026-12-10" }], "2026-12-11");
+    const out = projectInstallments(
+      [
+        { ...base, amount: -333.34, number: 1, date: "2026-11-10" },
+        { ...base, amount: -333.33, number: 2, date: "2026-12-10" },
+      ],
+      "2026-12-11",
+    );
     expect(out.map((p) => [p.number, p.amount])).toEqual([[3, 333.33]]);
   });
 });

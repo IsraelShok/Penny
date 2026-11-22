@@ -3,11 +3,11 @@ import { dictionaryCategory } from "@/lib/merchant-dictionary";
 
 describe("dictionaryCategory", () => {
   it.each([
-    ["שופרסל דיל ת\"א", "Groceries"],
+    ['שופרסל דיל ת"א', "Groceries"],
     ["SHUFERSAL ONLINE", "Groceries"],
     ["רמי לוי תקשורת", "Mobile Phone"],
     ["רמי לוי שיווק השקמה", "Groceries"],
-    ["פזגז בע\"מ", "Gas"],
+    ['פזגז בע"מ', "Gas"],
     ["פז ילו רמת גן", "Fuel"],
     ["חברת החשמל לישראל", "Electricity"],
     ["מי אביבים 2010", "Water"],
@@ -15,12 +15,21 @@ describe("dictionaryCategory", () => {
     ["WOLT", "Food Delivery"],
     ["NETFLIX.COM", "Streaming"],
     ["ביטוח לאומי", "National Insurance"],
-    ["ע\"ר לתת", "Donations"],
+    ['ע"ר לתת', "Donations"],
     ["‏ארומה תל אביב‎", "Coffee & Cafes"],
   ])("%s → %s", (d, cat) => expect(dictionaryCategory(d, "expense")).toBe(cat));
 
   it("leaves ambiguous and unknown merchants alone", () => {
-    for (const d of ["סופר-פארם", "המשביר לצרכן", "העברה לחשבון", "מקסים רסטורנט", "דוד כהן", "יסמין פרחים", "פזורה"]) expect(dictionaryCategory(d, "expense")).toBeNull();
+    for (const d of [
+      "סופר-פארם",
+      "המשביר לצרכן",
+      "העברה לחשבון",
+      "מקסים רסטורנט",
+      "דוד כהן",
+      "יסמין פרחים",
+      "פזורה",
+    ])
+      expect(dictionaryCategory(d, "expense")).toBeNull();
   });
 
   it("reads income separately", () => {

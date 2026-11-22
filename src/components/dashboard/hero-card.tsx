@@ -16,13 +16,7 @@ interface HeroCardProps {
   monthLabel: string;
 }
 
-type PaceVerdict =
-  | "overBudget"
-  | "headsUp"
-  | "wellUnder"
-  | "ahead"
-  | "onSchedule"
-  | "noBudget";
+type PaceVerdict = "overBudget" | "headsUp" | "wellUnder" | "ahead" | "onSchedule" | "noBudget";
 
 function computeVerdict(
   budgetedSpent: number,
@@ -66,15 +60,12 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
   const hasBudget = totalBudget > 0;
 
   const parentIdsWithRollup = new Set(
-    categoriesWithData.filter((c) => c.isParent).map((c) => c.categoryId)
+    categoriesWithData.filter((c) => c.isParent).map((c) => c.categoryId),
   );
   const sorted = [...categoriesWithData]
     .filter(
       (c) =>
-        c.spent > 0 &&
-        (c.isParent ||
-          c.parentId == null ||
-          !parentIdsWithRollup.has(c.parentId))
+        c.spent > 0 && (c.isParent || c.parentId == null || !parentIdsWithRollup.has(c.parentId)),
     )
     .sort((a, b) => b.spent - a.spent);
   const topFour = sorted.slice(0, 4);
@@ -114,7 +105,10 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
   const pct = hasBudget ? Math.min(100, (budgetedSpent / totalBudget) * 100) : 0;
   const left = totalBudget - budgetedSpent;
   const forecast = timeElapsedPercent > 5 ? (spent / timeElapsedPercent) * 100 : null;
-  const tone = verdict === "overBudget" || verdict === "headsUp" ? "var(--status-heads-up)" : "var(--status-on-track)";
+  const tone =
+    verdict === "overBudget" || verdict === "headsUp"
+      ? "var(--status-heads-up)"
+      : "var(--status-on-track)";
   const word = {
     overBudget: t("wordOverBudget"),
     headsUp: t("wordOverSchedule"),
@@ -127,13 +121,23 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
   return (
     <section className="rounded-2xl bg-card p-6 md:p-8" aria-label={monthLabel}>
       <p className="text-footnote text-muted-foreground">
-        {todayPhrase} · {daysUntilPayday} {daysUntilPayday === 1 ? t("daysOne") : t("daysOther")} {t("untilPayday")}
+        {todayPhrase} · {daysUntilPayday} {daysUntilPayday === 1 ? t("daysOne") : t("daysOther")}{" "}
+        {t("untilPayday")}
       </p>
 
       <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="figure text-5xl"><bdi>{money(spent)}</bdi></span>
-        {hasBudget && <span className="text-headline text-muted-foreground">{t("ofBudget", { amount: money(totalBudget) })} <WhatIs concept="budget" /></span>}
-        <span className="ms-auto rounded-full px-3 py-1 text-footnote font-semibold" style={{ color: tone, backgroundColor: `color-mix(in oklch, ${tone} 12%, transparent)` }}>
+        <span className="figure text-5xl">
+          <bdi>{money(spent)}</bdi>
+        </span>
+        {hasBudget && (
+          <span className="text-headline text-muted-foreground">
+            {t("ofBudget", { amount: money(totalBudget) })} <WhatIs concept="budget" />
+          </span>
+        )}
+        <span
+          className="ms-auto rounded-full px-3 py-1 text-footnote font-semibold"
+          style={{ color: tone, backgroundColor: `color-mix(in oklch, ${tone} 12%, transparent)` }}
+        >
           {word}
         </span>
         <WhatIs concept="pace" className="-ms-2" />
@@ -142,14 +146,38 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
       {hasBudget && (
         <div className="mt-5">
           <div className="relative h-2.5 rounded-full bg-muted">
-            <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: tone }} />
+            <div
+              className="h-full rounded-full"
+              style={{ width: `${pct}%`, backgroundColor: tone }}
+            />
             {/* Where spending would be today at an even pace. */}
-            <span className="absolute -top-1 h-[1.125rem] w-0.5 rounded-full bg-foreground/60" style={{ insetInlineStart: `${Math.min(100, timeElapsedPercent)}%` }} aria-hidden />
+            <span
+              className="absolute -top-1 h-[1.125rem] w-0.5 rounded-full bg-foreground/60"
+              style={{ insetInlineStart: `${Math.min(100, timeElapsedPercent)}%` }}
+              aria-hidden
+            />
           </div>
           <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">
-            <div><dt className="text-muted-foreground">{left >= 0 ? t("heroLeft") : t("heroOver")}</dt><dd className="mt-0.5 font-semibold tabular-nums"><bdi>{money(Math.abs(left))}</bdi></dd></div>
-            <div><dt className="text-muted-foreground">{t("heroPerDay")}</dt><dd className="mt-0.5 font-semibold tabular-nums"><bdi>{left > 0 && daysUntilPayday > 0 ? money(left / daysUntilPayday) : "—"}</bdi></dd></div>
-            <div><dt className="text-muted-foreground">{t("heroForecast")} <WhatIs concept="forecast" /></dt><dd className="mt-0.5 font-semibold tabular-nums"><bdi>{forecast != null ? money(forecast) : "—"}</bdi></dd></div>
+            <div>
+              <dt className="text-muted-foreground">{left >= 0 ? t("heroLeft") : t("heroOver")}</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums">
+                <bdi>{money(Math.abs(left))}</bdi>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">{t("heroPerDay")}</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums">
+                <bdi>{left > 0 && daysUntilPayday > 0 ? money(left / daysUntilPayday) : "—"}</bdi>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">
+                {t("heroForecast")} <WhatIs concept="forecast" />
+              </dt>
+              <dd className="mt-0.5 font-semibold tabular-nums">
+                <bdi>{forecast != null ? money(forecast) : "—"}</bdi>
+              </dd>
+            </div>
           </dl>
         </div>
       )}
@@ -160,9 +188,15 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
           <ul className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2 lg:grid-cols-3">
             {legend.map((seg) => (
               <li key={seg.name} className="flex items-center gap-2">
-                <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: seg.color }} aria-hidden />
+                <span
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: seg.color }}
+                  aria-hidden
+                />
                 <span className="min-w-0 truncate">{seg.name}</span>
-                <span className="ms-auto tabular-nums text-muted-foreground"><bdi>{money(seg.amount)}</bdi></span>
+                <span className="ms-auto tabular-nums text-muted-foreground">
+                  <bdi>{money(seg.amount)}</bdi>
+                </span>
               </li>
             ))}
           </ul>
@@ -193,20 +227,11 @@ function useTodayPhrase(serverLabel: string, locale: Locale): string {
   }
 }
 
-
-
-function StackedBar({
-  legend,
-}: {
-  legend: { name: string; color: string; pct: number }[];
-}) {
+function StackedBar({ legend }: { legend: { name: string; color: string; pct: number }[] }) {
   return (
     <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
       {legend.map((seg, i) => (
-        <div
-          key={i}
-          style={{ width: `${seg.pct}%`, backgroundColor: seg.color }}
-        />
+        <div key={i} style={{ width: `${seg.pct}%`, backgroundColor: seg.color }} />
       ))}
     </div>
   );

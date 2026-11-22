@@ -1,14 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { CAR_DEFAULTS, SHARED_DEFAULTS, carCost, monthlyPayment, type CarInputs } from "@/lib/car-cost";
+import {
+  CAR_DEFAULTS,
+  SHARED_DEFAULTS,
+  carCost,
+  monthlyPayment,
+  type CarInputs,
+} from "@/lib/car-cost";
 
 const car = (type: CarInputs["type"], p: Partial<CarInputs> = {}): CarInputs => ({
-  ...CAR_DEFAULTS[type], price: 150_000, downShare: 1, loanRate: 0.07, loanYears: 5, ...p,
+  ...CAR_DEFAULTS[type],
+  price: 150_000,
+  downShare: 1,
+  loanRate: 0.07,
+  loanYears: 5,
+  ...p,
 });
 
 describe("carCost", () => {
   it("adds up its parts", () => {
     const c = carCost(car("gas"), SHARED_DEFAULTS);
-    const parts = c.depreciation + c.interest + c.energy + c.insurance + c.maintenance + c.license + c.missedReturn;
+    const parts =
+      c.depreciation +
+      c.interest +
+      c.energy +
+      c.insurance +
+      c.maintenance +
+      c.license +
+      c.missedReturn;
     expect(c.total).toBeCloseTo(parts);
     expect(c.perMonth).toBeCloseTo(c.total / 60);
   });
@@ -35,7 +53,9 @@ describe("carCost", () => {
 
   it("makes a loan dearer than cash when its rate beats the investment return", () => {
     const s = { ...SHARED_DEFAULTS, investReturn: 0.04 };
-    expect(carCost(car("gas", { downShare: 0.2, loanRate: 0.09 }), s).total).toBeGreaterThan(carCost(car("gas"), s).total);
+    expect(carCost(car("gas", { downShare: 0.2, loanRate: 0.09 }), s).total).toBeGreaterThan(
+      carCost(car("gas"), s).total,
+    );
   });
 
   it("depreciates to the 5-year resale share", () => {
@@ -45,5 +65,6 @@ describe("carCost", () => {
 
 describe("monthlyPayment", () => {
   it("splits evenly at 0%", () => expect(monthlyPayment(12_000, 0, 1)).toBe(1_000));
-  it("matches the annuity formula", () => expect(monthlyPayment(100_000, 0.06, 5)).toBeCloseTo(1933.28, 1));
+  it("matches the annuity formula", () =>
+    expect(monthlyPayment(100_000, 0.06, 5)).toBeCloseTo(1933.28, 1));
 });

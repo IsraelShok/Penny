@@ -7,7 +7,14 @@ export function confetti({ count = 160, durationMs = 2600 } = {}) {
   if (typeof window === "undefined" || motionReduced()) return;
   const canvas = document.createElement("canvas");
   canvas.setAttribute("aria-hidden", "true");
-  Object.assign(canvas.style, { position: "fixed", inset: "0", width: "100%", height: "100%", pointerEvents: "none", zIndex: "9999" });
+  Object.assign(canvas.style, {
+    position: "fixed",
+    inset: "0",
+    width: "100%",
+    height: "100%",
+    pointerEvents: "none",
+    zIndex: "9999",
+  });
   document.body.appendChild(canvas);
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas.remove();

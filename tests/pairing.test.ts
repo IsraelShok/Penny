@@ -33,7 +33,7 @@ beforeAll(async () => {
   const cred = (provider: string) =>
     db
       .prepare(
-        "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, ?, ?, x'00', x'00', x'00')"
+        "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, ?, ?, x'00', x'00', x'00')",
       )
       .run(ws, provider, provider).lastInsertRowid as number;
 
@@ -52,7 +52,7 @@ beforeAll(async () => {
     ],
     "hapoalim",
     hapoalim,
-    runH
+    runH,
   );
 
   const runL = createSyncRun(ws, "leumi", leumi, "2026-10-01");
@@ -64,7 +64,7 @@ beforeAll(async () => {
     [txn("C1", "זארה", -500, "2026-10-20"), txn("C1", "זיכוי זארה", 500, "2026-10-25")],
     "isracard",
     isracard,
-    runC
+    runC,
   );
 
   // A purchase usually gets its category from the rules or the user; the refund should follow it.
@@ -138,7 +138,11 @@ describe("one source of truth", () => {
       months: ["2026-11"],
     });
     const factsTotals = facts.cashBetween(ws, "2026-11-01", "2026-11-30");
-    expect(home).toEqual({ income: factsTotals.income, expenses: factsTotals.spend, net: factsTotals.net });
+    expect(home).toEqual({
+      income: factsTotals.income,
+      expenses: factsTotals.spend,
+      net: factsTotals.net,
+    });
     expect(overview.income).toBe(factsTotals.income);
     expect(overview.expenses).toBe(factsTotals.spend);
     expect(overview.net).toBe(factsTotals.net);
@@ -147,10 +151,23 @@ describe("one source of truth", () => {
 
 describe("flow totals", () => {
   it("assigns every row a flow type and the parts add up to the whole", () => {
-    const rows = db.prepare("SELECT flow_type FROM transactions WHERE workspace_id = ?").all(ws) as {
+    const rows = db
+      .prepare("SELECT flow_type FROM transactions WHERE workspace_id = ?")
+      .all(ws) as {
       flow_type: string;
     }[];
-    expect(rows.every((r) => ["expense", "income", "refund", "transfer_internal", "loan_drawdown", "loan_repayment"].includes(r.flow_type))).toBe(true);
+    expect(
+      rows.every((r) =>
+        [
+          "expense",
+          "income",
+          "refund",
+          "transfer_internal",
+          "loan_drawdown",
+          "loan_repayment",
+        ].includes(r.flow_type),
+      ),
+    ).toBe(true);
     const sum = facts.flowTotals(ws).reduce((s, f) => s + f.total, 0);
     expect(sum).toBeCloseTo(facts.transactionsTotal(ws), 2);
   });

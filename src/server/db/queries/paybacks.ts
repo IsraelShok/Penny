@@ -46,7 +46,12 @@ function getRow(workspaceId: number, id: number): Self | null {
   return row ? { ...row, isExcluded: row.excluded === 1 } : null;
 }
 
-const toTxn = (r: Self): PaybackTxn => ({ id: r.id, date: r.date, description: r.description, amount: r.amount });
+const toTxn = (r: Self): PaybackTxn => ({
+  id: r.id,
+  date: r.date,
+  description: r.description,
+  amount: r.amount,
+});
 
 /** What earlier credits already covered of this expense. */
 function coveredFor(workspaceId: number, expenseId: number): number {
@@ -91,13 +96,31 @@ function candidatesFor(workspaceId: number, self: Self, coveredAbs: number): Pay
   if (self.kind === "income" && self.amount > 0) {
     return db
       .prepare(EXPENSES)
-      .all(workspaceId, workspaceId, self.id, self.date, self.date, self.amount, self.amount, self.date) as PaybackTxn[];
+      .all(
+        workspaceId,
+        workspaceId,
+        self.id,
+        self.date,
+        self.date,
+        self.amount,
+        self.amount,
+        self.date,
+      ) as PaybackTxn[];
   }
   if (self.kind === "expense" && self.amount < 0) {
     const remaining = -self.amount - coveredAbs;
     return db
       .prepare(CREDITS)
-      .all(workspaceId, self.id, self.date, self.date, remaining, workspaceId, remaining, self.date) as PaybackTxn[];
+      .all(
+        workspaceId,
+        self.id,
+        self.date,
+        self.date,
+        remaining,
+        workspaceId,
+        remaining,
+        self.date,
+      ) as PaybackTxn[];
   }
   return [];
 }
@@ -153,7 +176,14 @@ export function linkPayback(
     db.prepare(
       `INSERT INTO transaction_links (workspace_id, credit_id, expense_id, prev_kind, prev_category_id, prev_business_share_pct)
        VALUES (?, ?, ?, ?, ?, ?)`,
-    ).run(workspaceId, creditId, expenseId, credit.kind, credit.categoryId, credit.businessSharePct);
+    ).run(
+      workspaceId,
+      creditId,
+      expenseId,
+      credit.kind,
+      credit.categoryId,
+      credit.businessSharePct,
+    );
     // The credit becomes a positive expense in the expense's category, which is what nets it out, and
     // takes the same business share so the personal totals keep the same split.
     db.prepare(
@@ -173,7 +203,8 @@ export function unlinkPayback(workspaceId: number, creditId: number): boolean {
       `SELECT prev_kind AS kind, prev_category_id AS categoryId, prev_business_share_pct AS businessSharePct
        FROM transaction_links WHERE workspace_id = ? AND credit_id = ?`,
     )
-    .get(workspaceId, creditId) as { kind: string; categoryId: number | null; businessSharePct: number } | undefined;
+    .get(workspaceId, creditId) as
+    { kind: string; categoryId: number | null; businessSharePct: number } | undefined;
   if (!link) return false;
 
   db.transaction(() => {
@@ -181,7 +212,10 @@ export function unlinkPayback(workspaceId: number, creditId: number): boolean {
       `UPDATE transactions SET kind = ?, category_id = ?, business_share_pct = ?, updated_at = datetime('now')
        WHERE workspace_id = ? AND id = ?`,
     ).run(link.kind, link.categoryId, link.businessSharePct, workspaceId, creditId);
-    db.prepare("DELETE FROM transaction_links WHERE workspace_id = ? AND credit_id = ?").run(workspaceId, creditId);
+    db.prepare("DELETE FROM transaction_links WHERE workspace_id = ? AND credit_id = ?").run(
+      workspaceId,
+      creditId,
+    );
   })();
   return true;
 }

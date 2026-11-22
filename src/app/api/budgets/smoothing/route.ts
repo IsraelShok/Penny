@@ -10,5 +10,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const ws = getWorkspaceIdFromRequest(request);
   const { past, current } = getMonthlyIncomes(ws);
-  return NextResponse.json({ smoothing: smoothIncome(past, current, getAppSettings(ws).household.incomeShape) });
+  return NextResponse.json({
+    smoothing: smoothIncome(past, current, getAppSettings(ws).household.incomeShape),
+  });
 }

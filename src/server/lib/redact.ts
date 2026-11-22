@@ -16,6 +16,19 @@ export function redact(text: string): string {
   return RULES.reduce((out, [re, rep]) => out.replace(re, rep), text);
 }
 
+/**
+ * Replaces stored secrets verbatim. A bank's own error text can echo a password without
+ * naming it ("login failed for 12345678/Passw0rd"), which the pattern rules cannot spot.
+ */
+export function redactKnownSecrets(text: string, secrets: string[]): string {
+  let out = text;
+  for (const secret of secrets) {
+    if (secret.length < 4) continue; // too short to replace safely without mangling the text
+    out = out.split(secret).join("[redacted]");
+  }
+  return out;
+}
+
 /** Error -> short, redacted string. Stack traces are dropped: some libraries put request bodies in them. */
 export function redactError(err: unknown): string {
   return redact(err instanceof Error ? `${err.name}: ${err.message}` : String(err));

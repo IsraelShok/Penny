@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  getPeriodTotal,
-  getTopMerchants,
-} from "@/server/db/queries/transactions";
+import { getPeriodTotal, getTopMerchants } from "@/server/db/queries/transactions";
 import {
   getBankHealth,
   getCashFlow,
@@ -17,13 +14,7 @@ import { getNextRunAt } from "@/server/sync/scheduler";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { ownerScopeFromParam } from "@/server/lib/account-owners";
 import { runWithOwner } from "@/server/lib/owner-scope";
-import {
-  daysInMonth,
-  dayWithinMonth,
-  daysUntil,
-  nextPayday,
-  pacePhrase,
-} from "@/server/lib/pace";
+import { daysInMonth, dayWithinMonth, daysUntil, nextPayday, pacePhrase } from "@/server/lib/pace";
 import { israelToday, toLocalISODate } from "@/server/lib/date-utils";
 import { homeMonthDate } from "@/lib/home-month";
 import type {
@@ -47,11 +38,7 @@ const TOP_MERCHANT_LIMIT = 6;
 const CATEGORY_SNAPSHOT_LIMIT = 6;
 const CATEGORY_TREND_MONTHS = 6;
 
-function safe<T>(
-  section: HomeSection,
-  errors: HomeSectionError[],
-  fn: () => T
-): T | null {
+function safe<T>(section: HomeSection, errors: HomeSectionError[], fn: () => T): T | null {
   try {
     return fn();
   } catch (err) {
@@ -65,7 +52,10 @@ function safe<T>(
 
 /** ?owner= scopes the dashboard's spend and cash figures to one household member. */
 export async function GET(request: Request) {
-  const scope = ownerScopeFromParam(getWorkspaceIdFromRequest(request), new URL(request.url).searchParams.get("owner"));
+  const scope = ownerScopeFromParam(
+    getWorkspaceIdFromRequest(request),
+    new URL(request.url).searchParams.get("owner"),
+  );
   return runWithOwner(scope, () => home(request));
 }
 
@@ -98,27 +88,26 @@ async function home(request: Request) {
   const thisMonth = safe<HomeThisMonth>("thisMonth", errors, () => {
     const spent = getPeriodTotal(workspaceId, from, to);
     const monthlyTargetRaw = getWorkspaceSetting(workspaceId, "monthly_target");
-    const parsed = monthlyTargetRaw != null ? Number(monthlyTargetRaw) : NaN;
+    const parsed = monthlyTargetRaw != null ? Number(monthlyTargetRaw) : Number.NaN;
     const budget = Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 
     // Same window last month: from day 1 to today's day-of-month (clamped).
     const prevMonthStart = new Date(year, month - 1, 1);
     const prevElapsedDay = Math.min(
       elapsedDays,
-      daysInMonth(prevMonthStart.getFullYear(), prevMonthStart.getMonth())
+      daysInMonth(prevMonthStart.getFullYear(), prevMonthStart.getMonth()),
     );
     const prevMonthMtdEnd = new Date(
       prevMonthStart.getFullYear(),
       prevMonthStart.getMonth(),
-      prevElapsedDay
+      prevElapsedDay,
     );
     const prevSpent = getPeriodTotal(
       workspaceId,
       toLocalISODate(prevMonthStart),
-      toLocalISODate(prevMonthMtdEnd)
+      toLocalISODate(prevMonthMtdEnd),
     );
-    const deltaVsLastMonth =
-      prevSpent > 0 ? ((spent - prevSpent) / prevSpent) * 100 : null;
+    const deltaVsLastMonth = prevSpent > 0 ? ((spent - prevSpent) / prevSpent) * 100 : null;
 
     const phrase = pacePhrase(spent, spent, budget, timeElapsedPercent, monthLabel);
 
@@ -133,26 +122,18 @@ async function home(request: Request) {
     };
   });
 
-  const cashFlow = safe<HomeCashFlow>("cashFlow", errors, () =>
-    getCashFlow(workspaceId, from, to)
+  const cashFlow = safe<HomeCashFlow>("cashFlow", errors, () => getCashFlow(workspaceId, from, to));
+
+  const categorySnapshot = safe<HomeCategorySnapshotItem[]>("categorySnapshot", errors, () =>
+    getCategorySnapshot(workspaceId, from, to, CATEGORY_SNAPSHOT_LIMIT),
   );
 
-  const categorySnapshot = safe<HomeCategorySnapshotItem[]>(
-    "categorySnapshot",
-    errors,
-    () => getCategorySnapshot(workspaceId, from, to, CATEGORY_SNAPSHOT_LIMIT)
+  const historicalTrend = safe<HomeHistoricalTrendPoint[]>("historicalTrend", errors, () =>
+    getHistoricalTrend(workspaceId, HISTORICAL_MONTHS),
   );
 
-  const historicalTrend = safe<HomeHistoricalTrendPoint[]>(
-    "historicalTrend",
-    errors,
-    () => getHistoricalTrend(workspaceId, HISTORICAL_MONTHS)
-  );
-
-  const recentTransactions = safe<HomeRecentTransaction[]>(
-    "recentTransactions",
-    errors,
-    () => getRecentTransactionsForHome(workspaceId, RECENT_TXN_LIMIT)
+  const recentTransactions = safe<HomeRecentTransaction[]>("recentTransactions", errors, () =>
+    getRecentTransactionsForHome(workspaceId, RECENT_TXN_LIMIT),
   );
 
   const topMerchants = safe<HomeTopMerchant[]>("topMerchants", errors, () => {
@@ -164,18 +145,16 @@ async function home(request: Request) {
     }));
   });
 
-  const needsAttention = safe<HomeNeedsAttention>(
-    "needsAttention",
-    errors,
-    () => getNeedsAttentionCounts(workspaceId)
+  const needsAttention = safe<HomeNeedsAttention>("needsAttention", errors, () =>
+    getNeedsAttentionCounts(workspaceId),
   );
 
   const bankHealth = safe<HomeBankHealthItem[]>("bankHealth", errors, () =>
-    getBankHealth(workspaceId)
+    getBankHealth(workspaceId),
   );
 
   const categories = safe<HomeCategoryBlock[]>("categories", errors, () =>
-    getCategoryScroll(workspaceId, from, to, CATEGORY_TREND_MONTHS)
+    getCategoryScroll(workspaceId, from, to, CATEGORY_TREND_MONTHS),
   );
 
   const payload: HomePayload = {

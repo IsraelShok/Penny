@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { normalizeSymbol } from "@/lib/markets";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
-import { addWatchedSymbol, listWatchedSymbols, removeWatchedSymbol } from "@/server/db/queries/market-watchlist";
+import {
+  addWatchedSymbol,
+  listWatchedSymbols,
+  removeWatchedSymbol,
+} from "@/server/db/queries/market-watchlist";
 
 export const dynamic = "force-dynamic";
 

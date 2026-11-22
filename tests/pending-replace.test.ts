@@ -14,7 +14,9 @@ beforeAll(async () => {
   const { createSyncRun } = await import("@/server/db/queries/sync-runs");
   ws = (db.prepare("SELECT id FROM workspaces LIMIT 1").get() as { id: number }).id;
   cred = db
-    .prepare("INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, 'isracard', 'T', x'00', x'00', x'00')")
+    .prepare(
+      "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, 'isracard', 'T', x'00', x'00', x'00')",
+    )
     .run(ws).lastInsertRowid as number;
   run = createSyncRun(ws, "isracard", cred, "2026-10-01");
 });
@@ -22,15 +24,33 @@ beforeAll(async () => {
 const common = { type: "normal" as const, originalCurrency: "ILS" };
 // Fork pending rows: empty identifier, raw date, positive unsigned amount.
 const pending = (account: string, description: string, amount: number) => ({
-  ...common, accountNumber: account, description, status: "pending" as const, identifier: "",
-  date: "2026-11-01", processedDate: "2026-11-01", originalAmount: amount, chargedAmount: amount,
+  ...common,
+  accountNumber: account,
+  description,
+  status: "pending" as const,
+  identifier: "",
+  date: "2026-11-01",
+  processedDate: "2026-11-01",
+  originalAmount: amount,
+  chargedAmount: amount,
 });
 const completed = (account: string, description: string, amount: number) => ({
-  ...common, accountNumber: account, description, status: "completed" as const, identifier: "9911",
-  date: "2026-10-31T22:00:00.000Z", processedDate: "2026-12-10T00:00:00.000Z", originalAmount: -amount, chargedAmount: -amount,
+  ...common,
+  accountNumber: account,
+  description,
+  status: "completed" as const,
+  identifier: "9911",
+  date: "2026-10-31T22:00:00.000Z",
+  processedDate: "2026-12-10T00:00:00.000Z",
+  originalAmount: -amount,
+  chargedAmount: -amount,
 });
 const rows = (account: string) =>
-  db.prepare("SELECT description, status, category_id as categoryId FROM transactions WHERE workspace_id = ? AND account_number = ? ORDER BY id").all(ws, account);
+  db
+    .prepare(
+      "SELECT description, status, category_id as categoryId FROM transactions WHERE workspace_id = ? AND account_number = ? ORDER BY id",
+    )
+    .all(ws, account);
 
 describe("saveSyncTransactions", () => {
   it("removes a pending row once the scrape returns it as completed in a different shape", () => {
@@ -41,8 +61,14 @@ describe("saveSyncTransactions", () => {
 
   it("keeps a still-pending row, and the category set on it, across syncs", () => {
     q.saveSyncTransactions(ws, [pending("B", "Super-Pharm", 80)], "isracard", cred, run, ["B"]);
-    const cat = (db.prepare("SELECT id FROM categories WHERE workspace_id = ? LIMIT 1").get(ws) as { id: number }).id;
-    db.prepare("UPDATE transactions SET category_id = ?, category_source = 'user' WHERE account_number = 'B'").run(cat);
+    const cat = (
+      db.prepare("SELECT id FROM categories WHERE workspace_id = ? LIMIT 1").get(ws) as {
+        id: number;
+      }
+    ).id;
+    db.prepare(
+      "UPDATE transactions SET category_id = ?, category_source = 'user' WHERE account_number = 'B'",
+    ).run(cat);
     q.saveSyncTransactions(ws, [pending("B", "Super-Pharm", 80)], "isracard", cred, run, ["B"]);
     expect(rows("B")).toEqual([{ description: "Super-Pharm", status: "pending", categoryId: cat }]);
   });
@@ -56,7 +82,10 @@ describe("saveSyncTransactions", () => {
   it("never deletes completed rows", () => {
     q.saveSyncTransactions(ws, [completed("E", "IKEA", 500)], "isracard", cred, run, ["E"]);
     q.saveSyncTransactions(ws, [pending("E", "Fox", 90)], "isracard", cred, run, ["E"]);
-    expect(rows("E").map((r) => (r as { status: string }).status)).toEqual(["completed", "pending"]);
+    expect(rows("E").map((r) => (r as { status: string }).status)).toEqual([
+      "completed",
+      "pending",
+    ]);
   });
 
   it("removes a voided pending charge when the scrape returns its account with no rows", () => {

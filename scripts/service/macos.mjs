@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { systemBin } from "../lib/system-bin.mjs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -10,7 +11,7 @@ const PLIST_PATH = path.join(os.homedir(), "Library", "LaunchAgents", `${LABEL}.
 const LOG_DIR = path.join(os.homedir(), "Library", "Logs", "Penny");
 
 function whichNode() {
-  const r = spawnSync("which", ["node"], { encoding: "utf-8" });
+  const r = spawnSync(systemBin("which"), ["node"], { encoding: "utf-8" });
   if (r.status !== 0) throw new Error("Cannot find `node` on PATH.");
   return r.stdout.trim();
 }
@@ -39,7 +40,7 @@ function writePlist() {
 }
 
 function launchctl(args, opts = {}) {
-  return spawnSync("launchctl", args, {
+  return spawnSync(systemBin("launchctl"), args, {
     encoding: "utf-8",
     stdio: opts.stdio ?? "pipe",
   });
@@ -69,25 +70,19 @@ function kickstart() {
 }
 
 function checkPortBinding() {
-  const r = spawnSync(
-    "lsof",
-    ["-nP", `-iTCP:${PORT}`, "-sTCP:LISTEN"],
-    { encoding: "utf-8" },
-  );
+  const r = spawnSync(systemBin("lsof"), ["-nP", `-iTCP:${PORT}`, "-sTCP:LISTEN"], {
+    encoding: "utf-8",
+  });
   if (r.status !== 0) return { listening: false };
   const lines = r.stdout.split("\n").filter(Boolean);
   const onLoopback = lines.some((l) => l.includes(`127.0.0.1:${PORT}`));
-  const onWildcard = lines.some(
-    (l) => l.includes(`*:${PORT}`) || l.includes(`0.0.0.0:${PORT}`),
-  );
+  const onWildcard = lines.some((l) => l.includes(`*:${PORT}`) || l.includes(`0.0.0.0:${PORT}`));
   return { listening: lines.length > 0, onLoopback, onWildcard };
 }
 
 function preflight() {
   if (!fs.existsSync(path.join(REPO_ROOT, ".next"))) {
-    console.warn(
-      "WARNING: .next/ not found. Run `npm run build` before installing the service.",
-    );
+    console.warn("WARNING: .next/ not found. Run `npm run build` before installing the service.");
   }
 }
 
@@ -118,9 +113,7 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
         if (state.onLoopback) {
           console.log(`Penny is running. Open ${friendlyUrl} or ${loopbackUrl}.`);
         } else {
-          console.log(
-            `Service installed. Check status: npm run service:status`,
-          );
+          console.log(`Service installed. Check status: npm run service:status`);
         }
       }, 1500);
       return;
@@ -172,11 +165,11 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
       const errLog = path.join(LOG_DIR, "err.log");
       const outLog = path.join(LOG_DIR, "out.log");
       console.log(`tail -f ${errLog} ${outLog}`);
-      spawnSync("tail", ["-f", errLog, outLog], { stdio: "inherit" });
+      spawnSync(systemBin("tail"), ["-f", errLog, outLog], { stdio: "inherit" });
       return;
     }
     case "open": {
-      spawnSync("open", [friendlyUrl], { stdio: "inherit" });
+      spawnSync(systemBin("open"), [friendlyUrl], { stdio: "inherit" });
       return;
     }
   }

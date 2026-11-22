@@ -26,7 +26,11 @@ describe("monthlyCost", () => {
 
 describe("auditSubscriptions", () => {
   const series = [
-    sub({ merchant: "Netflix", expectedAmount: -60, priceChange: { from: 50, to: 60, date: "2026-09-01" } }),
+    sub({
+      merchant: "Netflix",
+      expectedAmount: -60,
+      priceChange: { from: 50, to: 60, date: "2026-09-01" },
+    }),
     sub({ merchant: "Gym", expectedAmount: -200, lastDate: "2026-08-01" }),
     sub({ merchant: "Domain", cadence: "yearly", expectedAmount: -120, lastDate: "2026-10-01" }),
   ];

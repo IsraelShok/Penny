@@ -52,7 +52,7 @@ export function formatOverview(payload) {
   ];
   const byCost = payload?.byCost ?? {};
   lines.push(
-    `Spending by type: fixed ${ils(byCost.fixed)} · variable ${ils(byCost.variable)} · unplanned ${ils(byCost.unplanned)}`
+    `Spending by type: fixed ${ils(byCost.fixed)} · variable ${ils(byCost.variable)} · unplanned ${ils(byCost.unplanned)}`,
   );
   if (payload?.uncategorized > 0) lines.push(`Still uncategorized: ${ils(payload.uncategorized)}`);
 
@@ -80,7 +80,10 @@ export function formatTransactions(result) {
     return `${t.date}  ${ils(rowAmount(t))}  ${t.description ?? ""}  [${category} · ${account} · ${t.kind}]`;
   });
   const total = Number(result?.total ?? rows.length);
-  if (total > rows.length) lines.push(`Showing ${rows.length} of ${total}. Narrow the dates or the search to see the rest.`);
+  if (total > rows.length)
+    lines.push(
+      `Showing ${rows.length} of ${total}. Narrow the dates or the search to see the rest.`,
+    );
   return lines.join("\n");
 }
 
@@ -91,7 +94,8 @@ export function formatBudgets(summary) {
   const lines = [
     `Spent so far in this household month: ${ils(summary?.periodTotal)}${Number(summary?.totalBudget) > 0 ? ` of a ${ils(summary.totalBudget)} target` : ""}`,
   ];
-  if (Number(summary?.uncategorized) > 0) lines.push(`Still uncategorized: ${ils(summary.uncategorized)}`);
+  if (Number(summary?.uncategorized) > 0)
+    lines.push(`Still uncategorized: ${ils(summary.uncategorized)}`);
   if (rows.length === 0) {
     lines.push("", "No category has a budget set yet.");
     return lines.join("\n");
@@ -99,7 +103,7 @@ export function formatBudgets(summary) {
   lines.push("", "Category budgets:");
   for (const r of rows) {
     lines.push(
-      `- ${r.categoryName}: spent ${ils(r.spent)} of ${ils(r.budget)} (${pct(r.spent, r.budget)} used, ${ils(r.remaining)} left)`
+      `- ${r.categoryName}: spent ${ils(r.spent)} of ${ils(r.budget)} (${pct(r.spent, r.budget)} used, ${ils(r.remaining)} left)`,
     );
   }
   return lines.join("\n");
@@ -111,14 +115,17 @@ export function formatNetWorth(payload) {
     `Net worth: ${ils(totals.netWorth)}`,
     `Assets: ${ils(totals.assets)} (liquid ${ils(totals.liquid)}) · Liabilities: ${ils(totals.liabilities)}`,
   ];
-  if (Number(totals.deferredTax) > 0) lines.push(`Deferred tax on unrealised gains: ${ils(totals.deferredTax)}`);
+  if (Number(totals.deferredTax) > 0)
+    lines.push(`Deferred tax on unrealised gains: ${ils(totals.deferredTax)}`);
   const assets = (payload?.assets ?? [])
     .filter((a) => Number(a?.valueIls) > 0)
     .sort((a, b) => Number(b.valueIls) - Number(a.valueIls));
   if (assets.length > 0) {
     lines.push("", "Holdings, largest first:");
     for (const a of assets.slice(0, 12)) {
-      lines.push(`- ${a.name ?? "asset"} (${a.type}${a.liquid ? ", liquid" : ""}): ${ils(a.valueIls)}`);
+      lines.push(
+        `- ${a.name ?? "asset"} (${a.type}${a.liquid ? ", liquid" : ""}): ${ils(a.valueIls)}`,
+      );
     }
     if (assets.length > 12) lines.push(`- and ${assets.length - 12} more`);
   }
@@ -179,20 +186,31 @@ export const TOOLS = [
         from: { type: "string", description: "First date, YYYY-MM-DD." },
         to: { type: "string", description: "Last date, YYYY-MM-DD." },
         search: { type: "string", description: "Text to look for in the description or the memo." },
-        kind: { type: "string", enum: ["expense", "income", "all"], description: "Defaults to all." },
-        limit: { type: "integer", minimum: 1, maximum: 200, description: "How many rows to return, newest first. Defaults to 25." },
+        kind: {
+          type: "string",
+          enum: ["expense", "income", "all"],
+          description: "Defaults to all.",
+        },
+        limit: {
+          type: "integer",
+          minimum: 1,
+          maximum: 200,
+          description: "How many rows to return, newest first. Defaults to 25.",
+        },
       },
       additionalProperties: false,
     },
   },
   {
     name: "penny_budgets",
-    description: "Where this household month stands: spending against the monthly target, and each category budget with what is left.",
+    description:
+      "Where this household month stands: spending against the monthly target, and each category budget with what is left.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "penny_net_worth",
-    description: "Net worth now: assets, liquid assets, liabilities, deferred tax and the largest holdings.",
+    description:
+      "Net worth now: assets, liquid assets, liabilities, deferred tax and the largest holdings.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -206,21 +224,24 @@ export async function callApi(path, deps = {}) {
   const baseUrl = (deps.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
   const fetchImpl = deps.fetchImpl ?? globalThis.fetch;
   const headers = {};
-  if (deps.workspaceId != null && deps.workspaceId !== "") headers["x-workspace-id"] = String(deps.workspaceId);
+  if (deps.workspaceId != null && deps.workspaceId !== "")
+    headers["x-workspace-id"] = String(deps.workspaceId);
 
   let response;
   try {
     response = await fetchImpl(`${baseUrl}${path}`, { headers });
   } catch {
     throw new PennyError(
-      `Penny is not answering at ${baseUrl}. Start the app (the Penny service, or npm start), or point PENNY_BASE_URL at the address it does answer on.`
+      `Penny is not answering at ${baseUrl}. Start the app (the Penny service, or npm start), or point PENNY_BASE_URL at the address it does answer on.`,
     );
   }
   if (response.status === 401) {
     throw new PennyError("Penny is locked. Unlock the app, then ask again.");
   }
   if (!response.ok) {
-    throw new PennyError(`Penny answered ${response.status} for ${path}. Check the app's settings and try again.`);
+    throw new PennyError(
+      `Penny answered ${response.status} for ${path}. Check the app's settings and try again.`,
+    );
   }
   try {
     return await response.json();
@@ -231,7 +252,9 @@ export async function callApi(path, deps = {}) {
 
 export const TOOL_HANDLERS = {
   penny_overview: async (args, deps) => {
-    const period = ["month", "quarter", "half", "year"].includes(args?.period) ? args.period : "month";
+    const period = ["month", "quarter", "half", "year"].includes(args?.period)
+      ? args.period
+      : "month";
     const offset = intArg(args?.offset, 0, 0, 60);
     const payload = await callApi(`/api/overview?period=${period}&offset=${offset}`, deps);
     return formatOverview(payload);
@@ -278,7 +301,9 @@ export async function handleMessage(message, deps = {}) {
       jsonrpc: "2.0",
       id,
       result: {
-        protocolVersion: KNOWN_PROTOCOL_VERSIONS.has(requested) ? requested : DEFAULT_PROTOCOL_VERSION,
+        protocolVersion: KNOWN_PROTOCOL_VERSIONS.has(requested)
+          ? requested
+          : DEFAULT_PROTOCOL_VERSION,
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
         instructions:
@@ -299,7 +324,9 @@ export async function handleMessage(message, deps = {}) {
       return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text }], isError: false } };
     } catch (error) {
       const text =
-        error instanceof PennyError ? error.message : `The tool failed: ${error instanceof Error ? error.message : String(error)}`;
+        error instanceof PennyError
+          ? error.message
+          : `The tool failed: ${error instanceof Error ? error.message : String(error)}`;
       return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text }], isError: true } };
     }
   }
@@ -363,4 +390,4 @@ export function run(options = {}) {
 }
 
 const isMain = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
-if (isMain) run();
+if (isMain) void run();

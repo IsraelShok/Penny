@@ -27,19 +27,48 @@ export function WipeCard() {
 
   return (
     <SettingCard title={t("wipeTitle")} description={t("wipeDescription")}>
-      <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); wipe.mutate(); }}>
+      <form
+        className="space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          wipe.mutate();
+        }}
+      >
         <div className="space-y-2">
           <Label htmlFor="wipe-confirm">{t("wipeConfirm", { word: WORD })}</Label>
-          <Input id="wipe-confirm" autoComplete="off" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="h-11" />
+          <Input
+            id="wipe-confirm"
+            autoComplete="off"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            className="h-11"
+          />
         </div>
         {locked && (
           <div className="space-y-2">
             <Label htmlFor="wipe-secret">{t("lockCurrent")}</Label>
-            <Input id="wipe-secret" type="password" autoComplete="current-password" value={secret} onChange={(e) => setSecret(e.target.value)} className="h-11" />
+            <Input
+              id="wipe-secret"
+              type="password"
+              autoComplete="current-password"
+              value={secret}
+              onChange={(e) => setSecret(e.target.value)}
+              className="h-11"
+            />
           </div>
         )}
-        {error && <p role="alert" className="text-sm text-destructive">{t(error === "wrong" || error === "wait" ? `lockError_${error}` : "lockError_failed")}</p>}
-        <Button type="submit" variant="destructive" disabled={wipe.isPending || confirm.trim().toLowerCase() !== WORD || (locked && !secret)}>{t("wipeCta")}</Button>
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {t(error === "wrong" || error === "wait" ? `lockError_${error}` : "lockError_failed")}
+          </p>
+        )}
+        <Button
+          type="submit"
+          variant="destructive"
+          disabled={wipe.isPending || confirm.trim().toLowerCase() !== WORD || (locked && !secret)}
+        >
+          {t("wipeCta")}
+        </Button>
       </form>
     </SettingCard>
   );

@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { systemBin } from "../lib/system-bin.mjs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -73,11 +74,11 @@ function writeUnix(targetPath, newContent) {
   fs.writeFileSync(tmp, newContent, { mode: 0o644 });
   try {
     console.log(`Updating ${targetPath} (requires sudo for this step only).`);
-    const r = spawnSync("sudo", ["cp", tmp, targetPath], { stdio: "inherit" });
+    const r = spawnSync(systemBin("sudo"), [systemBin("cp"), tmp, targetPath], {
+      stdio: "inherit",
+    });
     if (r.status !== 0) {
-      throw new Error(
-        `sudo cp failed (exit ${r.status}). Hosts file not modified.`,
-      );
+      throw new Error(`sudo cp failed (exit ${r.status}). Hosts file not modified.`);
     }
   } finally {
     try {
@@ -94,7 +95,7 @@ function writeWindows(targetPath, newContent) {
     return;
   } catch (err) {
     throw new Error(
-      `Cannot write ${targetPath}: ${(err instanceof Error ? err.message : err)}.\n` +
+      `Cannot write ${targetPath}: ${err instanceof Error ? err.message : err}.\n` +
         "Re-run this command from an Administrator PowerShell:\n" +
         '  Start-Process powershell -Verb RunAs -ArgumentList "-NoExit","-Command","cd \\"' +
         process.cwd() +

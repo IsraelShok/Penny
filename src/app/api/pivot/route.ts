@@ -13,7 +13,14 @@ export function GET(request: Request) {
   const n = Number.isInteger(asked) ? Math.min(24, Math.max(3, asked)) : 6;
   const months = lastMonths(n);
   // "-31" works for every month: dates are compared as strings.
-  const perMonth = months.map((m) => getCategoryBreakdown(workspaceId, `${m}-01`, `${m}-31`).map((c) => ({ categoryId: c.categoryId, name: c.name, color: c.color, amount: c.amount })));
+  const perMonth = months.map((m) =>
+    getCategoryBreakdown(workspaceId, `${m}-01`, `${m}-31`).map((c) => ({
+      categoryId: c.categoryId,
+      name: c.name,
+      color: c.color,
+      amount: c.amount,
+    })),
+  );
   const categories = getAllCategories(workspaceId);
   const byId = new Map(categories.map((c) => [c.id, c]));
   const parentOf = new Map<number, PivotParent>();

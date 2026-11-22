@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { growth, inflation, leaseVsBuy, loan, mortgage, payoffPlan, renovationBudget, savingsGoal, split503020, type Debt } from "@/lib/calculators";
+import {
+  growth,
+  inflation,
+  leaseVsBuy,
+  loan,
+  mortgage,
+  payoffPlan,
+  renovationBudget,
+  savingsGoal,
+  split503020,
+  type Debt,
+} from "@/lib/calculators";
 
 describe("loan / mortgage", () => {
   it("matches the textbook payment and sums tracks", () => {
@@ -7,7 +18,11 @@ describe("loan / mortgage", () => {
     expect(l.monthly).toBeCloseTo(5_845.9, 0);
     expect(l.interest).toBeCloseTo(l.monthly * 300 - 1_000_000, 6);
     expect(loan({ amount: 12_000, ratePct: 0, years: 1 }).monthly).toBe(1_000);
-    const m = mortgage([{ amount: 1_000_000, ratePct: 5, years: 25 }, { amount: 0, ratePct: 4, years: 20 }, { amount: 12_000, ratePct: 0, years: 1 }]);
+    const m = mortgage([
+      { amount: 1_000_000, ratePct: 5, years: 25 },
+      { amount: 0, ratePct: 4, years: 20 },
+      { amount: 12_000, ratePct: 0, years: 1 },
+    ]);
     expect(m.monthly).toBeCloseTo(l.monthly + 1_000, 6);
   });
 });
@@ -38,7 +53,14 @@ describe("split503020", () => {
 
 describe("leaseVsBuy", () => {
   it("cash buy at 0% costs only depreciation", () => {
-    const r = leaseVsBuy({ price: 150_000, residualPct: 60, years: 3, ratePct: 0, leaseMonthly: 2_500, leaseUpfront: 10_000 });
+    const r = leaseVsBuy({
+      price: 150_000,
+      residualPct: 60,
+      years: 3,
+      ratePct: 0,
+      leaseMonthly: 2_500,
+      leaseUpfront: 10_000,
+    });
     expect(r.buy).toBeCloseTo(60_000, 6);
     expect(r.lease).toBe(100_000);
     expect(r.diff).toBeCloseTo(40_000, 6);
@@ -78,17 +100,30 @@ describe("payoffPlan", () => {
   });
 
   it("finishes sooner with a bigger budget", () => {
-    expect(payoffPlan(debts, 3_000, "avalanche")!.months).toBeLessThan(payoffPlan(debts, 1_500, "avalanche")!.months);
+    expect(payoffPlan(debts, 3_000, "avalanche")!.months).toBeLessThan(
+      payoffPlan(debts, 1_500, "avalanche")!.months,
+    );
   });
 
   it("returns null when payments never beat the interest", () => {
-    expect(payoffPlan([{ name: "x", balance: 100_000, ratePct: 30, minPayment: 0 }], 100, "avalanche")).toBeNull();
+    expect(
+      payoffPlan([{ name: "x", balance: 100_000, ratePct: 30, minPayment: 0 }], 100, "avalanche"),
+    ).toBeNull();
   });
 });
 
 describe("renovationBudget", () => {
   it("adds the buffer and borrows only the gap", () => {
-    const r = renovationBudget([{ kind: "kitchen", cost: 60_000 }, { kind: "paint", cost: 10_000 }], 0.15, 50_000, 0, 2);
+    const r = renovationBudget(
+      [
+        { kind: "kitchen", cost: 60_000 },
+        { kind: "paint", cost: 10_000 },
+      ],
+      0.15,
+      50_000,
+      0,
+      2,
+    );
     expect(r.total).toBeCloseTo(80_500);
     expect(r.loan).toBeCloseTo(30_500);
     expect(r.monthly).toBeCloseTo(30_500 / 24);

@@ -21,7 +21,8 @@ export function CashWalletCard() {
   const [note, setNote] = useState("");
 
   const refresh = () => {
-    for (const key of ["cash-wallet", "transactions", "transactions-summary", "summary", "home"]) void queryClient.invalidateQueries({ queryKey: [key] });
+    for (const key of ["cash-wallet", "transactions", "transactions-summary", "summary", "home"])
+      void queryClient.invalidateQueries({ queryKey: [key] });
   };
   const log = useMutation({
     mutationFn: () => logCashExpense(Number(amount), note.trim() || t("cashDefault")),
@@ -47,7 +48,12 @@ export function CashWalletCard() {
     <section aria-label={t("cashTitle")} className="card-surface">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-full bg-muted" aria-hidden><Banknote className="size-4" /></span>
+          <span
+            className="flex size-9 items-center justify-center rounded-full bg-muted"
+            aria-hidden
+          >
+            <Banknote className="size-4" />
+          </span>
           <div>
             <h2 className="card-title">{t("cashTitle")}</h2>
             <p className="card-figure">{shekels(Math.round(balance), locale)}</p>
@@ -58,17 +64,48 @@ export function CashWalletCard() {
       {open && (
         <form
           className="mt-3 flex flex-wrap items-center gap-2"
-          onSubmit={(e) => { e.preventDefault(); if (valid) log.mutate(); }}
-          onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (valid) log.mutate();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setOpen(false);
+          }}
         >
-          <Input autoFocus required type="number" inputMode="decimal" min="0.01" step="any" dir="ltr" aria-label={t("cashAmount")} placeholder="₪40" value={amount} onChange={(e) => setAmount(e.target.value)} className="h-9 w-24 tabular-nums" />
-          <Input aria-label={t("cashWhere")} placeholder={t("cashWherePlaceholder")} maxLength={80} value={note} onChange={(e) => setNote(e.target.value)} className="h-9 w-40" />
-          <Button type="submit" disabled={!valid || log.isPending}>{t("cashSave")}</Button>
-          <Button type="button" variant="ghost" onClick={() => setOpen(false)}>{t("cancel")}</Button>
+          <Input
+            autoFocus
+            required
+            type="number"
+            inputMode="decimal"
+            min="0.01"
+            step="any"
+            dir="ltr"
+            aria-label={t("cashAmount")}
+            placeholder="₪40"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="h-9 w-24 tabular-nums"
+          />
+          <Input
+            aria-label={t("cashWhere")}
+            placeholder={t("cashWherePlaceholder")}
+            maxLength={80}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="h-9 w-40"
+          />
+          <Button type="submit" disabled={!valid || log.isPending}>
+            {t("cashSave")}
+          </Button>
+          <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+            {t("cancel")}
+          </Button>
         </form>
       )}
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-        {withdrawn > 0 ? t("cashNote", { days, withdrawn: shekels(Math.round(withdrawn), locale) }) : t("cashNoteEmpty", { days })}
+        {withdrawn > 0
+          ? t("cashNote", { days, withdrawn: shekels(Math.round(withdrawn), locale) })
+          : t("cashNoteEmpty", { days })}
       </p>
     </section>
   );

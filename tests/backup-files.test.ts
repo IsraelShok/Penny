@@ -15,7 +15,13 @@ describe("backups carry documents and receipts", () => {
     getDb();
     const receipt = path.join(root, "receipts", "1", "7", "3-קבלה.pdf");
     const policy = path.join(root, "policies", "1", "2", "1-policy.pdf");
-    for (const [f, body] of [[receipt, "receipt"], [policy, "policy"]]) { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, body); }
+    for (const [f, body] of [
+      [receipt, "receipt"],
+      [policy, "policy"],
+    ]) {
+      fs.mkdirSync(path.dirname(f), { recursive: true });
+      fs.writeFileSync(f, body);
+    }
 
     const { applyBackup, createBackup } = await import("@/server/lib/portable-backup");
     const { bytes } = createBackup("long enough pass");
@@ -28,7 +34,17 @@ describe("backups carry documents and receipts", () => {
 
   it("never writes outside the document folders", async () => {
     const { restorePathFor } = await import("@/server/lib/portable-backup");
-    expect(restorePathFor(root, "receipts/1/2/a.pdf")).toBe(path.join(root, "receipts", "1", "2", "a.pdf"));
-    for (const bad of ["penny.db", "receipts/../penny.db", "receipts/1/../../key", "../x", "policies//a", "receipts"]) expect(restorePathFor(root, bad), bad).toBeNull();
+    expect(restorePathFor(root, "receipts/1/2/a.pdf")).toBe(
+      path.join(root, "receipts", "1", "2", "a.pdf"),
+    );
+    for (const bad of [
+      "penny.db",
+      "receipts/../penny.db",
+      "receipts/1/../../key",
+      "../x",
+      "policies//a",
+      "receipts",
+    ])
+      expect(restorePathFor(root, bad), bad).toBeNull();
   });
 });

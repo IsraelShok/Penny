@@ -1,6 +1,11 @@
 export type PeriodKind = "month" | "quarter" | "half" | "year";
 
-export const PERIOD_MONTHS: Record<PeriodKind, number> = { month: 1, quarter: 3, half: 6, year: 12 };
+export const PERIOD_MONTHS: Record<PeriodKind, number> = {
+  month: 1,
+  quarter: 3,
+  half: 6,
+  year: 12,
+};
 
 export interface PeriodRange {
   kind: PeriodKind;
@@ -21,7 +26,7 @@ export function periodRange(kind: PeriodKind, today: Date, offset = 0): PeriodRa
   const len = PERIOD_MONTHS[kind];
   const index = Math.floor(today.getMonth() / len) - offset;
   const year = today.getFullYear() + Math.floor((index * len) / 12);
-  const startMonth = (((index * len) % 12) + 12) % 12 + 1;
+  const startMonth = ((((index * len) % 12) + 12) % 12) + 1;
   return rangeFrom(kind, year, startMonth);
 }
 

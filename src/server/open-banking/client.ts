@@ -2,11 +2,7 @@ import "server-only";
 import { israelToday } from "@/server/lib/date-utils";
 
 import { redact } from "@/server/lib/redact";
-import type {
-  ScrapedAccount,
-  ScrapedTransaction,
-  ScrapeResult,
-} from "@/server/scrapers/types";
+import type { ScrapedAccount, ScrapedTransaction, ScrapeResult } from "@/server/scrapers/types";
 
 /**
  * Israeli open banking is the Bank of Israel's XS2A standard: a NextGenPSD2
@@ -91,10 +87,7 @@ function messageFor(status: number, body: string): string {
   return `Open banking request failed (HTTP ${status}).${detail ? ` ${detail}` : ""}`;
 }
 
-async function getJson<T>(
-  credentials: OpenBankingCredentials,
-  path: string
-): Promise<T> {
+async function getJson<T>(credentials: OpenBankingCredentials, path: string): Promise<T> {
   const url = `${baseUrlOf(credentials)}${path}`;
   const headers: Record<string, string> = {
     Authorization: `Bearer ${tokenOf(credentials)}`,
@@ -132,9 +125,7 @@ function accountsOf(payload: unknown): BgAccount[] {
   return record.accounts ?? record.data ?? [];
 }
 
-function txnsOf(
-  payload: BgTransactionsResponse
-): { txn: BgTransaction; pending: boolean }[] {
+function txnsOf(payload: BgTransactionsResponse): { txn: BgTransaction; pending: boolean }[] {
   const booked = payload.transactions?.booked ?? [];
   const pending = payload.transactions?.pending ?? [];
   return [
@@ -172,7 +163,7 @@ function descriptionOf(txn: BgTransaction): string {
 function toScrapedTransaction(
   txn: BgTransaction,
   pending: boolean,
-  today: string
+  today: string,
 ): ScrapedTransaction {
   const raw = Number(txn.transactionAmount?.amount ?? 0);
   // The standard is signed: a debit (expense) arrives negative, which is also
@@ -206,7 +197,7 @@ function toScrapedTransaction(
  */
 export async function connectOpenBanking(
   credentials: Record<string, string>,
-  startDate: Date
+  startDate: Date,
 ): Promise<ScrapeResult> {
   const creds: OpenBankingCredentials = {
     baseUrl: credentials.baseUrl,
@@ -215,10 +206,7 @@ export async function connectOpenBanking(
   };
 
   try {
-    const accountsPayload = await getJson<unknown>(
-      creds,
-      "/v1/accounts?withBalance=true"
-    );
+    const accountsPayload = await getJson<unknown>(creds, "/v1/accounts?withBalance=true");
     const accounts = accountsOf(accountsPayload);
     if (accounts.length === 0) {
       return {
@@ -238,10 +226,10 @@ export async function connectOpenBanking(
       if (!accountId) continue;
       const payload = await getJson<BgTransactionsResponse>(
         creds,
-        `/v1/accounts/${encodeURIComponent(accountId)}/transactions?dateFrom=${dateFrom}&dateTo=${today}&bookingStatus=both`
+        `/v1/accounts/${encodeURIComponent(accountId)}/transactions?dateFrom=${dateFrom}&dateTo=${today}&bookingStatus=both`,
       );
       const transactions = txnsOf(payload).map(({ txn, pending }) =>
-        toScrapedTransaction(txn, pending, today)
+        toScrapedTransaction(txn, pending, today),
       );
       scraped.push({
         accountNumber: account.iban ?? account.bbAN ?? accountId,
@@ -251,9 +239,7 @@ export async function connectOpenBanking(
     }
 
     const total = scraped.reduce((sum, a) => sum + a.transactions.length, 0);
-    console.log(
-      `[open-banking] success: ${scraped.length} account(s), ${total} transaction(s)`
-    );
+    console.log(`[open-banking] success: ${scraped.length} account(s), ${total} transaction(s)`);
     return { success: true, accounts: scraped };
   } catch (err) {
     const message = redact(err instanceof Error ? err.message : String(err));

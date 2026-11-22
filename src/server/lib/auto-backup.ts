@@ -36,13 +36,17 @@ export interface AutoBackupConfig {
 export const defaultBackupDir = () => path.join(os.homedir(), "Documents", "Penny backups");
 
 /** True when a backup is due: never made, or the period has passed (an hour early is fine, the check is hourly). */
-export function backupDue(lastAt: string | null, frequency: BackupFrequency, now = Date.now()): boolean {
+export function backupDue(
+  lastAt: string | null,
+  frequency: BackupFrequency,
+  now = Date.now(),
+): boolean {
   return !lastAt || now - Date.parse(lastAt) >= PERIOD[frequency] - 3_600_000;
 }
 
 /** Of our own backup files in a folder, the ones beyond the newest `keep` (timestamps sort as text). */
 export function backupsToPrune(names: string[], keep = AUTO_BACKUP_KEEP): string[] {
-  const ours = names.filter((n) => NAME_RE.test(n)).sort();
+  const ours = names.filter((n) => NAME_RE.test(n)).sort((a, b) => a.localeCompare(b));
   return ours.slice(0, Math.max(0, ours.length - keep));
 }
 
@@ -66,7 +70,15 @@ export function getAutoBackupConfig(): AutoBackupConfig {
 }
 
 function save(c: AutoBackupConfig) {
-  const rest = { enabled: c.enabled, frequency: c.frequency, dir: c.dir, lastAt: c.lastAt, lastFile: c.lastFile, status: c.status, error: c.error };
+  const rest = {
+    enabled: c.enabled,
+    frequency: c.frequency,
+    dir: c.dir,
+    lastAt: c.lastAt,
+    lastFile: c.lastFile,
+    status: c.status,
+    error: c.error,
+  };
   setGlobalSetting(KEY, JSON.stringify(rest));
   return getAutoBackupConfig();
 }
@@ -75,18 +87,36 @@ function passphrase(): string | null {
   const raw = getGlobalSetting(SECRET);
   if (!raw) return null;
   const d = JSON.parse(raw) as Record<"e" | "i" | "t", string>;
-  return decrypt({ encrypted: Buffer.from(d.e, "base64"), iv: Buffer.from(d.i, "base64"), authTag: Buffer.from(d.t, "base64") });
+  return decrypt({
+    encrypted: Buffer.from(d.e, "base64"),
+    iv: Buffer.from(d.i, "base64"),
+    authTag: Buffer.from(d.t, "base64"),
+  });
 }
 
-export function updateAutoBackupConfig(patch: { enabled?: boolean; frequency?: string; dir?: string; passphrase?: string }) {
+export function updateAutoBackupConfig(patch: {
+  enabled?: boolean;
+  frequency?: string;
+  dir?: string;
+  passphrase?: string;
+}) {
   const c = getAutoBackupConfig();
   if (patch.passphrase !== undefined) {
-    if (typeof patch.passphrase !== "string" || patch.passphrase.length < MIN_PASSPHRASE) throw new Error("weakPassphrase");
+    if (typeof patch.passphrase !== "string" || patch.passphrase.length < MIN_PASSPHRASE)
+      throw new Error("weakPassphrase");
     const e = encrypt(patch.passphrase);
-    setGlobalSetting(SECRET, JSON.stringify({ e: e.encrypted.toString("base64"), i: e.iv.toString("base64"), t: e.authTag.toString("base64") }));
+    setGlobalSetting(
+      SECRET,
+      JSON.stringify({
+        e: e.encrypted.toString("base64"),
+        i: e.iv.toString("base64"),
+        t: e.authTag.toString("base64"),
+      }),
+    );
   }
   if (patch.dir !== undefined) c.dir = validateDir(patch.dir);
-  if (patch.frequency !== undefined) c.frequency = patch.frequency === "weekly" ? "weekly" : "daily";
+  if (patch.frequency !== undefined)
+    c.frequency = patch.frequency === "weekly" ? "weekly" : "daily";
   if (patch.enabled !== undefined) {
     if (patch.enabled === true && !getGlobalSetting(SECRET)) throw new Error("noPassphrase");
     c.enabled = patch.enabled === true;
@@ -110,9 +140,19 @@ export function runAutoBackup(): AutoBackupConfig {
     fs.writeFileSync(`${file}.tmp`, bytes);
     fs.renameSync(`${file}.tmp`, file);
     for (const old of backupsToPrune(fs.readdirSync(root))) fs.unlinkSync(path.join(root, old));
-    return save({ ...c, lastAt: new Date().toISOString(), lastFile: file, status: "ok", error: null });
+    return save({
+      ...c,
+      lastAt: new Date().toISOString(),
+      lastFile: file,
+      status: "ok",
+      error: null,
+    });
   } catch (e) {
-    return save({ ...c, status: "error", error: e instanceof Error ? e.message.slice(0, 200) : "failed" });
+    return save({
+      ...c,
+      status: "error",
+      error: e instanceof Error ? e.message.slice(0, 200) : "failed",
+    });
   }
 }
 

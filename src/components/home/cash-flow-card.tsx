@@ -40,9 +40,7 @@ export function CashFlowCard({ data }: Props) {
             </span>
             <span
               className={`font-semibold text-2xl tabular-nums ${
-                netPositive
-                  ? "text-[var(--status-on-track)]"
-                  : "text-[var(--status-over)]"
+                netPositive ? "text-[var(--status-on-track)]" : "text-[var(--status-over)]"
               }`}
             >
               {/* bdi keeps the sign in front of the amount inside Hebrew text. */}

@@ -25,7 +25,8 @@ jobs:
       - name: Tag matches package.json
         shell: bash
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
-      - run: npm ci
+      # Same install policy as CI and the Dockerfile; the packager ships prebuilt binaries.
+      - run: npm ci --ignore-scripts
         env:
           PUPPETEER_SKIP_DOWNLOAD: "1"
       - run: npm test

@@ -18,7 +18,10 @@ type Mode = "salaried" | "self";
 export function TakeHome() {
   const t = useTranslations("freelance");
   const { household } = useHousehold();
-  const auto: Mode = household.incomeShape === "freelancer" || household.incomeShape === "mixed" ? "self" : "salaried";
+  const auto: Mode =
+    household.incomeShape === "freelancer" || household.incomeShape === "mixed"
+      ? "self"
+      : "salaried";
   const [picked, setPicked] = useState<Mode | null>(null);
   const mode = picked ?? auto;
   return (
@@ -27,20 +30,44 @@ export function TakeHome() {
         label={t("title")}
         value={mode}
         onChange={setPicked}
-        options={[{ value: "salaried", label: t("salaried") }, { value: "self", label: t("self") }]}
+        options={[
+          { value: "salaried", label: t("salaried") },
+          { value: "self", label: t("self") },
+        ]}
         className="mb-4"
       />
       {mode === "salaried" ? <Salaried /> : <SelfEmployed />}
-      <p className="mt-4 text-caption text-pretty text-muted-foreground">{t("note", { year: IL.year })}</p>
+      <p className="mt-4 text-caption text-pretty text-muted-foreground">
+        {t("note", { year: IL.year })}
+      </p>
     </CardShell>
   );
 }
 
-function NumberField({ id, label, value, onChange }: { id: string; label: string; value: number; onChange: (n: number) => void }) {
+function NumberField({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: number;
+  onChange: (n: number) => void;
+}) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-caption">{label}</Label>
-      <Input id={id} type="number" inputMode="decimal" min={0} value={value || ""} onChange={(e) => onChange(Math.max(0, Number(e.target.value) || 0))} />
+      <Label htmlFor={id} className="text-caption">
+        {label}
+      </Label>
+      <Input
+        id={id}
+        type="number"
+        inputMode="decimal"
+        min={0}
+        value={value || ""}
+        onChange={(e) => onChange(Math.max(0, Number(e.target.value) || 0))}
+      />
     </div>
   );
 }
@@ -66,17 +93,36 @@ function Salaried() {
   const [extra, setExtra] = useState(0);
   const [pensionPct, setPensionPct] = useState(6);
   const [studyPct, setStudyPct] = useState(2.5);
-  const r = netSalary({ gross, sex, extraPoints: extra, pensionRate: pensionPct / 100, studyFundRate: studyPct / 100 });
+  const r = netSalary({
+    gross,
+    sex,
+    extraPoints: extra,
+    pensionRate: pensionPct / 100,
+    studyFundRate: studyPct / 100,
+  });
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
         <NumberField id="th-gross" label={t("gross")} value={gross} onChange={setGross} />
         <div className="space-y-1.5">
           <span className="block text-caption">{t("points")}</span>
-          <Segmented label={t("points")} value={sex} onChange={setSex} options={[{ value: "man", label: t("man") }, { value: "woman", label: t("woman") }]} />
+          <Segmented
+            label={t("points")}
+            value={sex}
+            onChange={setSex}
+            options={[
+              { value: "man", label: t("man") },
+              { value: "woman", label: t("woman") },
+            ]}
+          />
         </div>
         <NumberField id="th-extra" label={t("extraPoints")} value={extra} onChange={setExtra} />
-        <NumberField id="th-pension" label={t("pensionPct")} value={pensionPct} onChange={setPensionPct} />
+        <NumberField
+          id="th-pension"
+          label={t("pensionPct")}
+          value={pensionPct}
+          onChange={setPensionPct}
+        />
         <NumberField id="th-study" label={t("studyPct")} value={studyPct} onChange={setStudyPct} />
       </div>
       <p className="mt-4 text-footnote">{t("netLead")}</p>
@@ -102,17 +148,37 @@ function SelfEmployed() {
   const [advancePct, setAdvancePct] = useState(10);
   const [vatRegistered, setVatRegistered] = useState(false);
   const r = freelanceSetAside({ income, expenses, advanceRate: advancePct / 100, vatRegistered });
-  const due = nextVatDue(new Date()).toLocaleDateString(locale === "he" ? "he-IL" : "en-US", { day: "numeric", month: "long" });
+  const due = nextVatDue(new Date()).toLocaleDateString(locale === "he" ? "he-IL" : "en-US", {
+    day: "numeric",
+    month: "long",
+  });
   return (
     <>
-      <p className="mb-4 text-headline text-pretty">{t("lead", { amount: shekels(r.total, locale) })}</p>
+      <p className="mb-4 text-headline text-pretty">
+        {t("lead", { amount: shekels(r.total, locale) })}
+      </p>
       <div className="grid grid-cols-2 gap-3">
         <NumberField id="th-income" label={t("income")} value={income} onChange={setIncome} />
-        <NumberField id="th-expenses" label={t("expenses")} value={expenses} onChange={setExpenses} />
-        <NumberField id="th-advance" label={t("advancePct")} value={advancePct} onChange={setAdvancePct} />
+        <NumberField
+          id="th-expenses"
+          label={t("expenses")}
+          value={expenses}
+          onChange={setExpenses}
+        />
+        <NumberField
+          id="th-advance"
+          label={t("advancePct")}
+          value={advancePct}
+          onChange={setAdvancePct}
+        />
       </div>
       <label className="mt-3 flex cursor-pointer items-center gap-3 text-footnote">
-        <input type="checkbox" className="size-4 accent-[var(--foreground)]" checked={vatRegistered} onChange={(e) => setVatRegistered(e.target.checked)} />
+        <input
+          type="checkbox"
+          className="size-4 accent-[var(--foreground)]"
+          checked={vatRegistered}
+          onChange={(e) => setVatRegistered(e.target.checked)}
+        />
         {t("vatRegistered")}
       </label>
       <Rows
@@ -120,7 +186,9 @@ function SelfEmployed() {
           [t("advance"), shekels(r.taxAdvance, locale)],
           [t("bituach"), shekels(r.bituach, locale)],
           [t("pensionMin"), shekels(r.pension, locale)],
-          ...(vatRegistered ? [[t("vat", { rate: IL.vat.rate * 100 }), shekels(r.vat, locale)] as [string, string]] : []),
+          ...(vatRegistered
+            ? [[t("vat", { rate: IL.vat.rate * 100 }), shekels(r.vat, locale)] as [string, string]]
+            : []),
         ]}
       />
       {vatRegistered && <p className="mt-3 text-footnote">{t("vatDue", { date: due })}</p>}

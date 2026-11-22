@@ -17,12 +17,20 @@ export const BENCHMARK_FEES: Record<string, { deposit: number; balance: number }
 };
 
 /** Balance after `years` with monthly deposits, given yearly gross return and fees in percent. */
-export function projectBalance(balance: number, monthlyDeposit: number, years: number, grossReturn: number, feeDepositPct: number, feeBalancePct: number): number {
+export function projectBalance(
+  balance: number,
+  monthlyDeposit: number,
+  years: number,
+  grossReturn: number,
+  feeDepositPct: number,
+  feeBalancePct: number,
+): number {
   const monthly = Math.pow(1 + grossReturn - feeBalancePct / 100, 1 / 12) - 1;
   let b = balance;
   // Capped at 100 years: a typed 1e9 years would otherwise loop billions of times and freeze the page.
   const months = Math.min(1200, Math.round(years * 12));
-  for (let m = 0; m < months; m++) b = b * (1 + monthly) + monthlyDeposit * (1 - feeDepositPct / 100);
+  for (let m = 0; m < months; m++)
+    b = b * (1 + monthly) + monthlyDeposit * (1 - feeDepositPct / 100);
   return b;
 }
 
@@ -36,17 +44,35 @@ export function feeCost(
   feeBalancePct: number,
   grossReturn = 0.05,
   /** Peer medians from the fund's public data, when the asset is linked to a fund. */
-  peers?: { deposit: number; balance: number }
+  peers?: { deposit: number; balance: number },
 ): { yours: number; benchmark: number; cost: number } | null {
   const bench = peers ?? BENCHMARK_FEES[type];
   if (!bench || years <= 0) return null;
-  const yours = projectBalance(balance, monthlyDeposit, years, grossReturn, feeDepositPct, feeBalancePct);
-  const benchmark = projectBalance(balance, monthlyDeposit, years, grossReturn, Math.min(feeDepositPct, bench.deposit), Math.min(feeBalancePct, bench.balance));
+  const yours = projectBalance(
+    balance,
+    monthlyDeposit,
+    years,
+    grossReturn,
+    feeDepositPct,
+    feeBalancePct,
+  );
+  const benchmark = projectBalance(
+    balance,
+    monthlyDeposit,
+    years,
+    grossReturn,
+    Math.min(feeDepositPct, bench.deposit),
+    Math.min(feeBalancePct, bench.balance),
+  );
   return { yours, benchmark, cost: benchmark - yours };
 }
 
 /** Months to pay off a debt and the interest paid; null if the payment doesn't cover the interest. */
-export function debtPayoff(balance: number, ratePct: number, payment: number): { months: number; interest: number } | null {
+export function debtPayoff(
+  balance: number,
+  ratePct: number,
+  payment: number,
+): { months: number; interest: number } | null {
   const r = ratePct / 100 / 12;
   if (balance <= 0) return { months: 0, interest: 0 };
   if (payment <= balance * r) return null;
@@ -63,7 +89,12 @@ export function debtPayoff(balance: number, ratePct: number, payment: number): {
 }
 
 /** Monthly saving needed to reach a goal by its date (0 if already funded; the whole gap if the date has passed). */
-export function goalMonthly(target: number, saved: number, targetDate: string, today: Date): number {
+export function goalMonthly(
+  target: number,
+  saved: number,
+  targetDate: string,
+  today: Date,
+): number {
   const gap = target - saved;
   if (gap <= 0) return 0;
   const [y, m] = targetDate.split("-").map(Number);
@@ -76,9 +107,18 @@ export const GOAL_COLORS = ["indigo", "green", "amber", "orange", "red"] as cons
 export type GoalColor = (typeof GOAL_COLORS)[number];
 
 /** Month (YYYY-MM) a goal is reached when saving `monthly` every month from now; null without a positive monthly amount. */
-export function goalReachMonth(target: number, saved: number, monthly: number | null | undefined, today: Date): string | null {
+export function goalReachMonth(
+  target: number,
+  saved: number,
+  monthly: number | null | undefined,
+  today: Date,
+): string | null {
   if (!monthly || monthly <= 0) return null;
-  const d = new Date(today.getFullYear(), today.getMonth() + Math.max(0, Math.ceil((target - saved) / monthly)), 1);
+  const d = new Date(
+    today.getFullYear(),
+    today.getMonth() + Math.max(0, Math.ceil((target - saved) / monthly)),
+    1,
+  );
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
@@ -87,9 +127,15 @@ export type AllocationClass = (typeof ALLOCATION_CLASSES)[number];
 
 /** Which liquid asset types count toward each class of the target allocation. */
 export const CLASS_OF: Record<string, AllocationClass> = {
-  stock: "equity", fund: "equity", crypto: "equity", metal: "equity", study_fund: "equity", provident: "equity",
+  stock: "equity",
+  fund: "equity",
+  crypto: "equity",
+  metal: "equity",
+  study_fund: "equity",
+  provident: "equity",
   bond: "bonds",
-  cash: "cash", deposit: "cash",
+  cash: "cash",
+  deposit: "cash",
 };
 
 export interface FinancialPlan {
@@ -151,7 +197,15 @@ export interface UserProfile {
   onboarded: boolean;
 }
 
-export const EMPTY_PROFILE: UserProfile = { situation: null, householdSize: null, goal: null, goalNote: "", confidence: null, detail: null, onboarded: false };
+export const EMPTY_PROFILE: UserProfile = {
+  situation: null,
+  householdSize: null,
+  goal: null,
+  goalNote: "",
+  confidence: null,
+  detail: null,
+  onboarded: false,
+};
 
 /** The plan changes the answers drive: beginners or "simple" get simple mode, advanced or "detailed" get the full views. */
 export function profileEffects(p: UserProfile): Partial<FinancialPlan> {
@@ -162,10 +216,13 @@ export function profileEffects(p: UserProfile): Partial<FinancialPlan> {
 
 /** Show extra explanations (page purposes, hints): beginners, or anyone in simple mode. */
 export function wantsExplanations(plan: FinancialPlan): boolean {
-  return plan.profile.confidence === "beginner" || (plan.profile.confidence == null && plan.simpleMode);
+  return (
+    plan.profile.confidence === "beginner" || (plan.profile.confidence == null && plan.simpleMode)
+  );
 }
 
-const pick = <T extends string>(list: readonly T[], v: unknown): T | null => (list.includes(v as T) ? (v as T) : null);
+const pick = <T extends string>(list: readonly T[], v: unknown): T | null =>
+  list.includes(v as T) ? (v as T) : null;
 
 /** A future change: a one-off amount (negative = cost) and a monthly cost change from that year on (positive = spend more). */
 export interface LifeEvent {
@@ -212,17 +269,25 @@ export function parsePlan(raw: unknown): FinancialPlan {
   const p = (r.profile ?? {}) as Record<string, unknown>;
   return {
     monthStartDay: int(r.monthStartDay, 1, 28, DEFAULT_PLAN.monthStartDay),
-    birthYear: r.birthYear == null || r.birthYear === "" ? null : int(r.birthYear, 1920, 2015, 0) || null,
+    birthYear:
+      r.birthYear == null || r.birthYear === "" ? null : int(r.birthYear, 1920, 2015, 0) || null,
     retirementAge: int(r.retirementAge, 40, 80, DEFAULT_PLAN.retirementAge),
     emergencyMonths: int(r.emergencyMonths, 1, 24, DEFAULT_PLAN.emergencyMonths),
-    allocation: Object.fromEntries(ALLOCATION_CLASSES.map((c) => [c, int(a[c], 0, 100, DEFAULT_PLAN.allocation[c])])) as Record<AllocationClass, number>,
-    taxDone: Object.fromEntries(Object.entries(t).filter(([k, v]) => /^[a-z_]{1,30}$/.test(k) && Number.isInteger(v)).slice(0, 20)) as Record<string, number>,
+    allocation: Object.fromEntries(
+      ALLOCATION_CLASSES.map((c) => [c, int(a[c], 0, 100, DEFAULT_PLAN.allocation[c])]),
+    ) as Record<AllocationClass, number>,
+    taxDone: Object.fromEntries(
+      Object.entries(t)
+        .filter(([k, v]) => /^[a-z_]{1,30}$/.test(k) && Number.isInteger(v))
+        .slice(0, 20),
+    ) as Record<string, number>,
     simpleMode: r.simpleMode === true,
     // Plans saved before the split kept one flag for both modes; the old simple-mode home was the raze one.
     razeMode: r.razeMode === true || (r.razeMode == null && r.simpleMode === true),
     wheelPaging: r.wheelPaging === true,
     checkin: {
-      lastWeek: typeof c.lastWeek === "string" && /^\d{4}-W\d{2}$/.test(c.lastWeek) ? c.lastWeek : null,
+      lastWeek:
+        typeof c.lastWeek === "string" && /^\d{4}-W\d{2}$/.test(c.lastWeek) ? c.lastWeek : null,
       streak: int(c.streak, 0, 1000, 0),
     },
     events: (Array.isArray(r.events) ? r.events : [])

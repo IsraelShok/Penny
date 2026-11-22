@@ -38,8 +38,8 @@ export function CategorizeReviewDialog({
   });
 
   // Track per-proposal state: approved (default true), or a fallback name.
-  const [approvedMap, setApprovedMap] = useState<Record<string, boolean>>(
-    () => Object.fromEntries(preview.proposedCategories.map((p) => [p.name, true]))
+  const [approvedMap, setApprovedMap] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(preview.proposedCategories.map((p) => [p.name, true])),
   );
 
   const applyMutation = useMutation({
@@ -62,7 +62,7 @@ export function CategorizeReviewDialog({
               count: data.appliedCount,
               created: data.createdCategoriesCount,
             })
-          : t("applied", { count: data.appliedCount })
+          : t("applied", { count: data.appliedCount }),
       );
       onApplied();
     },
@@ -73,7 +73,7 @@ export function CategorizeReviewDialog({
 
   const approvedCount = useMemo(
     () => Object.values(approvedMap).filter(Boolean).length,
-    [approvedMap]
+    [approvedMap],
   );
   const totalProposals = preview.proposedCategories.length;
 
@@ -97,20 +97,17 @@ export function CategorizeReviewDialog({
         .map(([name, count]) => ({
           name,
           count,
-          color:
-            existingCategories.find((c) => c.name === name)?.color ?? "#B1AA9C",
+          color: existingCategories.find((c) => c.name === name)?.color ?? "#B1AA9C",
         }))
         .sort((a, b) => b.count - a.count),
-    [preview.existingCategoryUsage, existingCategories]
+    [preview.existingCategoryUsage, existingCategories],
   );
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[85vh] max-w-2xl gap-0 overflow-hidden p-0">
         <DialogHeader className="px-6 pb-3 pt-6">
-          <DialogTitle className="font-semibold text-2xl tracking-tight">
-            {t("title")}
-          </DialogTitle>
+          <DialogTitle className="font-semibold text-2xl tracking-tight">{t("title")}</DialogTitle>
           <DialogDescription>
             {t("description", { count: preview.uncategorizedCount })}
           </DialogDescription>
@@ -129,10 +126,7 @@ export function CategorizeReviewDialog({
                       key={c.name}
                       className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs"
                     >
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: c.color }}
-                      />
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />
                       <span className="font-medium">{c.name}</span>
                       <span className="text-muted-foreground">{c.count}</span>
                     </span>
@@ -154,12 +148,7 @@ export function CategorizeReviewDialog({
                       className="text-muted-foreground"
                       onClick={() =>
                         setApprovedMap(
-                          Object.fromEntries(
-                            preview.proposedCategories.map((p) => [
-                              p.name,
-                              true,
-                            ])
-                          )
+                          Object.fromEntries(preview.proposedCategories.map((p) => [p.name, true])),
                         )
                       }
                     >
@@ -172,11 +161,8 @@ export function CategorizeReviewDialog({
                       onClick={() =>
                         setApprovedMap(
                           Object.fromEntries(
-                            preview.proposedCategories.map((p) => [
-                              p.name,
-                              false,
-                            ])
-                          )
+                            preview.proposedCategories.map((p) => [p.name, false]),
+                          ),
                         )
                       }
                     >
@@ -190,17 +176,13 @@ export function CategorizeReviewDialog({
                       key={p.name}
                       proposal={p}
                       approved={approvedMap[p.name] ?? false}
-                      onToggle={(v) =>
-                        setApprovedMap((prev) => ({ ...prev, [p.name]: v }))
-                      }
+                      onToggle={(v) => setApprovedMap((prev) => ({ ...prev, [p.name]: v }))}
                     />
                   ))}
                 </div>
               </section>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                {t("noProposals")}
-              </p>
+              <p className="text-sm text-muted-foreground">{t("noProposals")}</p>
             )}
 
             {preview.errors && preview.errors.length > 0 && (
@@ -216,9 +198,7 @@ export function CategorizeReviewDialog({
             <div>
               {t.rich("willCategorize", {
                 count: stats.toExisting + stats.toNew,
-                b: (chunks) => (
-                  <span className="font-medium text-foreground">{chunks}</span>
-                ),
+                b: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
               })}
               {stats.willStay > 0 && (
                 <>
@@ -226,9 +206,7 @@ export function CategorizeReviewDialog({
                   ·{" "}
                   {t.rich("willStay", {
                     count: stats.willStay,
-                    b: (chunks) => (
-                      <span className="text-foreground">{chunks}</span>
-                    ),
+                    b: (chunks) => <span className="text-foreground">{chunks}</span>,
                   })}
                 </>
               )}
@@ -238,9 +216,7 @@ export function CategorizeReviewDialog({
                 {t.rich("willCreate", {
                   approved: approvedCount,
                   count: totalProposals,
-                  b: (chunks) => (
-                    <span className="font-medium text-foreground">{chunks}</span>
-                  ),
+                  b: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
                 })}
               </div>
             )}
@@ -254,7 +230,11 @@ export function CategorizeReviewDialog({
             onClick={() => applyMutation.mutate()}
             disabled={applyMutation.isPending}
           >
-            {applyMutation.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Check className="size-4" aria-hidden />}
+            {applyMutation.isPending ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : (
+              <Check className="size-4" aria-hidden />
+            )}
           </IconButton>
         </DialogFooter>
       </DialogContent>
@@ -280,9 +260,7 @@ function ProposalRow({
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="text-sm font-bold tracking-tight">
-            {proposal.name}
-          </span>
+          <span className="text-sm font-bold tracking-tight">{proposal.name}</span>
           <span className="text-xs text-muted-foreground">
             {t("transactionCount", { count: proposal.transactionIds.length })}
           </span>

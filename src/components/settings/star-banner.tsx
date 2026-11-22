@@ -6,7 +6,10 @@ export function StarBanner() {
   const t = useTranslations("settings.appearance");
   return (
     <section className="flex flex-col gap-4 rounded-2xl border border-primary/20 bg-[color-mix(in_oklch,var(--primary)_7%,var(--card))] p-5 sm:flex-row sm:flex-wrap sm:items-center">
-      <span className="grid size-11 shrink-0 place-items-center rounded-full bg-amber-400/20" aria-hidden>
+      <span
+        className="grid size-11 shrink-0 place-items-center rounded-full bg-amber-400/20"
+        aria-hidden
+      >
         <Star className="size-5 fill-amber-400 text-amber-500" />
       </span>
       <div className="min-w-[min(100%,12rem)] flex-1">

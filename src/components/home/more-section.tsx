@@ -25,7 +25,10 @@ export function MoreSection({ children }: { children: ReactNode }) {
   if (plan.simpleMode) {
     return (
       <p className="text-center text-footnote text-muted-foreground">
-        {t("simpleOn")} <Link href="/settings/appearance" className="text-primary hover:underline">{t("simpleChange")}</Link>
+        {t("simpleOn")}{" "}
+        <Link href="/settings/appearance" className="text-primary hover:underline">
+          {t("simpleChange")}
+        </Link>
       </p>
     );
   }
@@ -44,11 +47,20 @@ export function MoreSection({ children }: { children: ReactNode }) {
         className="mx-auto mb-4 flex items-center gap-1.5 rounded-full px-4 py-2 text-footnote font-medium text-muted-foreground transition-[background-color,color] duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
       >
         {open ? t("less") : t("more")}
-        <ChevronDown className={cn("size-4 transition-transform duration-150 motion-reduce:transition-none", open && "rotate-180")} aria-hidden />
+        <ChevronDown
+          className={cn(
+            "size-4 transition-transform duration-150 motion-reduce:transition-none",
+            open && "rotate-180",
+          )}
+          aria-hidden
+        />
       </button>
       <div id="home-more" hidden={!open}>
         {children}
-        <Link href="/journey" className="mx-auto mt-6 block w-fit rounded-full px-4 py-2 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
+        <Link
+          href="/journey"
+          className="mx-auto mt-6 block w-fit rounded-full px-4 py-2 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+        >
           {tJ("homeLink")}
         </Link>
       </div>

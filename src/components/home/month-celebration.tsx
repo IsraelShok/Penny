@@ -17,7 +17,10 @@ export function MonthCelebration() {
   const t = useTranslations("celebrate");
   const locale = useLocale();
   const router = useRouter();
-  const last = useQuery({ queryKey: ["overview", "month", 1], queryFn: () => getOverview("month", 1) });
+  const last = useQuery({
+    queryKey: ["overview", "month", 1],
+    queryFn: () => getOverview("month", 1),
+  });
   const data = last.data;
 
   useEffect(() => {
@@ -31,7 +34,9 @@ export function MonthCelebration() {
     } catch {
       return; // no storage: better no party than one on every visit
     }
-    const month = new Intl.DateTimeFormat(locale, { month: "long" }).format(new Date(`${data.period.from}T12:00:00`));
+    const month = new Intl.DateTimeFormat(locale, { month: "long" }).format(
+      new Date(`${data.period.from}T12:00:00`),
+    );
     confetti();
     toast.success(t("title", { month, amount: shekels(net, locale) }), {
       description: t("body", { pct: Math.round((net / income) * 100) }),

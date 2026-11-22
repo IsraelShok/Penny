@@ -11,6 +11,16 @@ export async function GET(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const today = israelToday();
   const i = loadInsights(workspaceId, today, Number(process.env.CARD_BILLING_DAY) || 10);
-  const forecast = forecastCards({ today, cards: i.cards, series: i.series, installments: i.installments });
-  return NextResponse.json({ series: i.series, forecast, anomalies: i.anomalies, installments: openInstallments(i.installments, today) });
+  const forecast = forecastCards({
+    today,
+    cards: i.cards,
+    series: i.series,
+    installments: i.installments,
+  });
+  return NextResponse.json({
+    series: i.series,
+    forecast,
+    anomalies: i.anomalies,
+    installments: openInstallments(i.installments, today),
+  });
 }

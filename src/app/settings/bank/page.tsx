@@ -13,7 +13,11 @@ import { SectionShell } from "@/components/settings/section-shell";
 import { InstitutionGrid, InstitutionTile } from "@/components/settings/institution-grid";
 import { ManualImport } from "@/components/settings/manual-import";
 import { ScraperDisclaimer } from "@/components/settings/scraper-disclaimer";
-import { DangerZone, ExcludedMerchantsCard, ShowBrowserCard } from "@/components/settings/data-cards";
+import {
+  DangerZone,
+  ExcludedMerchantsCard,
+  ShowBrowserCard,
+} from "@/components/settings/data-cards";
 import { ExportCard } from "@/components/settings/export-card";
 import { DiagnosticsCard } from "@/components/settings/diagnostics-card";
 import { AutoBackupCard } from "@/components/settings/auto-backup-card";
@@ -51,7 +55,12 @@ export default function BankSettingsPage() {
     return requested === "auto" || requested === "manual" ? requested : "openBanking";
   });
 
-  const { data: integrations = [], isPending, isError, refetch } = useQuery({
+  const {
+    data: integrations = [],
+    isPending,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["integrations"],
     queryFn: listIntegrations,
   });
@@ -67,11 +76,9 @@ export default function BankSettingsPage() {
   });
 
   const lastSync = useMemo(() => {
-    const stamps = integrations
-      .map((i) => i.lastSyncAt)
-      .filter((s): s is string => Boolean(s));
+    const stamps = integrations.map((i) => i.lastSyncAt).filter((s): s is string => Boolean(s));
     if (stamps.length === 0) return null;
-    return stamps.sort().slice(-1)[0];
+    return stamps.sort((a, b) => a.localeCompare(b)).slice(-1)[0];
   }, [integrations]);
 
   // Open banking has its own tab, so it never shows up as a bank to scrape.
@@ -79,7 +86,7 @@ export default function BankSettingsPage() {
 
   const sheetIntegration: Integration | null =
     sheet.mode === "edit" && sheet.credentialId != null
-      ? integrations.find((i) => i.id === sheet.credentialId) ?? null
+      ? (integrations.find((i) => i.id === sheet.credentialId) ?? null)
       : null;
 
   // Count only the scraped connections: open banking lives in its own tab and is not in this list.
@@ -90,7 +97,11 @@ export default function BankSettingsPage() {
 
   return (
     <>
-      <SectionShell title={t("title")} description={t("description")} icon={<Landmark aria-hidden />}>
+      <SectionShell
+        title={t("title")}
+        description={t("description")}
+        icon={<Landmark aria-hidden />}
+      >
         <div className="space-y-2 px-4">
           <Segmented<Mode>
             label={t("modeLabel")}
@@ -105,7 +116,13 @@ export default function BankSettingsPage() {
           />
           {/* What the picked way actually does, so the choice is made on facts rather than a label. */}
           <p aria-live="polite" className="text-footnote leading-5 text-muted-foreground">
-            {t(mode === "openBanking" ? "modeOpenBankingHint" : mode === "auto" ? "modeAutoHint" : "modeManualHint")}
+            {t(
+              mode === "openBanking"
+                ? "modeOpenBankingHint"
+                : mode === "auto"
+                  ? "modeAutoHint"
+                  : "modeManualHint",
+            )}
           </p>
         </div>
 
@@ -127,7 +144,10 @@ export default function BankSettingsPage() {
           <>
             <ScraperDisclaimer />
 
-            <div id="connect" className="flex scroll-mt-20 flex-wrap items-center justify-between gap-2">
+            <div
+              id="connect"
+              className="flex scroll-mt-20 flex-wrap items-center justify-between gap-2"
+            >
               <div className="px-4 text-footnote text-muted-foreground">
                 {!isPending && !isError && countLabel}
                 {lastSync ? (
@@ -140,11 +160,22 @@ export default function BankSettingsPage() {
                 ) : null}
               </div>
               <div className="flex items-center gap-2">
-                <Suspense fallback={null}><SyncActions /></Suspense>
+                <Suspense fallback={null}>
+                  <SyncActions />
+                </Suspense>
               </div>
             </div>
 
-            {isPending ? <p role="status">{t("loading")}</p> : isError ? <div role="alert"><p>{t("loadFailed")}</p><Button variant="outline" className="mt-3" onClick={() => void refetch()}>{t("retry")}</Button></div> : scraped.length === 0 ? (
+            {isPending ? (
+              <p role="status">{t("loading")}</p>
+            ) : isError ? (
+              <div role="alert">
+                <p>{t("loadFailed")}</p>
+                <Button variant="outline" className="mt-3" onClick={() => void refetch()}>
+                  {t("retry")}
+                </Button>
+              </div>
+            ) : scraped.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
                 {t.rich("noneConnectedPrompt", {
                   addBankBold: (chunks) => <b>{chunks}</b>,
@@ -152,88 +183,153 @@ export default function BankSettingsPage() {
               </div>
             ) : (
               <section aria-labelledby="banks-connected" className="space-y-3">
-              <h3 id="banks-connected" className="mb-2 px-4 text-sm font-semibold text-muted-foreground">{t("groupConnected", { count: scraped.length })}</h3>
-              <InstitutionGrid>
-                  {[...scraped].sort((x, y) => x.label.localeCompare(y.label, locale)).map((integration) => {
-                    const info = BANK_PROVIDERS.find(
-                      (b) => b.id === integration.provider
-                    );
-                    if (!info) return null;
-                    const sync = stateFor(integration.id);
-                    const localName = translateProviderName(info.id, info.name, tBanks);
-                    const openSheet = () =>
-                      setSheet({
-                        open: true,
-                        mode: "edit",
-                        providerId: integration.provider,
-                        credentialId: integration.id,
-                      });
-                    const subline = integration.lastSyncAt
-                      ? t("transactionsCountWithSync", {
-                          count: integration.transactionCount,
-                          time: formatLastSync(integration.lastSyncAt, labels),
-                        })
-                      : t("transactionsCountNever", {
-                          count: integration.transactionCount,
+                <h3
+                  id="banks-connected"
+                  className="mb-2 px-4 text-sm font-semibold text-muted-foreground"
+                >
+                  {t("groupConnected", { count: scraped.length })}
+                </h3>
+                <InstitutionGrid>
+                  {[...scraped]
+                    .sort((x, y) => x.label.localeCompare(y.label, locale))
+                    .map((integration) => {
+                      const info = BANK_PROVIDERS.find((b) => b.id === integration.provider);
+                      if (!info) return null;
+                      const sync = stateFor(integration.id);
+                      const localName = translateProviderName(info.id, info.name, tBanks);
+                      const openSheet = () =>
+                        setSheet({
+                          open: true,
+                          mode: "edit",
+                          providerId: integration.provider,
+                          credentialId: integration.id,
                         });
-                    return (
-                      <InstitutionTile
-                        key={integration.id}
-                        label={integration.label}
-                        color={info.color}
-                        domain={info.domain}
-                        labelFor={t("openDetails", { name: `${integration.label} (${localName})` })}
-                        onClick={openSheet}
-                        subline={`${localName} · ${t(info.kind === "bank" ? "kindBank" : "kindCard")} · ${subline}`}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <StatusPill lastSyncAt={integration.lastSyncAt} syncing={sync.syncing} />
-                          <SyncShortButton syncing={sync.syncing} stage={sync.stage} onClick={() => start(integration.id)} />
-                        </div>
-                      </InstitutionTile>
-                    );
-                  })}
-              </InstitutionGrid>
+                      const subline = integration.lastSyncAt
+                        ? t("transactionsCountWithSync", {
+                            count: integration.transactionCount,
+                            time: formatLastSync(integration.lastSyncAt, labels),
+                          })
+                        : t("transactionsCountNever", {
+                            count: integration.transactionCount,
+                          });
+                      return (
+                        <InstitutionTile
+                          key={integration.id}
+                          label={integration.label}
+                          color={info.color}
+                          domain={info.domain}
+                          labelFor={t("openDetails", {
+                            name: `${integration.label} (${localName})`,
+                          })}
+                          onClick={openSheet}
+                          subline={`${localName} · ${t(info.kind === "bank" ? "kindBank" : "kindCard")} · ${subline}`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <StatusPill
+                              lastSyncAt={integration.lastSyncAt}
+                              syncing={sync.syncing}
+                            />
+                            <SyncShortButton
+                              syncing={sync.syncing}
+                              stage={sync.stage}
+                              onClick={() => start(integration.id)}
+                            />
+                          </div>
+                        </InstitutionTile>
+                      );
+                    })}
+                </InstitutionGrid>
               </section>
             )}
             {/* Every provider we can read, connected or not, so nothing is hidden in a menu. */}
-            {!isPending && !isError && (() => {
-              const connected = new Set(integrations.map((i) => i.provider));
-              const rest = availableToAdd.filter((b) => !connected.has(b.id));
-              const groups = (["bank", "card"] as const).map((kind) => ({ kind, items: rest.filter((b) => b.kind === kind).sort((x, y) => translateProviderName(x.id, x.name, tBanks).localeCompare(translateProviderName(y.id, y.name, tBanks), locale)) })).filter((g) => g.items.length);
-              return groups.length > 0 && (
-                <>
-                  {groups.map((g) => (
-                    <section key={g.kind} aria-labelledby={`not-connected-${g.kind}`} className="space-y-3">
-                      <h3 id={`not-connected-${g.kind}`} className="mb-2 px-4 text-sm font-semibold text-muted-foreground">{t(g.kind === "bank" ? "groupBanks" : "groupCards")}</h3>
-                      <InstitutionGrid>
-                        {g.items.map((b) => {
-                          const name = translateProviderName(b.id, b.name, tBanks);
-                          return (
-                            <InstitutionTile
-                              key={b.id}
-                              label={name}
-                              color={b.color}
-                              domain={b.domain}
-                              labelFor={`${t("connect")} · ${name}`}
-                              onClick={() => setSheet({ open: true, mode: "add", providerId: b.id, credentialId: null })}
-                            >
-                              <Button variant="outline" size="sm" aria-label={`${t("connect")} · ${name}`} onClick={() => setSheet({ open: true, mode: "add", providerId: b.id, credentialId: null })}>{t("connect")}</Button>
-                            </InstitutionTile>
-                          );
-                        })}
-                      </InstitutionGrid>
-                    </section>
-                  ))}
-                </>
-              );
-            })()}
+            {!isPending &&
+              !isError &&
+              (() => {
+                const connected = new Set(integrations.map((i) => i.provider));
+                const rest = availableToAdd.filter((b) => !connected.has(b.id));
+                const groups = (["bank", "card"] as const)
+                  .map((kind) => ({
+                    kind,
+                    items: rest
+                      .filter((b) => b.kind === kind)
+                      .sort((x, y) =>
+                        translateProviderName(x.id, x.name, tBanks).localeCompare(
+                          translateProviderName(y.id, y.name, tBanks),
+                          locale,
+                        ),
+                      ),
+                  }))
+                  .filter((g) => g.items.length);
+                return (
+                  groups.length > 0 && (
+                    <>
+                      {groups.map((g) => (
+                        <section
+                          key={g.kind}
+                          aria-labelledby={`not-connected-${g.kind}`}
+                          className="space-y-3"
+                        >
+                          <h3
+                            id={`not-connected-${g.kind}`}
+                            className="mb-2 px-4 text-sm font-semibold text-muted-foreground"
+                          >
+                            {t(g.kind === "bank" ? "groupBanks" : "groupCards")}
+                          </h3>
+                          <InstitutionGrid>
+                            {g.items.map((b) => {
+                              const name = translateProviderName(b.id, b.name, tBanks);
+                              return (
+                                <InstitutionTile
+                                  key={b.id}
+                                  label={name}
+                                  color={b.color}
+                                  domain={b.domain}
+                                  labelFor={`${t("connect")} · ${name}`}
+                                  onClick={() =>
+                                    setSheet({
+                                      open: true,
+                                      mode: "add",
+                                      providerId: b.id,
+                                      credentialId: null,
+                                    })
+                                  }
+                                >
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    aria-label={`${t("connect")} · ${name}`}
+                                    onClick={() =>
+                                      setSheet({
+                                        open: true,
+                                        mode: "add",
+                                        providerId: b.id,
+                                        credentialId: null,
+                                      })
+                                    }
+                                  >
+                                    {t("connect")}
+                                  </Button>
+                                </InstitutionTile>
+                              );
+                            })}
+                          </InstitutionGrid>
+                        </section>
+                      ))}
+                    </>
+                  )
+                );
+              })()}
             <InvestmentHouses />
           </>
         )}
 
-        <section aria-labelledby="data-heading" className="space-y-7 border-t border-border/60 pt-6">
-          <h2 id="data-heading" className="px-4 text-lg font-semibold">{t("groupData")}</h2>
+        <section
+          aria-labelledby="data-heading"
+          className="space-y-7 border-t border-border/60 pt-6"
+        >
+          <h2 id="data-heading" className="px-4 text-lg font-semibold">
+            {t("groupData")}
+          </h2>
           <ExportCard />
           <DiagnosticsCard />
           <BackupCard />
@@ -260,13 +356,7 @@ export default function BankSettingsPage() {
   );
 }
 
-function StatusPill({
-  lastSyncAt,
-  syncing,
-}: {
-  lastSyncAt: string | null;
-  syncing: boolean;
-}) {
+function StatusPill({ lastSyncAt, syncing }: { lastSyncAt: string | null; syncing: boolean }) {
   const t = useTranslations("settings.bank");
   if (syncing) {
     return (

@@ -20,10 +20,24 @@ export function trackedRows<T extends { spent: number; expected: number }>(track
   return { shown: sorted.slice(0, cut), rest: sorted.slice(cut) };
 }
 
-export interface Item { id: number; date: string; description: string; amount: number }
-interface Line { spent: number; expected: number; items: Item[] }
+export interface Item {
+  id: number;
+  date: string;
+  description: string;
+  amount: number;
+}
+interface Line {
+  spent: number;
+  expected: number;
+  items: Item[];
+}
 
-const item = (t: TransactionWithCategory, amount = t.chargedAmount): Item => ({ id: t.id, date: t.date, description: t.description, amount });
+const item = (t: TransactionWithCategory, amount = t.chargedAmount): Item => ({
+  id: t.id,
+  date: t.date,
+  description: t.description,
+  amount,
+});
 const line = (): Line => ({ spent: 0, expected: 0, items: [] });
 
 /**
@@ -47,13 +61,20 @@ export function buildCashflow(
   const budget = new Map(budgets.map((b) => [b.categoryId, b.monthlyAmount]));
   const previous = new Map(previousMonth.categories.map((c) => [c.categoryId, c.spent]));
   // A budget of 0 is a real choice; only a missing budget falls back to last month.
-  const expectedOf = (id: number) => (budget.has(id) ? budget.get(id)! : previous.get(id) ?? 0);
+  const expectedOf = (id: number) => (budget.has(id) ? budget.get(id)! : (previous.get(id) ?? 0));
   // Parents roll up their children, so only leaves carry an expectation (no double counting).
   const parents = new Set(categories.map((c) => c.parentId).filter((p): p is number => p != null));
 
-  const variable = line(), fixed = line(), savings = line();
+  const variable = line(),
+    fixed = line(),
+    savings = line();
   const tracked = new Map<number, Line & { id: number; name: string; color: string }>();
-  const income = { received: 0, expected: previousMonth.totals.income, fixed: [] as Item[], variable: [] as Item[] };
+  const income = {
+    received: 0,
+    expected: previousMonth.totals.income,
+    fixed: [] as Item[],
+    variable: [] as Item[],
+  };
   const off = { income: [] as Item[], expenses: [] as Item[], incomeTotal: 0, expenseTotal: 0 };
   const seen = new Set<number>();
 
@@ -77,12 +98,17 @@ export function buildCashflow(
     if (c.costType === "fixed") return fixed;
     // Tracked when the category itself, or the parent it rolls into, is budgeted.
     let budgeted = c.budgetMode === "budgeted";
-    for (let up = c.parentId != null ? cat.get(c.parentId) : undefined; up && !budgeted; up = up.parentId != null ? cat.get(up.parentId) : undefined) {
+    for (
+      let up = c.parentId != null ? cat.get(c.parentId) : undefined;
+      up && !budgeted;
+      up = up.parentId != null ? cat.get(up.parentId) : undefined
+    ) {
       budgeted = up.budgetMode === "budgeted";
     }
     if (budgeted) {
       const row = rootOf(c);
-      if (!tracked.has(row.id)) tracked.set(row.id, { id: row.id, name: row.name, color: row.color, ...line() });
+      if (!tracked.has(row.id))
+        tracked.set(row.id, { id: row.id, name: row.name, color: row.color, ...line() });
       return tracked.get(row.id)!;
     }
     return variable;
@@ -92,7 +118,10 @@ export function buildCashflow(
   for (const c of categories) {
     if (c.kind !== "expense" || parents.has(c.id)) continue;
     const e = expectedOf(c.id);
-    if (e > 0 || c.budgetMode === "budgeted") { lineFor(c).expected += e; seen.add(c.id); }
+    if (e > 0 || c.budgetMode === "budgeted") {
+      lineFor(c).expected += e;
+      seen.add(c.id);
+    }
   }
 
   /** Books `amount` (negative = money out) of `t` on category `categoryId`. */
@@ -104,7 +133,10 @@ export function buildCashflow(
       return;
     }
     const l = lineFor(c);
-    if (c && !seen.has(c.id) && !parents.has(c.id)) { l.expected += expectedOf(c.id); seen.add(c.id); }
+    if (c && !seen.has(c.id) && !parents.has(c.id)) {
+      l.expected += expectedOf(c.id);
+      seen.add(c.id);
+    }
     l.spent -= amount; // a refund (amount > 0) lowers spend
     l.items.push(item(t, amount));
   };
@@ -112,7 +144,13 @@ export function buildCashflow(
   for (const t of txns) {
     const a = t.chargedAmount;
     if (t.isExcluded || t.kind === "transfer") {
-      if (a >= 0) { off.income.push(item(t)); off.incomeTotal += a; } else { off.expenses.push(item(t)); off.expenseTotal -= a; }
+      if (a >= 0) {
+        off.income.push(item(t));
+        off.incomeTotal += a;
+      } else {
+        off.expenses.push(item(t));
+        off.expenseTotal -= a;
+      }
       continue;
     }
     if (t.allocations?.length) {
@@ -138,7 +176,9 @@ export function buildCashflow(
     forecast,
     variable: { ...variable, left: variable.expected - variable.spent },
     weeks,
-    tracked: [...tracked.values()].sort((a, b) => b.expected - a.expected).map((l) => ({ ...l, weeks: weeksOf(l) })),
+    tracked: [...tracked.values()]
+      .sort((a, b) => b.expected - a.expected)
+      .map((l) => ({ ...l, weeks: weeksOf(l) })),
     fixed,
     savings,
     totalSpent,
@@ -148,7 +188,15 @@ export function buildCashflow(
   };
 }
 
-export type Week = { from: Date; to: Date; spent: number; share: number; left: number; future: boolean; current: boolean };
+export type Week = {
+  from: Date;
+  to: Date;
+  spent: number;
+  share: number;
+  left: number;
+  future: boolean;
+  current: boolean;
+};
 
 /**
  * A line's month in weeks of 7 days from the month start (the last one may be shorter). Each week's share is what is
@@ -162,11 +210,18 @@ function splitWeeks(l: Line, range: { from: Date; to: Date }, today: Date): Week
   // Day indexes by calendar date (not ms), so a DST change never shifts a day into the next week.
   const at = (i: number) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
   const weeks: Week[] = Array.from({ length: count }, (_, i) => ({
-    from: at(i * 7), to: at(Math.min(days - 1, i * 7 + 6)), spent: 0, share: 0, left: 0,
-    future: at(i * 7) > today, current: at(i * 7) <= today && today < at(Math.min(days, i * 7 + 7)),
+    from: at(i * 7),
+    to: at(Math.min(days - 1, i * 7 + 6)),
+    spent: 0,
+    share: 0,
+    left: 0,
+    future: at(i * 7) > today,
+    current: at(i * 7) <= today && today < at(Math.min(days, i * 7 + 7)),
   }));
   for (const x of l.items) {
-    const d = Math.round((new Date(x.date.slice(0, 10) + "T00:00:00").getTime() - start.getTime()) / DAY);
+    const d = Math.round(
+      (new Date(x.date.slice(0, 10) + "T00:00:00").getTime() - start.getTime()) / DAY,
+    );
     weeks[Math.min(count - 1, Math.max(0, Math.floor(d / 7)))].spent -= x.amount;
   }
   let before = 0;

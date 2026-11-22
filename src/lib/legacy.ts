@@ -1,4 +1,10 @@
-import { BANK_PROVIDERS, type Asset, type Goal, type InsurancePolicy, type Integration } from "./types";
+import {
+  BANK_PROVIDERS,
+  type Asset,
+  type Goal,
+  type InsurancePolicy,
+  type Integration,
+} from "./types";
 
 /** Free text the user writes for the family document. Plain text only, never secrets. */
 export interface LegacyNotes {
@@ -41,8 +47,12 @@ export interface LegacyRow {
   when?: string;
 }
 
-export type LegacySectionId = "banks" | "cards" | "investments" | "pension" | "insurance" | "debts" | "recurring" | "goals";
-export interface LegacySection { id: LegacySectionId; rows: LegacyRow[] }
+export type LegacySectionId =
+  "banks" | "cards" | "investments" | "pension" | "insurance" | "debts" | "recurring" | "goals";
+export interface LegacySection {
+  id: LegacySectionId;
+  rows: LegacyRow[];
+}
 
 export interface LegacyInput {
   assets: Asset[];
@@ -73,14 +83,21 @@ export function buildLegacySections(d: LegacyInput): LegacySection[] {
       rows: [
         ...own.filter((a) => a.type === "cash").map((a) => ({ title: a.name, amount: a.valueIls })),
         ...d.integrations
-          .filter((i) => providerKind(i.provider) === "bank" && !own.some((a) => a.type === "cash" && a.name.includes(providerName(i.provider))))
+          .filter(
+            (i) =>
+              providerKind(i.provider) === "bank" &&
+              !own.some((a) => a.type === "cash" && a.name.includes(providerName(i.provider))),
+          )
           .map((i) => ({ title: providerName(i.provider), detail: i.label || undefined })),
       ],
     },
     {
       id: "cards",
       rows: [
-        ...cardAccounts.map((a) => ({ title: providerName(a.provider), detail: `•••• ${last4(a.accountNumber)}${a.label ? ` · ${a.label}` : ""}` })),
+        ...cardAccounts.map((a) => ({
+          title: providerName(a.provider),
+          detail: `•••• ${last4(a.accountNumber)}${a.label ? ` · ${a.label}` : ""}`,
+        })),
         ...d.integrations
           .filter((i) => providerKind(i.provider) === "card" && !cardProviders.has(i.provider))
           .map((i) => ({ title: providerName(i.provider), detail: i.label || undefined })),
@@ -90,16 +107,26 @@ export function buildLegacySections(d: LegacyInput): LegacySection[] {
       id: "investments",
       rows: own
         .filter((a) => a.type !== "cash" && !PENSION.has(a.type))
-        .map((a) => ({ title: a.name, kind: a.type, detail: a.symbol ?? undefined, amount: a.valueIls })),
+        .map((a) => ({
+          title: a.name,
+          kind: a.type,
+          detail: a.symbol ?? undefined,
+          amount: a.valueIls,
+        })),
     },
     {
       id: "pension",
-      rows: own.filter((a) => PENSION.has(a.type)).map((a) => ({
-        title: a.name,
-        kind: a.type,
-        detail: [a.fund?.fund.company, a.fund?.fund.name, a.fundId ? `#${a.fundId}` : null].filter(Boolean).join(" · ") || undefined,
-        amount: a.valueIls,
-      })),
+      rows: own
+        .filter((a) => PENSION.has(a.type))
+        .map((a) => ({
+          title: a.name,
+          kind: a.type,
+          detail:
+            [a.fund?.fund.company, a.fund?.fund.name, a.fundId ? `#${a.fundId}` : null]
+              .filter(Boolean)
+              .join(" · ") || undefined,
+          amount: a.valueIls,
+        })),
     },
     {
       id: "insurance",
@@ -113,15 +140,32 @@ export function buildLegacySections(d: LegacyInput): LegacySection[] {
     },
     {
       id: "debts",
-      rows: d.assets.filter((a) => a.isLiability).map((a) => ({ title: a.name, kind: a.type, amount: a.valueIls, monthly: a.monthlyPayment })),
+      rows: d.assets
+        .filter((a) => a.isLiability)
+        .map((a) => ({
+          title: a.name,
+          kind: a.type,
+          amount: a.valueIls,
+          monthly: a.monthlyPayment,
+        })),
     },
     {
       id: "recurring",
-      rows: d.recurring.map((s) => ({ title: s.merchant, detail: s.account ? `•••• ${last4(s.account)}` : undefined, amount: s.expectedAmount, kind: s.cadence })),
+      rows: d.recurring.map((s) => ({
+        title: s.merchant,
+        detail: s.account ? `•••• ${last4(s.account)}` : undefined,
+        amount: s.expectedAmount,
+        kind: s.cadence,
+      })),
     },
     {
       id: "goals",
-      rows: d.goals.map((g) => ({ title: g.name, amount: g.targetAmount, saved: g.savedAmount, when: g.targetDate ?? undefined })),
+      rows: d.goals.map((g) => ({
+        title: g.name,
+        amount: g.targetAmount,
+        saved: g.savedAmount,
+        when: g.targetDate ?? undefined,
+      })),
     },
   ];
   return sections;

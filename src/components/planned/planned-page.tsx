@@ -4,15 +4,38 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { AlarmClock, CalendarClock, Check, Link2, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import {
+  AlarmClock,
+  CalendarClock,
+  Check,
+  Link2,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Trash2,
+  X,
+} from "lucide-react";
 
 import { CardShell } from "@/components/home/card-shell";
 import { translateCategoryName } from "@/lib/i18n-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   deletePlannedItem,
@@ -92,7 +115,11 @@ export function PlannedPage() {
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["planned"], queryFn: getPlanned });
   const settings = useQuery({ queryKey: ["settings"], queryFn: getSettings, staleTime: 60_000 });
-  const categories = useQuery({ queryKey: ["categories", "expense"], queryFn: () => getCategories("expense"), staleTime: 60_000 });
+  const categories = useQuery({
+    queryKey: ["categories", "expense"],
+    queryFn: () => getCategories("expense"),
+    staleTime: 60_000,
+  });
   const [draft, setDraft] = useState<Draft | null>(null);
   const [deleting, setDeleting] = useState<PlannedItemView | null>(null);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["planned"] });
@@ -100,7 +127,7 @@ export function PlannedPage() {
   const save = useMutation({
     mutationFn: (d: Draft) => savePlannedItem(itemOf(d)),
     onSuccess: (_r, d) => {
-      refresh();
+      void refresh();
       setDraft(null);
       toast.success(d.id ? t("updated") : t("created"));
     },
@@ -109,21 +136,26 @@ export function PlannedPage() {
   const remove = useMutation({
     mutationFn: (item: PlannedItemView) => deletePlannedItem(item.id),
     onSuccess: () => {
-      refresh();
+      void refresh();
       setDeleting(null);
       toast.success(t("deleted"));
     },
     onError: (e: Error) => toast.error(e.message || t("saveFailed")),
   });
   const status = useMutation({
-    mutationFn: ({ item, next }: { item: PlannedItemView; next: "planned" | "cancelled" }) => setPlannedItemStatus(item.id, next),
+    mutationFn: ({ item, next }: { item: PlannedItemView; next: "planned" | "cancelled" }) =>
+      setPlannedItemStatus(item.id, next),
     onSuccess: refresh,
     onError: (e: Error) => toast.error(e.message || t("saveFailed")),
   });
   const act = useMutation({
-    mutationFn: (input: { action: "match" | "link" | "reject" | "unlink"; itemId?: number; txnId?: number }) => plannedAction(input.action, input),
+    mutationFn: (input: {
+      action: "match" | "link" | "reject" | "unlink";
+      itemId?: number;
+      txnId?: number;
+    }) => plannedAction(input.action, input),
     onSuccess: (res, input) => {
-      refresh();
+      void refresh();
       if (input.action === "match") {
         if (res.matched) toast.success(t("matchedToast", { count: res.matched }));
       } else if (input.action === "unlink") {
@@ -148,7 +180,12 @@ export function PlannedPage() {
     const name = id == null ? null : categories.data?.find((c) => c.id === id)?.name;
     return name ? translateCategoryName(name, tCat) : null;
   };
-  const ownerName = (owner: string | null) => (owner == null ? null : owner === "shared" ? t("shared") : members.find((m) => m.id === owner)?.name ?? null);
+  const ownerName = (owner: string | null) =>
+    owner == null
+      ? null
+      : owner === "shared"
+        ? t("shared")
+        : (members.find((m) => m.id === owner)?.name ?? null);
 
   const active = data?.items.filter((i) => i.status === "planned") ?? [];
   const matched = data?.items.filter((i) => i.status === "matched") ?? [];
@@ -164,7 +201,9 @@ export function PlannedPage() {
         <CardShell>
           <div className="flex items-center justify-between gap-3 py-4">
             <span className="text-footnote text-muted-foreground">{t("loadFailed")}</span>
-            <Button variant="outline" size="sm" onClick={() => query.refetch()}>{t("retry")}</Button>
+            <Button variant="outline" size="sm" onClick={() => query.refetch()}>
+              {t("retry")}
+            </Button>
           </div>
         </CardShell>
       )}
@@ -174,13 +213,19 @@ export function PlannedPage() {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Stat label={t("plannedCount")} value={String(data.totals.planned)} />
             <Stat label={t("upcoming")} value={shekels(data.totals.upcoming, locale)} />
-            <Stat label={t("overdue")} value={String(data.totals.overdue)} tone={data.totals.overdue > 0 ? "warn" : undefined} />
+            <Stat
+              label={t("overdue")}
+              value={String(data.totals.overdue)}
+              tone={data.totals.overdue > 0 ? "warn" : undefined}
+            />
             <Stat label={t("matchedCount")} value={String(data.totals.matched)} />
           </div>
 
           {waiting.length > 0 && (
             <CardShell label={t("candidatesTitle")}>
-              <p className="pb-2 text-caption text-pretty text-muted-foreground">{t("candidatesHint")}</p>
+              <p className="pb-2 text-caption text-pretty text-muted-foreground">
+                {t("candidatesHint")}
+              </p>
               <ul className="row-grid">
                 {waiting.map((item) => (
                   <li key={item.id} className="py-2.5">
@@ -189,17 +234,36 @@ export function PlannedPage() {
                     </p>
                     <ul className="mt-1 space-y-1">
                       {item.candidates.map((c) => (
-                        <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 text-caption">
+                        <li
+                          key={c.id}
+                          className="flex flex-wrap items-center justify-between gap-2 text-caption"
+                        >
                           <span className="min-w-0 text-muted-foreground">
-                            {t("candidateLine", { date: formatDate(c.date), account: shortAccount(c.account), amount: shekels(c.amount, locale) })}
+                            {t("candidateLine", {
+                              date: formatDate(c.date),
+                              account: shortAccount(c.account),
+                              amount: shekels(c.amount, locale),
+                            })}
                             <span className="ms-2 truncate">{c.description}</span>
                           </span>
                           <span className="flex items-center gap-1">
-                            <Button variant="outline" size="sm" onClick={() => act.mutate({ action: "link", itemId: item.id, txnId: c.id })}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                act.mutate({ action: "link", itemId: item.id, txnId: c.id })
+                              }
+                            >
                               <Check className="size-3.5" aria-hidden />
                               {t("useThis")}
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => act.mutate({ action: "reject", itemId: item.id, txnId: c.id })}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                act.mutate({ action: "reject", itemId: item.id, txnId: c.id })
+                              }
+                            >
                               <X className="size-3.5" aria-hidden />
                               {t("notThis")}
                             </Button>
@@ -217,7 +281,12 @@ export function PlannedPage() {
             label={t("items")}
             action={
               <span className="flex flex-wrap items-center gap-1">
-                <Button variant="ghost" size="sm" onClick={() => act.mutate({ action: "match" })} disabled={act.isPending}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => act.mutate({ action: "match" })}
+                  disabled={act.isPending}
+                >
                   <Link2 className="size-4" aria-hidden />
                   {t("runMatch")}
                 </Button>
@@ -244,7 +313,12 @@ export function PlannedPage() {
                     category={categoryName(item.categoryId)}
                     owner={ownerName(item.owner)}
                     onEdit={() => setDraft(draftOf(item))}
-                    onCancel={() => status.mutate({ item, next: item.status === "cancelled" ? "planned" : "cancelled" })}
+                    onCancel={() =>
+                      status.mutate({
+                        item,
+                        next: item.status === "cancelled" ? "planned" : "cancelled",
+                      })
+                    }
                     onUnlink={() => act.mutate({ action: "unlink", itemId: item.id })}
                     onDelete={() => setDeleting(item)}
                   />
@@ -272,11 +346,19 @@ export function PlannedPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{t("delete")}</DialogTitle>
-                <DialogDescription>{deleting ? `${deleting.description}: ${t("deleteHint")}` : ""}</DialogDescription>
+                <DialogDescription>
+                  {deleting ? `${deleting.description}: ${t("deleteHint")}` : ""}
+                </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDeleting(null)}>{t("cancel")}</Button>
-                <Button variant="destructive" disabled={remove.isPending} onClick={() => deleting && remove.mutate(deleting)}>
+                <Button variant="outline" onClick={() => setDeleting(null)}>
+                  {t("cancel")}
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={remove.isPending}
+                  onClick={() => deleting && remove.mutate(deleting)}
+                >
                   {t("delete")}
                 </Button>
               </DialogFooter>
@@ -296,7 +378,15 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "wa
   return (
     <div className="card-surface px-4 py-3">
       <p className="text-caption text-muted-foreground">{label}</p>
-      <p className={tone === "warn" ? "mt-1 text-title font-semibold tabular-nums text-status-heads-up" : "mt-1 text-title font-semibold tabular-nums"}>{value}</p>
+      <p
+        className={
+          tone === "warn"
+            ? "mt-1 text-title font-semibold tabular-nums text-status-heads-up"
+            : "mt-1 text-title font-semibold tabular-nums"
+        }
+      >
+        {value}
+      </p>
     </div>
   );
 }
@@ -322,7 +412,9 @@ function Row({
 }) {
   const t = useTranslations("planned");
   const next = item.nextPayment;
-  const meta = [category, owner, item.account ? shortAccount(item.account) : null].filter(Boolean).join(" · ");
+  const meta = [category, owner, item.account ? shortAccount(item.account) : null]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <li className={item.status === "cancelled" ? "py-3 opacity-60" : "py-3"}>
@@ -351,12 +443,18 @@ function Row({
           {meta && <p className="mt-0.5 text-caption text-muted-foreground">{meta}</p>}
           <p className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-0.5 text-caption text-muted-foreground">
             <span>{t("dueOn", { date: formatDate(item.date) })}</span>
-            {item.installments > 1 && <span>{t("paymentsCount", { count: item.installments })}</span>}
-            {item.status === "planned" && next && <span>{t("nextCharge", { date: formatDate(next.chargeDate) })}</span>}
+            {item.installments > 1 && (
+              <span>{t("paymentsCount", { count: item.installments })}</span>
+            )}
+            {item.status === "planned" && next && (
+              <span>{t("nextCharge", { date: formatDate(next.chargeDate) })}</span>
+            )}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <span className="text-footnote font-semibold tabular-nums">{shekels(item.amount, locale)}</span>
+          <span className="text-footnote font-semibold tabular-nums">
+            {shekels(item.amount, locale)}
+          </span>
           <span className="flex items-center gap-1">
             {item.status === "matched" ? (
               <Button variant="ghost" size="icon" aria-label={t("unlink")} onClick={onUnlink}>
@@ -368,7 +466,11 @@ function Row({
                   <Pencil className="size-4" aria-hidden />
                 </Button>
                 <Button variant="ghost" size="icon" aria-label={t("cancelItem")} onClick={onCancel}>
-                  {item.status === "cancelled" ? <RotateCcw className="size-4" aria-hidden /> : <X className="size-4" aria-hidden />}
+                  {item.status === "cancelled" ? (
+                    <RotateCcw className="size-4" aria-hidden />
+                  ) : (
+                    <X className="size-4" aria-hidden />
+                  )}
                 </Button>
               </>
             )}
@@ -409,7 +511,9 @@ function PlannedDialog({
 
   // Parent categories read better with the parent's name in front.
   const labelOf = (c: { id: number; name: string; parentId: number | null }) =>
-    c.parentId == null ? categoryName(c.id) ?? c.name : `${categoryName(c.parentId) ?? ""} · ${categoryName(c.id) ?? c.name}`;
+    c.parentId == null
+      ? (categoryName(c.id) ?? c.name)
+      : `${categoryName(c.parentId) ?? ""} · ${categoryName(c.id) ?? c.name}`;
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -425,17 +529,44 @@ function PlannedDialog({
           }}
         >
           <Field label={t("description")} htmlFor="planned-description" className="sm:col-span-2">
-            <Input id="planned-description" required maxLength={80} value={form.description} onChange={(e) => set("description", e.target.value)} />
+            <Input
+              id="planned-description"
+              required
+              maxLength={80}
+              value={form.description}
+              onChange={(e) => set("description", e.target.value)}
+            />
           </Field>
           <Field label={t("amount")} htmlFor="planned-amount">
-            <Input id="planned-amount" required type="number" min="0.01" step="any" dir="ltr" value={form.amount} onChange={(e) => set("amount", e.target.value)} />
+            <Input
+              id="planned-amount"
+              required
+              type="number"
+              min="0.01"
+              step="any"
+              dir="ltr"
+              value={form.amount}
+              onChange={(e) => set("amount", e.target.value)}
+            />
           </Field>
           <Field label={t("date")} htmlFor="planned-date">
-            <Input id="planned-date" required type="date" dir="ltr" value={form.date} onChange={(e) => set("date", e.target.value)} />
+            <Input
+              id="planned-date"
+              required
+              type="date"
+              dir="ltr"
+              value={form.date}
+              onChange={(e) => set("date", e.target.value)}
+            />
           </Field>
           <Field label={t("account")}>
-            <Select value={form.account || NONE} onValueChange={(v) => v && set("account", v === NONE ? "" : v)}>
-              <SelectTrigger aria-label={t("account")} className="w-full"><SelectValue /></SelectTrigger>
+            <Select
+              value={form.account || NONE}
+              onValueChange={(v) => v && set("account", v === NONE ? "" : v)}
+            >
+              <SelectTrigger aria-label={t("account")} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>{t("noAccount")}</SelectItem>
                 {data.accounts.map((a) => (
@@ -447,29 +578,78 @@ function PlannedDialog({
             </Select>
           </Field>
           <Field label={t("installments")} htmlFor="planned-installments">
-            <Input id="planned-installments" type="number" min="1" max="60" step="1" dir="ltr" value={form.installments} onChange={(e) => set("installments", e.target.value)} />
+            <Input
+              id="planned-installments"
+              type="number"
+              min="1"
+              max="60"
+              step="1"
+              dir="ltr"
+              value={form.installments}
+              onChange={(e) => set("installments", e.target.value)}
+            />
           </Field>
-          <Field label={t("matchPattern")} htmlFor="planned-match" hint={t("matchHint")} className="sm:col-span-2">
-            <Input id="planned-match" maxLength={60} value={form.matchPattern} onChange={(e) => set("matchPattern", e.target.value)} />
+          <Field
+            label={t("matchPattern")}
+            htmlFor="planned-match"
+            hint={t("matchHint")}
+            className="sm:col-span-2"
+          >
+            <Input
+              id="planned-match"
+              maxLength={60}
+              value={form.matchPattern}
+              onChange={(e) => set("matchPattern", e.target.value)}
+            />
           </Field>
           <Field label={t("category")}>
-            <Select value={form.categoryId || NONE} onValueChange={(v) => v && set("categoryId", v === NONE ? "" : v)}>
-              <SelectTrigger aria-label={t("category")} className="w-full"><SelectValue>{(v: string) => (v === NONE ? t("noCategory") : categories.find((c) => String(c.id) === v)?.name ?? t("noCategory"))}</SelectValue></SelectTrigger>
+            <Select
+              value={form.categoryId || NONE}
+              onValueChange={(v) => v && set("categoryId", v === NONE ? "" : v)}
+            >
+              <SelectTrigger aria-label={t("category")} className="w-full">
+                <SelectValue>
+                  {(v: string) =>
+                    v === NONE
+                      ? t("noCategory")
+                      : (categories.find((c) => String(c.id) === v)?.name ?? t("noCategory"))
+                  }
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>{t("noCategory")}</SelectItem>
                 {categories.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>{labelOf(c)}</SelectItem>
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {labelOf(c)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </Field>
           <Field label={t("owner")}>
-            <Select value={form.owner || NONE} onValueChange={(v) => v && set("owner", v === NONE ? "" : v)}>
-              <SelectTrigger aria-label={t("owner")} className="w-full"><SelectValue>{(v: string) => (v === NONE ? t("owner") : v === "shared" ? t("shared") : memberName(v) ?? t("owner"))}</SelectValue></SelectTrigger>
+            <Select
+              value={form.owner || NONE}
+              onValueChange={(v) => v && set("owner", v === NONE ? "" : v)}
+            >
+              <SelectTrigger aria-label={t("owner")} className="w-full">
+                <SelectValue>
+                  {(v: string) =>
+                    v === NONE
+                      ? t("owner")
+                      : v === "shared"
+                        ? t("shared")
+                        : (memberName(v) ?? t("owner"))
+                  }
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>{t("owner")}</SelectItem>
                 <SelectItem value="shared">{t("shared")}</SelectItem>
-                {members.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+                {members.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>
@@ -484,8 +664,12 @@ function PlannedDialog({
             />
           </Field>
           <DialogFooter className="sm:col-span-2">
-            <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
-            <Button type="submit" disabled={saving}>{saving ? t("saving") : t("save")}</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              {t("cancel")}
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? t("saving") : t("save")}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

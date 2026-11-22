@@ -6,14 +6,34 @@ import { useLocale, useTranslations } from "next-intl";
 import { studyFundLiquidFrom } from "@/lib/study-fund";
 import { toast } from "sonner";
 import { createAssets, searchFunds, updateAsset } from "@/lib/api";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Check, X } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ASSET_TYPES, LIABILITY_TYPES, type Asset, type AssetInput, type AssetType, type Fund, type FundSource } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ASSET_TYPES,
+  LIABILITY_TYPES,
+  type Asset,
+  type AssetInput,
+  type AssetType,
+  type Fund,
+  type FundSource,
+} from "@/lib/types";
 
 const CURRENCIES = ["ILS", "USD", "EUR", "GBP"];
 /** Types that usually have a ticker on Yahoo Finance. */
@@ -39,7 +59,12 @@ export function AssetDialog({
   const tp = useTranslations("property");
   const tc = useTranslations("common");
   const queryClient = useQueryClient();
-  const initial = asset === "new" ? (preset ? ({ ...preset, symbol: preset.symbol ?? null } as Partial<Asset>) : null) : asset;
+  const initial =
+    asset === "new"
+      ? preset
+        ? ({ ...preset, symbol: preset.symbol ?? null } as Partial<Asset>)
+        : null
+      : asset;
   const [form, setForm] = useState({
     name: initial?.name ?? "",
     type: (initial?.type ?? "stock") as AssetType,
@@ -66,7 +91,8 @@ export function AssetDialog({
     purchaseMonth: initial?.purchaseMonth ?? "",
   });
   const opt = (s: string) => (s.trim() === "" ? null : Number(s));
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
   const canPrice = TICKER_TYPES.includes(form.type);
   const priced = canPrice && form.priced;
   const isLiability = (LIABILITY_TYPES as readonly string[]).includes(form.type);
@@ -74,8 +100,12 @@ export function AssetDialog({
   const isHome = form.type === "real_estate";
   const isStudyFund = form.type === "study_fund";
   const locale = useLocale();
-  const monthLabel = (m: string) => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(`${m}-15T12:00:00`));
-  const liquidFrom = isStudyFund && form.purchaseMonth ? studyFundLiquidFrom(form.purchaseMonth) : null;
+  const monthLabel = (m: string) =>
+    new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
+      new Date(`${m}-15T12:00:00`),
+    );
+  const liquidFrom =
+    isStudyFund && form.purchaseMonth ? studyFundLiquidFrom(form.purchaseMonth) : null;
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -107,10 +137,12 @@ export function AssetDialog({
         }),
         ...(isStudyFund && { purchaseMonth: form.purchaseMonth || null }),
       };
-      return asset !== "new" ? updateAsset(asset.id, input).then(() => undefined) : createAssets([input]).then(() => undefined);
+      return asset !== "new"
+        ? updateAsset(asset.id, input).then(() => undefined)
+        : createAssets([input]).then(() => undefined);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      void queryClient.invalidateQueries({ queryKey: ["assets"] });
       toast.success(t("saved"));
       onSaved?.();
       onClose();
@@ -134,7 +166,14 @@ export function AssetDialog({
         >
           <div className="space-y-1.5">
             <Label htmlFor="asset-name">{t("fieldName")}</Label>
-            <Input id="asset-name" required maxLength={80} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("namePlaceholder")} />
+            <Input
+              id="asset-name"
+              required
+              maxLength={80}
+              value={form.name}
+              onChange={(e) => set("name", e.target.value)}
+              placeholder={t("namePlaceholder")}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -147,10 +186,14 @@ export function AssetDialog({
                   setForm((f) => ({ ...f, type, liquid: !ILLIQUID_DEFAULT.includes(type) }));
                 }}
               >
-                <SelectTrigger aria-label={t("fieldType")} className="w-full"><SelectValue>{(v: string) => t(`type_${v}`)}</SelectValue></SelectTrigger>
+                <SelectTrigger aria-label={t("fieldType")} className="w-full">
+                  <SelectValue>{(v: string) => t(`type_${v}`)}</SelectValue>
+                </SelectTrigger>
                 <SelectContent>
                   {[...ASSET_TYPES, ...LIABILITY_TYPES].map((v) => (
-                    <SelectItem key={v} value={v}>{t(`type_${v}`)}</SelectItem>
+                    <SelectItem key={v} value={v}>
+                      {t(`type_${v}`)}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -158,9 +201,15 @@ export function AssetDialog({
             <div className="space-y-1.5">
               <Label>{t("fieldCurrency")}</Label>
               <Select value={form.currency} onValueChange={(v) => v && set("currency", v)}>
-                <SelectTrigger aria-label={t("fieldCurrency")} className="w-full"><SelectValue /></SelectTrigger>
+                <SelectTrigger aria-label={t("fieldCurrency")} className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -180,17 +229,46 @@ export function AssetDialog({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="asset-symbol">{t("fieldSymbol")}</Label>
-                <Input id="asset-symbol" required dir="ltr" value={form.symbol} onChange={(e) => set("symbol", e.target.value)} placeholder="VOO / TEVA.TA" />
+                <Input
+                  id="asset-symbol"
+                  required
+                  dir="ltr"
+                  value={form.symbol}
+                  onChange={(e) => set("symbol", e.target.value)}
+                  placeholder="VOO / TEVA.TA"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="asset-qty">{t("fieldQuantity")}</Label>
-                <Input id="asset-qty" required type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={form.quantity} onChange={(e) => set("quantity", e.target.value)} />
+                <Input
+                  id="asset-qty"
+                  required
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="any"
+                  dir="ltr"
+                  value={form.quantity}
+                  onChange={(e) => set("quantity", e.target.value)}
+                />
               </div>
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="asset-value">{isLiability ? t("fieldBalance") : t("fieldValue")}</Label>
-              <Input id="asset-value" required type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={form.manualValue} onChange={(e) => set("manualValue", e.target.value)} />
+              <Label htmlFor="asset-value">
+                {isLiability ? t("fieldBalance") : t("fieldValue")}
+              </Label>
+              <Input
+                id="asset-value"
+                required
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="any"
+                dir="ltr"
+                value={form.manualValue}
+                onChange={(e) => set("manualValue", e.target.value)}
+              />
             </div>
           )}
 
@@ -213,18 +291,42 @@ export function AssetDialog({
           )}
           {hasFees && (
             <div className="grid grid-cols-3 gap-3">
-              <NumField id="asset-fee-balance" label={t("fieldFeeBalance")} value={form.feeBalance} onChange={(v) => set("feeBalance", v)} />
-              <NumField id="asset-fee-deposit" label={t("fieldFeeDeposit")} value={form.feeDeposit} onChange={(v) => set("feeDeposit", v)} />
-              <NumField id="asset-deposit" label={t("fieldMonthlyDeposit")} value={form.monthlyDeposit} onChange={(v) => set("monthlyDeposit", v)} />
+              <NumField
+                id="asset-fee-balance"
+                label={t("fieldFeeBalance")}
+                value={form.feeBalance}
+                onChange={(v) => set("feeBalance", v)}
+              />
+              <NumField
+                id="asset-fee-deposit"
+                label={t("fieldFeeDeposit")}
+                value={form.feeDeposit}
+                onChange={(v) => set("feeDeposit", v)}
+              />
+              <NumField
+                id="asset-deposit"
+                label={t("fieldMonthlyDeposit")}
+                value={form.monthlyDeposit}
+                onChange={(v) => set("monthlyDeposit", v)}
+              />
             </div>
           )}
 
           {isStudyFund && (
             <div className="space-y-1.5">
               <Label htmlFor="fund-opened">{t("fieldOpened")}</Label>
-              <Input id="fund-opened" type="month" dir="ltr" value={form.purchaseMonth} onChange={(e) => set("purchaseMonth", e.target.value)} aria-describedby="fund-opened-hint" />
+              <Input
+                id="fund-opened"
+                type="month"
+                dir="ltr"
+                value={form.purchaseMonth}
+                onChange={(e) => set("purchaseMonth", e.target.value)}
+                aria-describedby="fund-opened-hint"
+              />
               <p id="fund-opened-hint" className="text-caption text-pretty text-muted-foreground">
-                {liquidFrom ? t("fieldOpenedLiquid", { date: monthLabel(liquidFrom) }) : t("fieldOpenedHint")}
+                {liquidFrom
+                  ? t("fieldOpenedLiquid", { date: monthLabel(liquidFrom) })
+                  : t("fieldOpenedHint")}
               </p>
             </div>
           )}
@@ -233,21 +335,52 @@ export function AssetDialog({
             <fieldset className="space-y-3 rounded-xl border border-border p-3">
               <legend className="px-1 text-footnote font-medium">{tp("detailsTitle")}</legend>
               <div className="grid grid-cols-2 gap-3">
-                <NumField id="home-price" label={tp("purchasePrice")} value={form.purchasePrice} onChange={(v) => set("purchasePrice", v)} />
+                <NumField
+                  id="home-price"
+                  label={tp("purchasePrice")}
+                  value={form.purchasePrice}
+                  onChange={(v) => set("purchasePrice", v)}
+                />
                 <div className="space-y-1.5">
                   <Label htmlFor="home-month">{tp("purchaseMonth")}</Label>
-                  <Input id="home-month" type="month" dir="ltr" value={form.purchaseMonth} onChange={(e) => set("purchaseMonth", e.target.value)} />
+                  <Input
+                    id="home-month"
+                    type="month"
+                    dir="ltr"
+                    value={form.purchaseMonth}
+                    onChange={(e) => set("purchaseMonth", e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="home-city">{tp("city")}</Label>
-                  <Input id="home-city" maxLength={60} value={form.city} onChange={(e) => set("city", e.target.value)} />
+                  <Input
+                    id="home-city"
+                    maxLength={60}
+                    value={form.city}
+                    onChange={(e) => set("city", e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="home-street">{tp("street")}</Label>
-                  <Input id="home-street" maxLength={80} value={form.street} onChange={(e) => set("street", e.target.value)} />
+                  <Input
+                    id="home-street"
+                    maxLength={80}
+                    value={form.street}
+                    onChange={(e) => set("street", e.target.value)}
+                  />
                 </div>
-                <NumField id="home-rooms" label={tp("rooms")} value={form.rooms} onChange={(v) => set("rooms", v)} />
-                <NumField id="home-size" label={tp("sizeM2")} value={form.sizeM2} onChange={(v) => set("sizeM2", v)} />
+                <NumField
+                  id="home-rooms"
+                  label={tp("rooms")}
+                  value={form.rooms}
+                  onChange={(v) => set("rooms", v)}
+                />
+                <NumField
+                  id="home-size"
+                  label={tp("sizeM2")}
+                  value={form.sizeM2}
+                  onChange={(v) => set("sizeM2", v)}
+                />
               </div>
               <p className="text-caption text-pretty text-muted-foreground">{tp("detailsHint")}</p>
             </fieldset>
@@ -255,9 +388,24 @@ export function AssetDialog({
 
           {isLiability && (
             <div className="grid grid-cols-3 gap-3">
-              <NumField id="asset-rate" label={t("fieldInterestRate")} value={form.interestRate} onChange={(v) => set("interestRate", v)} />
-              <NumField id="asset-payment" label={t("fieldMonthlyPayment")} value={form.monthlyPayment} onChange={(v) => set("monthlyPayment", v)} />
-              <NumField id="asset-original" label={t("fieldOriginal")} value={form.costBasis} onChange={(v) => set("costBasis", v)} />
+              <NumField
+                id="asset-rate"
+                label={t("fieldInterestRate")}
+                value={form.interestRate}
+                onChange={(v) => set("interestRate", v)}
+              />
+              <NumField
+                id="asset-payment"
+                label={t("fieldMonthlyPayment")}
+                value={form.monthlyPayment}
+                onChange={(v) => set("monthlyPayment", v)}
+              />
+              <NumField
+                id="asset-original"
+                label={t("fieldOriginal")}
+                value={form.costBasis}
+                onChange={(v) => set("costBasis", v)}
+              />
             </div>
           )}
 
@@ -265,29 +413,66 @@ export function AssetDialog({
             <>
               <div className="space-y-1.5">
                 <Label htmlFor="asset-cost">{t("fieldCost")}</Label>
-                <Input id="asset-cost" type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={form.costBasis} onChange={(e) => set("costBasis", e.target.value)} />
+                <Input
+                  id="asset-cost"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="any"
+                  dir="ltr"
+                  value={form.costBasis}
+                  onChange={(e) => set("costBasis", e.target.value)}
+                />
                 <p className="text-caption text-muted-foreground">{t("fieldCostHint")}</p>
               </div>
               {form.currency !== "ILS" && form.costBasis && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="asset-cost-fx">{t("fieldCostFx", { currency: form.currency })}</Label>
-                  <Input id="asset-cost-fx" type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={form.costFx} onChange={(e) => set("costFx", e.target.value)} aria-describedby="asset-cost-fx-hint" />
-                  <p id="asset-cost-fx-hint" className="text-caption text-pretty text-muted-foreground">{t("fieldCostFxHint")}</p>
+                  <Label htmlFor="asset-cost-fx">
+                    {t("fieldCostFx", { currency: form.currency })}
+                  </Label>
+                  <Input
+                    id="asset-cost-fx"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="any"
+                    dir="ltr"
+                    value={form.costFx}
+                    onChange={(e) => set("costFx", e.target.value)}
+                    aria-describedby="asset-cost-fx-hint"
+                  />
+                  <p
+                    id="asset-cost-fx-hint"
+                    className="text-caption text-pretty text-muted-foreground"
+                  >
+                    {t("fieldCostFxHint")}
+                  </p>
                 </div>
               )}
-              {!liquidFrom && <label className="flex items-center justify-between gap-3 text-footnote">
-                <span>
-                  <span className="block font-medium">{t("fieldLiquid")}</span>
-                  <span className="text-muted-foreground">{t("fieldLiquidHint")}</span>
-                </span>
-                <Switch checked={form.liquid} onCheckedChange={(v) => set("liquid", v)} />
-              </label>}
+              {!liquidFrom && (
+                <label className="flex items-center justify-between gap-3 text-footnote">
+                  <span>
+                    <span className="block font-medium">{t("fieldLiquid")}</span>
+                    <span className="text-muted-foreground">{t("fieldLiquidHint")}</span>
+                  </span>
+                  <Switch checked={form.liquid} onCheckedChange={(v) => set("liquid", v)} />
+                </label>
+              )}
             </>
           )}
         </form>
         <DialogFooter>
-          <IconButton showLabel label={tc("cancel")} variant="outline" onClick={onClose}><X className="size-4" aria-hidden /></IconButton>
-          <IconButton showLabel label={mutation.isPending ? t("saving") : t("save")} variant="default" type="submit" form="asset-form" disabled={mutation.isPending}>
+          <IconButton showLabel label={tc("cancel")} variant="outline" onClick={onClose}>
+            <X className="size-4" aria-hidden />
+          </IconButton>
+          <IconButton
+            showLabel
+            label={mutation.isPending ? t("saving") : t("save")}
+            variant="default"
+            type="submit"
+            form="asset-form"
+            disabled={mutation.isPending}
+          >
             <Check className="size-4" aria-hidden />
           </IconButton>
         </DialogFooter>
@@ -296,11 +481,30 @@ export function AssetDialog({
   );
 }
 
-function NumField({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (v: string) => void }) {
+function NumField({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Input id={id} type="number" inputMode="decimal" min="0" step="any" dir="ltr" value={value} onChange={(e) => onChange(e.target.value)} />
+      <Input
+        id={id}
+        type="number"
+        inputMode="decimal"
+        min="0"
+        step="any"
+        dir="ltr"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
   );
 }
@@ -333,13 +537,28 @@ function FundPicker({
       {selectedId ? (
         <div className="flex items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2 text-footnote">
           <span>{t("fundLinked", { id: selectedId })}</span>
-          <button type="button" className="text-primary underline underline-offset-4" onClick={onClear}>{t("fundUnlink")}</button>
+          <button
+            type="button"
+            className="text-primary underline underline-offset-4"
+            onClick={onClear}
+          >
+            {t("fundUnlink")}
+          </button>
         </div>
       ) : (
         <>
-          <Input id="fund-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("fundSearchPlaceholder")} autoComplete="off" />
+          <Input
+            id="fund-search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t("fundSearchPlaceholder")}
+            autoComplete="off"
+          />
           {results.length > 0 && (
-            <ul className="max-h-48 overflow-y-auto overscroll-contain rounded-xl bg-muted p-1" aria-label={t("fundSearch")}>
+            <ul
+              className="max-h-48 overflow-y-auto overscroll-contain rounded-xl bg-muted p-1"
+              aria-label={t("fundSearch")}
+            >
               {results.map((f) => (
                 <li key={f.id}>
                   <button
@@ -352,7 +571,11 @@ function FundPicker({
                   >
                     <span className="block truncate font-medium">{f.name}</span>
                     <span className="block text-caption text-muted-foreground tabular-nums">
-                      {t("fundLine", { fee: f.feeBalance ?? "—", deposit: f.feeDeposit ?? 0, avg5y: f.avg5y ?? "—" })}
+                      {t("fundLine", {
+                        fee: f.feeBalance ?? "—",
+                        deposit: f.feeDeposit ?? 0,
+                        avg5y: f.avg5y ?? "—",
+                      })}
                     </span>
                   </button>
                 </li>

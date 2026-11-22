@@ -6,14 +6,37 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { createAssets } from "@/lib/api";
 import { parseAmount, parseCsv } from "@/lib/csv";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { FileUp, X } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ASSET_TYPES, type AssetInput, type AssetType } from "@/lib/types";
 
-const FIELDS = ["name", "symbol", "quantity", "value", "cost", "currency", "feeBalance", "feeDeposit", "deposit"] as const;
+const FIELDS = [
+  "name",
+  "symbol",
+  "quantity",
+  "value",
+  "cost",
+  "currency",
+  "feeBalance",
+  "feeDeposit",
+  "deposit",
+] as const;
 type Field = (typeof FIELDS)[number];
 const NONE = "__none";
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -37,13 +60,15 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
   const tc = useTranslations("common");
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<string[][]>([]);
-  const [map, setMap] = useState<Record<Field, number | null>>(Object.fromEntries(FIELDS.map((f) => [f, null])) as Record<Field, number | null>);
+  const [map, setMap] = useState<Record<Field, number | null>>(
+    Object.fromEntries(FIELDS.map((f) => [f, null])) as Record<Field, number | null>,
+  );
   const [type, setType] = useState<AssetType>("stock");
   const header = rows[0] ?? [];
   const body = rows.slice(1);
 
   const assets = useMemo<AssetInput[]>(() => {
-    const cell = (r: string[], f: Field) => (map[f] == null ? "" : r[map[f]!] ?? "");
+    const cell = (r: string[], f: Field) => (map[f] == null ? "" : (r[map[f]!] ?? ""));
     return body.flatMap((r) => {
       const name = cell(r, "name") || cell(r, "symbol");
       const symbol = cell(r, "symbol").trim() || null;
@@ -53,29 +78,31 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
       const live = symbol != null && quantity != null && map.symbol != null;
       if (!name || (!live && value == null)) return [];
       const currency = cell(r, "currency").toUpperCase();
-      return [{
-        name,
-        type,
-        currency: /^[A-Z]{3}$/.test(currency) ? currency : "ILS",
-        symbol: live ? symbol : null,
-        quantity: live ? Math.abs(quantity) : null,
-        manualValue: live ? null : Math.abs(value!),
-        costBasis: parseAmount(cell(r, "cost")),
-        liquid: type !== "pension",
-        note: null,
-        feeBalance: parseAmount(cell(r, "feeBalance")),
-        feeDeposit: parseAmount(cell(r, "feeDeposit")),
-        monthlyDeposit: parseAmount(cell(r, "deposit")),
-        interestRate: null,
-        monthlyPayment: null,
-      }];
+      return [
+        {
+          name,
+          type,
+          currency: /^[A-Z]{3}$/.test(currency) ? currency : "ILS",
+          symbol: live ? symbol : null,
+          quantity: live ? Math.abs(quantity) : null,
+          manualValue: live ? null : Math.abs(value!),
+          costBasis: parseAmount(cell(r, "cost")),
+          liquid: type !== "pension",
+          note: null,
+          feeBalance: parseAmount(cell(r, "feeBalance")),
+          feeDeposit: parseAmount(cell(r, "feeDeposit")),
+          monthlyDeposit: parseAmount(cell(r, "deposit")),
+          interestRate: null,
+          monthlyPayment: null,
+        },
+      ];
     });
   }, [body, map, type]);
 
   const mutation = useMutation({
     mutationFn: () => createAssets(assets),
     onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      void queryClient.invalidateQueries({ queryKey: ["assets"] });
       toast.success(t("imported", { count: res.created }));
       onClose();
     },
@@ -95,7 +122,7 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
       FIELDS.map((f) => {
         const i = head.findIndex((h) => GUESS[f].test(h));
         return [f, i >= 0 ? i : null];
-      })
+      }),
     ) as Record<Field, number | null>;
     // "Market value" also matches cost columns loosely; keep the two apart.
     if (guessed.value != null && guessed.value === guessed.cost) guessed.cost = null;
@@ -135,14 +162,22 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
                     <Label>{t(`column_${f}`)}</Label>
                     <Select
                       value={map[f] == null ? NONE : String(map[f])}
-                      onValueChange={(v) => v && setMap((m) => ({ ...m, [f]: v === NONE ? null : Number(v) }))}
+                      onValueChange={(v) =>
+                        v && setMap((m) => ({ ...m, [f]: v === NONE ? null : Number(v) }))
+                      }
                     >
                       <SelectTrigger aria-label={t(`column_${f}`)} className="w-full">
-                        <SelectValue>{(v: string) => (v === NONE ? t("columnNone") : header[Number(v)])}</SelectValue>
+                        <SelectValue>
+                          {(v: string) => (v === NONE ? t("columnNone") : header[Number(v)])}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={NONE}>{t("columnNone")}</SelectItem>
-                        {header.map((h, i) => <SelectItem key={i} value={String(i)}>{h || `#${i + 1}`}</SelectItem>)}
+                        {header.map((h, i) => (
+                          <SelectItem key={i} value={String(i)}>
+                            {h || `#${i + 1}`}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -151,9 +186,15 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
               <div className="space-y-1.5">
                 <Label>{t("importType")}</Label>
                 <Select value={type} onValueChange={(v) => v && setType(v as AssetType)}>
-                  <SelectTrigger aria-label={t("importType")} className="w-full"><SelectValue>{(v: string) => t(`type_${v}`)}</SelectValue></SelectTrigger>
+                  <SelectTrigger aria-label={t("importType")} className="w-full">
+                    <SelectValue>{(v: string) => t(`type_${v}`)}</SelectValue>
+                  </SelectTrigger>
                   <SelectContent>
-                    {ASSET_TYPES.map((v) => <SelectItem key={v} value={v}>{t(`type_${v}`)}</SelectItem>)}
+                    {ASSET_TYPES.map((v) => (
+                      <SelectItem key={v} value={v}>
+                        {t(`type_${v}`)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -165,8 +206,16 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         <DialogFooter>
-          <IconButton showLabel label={tc("cancel")} variant="outline" onClick={onClose}><X className="size-4" aria-hidden /></IconButton>
-          <IconButton showLabel label={mutation.isPending ? t("saving") : t("importButton", { count: assets.length })} variant="default" disabled={assets.length === 0 || mutation.isPending} onClick={() => mutation.mutate()}>
+          <IconButton showLabel label={tc("cancel")} variant="outline" onClick={onClose}>
+            <X className="size-4" aria-hidden />
+          </IconButton>
+          <IconButton
+            showLabel
+            label={mutation.isPending ? t("saving") : t("importButton", { count: assets.length })}
+            variant="default"
+            disabled={assets.length === 0 || mutation.isPending}
+            onClick={() => mutation.mutate()}
+          >
             <FileUp className="size-4" aria-hidden />
           </IconButton>
         </DialogFooter>

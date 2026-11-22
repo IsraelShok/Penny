@@ -4,7 +4,9 @@ import he from "../src/i18n/messages/he.json";
 
 function keys(o: unknown, prefix = ""): string[] {
   if (o === null || typeof o !== "object") return [prefix];
-  return Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => keys(v, prefix ? `${prefix}.${k}` : k));
+  return Object.entries(o as Record<string, unknown>).flatMap(([k, v]) =>
+    keys(v, prefix ? `${prefix}.${k}` : k),
+  );
 }
 
 describe("i18n", () => {

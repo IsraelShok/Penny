@@ -39,19 +39,21 @@ export function LifetimeCard({ data }: { data: FiPayload }) {
   const monthlyStatePension = Math.max(0, Number(statePension) || 0);
 
   const frame = (children: ReactNode) => (
-    <CardShell label={t("lifetime_title", { end: LIFETIME_END_AGE })}>
-      {children}
-    </CardShell>
+    <CardShell label={t("lifetime_title", { end: LIFETIME_END_AGE })}>{children}</CardShell>
   );
 
   if (assets.isError) {
     return frame(
       <>
         <p className="text-footnote text-muted-foreground">{t("lifetime_loadFailed")}</p>
-        <button type="button" onClick={() => assets.refetch()} className="mt-2 w-fit text-footnote font-medium text-primary">
+        <button
+          type="button"
+          onClick={() => assets.refetch()}
+          className="mt-2 w-fit text-footnote font-medium text-primary"
+        >
           {t("lifetime_retry")}
         </button>
-      </>
+      </>,
     );
   }
 
@@ -66,18 +68,22 @@ export function LifetimeCard({ data }: { data: FiPayload }) {
           {t("lifetime_needBirthYear", { end: LIFETIME_END_AGE })}
         </p>
         <PlanSettingsButton />
-      </div>
+      </div>,
     );
   }
 
   if (age >= LIFETIME_END_AGE) {
     return frame(
-      <p className="text-footnote text-pretty text-muted-foreground">{t("lifetime_past", { end: LIFETIME_END_AGE })}</p>
+      <p className="text-footnote text-pretty text-muted-foreground">
+        {t("lifetime_past", { end: LIFETIME_END_AGE })}
+      </p>,
     );
   }
 
   if (data.monthsOfData === 0 || data.monthlyExpenses <= 0) {
-    return frame(<p className="text-footnote text-pretty text-muted-foreground">{t("lifetime_needData")}</p>);
+    return frame(
+      <p className="text-footnote text-pretty text-muted-foreground">{t("lifetime_needData")}</p>,
+    );
   }
 
   const result = simulateLifetime({
@@ -103,7 +109,7 @@ export function LifetimeCard({ data }: { data: FiPayload }) {
           <p
             className={cn(
               "text-[1.9rem] font-semibold leading-tight text-pretty",
-              result.ranOutAge != null ? "text-status-over" : "text-status-on-track"
+              result.ranOutAge != null ? "text-status-over" : "text-status-on-track",
             )}
           >
             {result.ranOutAge != null
@@ -113,7 +119,10 @@ export function LifetimeCard({ data }: { data: FiPayload }) {
           <p className="mt-2 text-footnote text-pretty text-muted-foreground">
             {result.ranOutAge != null
               ? t("lifetime_runsOutHint", { age: result.ranOutAge })
-              : t("lifetime_sustainableHint", { amount: shekels(lastLiquid, locale), end: LIFETIME_END_AGE })}
+              : t("lifetime_sustainableHint", {
+                  amount: shekels(lastLiquid, locale),
+                  end: LIFETIME_END_AGE,
+                })}
           </p>
           {result.annuityMonthly > 0 && (
             <p className="mt-2 text-footnote text-pretty text-muted-foreground">
@@ -128,7 +137,9 @@ export function LifetimeCard({ data }: { data: FiPayload }) {
               const row = result.rows.find((item) => item.age === value);
               return (
                 <div key={value}>
-                  <dt className="text-caption text-muted-foreground">{t("lifetime_at", { age: value })}</dt>
+                  <dt className="text-caption text-muted-foreground">
+                    {t("lifetime_at", { age: value })}
+                  </dt>
                   <dd className="figure mt-0.5 text-[1.15rem] leading-tight">
                     {row ? shekels(row.liquid, locale) : "-"}
                   </dd>
@@ -148,7 +159,9 @@ export function LifetimeCard({ data }: { data: FiPayload }) {
           </div>
           <p className="mt-1 text-caption text-muted-foreground">{t("lifetime_chartHint")}</p>
           {result.ranOutAge != null && (
-            <p className="mt-0.5 text-caption text-muted-foreground">{t("lifetime_chartEndHint")}</p>
+            <p className="mt-0.5 text-caption text-muted-foreground">
+              {t("lifetime_chartEndHint")}
+            </p>
           )}
         </div>
       </div>
@@ -167,7 +180,9 @@ export function LifetimeCard({ data }: { data: FiPayload }) {
             className="w-36"
           />
         </div>
-        <p className="max-w-lg text-caption text-pretty text-muted-foreground">{t("lifetime_statePensionHint")}</p>
+        <p className="max-w-lg text-caption text-pretty text-muted-foreground">
+          {t("lifetime_statePensionHint")}
+        </p>
       </div>
 
       <p className="mt-4 text-caption text-pretty text-muted-foreground">
@@ -176,7 +191,7 @@ export function LifetimeCard({ data }: { data: FiPayload }) {
           factor: DEFAULT_PENSION_FACTOR,
         })}
       </p>
-    </>
+    </>,
   );
 }
 
@@ -202,7 +217,8 @@ function LifetimeChart({
   const max = Math.max(1, ...rows.map((row) => row.liquid));
   const span = Math.max(1, last.age - first.age);
   const x = (age: number) => pad + ((age - first.age) / span) * (width - pad * 2);
-  const y = (value: number) => height - pad - (Math.max(0, Math.min(max, value)) / max) * (height - pad * 2);
+  const y = (value: number) =>
+    height - pad - (Math.max(0, Math.min(max, value)) / max) * (height - pad * 2);
   const points = rows.map((row) => [x(row.age), y(row.liquid)] as const);
   const firstPoint = points[0];
   const lastPoint = points[points.length - 1];
@@ -215,12 +231,22 @@ function LifetimeChart({
   const plotWidth = 100 - plotLeft * 2;
   const labelLeft = (age: number) => plotLeft + ((age - first.age) / span) * plotWidth;
   const showPensionLine = pensionStartAge > first.age && pensionStartAge < last.age;
-  const pensionLabel = showPensionLine && labelLeft(pensionStartAge) > plotLeft + 8 && labelLeft(pensionStartAge) < 100 - plotLeft - 8;
+  const pensionLabel =
+    showPensionLine &&
+    labelLeft(pensionStartAge) > plotLeft + 8 &&
+    labelLeft(pensionStartAge) < 100 - plotLeft - 8;
 
   return (
     <>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-40 w-full" role="img" aria-label={label}>
-        <line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} stroke="var(--border)" strokeWidth={1} />
+        <line
+          x1={pad}
+          y1={height - pad}
+          x2={width - pad}
+          y2={height - pad}
+          stroke="var(--border)"
+          strokeWidth={1}
+        />
         <path d={area} fill="var(--primary)" fillOpacity={0.12} />
         <polyline
           points={line}
@@ -260,7 +286,10 @@ function LifetimeChart({
           {first.age}
         </span>
         {pensionLabel && (
-          <span className="absolute -translate-x-1/2" style={{ left: `${labelLeft(pensionStartAge)}%` }}>
+          <span
+            className="absolute -translate-x-1/2"
+            style={{ left: `${labelLeft(pensionStartAge)}%` }}
+          >
             {pensionStartAge}
           </span>
         )}

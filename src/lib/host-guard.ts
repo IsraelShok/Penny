@@ -23,9 +23,15 @@ export function isPrivateLanName(name: string): boolean {
 }
 
 /** `lan`: phone access is on (and the app lock is set), so private LAN names are accepted too. */
-export function isAllowedHost(host: string | null, extra: string[] = fromEnv, lan = false): boolean {
+export function isAllowedHost(
+  host: string | null,
+  extra: string[] = fromEnv,
+  lan = false,
+): boolean {
   if (!host) return false;
-  const name = (host.startsWith("[") ? host.slice(0, host.indexOf("]") + 1) : host.split(":")[0]).toLowerCase();
+  const name = (
+    host.startsWith("[") ? host.slice(0, host.indexOf("]") + 1) : host.split(":")[0]
+  ).toLowerCase();
   const listed = extra.map((h) => {
     const lower = h.toLowerCase();
     return lower.includes(":") && !lower.startsWith("[") ? `[${lower}]` : lower;

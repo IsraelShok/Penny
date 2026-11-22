@@ -59,7 +59,7 @@ function loadRows(workspaceId: number): Row[] {
               linked_txn_id AS linkedTxnId, transfer_pair_id AS transferPairId
        FROM transactions
        WHERE workspace_id = ? AND status = 'completed' AND charged_amount <> 0 AND pairing_locked = 0
-       ORDER BY date, id`
+       ORDER BY date, id`,
     )
     .all(workspaceId) as Row[];
 }
@@ -83,25 +83,25 @@ export function reconcileFlows(workspaceId: number): FlowReconcileResult {
 
   const setFlow = db.prepare(
     `UPDATE transactions SET flow_type = ?, linked_txn_id = ?, updated_at = datetime('now')
-     WHERE id = ? AND workspace_id = ?`
+     WHERE id = ? AND workspace_id = ?`,
   );
   const linkTransfer = db.prepare(
     `UPDATE transactions SET flow_type = 'transfer_internal', kind = 'transfer',
        transfer_pair_id = ?, updated_at = datetime('now')
-     WHERE id = ? AND workspace_id = ?`
+     WHERE id = ? AND workspace_id = ?`,
   );
   const categoryOfSplit = db.prepare(
     `SELECT category_id AS id FROM transaction_allocations
-     WHERE transaction_id = ? ORDER BY amount_cents DESC LIMIT 1`
+     WHERE transaction_id = ? ORDER BY amount_cents DESC LIMIT 1`,
   );
   const linkRefund = db.prepare(
     `UPDATE transactions SET linked_txn_id = ?, category_id = COALESCE(category_id, ?),
        updated_at = datetime('now')
-     WHERE id = ? AND workspace_id = ?`
+     WHERE id = ? AND workspace_id = ?`,
   );
   const recordMatch = db.prepare(
     `INSERT INTO flow_matches (workspace_id, kind, primary_txn_id, other_txn_id, before_json)
-     VALUES (?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?)`,
   );
 
   return db.transaction((): FlowReconcileResult => {
@@ -115,20 +115,24 @@ export function reconcileFlows(workspaceId: number): FlowReconcileResult {
         isBankProvider(r.provider) &&
         LOAN_TEXT.test(r.description) &&
         r.flowType !== "refund" &&
-        r.flowType !== "loan_drawdown"
+        r.flowType !== "loan_drawdown",
     );
     for (const drawdown of drawdowns) {
       const before = snapshot(drawdown);
       db.prepare(
         `UPDATE transactions SET flow_type = 'loan_drawdown', kind = 'transfer', updated_at = datetime('now')
-         WHERE id = ? AND workspace_id = ?`
+         WHERE id = ? AND workspace_id = ?`,
       ).run(drawdown.id, workspaceId);
       drawdown.flowType = "loan_drawdown";
       drawdown.kind = "transfer";
       recordMatch.run(workspaceId, "loan_drawdown", drawdown.id, null, JSON.stringify([before]));
     }
     const repayments = rows.filter(
-      (r) => r.amount < 0 && isBankProvider(r.provider) && LOAN_TEXT.test(r.description) && r.flowType === "expense"
+      (r) =>
+        r.amount < 0 &&
+        isBankProvider(r.provider) &&
+        LOAN_TEXT.test(r.description) &&
+        r.flowType === "expense",
     );
     for (const repayment of repayments) {
       const loan = [...drawdowns].reverse().find((d) => d.date <= repayment.date) ?? null;
@@ -136,14 +140,25 @@ export function reconcileFlows(workspaceId: number): FlowReconcileResult {
       setFlow.run("loan_repayment", loan?.id ?? null, repayment.id, workspaceId);
       repayment.flowType = "loan_repayment";
       repayment.linkedTxnId = loan?.id ?? null;
-      recordMatch.run(workspaceId, "loan_repayment", repayment.id, loan?.id ?? null, JSON.stringify([before]));
+      recordMatch.run(
+        workspaceId,
+        "loan_repayment",
+        repayment.id,
+        loan?.id ?? null,
+        JSON.stringify([before]),
+      );
       if (loan) result.loansLinked++;
     }
 
     // 2. Transfers between our own bank accounts: opposite amounts, different accounts, close dates.
-    const negatives = rows.filter((r) => r.amount < 0 && r.flowType === "expense" && isBankProvider(r.provider));
+    const negatives = rows.filter(
+      (r) => r.amount < 0 && r.flowType === "expense" && isBankProvider(r.provider),
+    );
     const positives = rows.filter(
-      (r) => r.amount > 0 && isBankProvider(r.provider) && (r.flowType === "income" || r.flowType === "transfer_internal")
+      (r) =>
+        r.amount > 0 &&
+        isBankProvider(r.provider) &&
+        (r.flowType === "income" || r.flowType === "transfer_internal"),
     );
     const used = new Set<number>();
     for (const positive of positives) {
@@ -154,12 +169,14 @@ export function reconcileFlows(workspaceId: number): FlowReconcileResult {
             !used.has(n.id) &&
             n.account !== positive.account &&
             Math.abs(Math.abs(n.amount) - positive.amount) <= tolerance &&
-            Math.abs(daysBetween(n.date, positive.date)) <= TRANSFER_WINDOW_DAYS
+            Math.abs(daysBetween(n.date, positive.date)) <= TRANSFER_WINDOW_DAYS,
         )
         .sort(
           (a, b) =>
-            Math.abs(Math.abs(a.amount) - positive.amount) - Math.abs(Math.abs(b.amount) - positive.amount) ||
-            Math.abs(daysBetween(a.date, positive.date)) - Math.abs(daysBetween(b.date, positive.date))
+            Math.abs(Math.abs(a.amount) - positive.amount) -
+              Math.abs(Math.abs(b.amount) - positive.amount) ||
+            Math.abs(daysBetween(a.date, positive.date)) -
+              Math.abs(daysBetween(b.date, positive.date)),
         )[0];
       if (!candidate) continue;
       const before = [snapshot(candidate), snapshot(positive)];
@@ -178,13 +195,19 @@ export function reconcileFlows(workspaceId: number): FlowReconcileResult {
 
     // 3. Refunds: same account, same amount, up to two months after the purchase.
     const alreadyLinked = new Set(
-      (db
-        .prepare(`SELECT linked_txn_id AS id FROM transactions WHERE workspace_id = ? AND linked_txn_id IS NOT NULL`)
-        .all(workspaceId) as { id: number }[]).map((r) => r.id)
+      (
+        db
+          .prepare(
+            `SELECT linked_txn_id AS id FROM transactions WHERE workspace_id = ? AND linked_txn_id IS NOT NULL`,
+          )
+          .all(workspaceId) as { id: number }[]
+      ).map((r) => r.id),
     );
     const purchases = rows.filter((r) => r.amount < 0 && r.flowType === "expense");
     // A refund that is already linked is done; re-recording it would collide with its own match.
-    const refunds = rows.filter((r) => r.amount > 0 && r.flowType === "refund" && r.linkedTxnId === null);
+    const refunds = rows.filter(
+      (r) => r.amount > 0 && r.flowType === "refund" && r.linkedTxnId === null,
+    );
     for (const refund of refunds) {
       const pool = purchases.filter(
         (p) =>
@@ -192,15 +215,21 @@ export function reconcileFlows(workspaceId: number): FlowReconcileResult {
           p.account === refund.account &&
           p.date <= refund.date &&
           refund.date <= addDays(p.date, REFUND_WINDOW_DAYS) &&
-          Math.abs(Math.abs(p.amount) - refund.amount) <= amountTolerance(refund.amount)
+          Math.abs(Math.abs(p.amount) - refund.amount) <= amountTolerance(refund.amount),
       );
       if (pool.length === 0) continue;
       const best = pool
         .map((p) => ({ row: p, score: merchantScore(p.description, refund.description) }))
-        .sort((a, b) => b.score - a.score || Math.abs(daysBetween(a.row.date, refund.date)) - Math.abs(daysBetween(b.row.date, refund.date)))[0];
+        .sort(
+          (a, b) =>
+            b.score - a.score ||
+            Math.abs(daysBetween(a.row.date, refund.date)) -
+              Math.abs(daysBetween(b.row.date, refund.date)),
+        )[0];
       // A lone exact match on the same account is safe; otherwise require the merchant to match.
       if (best.score === 0 && pool.length > 1) continue;
-      const splitCategory = (categoryOfSplit.get(best.row.id) as { id: number | null } | undefined)?.id ?? null;
+      const splitCategory =
+        (categoryOfSplit.get(best.row.id) as { id: number | null } | undefined)?.id ?? null;
       const before = snapshot(refund);
       linkRefund.run(best.row.id, splitCategory ?? best.row.categoryId, refund.id, workspaceId);
       alreadyLinked.add(best.row.id);

@@ -18,8 +18,15 @@ export default async function AccessibilityStatementPage() {
   // Grouped like Settings: the title sits above the card.
   const section = "[&>div]:rounded-2xl [&>div]:bg-card [&>div]:px-4 [&>div]:py-3";
   const h2 = "mb-2 px-4 text-sm font-semibold text-muted-foreground";
-  const todo = <span className="rounded bg-muted px-1.5 py-0.5 text-footnote font-medium">TODO · {t("todo")}</span>;
-  const date = new Intl.DateTimeFormat(locale === "he" ? "he-IL" : "en-IL", { dateStyle: "long", timeZone: "Asia/Jerusalem" }).format(REVIEWED);
+  const todo = (
+    <span className="rounded bg-muted px-1.5 py-0.5 text-footnote font-medium">
+      TODO · {t("todo")}
+    </span>
+  );
+  const date = new Intl.DateTimeFormat(locale === "he" ? "he-IL" : "en-IL", {
+    dateStyle: "long",
+    timeZone: "Asia/Jerusalem",
+  }).format(REVIEWED);
   return (
     <AppShell>
       <PageHeader title={t("title")} />
@@ -27,52 +34,102 @@ export default async function AccessibilityStatementPage() {
         <p className="text-base">{t("intro")}</p>
 
         <section className={section} aria-labelledby="a11y-standard">
-          <h2 id="a11y-standard" className={h2}>{t("standardTitle")}</h2>
+          <h2 id="a11y-standard" className={h2}>
+            {t("standardTitle")}
+          </h2>
           <div>
-          <p className="text-base">{t("standardBody")}</p>
+            <p className="text-base">{t("standardBody")}</p>
           </div>
         </section>
 
         <section className={section} aria-labelledby="a11y-done">
-          <h2 id="a11y-done" className={h2}>{t("doneTitle")}</h2>
+          <h2 id="a11y-done" className={h2}>
+            {t("doneTitle")}
+          </h2>
           <div>
-          <ul className="list-disc space-y-2 ps-5 text-base">{DONE.map((k) => <li key={k}>{t(k)}</li>)}</ul>
+            <ul className="list-disc space-y-2 ps-5 text-base">
+              {DONE.map((k) => (
+                <li key={k}>{t(k)}</li>
+              ))}
+            </ul>
           </div>
         </section>
 
         <section className={section} aria-labelledby="a11y-menu">
-          <h2 id="a11y-menu" className={h2}>{t("menuTitle")}</h2>
+          <h2 id="a11y-menu" className={h2}>
+            {t("menuTitle")}
+          </h2>
           <div>
-          <p className="text-base">{t("menuBody")}</p>
+            <p className="text-base">{t("menuBody")}</p>
           </div>
         </section>
 
         <section className={section} aria-labelledby="a11y-limits">
-          <h2 id="a11y-limits" className={h2}>{t("limitsTitle")}</h2>
+          <h2 id="a11y-limits" className={h2}>
+            {t("limitsTitle")}
+          </h2>
           <div>
-          <ul className="list-disc space-y-2 ps-5 text-base">{LIMITS.map((k) => <li key={k}>{t(k)}</li>)}</ul>
+            <ul className="list-disc space-y-2 ps-5 text-base">
+              {LIMITS.map((k) => (
+                <li key={k}>{t(k)}</li>
+              ))}
+            </ul>
           </div>
         </section>
 
         <section className={section} aria-labelledby="a11y-support">
-          <h2 id="a11y-support" className={h2}>{t("supportTitle")}</h2>
+          <h2 id="a11y-support" className={h2}>
+            {t("supportTitle")}
+          </h2>
           <div>
-          <p className="text-base">{t("supportBody")}</p>
+            <p className="text-base">{t("supportBody")}</p>
           </div>
         </section>
 
         <section className={section} aria-labelledby="a11y-contact">
-          <h2 id="a11y-contact" className={h2}>{t("contactTitle")}</h2>
+          <h2 id="a11y-contact" className={h2}>
+            {t("contactTitle")}
+          </h2>
           <div>
-          <p className="text-base">{t("contactBody")}</p>
-          <dl className="mt-3 divide-y divide-border border-t border-border text-base [&>div]:flex [&>div]:flex-wrap [&>div]:justify-between [&>div]:gap-x-4 [&>div]:py-2.5 [&>div:last-child]:pb-0">
-            <div><dt className="font-medium">{t("contactName")}</dt>
-            <dd>{CONTACT.name || todo}</dd></div>
-            <div><dt className="font-medium">{t("contactEmail")}</dt>
-            <dd>{CONTACT.email ? <a href={`mailto:${CONTACT.email}`} dir="ltr" className="text-primary underline underline-offset-4">{CONTACT.email}</a> : todo}</dd></div>
-            <div><dt className="font-medium">{t("contactPhone")}</dt>
-            <dd>{CONTACT.phone ? <a href={`tel:${CONTACT.phone}`} dir="ltr" className="text-primary underline underline-offset-4">{CONTACT.phone}</a> : todo}</dd></div>
-          </dl>
+            <p className="text-base">{t("contactBody")}</p>
+            <dl className="mt-3 divide-y divide-border border-t border-border text-base [&>div]:flex [&>div]:flex-wrap [&>div]:justify-between [&>div]:gap-x-4 [&>div]:py-2.5 [&>div:last-child]:pb-0">
+              <div>
+                <dt className="font-medium">{t("contactName")}</dt>
+                <dd>{CONTACT.name || todo}</dd>
+              </div>
+              <div>
+                <dt className="font-medium">{t("contactEmail")}</dt>
+                <dd>
+                  {CONTACT.email ? (
+                    <a
+                      href={`mailto:${CONTACT.email}`}
+                      dir="ltr"
+                      className="text-primary underline underline-offset-4"
+                    >
+                      {CONTACT.email}
+                    </a>
+                  ) : (
+                    todo
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-medium">{t("contactPhone")}</dt>
+                <dd>
+                  {CONTACT.phone ? (
+                    <a
+                      href={`tel:${CONTACT.phone}`}
+                      dir="ltr"
+                      className="text-primary underline underline-offset-4"
+                    >
+                      {CONTACT.phone}
+                    </a>
+                  ) : (
+                    todo
+                  )}
+                </dd>
+              </div>
+            </dl>
           </div>
         </section>
 

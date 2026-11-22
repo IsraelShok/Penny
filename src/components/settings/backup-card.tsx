@@ -32,7 +32,8 @@ export function BackupCard() {
 
   const backups = useQuery({
     queryKey: ["backups"],
-    queryFn: async () => ((await (await fetch("/api/backup")).json()) as { backups?: BackupFile[] }).backups ?? [],
+    queryFn: async () =>
+      ((await (await fetch("/api/backup")).json()) as { backups?: BackupFile[] }).backups ?? [],
   });
 
   const errorText = (code: string) => {
@@ -63,7 +64,9 @@ export function BackupCard() {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? "backupFailed");
       }
-      const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? "penny-backup.pennybak";
+      const name =
+        /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ??
+        "penny-backup.pennybak";
       const url = URL.createObjectURL(await res.blob());
       const a = document.createElement("a");
       a.href = url;
@@ -87,7 +90,10 @@ export function BackupCard() {
       form.set("file", file);
       form.set("passphrase", passphrase);
       const res = await fetch("/api/backup/restore", { method: "POST", body: form });
-      const body = (await res.json().catch(() => ({}))) as { error?: string; counts?: { transactions: number } };
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        counts?: { transactions: number };
+      };
       if (!res.ok) throw new Error(body.error ?? "restoreFailed");
       return body;
     },
@@ -117,11 +123,17 @@ export function BackupCard() {
             onChange={(e) => setPassphrase(e.target.value)}
             dir="ltr"
           />
-          <p className="text-caption text-muted-foreground">{t("backupPassphraseHint", { min: MIN_PASSPHRASE })}</p>
+          <p className="text-caption text-muted-foreground">
+            {t("backupPassphraseHint", { min: MIN_PASSPHRASE })}
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" disabled={!canDownload || download.isPending} onClick={() => download.mutate()}>
+          <Button
+            type="button"
+            disabled={!canDownload || download.isPending}
+            onClick={() => download.mutate()}
+          >
             <Download className="size-4" aria-hidden />
             {download.isPending ? t("backupWorking") : t("backupDownload")}
           </Button>
@@ -149,10 +161,20 @@ export function BackupCard() {
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
             <label className="flex items-center gap-2 text-caption">
-              <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="size-4 accent-[var(--primary)]" />
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(e) => setConfirmed(e.target.checked)}
+                className="size-4 accent-[var(--primary)]"
+              />
               {t("backupRestoreConfirm")}
             </label>
-            <Button type="button" variant="outline" disabled={!canRestore || restore.isPending} onClick={() => restore.mutate()}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canRestore || restore.isPending}
+              onClick={() => restore.mutate()}
+            >
               <HardDriveDownload className="size-4" aria-hidden />
               {restore.isPending ? t("backupWorking") : t("backupRestore")}
             </Button>

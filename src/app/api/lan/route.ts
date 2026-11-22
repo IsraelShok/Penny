@@ -24,14 +24,19 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => ({}))) as { enabled?: unknown; action?: unknown };
+  const body = ((await request.json().catch(() => ({}))) ?? {}) as {
+    enabled?: unknown;
+    action?: unknown;
+  };
   if (body.action === "restart") {
     if (!restartable()) return NextResponse.json({ error: "not_restartable" }, { status: 400 });
     setTimeout(() => process.exit(75), 300); // the launcher re-reads the flag and starts again
     return NextResponse.json({ ok: true });
   }
-  if (typeof body.enabled !== "boolean") return NextResponse.json({ error: "bad_request" }, { status: 400 });
-  if (body.enabled && !isLockEnabled()) return NextResponse.json({ error: "lock_required" }, { status: 409 });
+  if (typeof body.enabled !== "boolean")
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  if (body.enabled && !isLockEnabled())
+    return NextResponse.json({ error: "lock_required" }, { status: 409 });
   setLanEnabled(body.enabled);
   return NextResponse.json({ ok: true });
 }

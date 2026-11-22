@@ -13,9 +13,15 @@ export default async function Page() {
     <AppShell>
       <PageHeader title={t("title")} largeTitle={false} />
       <div className="mx-auto w-full max-w-[1920px] px-4 pb-8 pt-3 md:px-6 lg:px-8">
-        <div className="mb-4 md:mb-6"><InvestmentCards /></div>
-        <div className="mb-4 md:mb-6"><FutureHero /></div>
-        <div className="mb-4 md:mb-6"><VolatileHoldings /></div>
+        <div className="mb-4 md:mb-6">
+          <InvestmentCards />
+        </div>
+        <div className="mb-4 md:mb-6">
+          <FutureHero />
+        </div>
+        <div className="mb-4 md:mb-6">
+          <VolatileHoldings />
+        </div>
         <InvestmentsView />
       </div>
     </AppShell>

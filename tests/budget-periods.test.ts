@@ -21,7 +21,11 @@ beforeAll(async () => {
 
   ws = (db.prepare("SELECT id FROM workspaces LIMIT 1").get() as { id: number }).id;
   const categoryIds = (
-    db.prepare("SELECT id FROM categories WHERE workspace_id = ? AND kind = 'expense' ORDER BY id LIMIT 2").all(ws) as {
+    db
+      .prepare(
+        "SELECT id FROM categories WHERE workspace_id = ? AND kind = 'expense' ORDER BY id LIMIT 2",
+      )
+      .all(ws) as {
       id: number;
     }[]
   ).map((r) => r.id);
@@ -29,7 +33,7 @@ beforeAll(async () => {
   otherCategoryId = categoryIds[1];
   const cred = db
     .prepare(
-      "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, ?, ?, x'00', x'00', x'00')"
+      "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, ?, ?, x'00', x'00', x'00')",
     )
     .run(ws, "hapoalim", "hapoalim").lastInsertRowid as number;
   const run = createSyncRun(ws, "hapoalim", cred, "2026-10-01");
@@ -51,7 +55,7 @@ beforeAll(async () => {
     ],
     "hapoalim",
     cred,
-    run
+    run,
   );
   db.prepare("UPDATE transactions SET category_id = ? WHERE workspace_id = ?").run(categoryId, ws);
 });
@@ -71,7 +75,9 @@ describe("budget periods", () => {
 
   it("edits this period without rewriting history", () => {
     q.setBudgetForPeriod(ws, nov(), startDay, categoryId, 1200);
-    const line = q.getPeriodBudget(ws, nov(), startDay).lines.find((l) => l.categoryId === categoryId);
+    const line = q
+      .getPeriodBudget(ws, nov(), startDay)
+      .lines.find((l) => l.categoryId === categoryId);
     expect(line?.base).toBe(1200);
     expect(line?.carryIn).toBe(600);
     expect(line?.budget).toBe(1800);
@@ -93,7 +99,9 @@ describe("budget periods", () => {
 
   it("removing a budget clears its base and its carry-in", () => {
     expect(q.setBudgetForPeriod(ws, nov(), startDay, categoryId, 0)).toBe(true);
-    const line = q.getPeriodBudget(ws, nov(), startDay).lines.find((l) => l.categoryId === categoryId);
+    const line = q
+      .getPeriodBudget(ws, nov(), startDay)
+      .lines.find((l) => l.categoryId === categoryId);
     expect(line?.base).toBe(0);
     expect(line?.carryIn).toBe(0);
     expect(line?.budget).toBe(0);
@@ -110,8 +118,14 @@ describe("budget periods", () => {
     setBudgetMoves(ws, { "2026-11": [{ from: otherCategoryId, to: categoryId, amount: 200 }] });
 
     const { lines, view } = q.getPeriodBudget(ws, nov(), startDay);
-    expect(lines.find((l) => l.categoryId === categoryId)).toMatchObject({ moves: 200, budget: 700 });
-    expect(lines.find((l) => l.categoryId === otherCategoryId)).toMatchObject({ moves: -200, budget: 300 });
+    expect(lines.find((l) => l.categoryId === categoryId)).toMatchObject({
+      moves: 200,
+      budget: 700,
+    });
+    expect(lines.find((l) => l.categoryId === otherCategoryId)).toMatchObject({
+      moves: -200,
+      budget: 300,
+    });
     expect(view.planned).toBe(1000);
     // The move is stored on the line, not added again on each read or in the history.
     expect(q.getPeriodBudget(ws, nov(), startDay).view.planned).toBe(1000);

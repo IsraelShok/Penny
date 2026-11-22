@@ -33,7 +33,7 @@ export function listFlowMatches(workspaceId: number, limit = 200): FlowMatchView
        LEFT JOIN categories c ON c.id = t.category_id
        WHERE m.workspace_id = ? AND m.status = 'active'
        ORDER BY t.date DESC, m.id DESC
-       LIMIT ?`
+       LIMIT ?`,
     )
     .all(workspaceId, limit) as MatchRow[];
 }
@@ -47,7 +47,7 @@ export function cancelFlowMatch(workspaceId: number, matchId: number): boolean {
   const match = db
     .prepare(
       `SELECT id, before_json AS beforeJson FROM flow_matches
-       WHERE id = ? AND workspace_id = ? AND status = 'active'`
+       WHERE id = ? AND workspace_id = ? AND status = 'active'`,
     )
     .get(matchId, workspaceId) as { id: number; beforeJson: string } | undefined;
   if (!match) return false;
@@ -58,16 +58,24 @@ export function cancelFlowMatch(workspaceId: number, matchId: number): boolean {
     `UPDATE transactions
      SET kind = ?, flow_type = ?, linked_txn_id = ?, transfer_pair_id = ?, category_id = ?,
          pairing_locked = 1, updated_at = datetime('now')
-     WHERE id = ? AND workspace_id = ?`
+     WHERE id = ? AND workspace_id = ?`,
   );
 
   return db.transaction(() => {
     for (const s of snapshots) {
-      restore.run(s.kind, s.flow_type, s.linked_txn_id, s.transfer_pair_id, s.category_id, s.id, workspaceId);
+      restore.run(
+        s.kind,
+        s.flow_type,
+        s.linked_txn_id,
+        s.transfer_pair_id,
+        s.category_id,
+        s.id,
+        workspaceId,
+      );
     }
     db.prepare(
       `UPDATE flow_matches SET status = 'cancelled', cancelled_at = datetime('now')
-       WHERE id = ? AND workspace_id = ?`
+       WHERE id = ? AND workspace_id = ?`,
     ).run(matchId, workspaceId);
     return true;
   })();

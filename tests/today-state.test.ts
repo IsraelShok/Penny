@@ -2,13 +2,20 @@ import { describe, expect, it } from "vitest";
 import { todayState } from "@/lib/today-state";
 
 const ready = {
-  pending: false, failed: false, hasCash: true, balance: 100,
-  connected: true, needsReview: false, hasSuggestions: false,
+  pending: false,
+  failed: false,
+  hasCash: true,
+  balance: 100,
+  connected: true,
+  needsReview: false,
+  hasSuggestions: false,
 };
 
 describe("today: trustworthy next action", () => {
   it("does not show a bank setup prompt while data loads", () => {
-    expect(todayState({ ...ready, pending: true, hasCash: false, balance: null, connected: false })).toBe("loading");
+    expect(
+      todayState({ ...ready, pending: true, hasCash: false, balance: null, connected: false }),
+    ).toBe("loading");
   });
   it("never reassures when a required request failed, even with cached data", () => {
     expect(todayState({ ...ready, failed: true })).toBe("error");

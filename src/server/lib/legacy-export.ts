@@ -40,15 +40,25 @@ export function validateDir(dir: string): string {
 }
 
 /** Writes html into dir (created if missing) and deletes all but the newest `keep` files of our own pattern. */
-export function writeLegacyFile(dir: string, html: string, now = new Date(), keep = LEGACY_KEEP): string {
+export function writeLegacyFile(
+  dir: string,
+  html: string,
+  now = new Date(),
+  keep = LEGACY_KEEP,
+): string {
   const root = validateDir(dir);
   fs.mkdirSync(root, { recursive: true });
   const file = path.join(root, legacyFileName(now));
   if (path.dirname(file) !== root) throw new Error("outside"); // never write outside the chosen folder
   fs.writeFileSync(file, html, "utf8");
   // ISO dates sort lexically; only exact-pattern regular files are ever deleted.
-  const ours = fs.readdirSync(root, { withFileTypes: true }).filter((e) => e.isFile() && NAME_RE.test(e.name)).map((e) => e.name).sort();
-  for (const name of ours.slice(0, Math.max(0, ours.length - keep))) fs.unlinkSync(path.join(root, name));
+  const ours = fs
+    .readdirSync(root, { withFileTypes: true })
+    .filter((e) => e.isFile() && NAME_RE.test(e.name))
+    .map((e) => e.name)
+    .sort((a, b) => a.localeCompare(b));
+  for (const name of ours.slice(0, Math.max(0, ours.length - keep)))
+    fs.unlinkSync(path.join(root, name));
   return file;
 }
 
@@ -79,10 +89,15 @@ function save(c: LegacyExportConfig) {
   return getLegacyExportConfig();
 }
 
-export function updateLegacyExportConfig(patch: { enabled?: boolean; frequency?: string; dir?: string }) {
+export function updateLegacyExportConfig(patch: {
+  enabled?: boolean;
+  frequency?: string;
+  dir?: string;
+}) {
   const c = getLegacyExportConfig();
   if (patch.enabled !== undefined) c.enabled = patch.enabled === true;
-  if (patch.frequency !== undefined) c.frequency = patch.frequency === "weekly" ? "weekly" : "monthly";
+  if (patch.frequency !== undefined)
+    c.frequency = patch.frequency === "weekly" ? "weekly" : "monthly";
   if (patch.dir !== undefined) c.dir = validateDir(patch.dir);
   return save(c);
 }
@@ -100,17 +115,30 @@ export function runLegacyExport(): LegacyExportConfig {
   if (!html) return save({ ...c, status: "error", error: "noSnapshot" });
   try {
     const file = writeLegacyFile(c.dir, html);
-    return save({ ...c, lastAt: new Date().toISOString(), lastFile: file, status: "ok", error: null });
+    return save({
+      ...c,
+      lastAt: new Date().toISOString(),
+      lastFile: file,
+      status: "ok",
+      error: null,
+    });
   } catch (e) {
-    return save({ ...c, status: "error", error: e instanceof Error ? e.message.slice(0, 200) : "failed" });
+    return save({
+      ...c,
+      status: "error",
+      error: e instanceof Error ? e.message.slice(0, 200) : "failed",
+    });
   }
 }
 
 export function openLegacyFolder() {
   const dir = validateDir(getLegacyExportConfig().dir);
   fs.mkdirSync(dir, { recursive: true });
-  const cmd = process.platform === "win32" ? "explorer" : process.platform === "darwin" ? "open" : "xdg-open";
-  spawn(cmd, [dir], { detached: true, stdio: "ignore" }).on("error", () => {}).unref();
+  const cmd =
+    process.platform === "win32" ? "explorer" : process.platform === "darwin" ? "open" : "xdg-open";
+  spawn(cmd, [dir], { detached: true, stdio: "ignore" })
+    .on("error", () => {})
+    .unref();
 }
 
 declare global {

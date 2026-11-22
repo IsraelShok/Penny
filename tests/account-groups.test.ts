@@ -15,7 +15,12 @@ describe("account groups", () => {
   });
 
   it("totals groups, makes debts negative, drops empty groups", () => {
-    const g = groupAccounts([a(1, "cash", 100), a(2, "deposit", 300), a(3, "loan", 50, { isLiability: true }), a(4, "stock", null)]);
+    const g = groupAccounts([
+      a(1, "cash", 100),
+      a(2, "deposit", 300),
+      a(3, "loan", 50, { isLiability: true }),
+      a(4, "stock", null),
+    ]);
     expect(g.map((x) => x.key)).toEqual(["bank", "investments", "liabilities"]);
     expect(g[0]).toMatchObject({ total: 400, items: [{ id: 2 }, { id: 1 }] });
     expect(g[2].total).toBe(-50);
@@ -23,7 +28,14 @@ describe("account groups", () => {
   });
 
   it("moves an account to a chosen group, but never turns an asset into a debt or a debt into an asset", () => {
-    const g = groupAccounts([a(1, "cash", 100), a(2, "deposit", 50), a(3, "loan", 20, { isLiability: true })], { 1: "investments", 2: "liabilities", 3: "bank" });
-    expect(g.map((x) => [x.key, x.items.map((i) => i.id)])).toEqual([["bank", [2]], ["investments", [1]], ["liabilities", [3]]]);
+    const g = groupAccounts(
+      [a(1, "cash", 100), a(2, "deposit", 50), a(3, "loan", 20, { isLiability: true })],
+      { 1: "investments", 2: "liabilities", 3: "bank" },
+    );
+    expect(g.map((x) => [x.key, x.items.map((i) => i.id)])).toEqual([
+      ["bank", [2]],
+      ["investments", [1]],
+      ["liabilities", [3]],
+    ]);
   });
 });

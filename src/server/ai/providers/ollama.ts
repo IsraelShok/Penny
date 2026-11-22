@@ -21,13 +21,13 @@ function parseConfidence(raw: unknown): number | undefined {
 export class OllamaProvider implements AIProvider {
   constructor(
     private baseUrl: string,
-    private model: string
+    private model: string,
   ) {}
 
   async categorize(
     transactions: TransactionForCategorization[],
     categories: CategoryForCategorization[],
-    options?: { allowProposals?: boolean; pastCorrections?: PastCorrection[] }
+    options?: { allowProposals?: boolean; pastCorrections?: PastCorrection[] },
   ): Promise<CategoryMapping[]> {
     const allowProposals = options?.allowProposals ?? false;
     const pastCorrections = options?.pastCorrections ?? [];
@@ -35,7 +35,7 @@ export class OllamaProvider implements AIProvider {
       transactions,
       categories,
       allowProposals,
-      pastCorrections
+      pastCorrections,
     );
 
     const baseUrl = normalizeOllamaUrl(this.baseUrl);
@@ -63,14 +63,18 @@ export class OllamaProvider implements AIProvider {
     };
     const text = data.message?.content ?? "";
 
-    return parseResponse(text, categories.map((c) => c.name), allowProposals);
+    return parseResponse(
+      text,
+      categories.map((c) => c.name),
+      allowProposals,
+    );
   }
 }
 
 export function parseResponse(
   text: string,
   validCategories: string[],
-  allowProposals: boolean
+  allowProposals: boolean,
 ): CategoryMapping[] {
   const jsonMatch = text.match(/\[[\s\S]*\]/);
   if (!jsonMatch) return [];

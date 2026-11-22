@@ -27,7 +27,9 @@ function StepFooter({ onBack, children }: { onBack?: () => void; children: React
         <Button variant="outline" size="lg" onClick={onBack}>
           <Back /> {t("back")}
         </Button>
-      ) : <span />}
+      ) : (
+        <span />
+      )}
       {children}
     </footer>
   );
@@ -65,19 +67,33 @@ export function IntroStep({ onComplete }: { onComplete: () => void }) {
 }
 
 /** Your profile: a name and your picture (a photo, or your initial on a colour). */
-export function ProfileStep({ onComplete, onBack }: { onComplete: () => void; onBack: () => void }) {
+export function ProfileStep({
+  onComplete,
+  onBack,
+}: {
+  onComplete: () => void;
+  onBack: () => void;
+}) {
   const t = useTranslations("onboarding");
   const tp = useTranslations("profiles");
   const qc = useQueryClient();
   const { active, isPending } = useProfiles();
   const [draft, setDraft] = useState<{ name: string; avatar: AvatarDraft } | null>(null);
   // Start from the stored profile once it loads; the seeded "Default" starts with an empty name.
-  if (!draft && !isPending) setDraft({ name: active && active.name !== "Default" ? active.name : "", avatar: { color: active?.avatarColor ?? null, photo: active?.avatarPhoto ?? null } });
+  if (!draft && !isPending)
+    setDraft({
+      name: active && active.name !== "Default" ? active.name : "",
+      avatar: { color: active?.avatarColor ?? null, photo: active?.avatarPhoto ?? null },
+    });
   const save = useMutation({
-    mutationFn: (d: { name: string; avatar: AvatarDraft }) => saveProfile(active?.id ?? null, d.name.trim(), { avatarColor: d.avatar.color, avatarPhoto: d.avatar.photo }),
+    mutationFn: (d: { name: string; avatar: AvatarDraft }) =>
+      saveProfile(active?.id ?? null, d.name.trim(), {
+        avatarColor: d.avatar.color,
+        avatarPhoto: d.avatar.photo,
+      }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["profiles"] });
-      qc.invalidateQueries({ queryKey: ["settings"] });
+      void qc.invalidateQueries({ queryKey: ["profiles"] });
+      void qc.invalidateQueries({ queryKey: ["settings"] });
       onComplete();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : tp("error")),
@@ -96,10 +112,22 @@ export function ProfileStep({ onComplete, onBack }: { onComplete: () => void; on
         <h1 className={title}>{t("profileTitle")}</h1>
         <p className="text-sm text-muted-foreground">{t("profileBody")}</p>
       </header>
-      <AvatarEditor id={active?.id ?? 1} name={draft.name} value={draft.avatar} onChange={(avatar) => setDraft({ ...draft, avatar })} />
+      <AvatarEditor
+        id={active?.id ?? 1}
+        name={draft.name}
+        value={draft.avatar}
+        onChange={(avatar) => setDraft({ ...draft, avatar })}
+      />
       <label className="flex flex-col gap-1.5 text-sm font-medium">
         {t("profileName")}
-        <Input autoFocus required maxLength={60} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="h-11" />
+        <Input
+          autoFocus
+          required
+          maxLength={60}
+          value={draft.name}
+          onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+          className="h-11"
+        />
       </label>
       <StepFooter onBack={onBack}>
         <Button type="submit" size="lg" disabled={!draft.name.trim() || save.isPending}>
@@ -111,23 +139,41 @@ export function ProfileStep({ onComplete, onBack }: { onComplete: () => void; on
 }
 
 /** Connect data: the automatic bank connection (the existing bank step) or a file import (the existing import card). */
-export function ConnectStep({ onComplete, onBack }: { onComplete: () => void; onBack?: () => void }) {
+export function ConnectStep({
+  onComplete,
+  onBack,
+}: {
+  onComplete: () => void;
+  onBack?: () => void;
+}) {
   const t = useTranslations("onboarding");
   const tSetup = useTranslations("setup");
   const [way, setWay] = useState<"bank" | "file" | null>(null);
   const change = (
-    <button type="button" onClick={() => setWay(null)} className="inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+    <button
+      type="button"
+      onClick={() => setWay(null)}
+      className="inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+    >
       <Back /> {t("connectOtherWay")}
     </button>
   );
-  if (way === "bank") return <div className="space-y-4"><div className="mx-auto max-w-[520px]">{change}</div><BankStep onComplete={onComplete} /></div>;
+  if (way === "bank")
+    return (
+      <div className="space-y-4">
+        <div className="mx-auto max-w-[520px]">{change}</div>
+        <BankStep onComplete={onComplete} />
+      </div>
+    );
   if (way === "file") {
     return (
       <div className="mx-auto w-full max-w-2xl space-y-4">
         {change}
         <StatementImportCard />
         <StepFooter>
-          <Button size="lg" onClick={onComplete}>{t("next")} <Forward /></Button>
+          <Button size="lg" onClick={onComplete}>
+            {t("next")} <Forward />
+          </Button>
         </StepFooter>
       </div>
     );
@@ -160,7 +206,9 @@ export function ConnectStep({ onComplete, onBack }: { onComplete: () => void; on
         ))}
       </div>
       <StepFooter onBack={onBack}>
-        <Button variant="ghost" size="lg" onClick={onComplete}>{t("later")}</Button>
+        <Button variant="ghost" size="lg" onClick={onComplete}>
+          {t("later")}
+        </Button>
       </StepFooter>
     </div>
   );
@@ -192,7 +240,9 @@ export function TourStep({ onComplete, onBack }: { onComplete: () => void; onBac
       </ol>
       <p className="rounded-2xl bg-muted/60 p-4 text-sm">{t("tourSearch")}</p>
       <StepFooter onBack={onBack}>
-        <Button size="lg" onClick={onComplete}>{t("next")} <Forward /></Button>
+        <Button size="lg" onClick={onComplete}>
+          {t("next")} <Forward />
+        </Button>
       </StepFooter>
     </div>
   );

@@ -4,13 +4,32 @@ import { Forward, Back } from "@/components/ui/dir-chevron";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { ArrowLeftRight, Baby, Banknote, Briefcase, CircleDot, Coffee, Gift, GraduationCap, HeartPulse, Home, PawPrint, Plane, Receipt, RefreshCw, Shield, ShoppingBag, ShoppingBasket, Sparkles, Ticket, TramFront, UtensilsCrossed, type LucideIcon } from "lucide-react";
-import { IconButton } from "@/components/ui/icon-button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  ArrowLeftRight,
+  Baby,
+  Banknote,
+  Briefcase,
+  CircleDot,
+  Coffee,
+  Gift,
+  GraduationCap,
+  HeartPulse,
+  Home,
+  PawPrint,
+  Plane,
+  Receipt,
+  RefreshCw,
+  Shield,
+  ShoppingBag,
+  ShoppingBasket,
+  Sparkles,
+  Ticket,
+  TramFront,
+  UtensilsCrossed,
+  type LucideIcon,
+} from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getCategories, setBudgetModesBulk, updateBudget } from "@/lib/api";
 import type { Category } from "@/lib/types";
 import { translateCategoryName } from "@/lib/i18n-data";
@@ -84,9 +103,7 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
     try {
       if (commit && budgeted.length > 0) {
         await setBudgetModesBulk(budgeted.map((b) => b.id));
-        await Promise.all(
-          budgeted.map((b) => updateBudget(b.id, b.amount))
-        );
+        await Promise.all(budgeted.map((b) => updateBudget(b.id, b.amount)));
       }
       onComplete();
     } finally {
@@ -103,18 +120,13 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
         <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight">
           {t("budgetsTitle")}
         </h1>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {t("budgetsDescription")}
-        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{t("budgetsDescription")}</p>
       </header>
 
       {isLoading ? (
         <div className="grid grid-cols-3 gap-1.5">
           {Array.from({ length: 18 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-9 animate-pulse rounded-lg bg-card/60"
-            />
+            <div key={i} className="h-9 animate-pulse rounded-lg bg-card/60" />
           ))}
         </div>
       ) : (
@@ -145,10 +157,22 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
       </div>
 
       <footer className="flex items-center justify-between pt-2">
-        <IconButton showLabel label={t("aiBackButton")} variant="outline" onClick={onBack} disabled={saving}>
+        <IconButton
+          showLabel
+          label={t("aiBackButton")}
+          variant="outline"
+          onClick={onBack}
+          disabled={saving}
+        >
           <Back />
         </IconButton>
-        <IconButton showLabel label={saving ? t("aiSavingButton") : t("aiContinueButton")} variant="default" onClick={() => finish(true)} disabled={saving || isLoading}>
+        <IconButton
+          showLabel
+          label={saving ? t("aiSavingButton") : t("aiContinueButton")}
+          variant="default"
+          onClick={() => finish(true)}
+          disabled={saving || isLoading}
+        >
           <Forward />
         </IconButton>
       </footer>
@@ -187,9 +211,7 @@ function CategoryCell({
       className="group flex min-w-0 items-center gap-1.5 rounded-lg border bg-card px-1.5 py-1.5 transition-colors"
       style={{
         borderColor: filled ? accent : "var(--border)",
-        background: filled
-          ? `color-mix(in oklch, ${category.color} 10%, var(--card))`
-          : undefined,
+        background: filled ? `color-mix(in oklch, ${category.color} 10%, var(--card))` : undefined,
       }}
     >
       <div
@@ -244,8 +266,8 @@ function shade(hex: string): string {
 function parseHex(hex: string): { r: number; g: number; b: number } {
   const clean = hex.replace("#", "");
   return {
-    r: parseInt(clean.slice(0, 2), 16),
-    g: parseInt(clean.slice(2, 4), 16),
-    b: parseInt(clean.slice(4, 6), 16),
+    r: Number.parseInt(clean.slice(0, 2), 16),
+    g: Number.parseInt(clean.slice(2, 4), 16),
+    b: Number.parseInt(clean.slice(4, 6), 16),
   };
 }

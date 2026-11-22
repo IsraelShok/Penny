@@ -6,7 +6,11 @@ import { LanguageCard } from "@/components/settings/language-card";
 export default async function LanguageSettingsPage() {
   const t = await getTranslations("settings.appearance");
   return (
-    <SectionShell title={t("languageCardTitle")} description={t("languageCardDescription")} icon={<Languages aria-hidden />}>
+    <SectionShell
+      title={t("languageCardTitle")}
+      description={t("languageCardDescription")}
+      icon={<Languages aria-hidden />}
+    >
       <LanguageCard />
     </SectionShell>
   );

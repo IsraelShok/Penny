@@ -19,7 +19,10 @@ describe("parseHousehold", () => {
 
 describe("isGentle", () => {
   const today = new Date("2026-11-06");
-  const ev = (type: "loss" | "wedding", date: string) => ({ ...EMPTY_HOUSEHOLD, events: [{ id: "a", type, date }] });
+  const ev = (type: "loss" | "wedding", date: string) => ({
+    ...EMPTY_HOUSEHOLD,
+    events: [{ id: "a", type, date }],
+  });
   it("follows gentleMode or a recent hard event", () => {
     expect(isGentle({ ...EMPTY_HOUSEHOLD, gentleMode: true }, today)).toBe(true);
     expect(isGentle(ev("loss", "2026-06-01"), today)).toBe(true);

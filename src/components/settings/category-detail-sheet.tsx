@@ -54,11 +54,7 @@ export interface CategoryDetailSheetProps {
   onClose: () => void;
 }
 
-export function CategoryDetailSheet({
-  categoryId,
-  data,
-  onClose,
-}: CategoryDetailSheetProps) {
+export function CategoryDetailSheet({ categoryId, data, onClose }: CategoryDetailSheetProps) {
   const open = categoryId !== null;
   const { data: allCategories } = useQuery({
     queryKey: ["categories"],
@@ -67,7 +63,7 @@ export function CategoryDetailSheet({
   });
   const category = useMemo(
     () => allCategories?.find((c) => c.id === categoryId) ?? null,
-    [allCategories, categoryId]
+    [allCategories, categoryId],
   );
 
   return (
@@ -77,10 +73,7 @@ export function CategoryDetailSheet({
         if (!o) onClose();
       }}
     >
-      <SheetContent
-        side="right"
-        className="w-full p-0 sm:max-w-md! md:max-w-lg!"
-      >
+      <SheetContent side="right" className="w-full p-0 sm:max-w-md! md:max-w-lg!">
         {category ? (
           <Body
             category={category}
@@ -107,9 +100,7 @@ function Body({
 }) {
   const td = useTranslations("settings.categoryDetail");
   const tCatTitle = useTranslations("categoriesSeeded");
-  const sameKind = allCategories.filter(
-    (c) => c.kind === category.kind && c.id !== category.id
-  );
+  const sameKind = allCategories.filter((c) => c.kind === category.kind && c.id !== category.id);
   const eligibleParents = sameKind
     .filter((c) => c.parentId == null)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -118,7 +109,7 @@ function Body({
       allCategories
         .filter((c) => c.parentId === category.id)
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [allCategories, category.id]
+    [allCategories, category.id],
   );
   const isParentGroup = childCategories.length > 0 || data?.isParent === true;
 
@@ -131,23 +122,14 @@ function Body({
         }}
       >
         <div className="flex items-center gap-3">
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-background/70"
-          >
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ background: category.color }}
-            />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-background/70">
+            <span className="h-3 w-3 rounded-full" style={{ background: category.color }} />
           </div>
           <div className="min-w-0 flex-1">
             <SheetTitle>{translateCategoryName(category.name, tCatTitle)}</SheetTitle>
             <SheetDescription className="mt-0.5">
-              {category.kind === "expense"
-                ? td("expenseCategory")
-                : td("incomeCategory")}
-              {data?.parentName
-                ? td("inParent", { name: data.parentName })
-                : ""}
+              {category.kind === "expense" ? td("expenseCategory") : td("incomeCategory")}
+              {data?.parentName ? td("inParent", { name: data.parentName }) : ""}
             </SheetDescription>
           </div>
         </div>
@@ -156,16 +138,9 @@ function Body({
       <div className="flex-1 space-y-6 p-6">
         <LookSection key={category.id} category={category} />
 
-        {!category.parentId && data?.isParent !== true ? (
-          <BudgetSection category={category} data={data} />
-        ) : (
-          <BudgetSection category={category} data={data} />
-        )}
+        <BudgetSection category={category} data={data} />
 
-        <GroupSection
-          category={category}
-          eligibleParents={eligibleParents}
-        />
+        <GroupSection category={category} eligibleParents={eligibleParents} />
 
         {category.kind === "expense" && !isParentGroup && (
           <SpendingTypeSection category={category} />
@@ -221,27 +196,20 @@ function DeleteCategorySection({
   const mutation = useMutation({
     mutationFn: () => deleteCategory(category.id),
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      toast.success(
-        t("deletedToast", { count: result.unassignedTransactionCount })
-      );
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["summary"] });
+      void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success(t("deletedToast", { count: result.unassignedTransactionCount }));
       setOpen(false);
       onDeleted();
     },
     onError: (err: Error) => {
       const names =
         parseDeleteCategoryError(err.message) ??
-        (childCategories.length > 0
-          ? childCategories.map((c) => c.name)
-          : null);
+        (childCategories.length > 0 ? childCategories.map((c) => c.name) : null);
       if (names && names.length > 0) {
         toast.error(t("deleteHasChildrenNamed", { names: names.join(", ") }));
-      } else if (
-        err.message.includes("has-children") ||
-        err.message.includes("409")
-      ) {
+      } else if (err.message.includes("has-children") || err.message.includes("409")) {
         toast.error(t("deleteHasChildren"));
       } else {
         toast.error(t("deleteFailed"));
@@ -266,7 +234,8 @@ function DeleteCategorySection({
                 ))}
               </ul>
             ) : null}
-            <IconButton showLabel
+            <IconButton
+              showLabel
               label={t("deleteButton")}
               variant="destructive"
               className="mt-3"
@@ -282,22 +251,17 @@ function DeleteCategorySection({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {t("confirmDeleteTitle", { name: category.name })}
-            </DialogTitle>
+            <DialogTitle>{t("confirmDeleteTitle", { name: category.name })}</DialogTitle>
             <DialogDescription>
               {t("confirmDeleteDescription", { count: transactionCount })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <IconButton
-              label={tCommon("cancel")}
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
+            <IconButton label={tCommon("cancel")} variant="outline" onClick={() => setOpen(false)}>
               <X className="size-4" aria-hidden />
             </IconButton>
-            <IconButton showLabel
+            <IconButton
+              showLabel
               label={mutation.isPending ? tCommon("deleting") : t("deleteButton")}
               variant="destructive"
               onClick={() => mutation.mutate()}
@@ -312,36 +276,27 @@ function DeleteCategorySection({
   );
 }
 
-function BudgetSection({
-  category,
-  data,
-}: {
-  category: Category;
-  data: CategoryWithData | null;
-}) {
+function BudgetSection({ category, data }: { category: Category; data: CategoryWithData | null }) {
   const td = useTranslations("settings.categoryDetail");
   const queryClient = useQueryClient();
   const isBudgeted = category.budgetMode === "budgeted";
 
   const modeMutation = useMutation({
-    mutationFn: (next: "budgeted" | "tracking") =>
-      updateCategoryBudgetMode(category.id, next),
+    mutationFn: (next: "budgeted" | "tracking") => updateCategoryBudgetMode(category.id, next),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["summary"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
 
   const budgetMutation = useMutation({
     mutationFn: (amount: number | null) => updateBudget(category.id, amount),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      void queryClient.invalidateQueries({ queryKey: ["summary"] });
     },
   });
 
-  const [amount, setAmount] = useState(
-    data ? String(Math.round(data.budget)) : ""
-  );
+  const [amount, setAmount] = useState(data ? String(Math.round(data.budget)) : "");
 
   const [prevData, setPrevData] = useState(data);
   if (data !== prevData) {
@@ -365,24 +320,17 @@ function BudgetSection({
       <div className="mt-3 rounded-xl bg-muted/60 p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1 space-y-1">
-            <Label
-              htmlFor={`mode-${category.id}`}
-              className="text-sm font-medium"
-            >
+            <Label htmlFor={`mode-${category.id}`} className="text-sm font-medium">
               {isBudgeted ? td("budgeted") : td("trackingOnly")}
             </Label>
             <p className="text-xs text-muted-foreground">
-              {isBudgeted
-                ? td("budgetedHint")
-                : td("trackingHint")}
+              {isBudgeted ? td("budgetedHint") : td("trackingHint")}
             </p>
           </div>
           <Switch
             id={`mode-${category.id}`}
             checked={isBudgeted}
-            onCheckedChange={(next) =>
-              modeMutation.mutate(next ? "budgeted" : "tracking")
-            }
+            onCheckedChange={(next) => modeMutation.mutate(next ? "budgeted" : "tracking")}
           />
         </div>
 
@@ -409,9 +357,7 @@ function BudgetSection({
                   <>
                     {" "}
                     {td("typical", {
-                      amount: Math.round(data.vsTypical.typical).toLocaleString(
-                        "en-IL"
-                      ),
+                      amount: Math.round(data.vsTypical.typical).toLocaleString("en-IL"),
                     })}
                   </>
                 ) : null}
@@ -435,8 +381,8 @@ function SpendingTypeSection({ category }: { category: Category }) {
     mutationFn: (fields: { needType?: NeedType; costType?: CostType }) =>
       updateCategorySpendingType(category.id, fields),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      queryClient.invalidateQueries({ queryKey: ["overview"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["overview"] });
       toast.success(td("spendingTypeSaved"));
     },
     onError: () => toast.error(td("spendingTypeSaveFailed")),
@@ -459,7 +405,9 @@ function SpendingTypeSection({ category }: { category: Category }) {
             </SelectTrigger>
             <SelectContent>
               {NEED_TYPES.map((v) => (
-                <SelectItem key={v} value={v}>{td(`needType_${v}`)}</SelectItem>
+                <SelectItem key={v} value={v}>
+                  {td(`needType_${v}`)}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -475,7 +423,9 @@ function SpendingTypeSection({ category }: { category: Category }) {
             </SelectTrigger>
             <SelectContent>
               {COST_TYPES.map((v) => (
-                <SelectItem key={v} value={v}>{td(`costType_${v}`)}</SelectItem>
+                <SelectItem key={v} value={v}>
+                  {td(`costType_${v}`)}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -493,9 +443,12 @@ function LookSection({ category }: { category: Category }) {
   const shown = translateCategoryName(category.name, tCat);
   const [name, setName] = useState(shown);
   const mutation = useMutation({
-    mutationFn: (fields: { name?: string; color?: string }) => updateCategoryLook(category.id, fields),
+    mutationFn: (fields: { name?: string; color?: string }) =>
+      updateCategoryLook(category.id, fields),
     onSuccess: () => {
-      ["categories", "summary", "budgets", "overview"].forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
+      ["categories", "summary", "budgets", "overview"].forEach((k) =>
+        queryClient.invalidateQueries({ queryKey: [k] }),
+      );
       toast.success(td("lookSaved"));
     },
     onError: (err: Error) => {
@@ -505,22 +458,42 @@ function LookSection({ category }: { category: Category }) {
   });
   const saveName = () => {
     const next = name.trim();
-    if (!next) { setName(shown); return; }
+    if (!next) {
+      setName(shown);
+      return;
+    }
     if (next !== shown) mutation.mutate({ name: next });
   };
   return (
     <section className="space-y-3">
       <div className="space-y-1.5">
         <Label htmlFor={`cat-name-${category.id}`}>{td("nameLabel")}</Label>
-        <Input id={`cat-name-${category.id}`} value={name} maxLength={60} onChange={(e) => setName(e.target.value)} onBlur={saveName}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }} />
+        <Input
+          id={`cat-name-${category.id}`}
+          value={name}
+          maxLength={60}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={saveName}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              (e.target as HTMLInputElement).blur();
+            }
+          }}
+        />
       </div>
       <div role="radiogroup" aria-label={td("colorLabel")} className="flex flex-wrap gap-2">
         {CATEGORY_COLORS.map((c) => (
-          <button key={c} type="button" role="radio" aria-checked={category.color.toLowerCase() === c.toLowerCase()} aria-label={c}
+          <button
+            key={c}
+            type="button"
+            role="radio"
+            aria-checked={category.color.toLowerCase() === c.toLowerCase()}
+            aria-label={c}
             onClick={() => mutation.mutate({ color: c })}
             className="grid size-8 place-items-center rounded-full ring-offset-2 ring-offset-background focus-visible:outline-2 focus-visible:outline-ring aria-checked:ring-2 aria-checked:ring-foreground"
-            style={{ background: c }} />
+            style={{ background: c }}
+          />
         ))}
       </div>
     </section>
@@ -537,11 +510,10 @@ function GroupSection({
   const td = useTranslations("settings.categoryDetail");
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (parentId: number | null) =>
-      setCategoryParent(category.id, parentId),
+    mutationFn: (parentId: number | null) => setCategoryParent(category.id, parentId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["summary"] });
       toast.success(td("groupUpdated"));
     },
     onError: (err: Error) => {
@@ -557,8 +529,7 @@ function GroupSection({
       }
     },
   });
-  const current =
-    category.parentId == null ? NONE_VALUE : String(category.parentId);
+  const current = category.parentId == null ? NONE_VALUE : String(category.parentId);
 
   return (
     <section>
@@ -580,8 +551,7 @@ function GroupSection({
               {(value: string) =>
                 value === NONE_VALUE
                   ? td("noParent")
-                  : eligibleParents.find((p) => String(p.id) === value)?.name ??
-                    td("noParent")
+                  : (eligibleParents.find((p) => String(p.id) === value)?.name ?? td("noParent"))
               }
             </SelectValue>
           </SelectTrigger>
@@ -594,9 +564,7 @@ function GroupSection({
             ))}
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">
-          {td("parentGroupHint")}
-        </p>
+        <p className="text-xs text-muted-foreground">{td("parentGroupHint")}</p>
       </div>
     </section>
   );
@@ -608,9 +576,11 @@ function DescriptionSection({ category }: { category: Category }) {
   const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale();
   // Seeded descriptions are English (the categorizer reads them); in Hebrew show the translation until the user edits it.
-  const seededHe = (useMessages() as { categoryDescriptions?: Record<string, string> }).categoryDescriptions?.[category.name];
+  const seededHe = (useMessages() as { categoryDescriptions?: Record<string, string> })
+    .categoryDescriptions?.[category.name];
   const stored = category.description ?? "";
-  const initial = locale === "he" && seededHe && /^[A-Za-z]/.test(stored.trim()) ? seededHe : stored;
+  const initial =
+    locale === "he" && seededHe && /^[A-Za-z]/.test(stored.trim()) ? seededHe : stored;
   const [value, setValue] = useState(initial);
   const [prevInitial, setPrevInitial] = useState(initial);
   if (initial !== prevInitial) {
@@ -619,10 +589,9 @@ function DescriptionSection({ category }: { category: Category }) {
   }
 
   const mutation = useMutation({
-    mutationFn: (next: string | null) =>
-      updateCategoryDescription(category.id, next),
+    mutationFn: (next: string | null) => updateCategoryDescription(category.id, next),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
       toast.success(td("descriptionSaved"));
     },
     onError: (err: Error) => {
@@ -655,7 +624,9 @@ function DescriptionSection({ category }: { category: Category }) {
           onBlur={handleBlur}
           rows={4}
           maxLength={DESCRIPTION_MAX}
-          placeholder={td("descriptionPlaceholder", { name: translateCategoryName(category.name, tCat) })}
+          placeholder={td("descriptionPlaceholder", {
+            name: translateCategoryName(category.name, tCat),
+          })}
           className="block w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           disabled={mutation.isPending}
         />

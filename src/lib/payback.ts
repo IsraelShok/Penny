@@ -11,13 +11,7 @@ export interface PaybackSide {
 }
 
 export type PaybackError =
-  | "same-row"
-  | "transfer"
-  | "excluded"
-  | "not-pair"
-  | "already-linked"
-  | "too-large"
-  | "not-found";
+  "same-row" | "transfer" | "excluded" | "not-pair" | "already-linked" | "too-large" | "not-found";
 
 export interface PaybackPair {
   creditId: number;
@@ -45,7 +39,12 @@ export function paybackPair(
 
   return {
     ok: true,
-    pair: { creditId: credit.id, expenseId: expense.id, creditAbs: credit.amount, expenseAbs: -expense.amount },
+    pair: {
+      creditId: credit.id,
+      expenseId: expense.id,
+      creditAbs: credit.amount,
+      expenseAbs: -expense.amount,
+    },
   };
 }
 

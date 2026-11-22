@@ -53,7 +53,7 @@ export function HomePage({ focus = false }: { focus?: boolean } = {}) {
       bankHealth: t("bankConnections"),
       categories: t("categoriesTitle"),
     }),
-    [t]
+    [t],
   );
 
   useEffect(() => {
@@ -82,9 +82,13 @@ export function HomePage({ focus = false }: { focus?: boolean } = {}) {
   const companion = plan.homeStyle === "companion";
   // Pocket Pal sits in the purple card, at its end side (visual left in Hebrew).
   // The intro invite rides with the pet instead of taking a block of its own.
-  const petAside = loaded && plan.pet.enabled ? <PetHeroAside extra={<WelcomePrompt variant="pip" />} /> : undefined;
+  const petAside =
+    loaded && plan.pet.enabled ? (
+      <PetHeroAside extra={<WelcomePrompt variant="pip" />} />
+    ) : undefined;
   const nextStep = <NextStep home={data} homePending={isLoading} homeFailed={isError} />;
-  const linkClass = "mx-auto flex min-h-11 w-fit items-center rounded-full px-4 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring";
+  const linkClass =
+    "mx-auto flex min-h-11 w-fit items-center rounded-full px-4 text-footnote font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring";
   // Two homes: the raze one-pager, or everything Home knows, expanded. Leaving the detail view first.
   // Until the plan loads, show only what both styles share (greeting and this month's card), so neither style flashes.
   if (!loaded) {
@@ -94,7 +98,9 @@ export function HomePage({ focus = false }: { focus?: boolean } = {}) {
         <div className="mx-auto w-full max-w-[1920px] px-4 pb-8 pt-3 md:px-6 lg:px-8">
           <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
           <Greeting name={settings?.displayName} />
-          <div className="rise-in mb-3"><QuickActions /></div>
+          <div className="rise-in mb-3">
+            <QuickActions />
+          </div>
           <CardSkeleton label={t("cashFlowTitle")} height={280} />
         </div>
       </>
@@ -102,17 +108,29 @@ export function HomePage({ focus = false }: { focus?: boolean } = {}) {
   }
 
   if (!simple) {
-    return <>
-      <PageHeader title={simple ? t("focusTitle") : t("pageTitle")} largeTitle={false} />
-      <div className="mx-auto w-full max-w-[1920px] space-y-5 px-4 py-6 md:px-8">
-        <SyncFailureBanner items={data?.bankHealth ?? null} />
-        {/* The board, with Quick start beside it on wide screens and above it on narrow ones. */}
-        <div className="flex flex-col gap-4 xl:flex-row-reverse xl:items-start">
-          <QuickStartRail />
-          <div className="min-w-0 flex-1"><DashboardBoard data={data} isLoading={isLoading} isError={isError} owner={owner} onOwnerChange={setOwner} month={boardMonth} onMonthChange={setBoardMonth} /></div>
+    return (
+      <>
+        <PageHeader title={simple ? t("focusTitle") : t("pageTitle")} largeTitle={false} />
+        <div className="mx-auto w-full max-w-[1920px] space-y-5 px-4 py-6 md:px-8">
+          <SyncFailureBanner items={data?.bankHealth ?? null} />
+          {/* The board, with Quick start beside it on wide screens and above it on narrow ones. */}
+          <div className="flex flex-col gap-4 xl:flex-row-reverse xl:items-start">
+            <QuickStartRail />
+            <div className="min-w-0 flex-1">
+              <DashboardBoard
+                data={data}
+                isLoading={isLoading}
+                isError={isError}
+                owner={owner}
+                onOwnerChange={setOwner}
+                month={boardMonth}
+                onMonthChange={setBoardMonth}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </>;
+      </>
+    );
   }
 
   // The companion style: one calm overview, unless simple mode asks for the compact hero.
@@ -123,18 +141,31 @@ export function HomePage({ focus = false }: { focus?: boolean } = {}) {
         <div className="mx-auto w-full max-w-[1920px] px-4 pb-8 pt-3 md:px-6 lg:px-8">
           <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
           {/* Simple mode keeps the page quiet: adding and importing live in the card's own menu row. */}
-          {!simple && <div className="rise-in mb-3"><QuickActions /></div>}
+          {!simple && (
+            <div className="rise-in mb-3">
+              <QuickActions />
+            </div>
+          )}
           {simple ? (
             <SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} />
           ) : (
             <>
               <Greeting name={settings?.displayName} />
-              <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
+              <SimpleHome
+                name={settings?.displayName}
+                cardOnly
+                extra={nextStep}
+                heroAside={petAside}
+              />
               <MoneyMap />
             </>
           )}
           {!petAside && <WelcomePrompt />}
-          {!simple && <Link href="/?view=detail" className={linkClass}>{t("detailLink")}</Link>}
+          {!simple && (
+            <Link href="/?view=detail" className={linkClass}>
+              {t("detailLink")}
+            </Link>
+          )}
         </div>
       </>
     );
@@ -145,31 +176,52 @@ export function HomePage({ focus = false }: { focus?: boolean } = {}) {
       {/* The view is chosen in the sidebar menu, not by a toggle on the page. */}
       <PageHeader title={simple ? t("focusTitle") : t("pageTitle")} largeTitle={false} />
       {/* The detail view of the Companion style always offers the way back. */}
-      {companion && <div className="mx-auto w-full max-w-[1920px] px-4 pt-3 md:px-6 lg:px-8"><Link href="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-footnote font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">{t("companionLink")}</Link></div>}
-      {!simple && <div className="rise-in mx-auto w-full max-w-[1920px] px-4 pb-1 md:px-6 lg:px-8"><QuickActions /></div>}
+      {companion && (
+        <div className="mx-auto w-full max-w-[1920px] px-4 pt-3 md:px-6 lg:px-8">
+          <Link
+            href="/"
+            className="inline-flex min-h-11 items-center rounded-full px-3 text-footnote font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            {t("companionLink")}
+          </Link>
+        </div>
+      )}
+      {!simple && (
+        <div className="rise-in mx-auto w-full max-w-[1920px] px-4 pb-1 md:px-6 lg:px-8">
+          <QuickActions />
+        </div>
+      )}
       {simple ? (
-        <div className="px-4 pb-8 pt-3"><SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} /></div>
+        <div className="px-4 pb-8 pt-3">
+          <SimpleHome name={settings?.displayName} extra={nextStep} heroAside={petAside} />
+        </div>
       ) : (
-
-      <div className="mx-auto w-full max-w-[1920px] px-4 pb-8 pt-3 md:px-6 lg:px-8">
-        <SyncFailureBanner
-          items={data?.bankHealth ?? null}
-          className="mb-4 md:mb-5 lg:mb-6"
-        />
-        <Greeting name={settings?.displayName} />
-        {/* The same forecast card as Simple mode: forecast, rings, legend and the month so far. */}
-        <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
-        <SuggestionsTipsCard />
-        <HealthCard />
-        <MonthCelebration />
-        {!petAside && <WelcomePrompt />}
-        <PersonalGrid render={id => {
-          if (id === "goals") return <GoalFocus />;
-          if (id === "planner") return <ScenarioCard />;
-          if (id === "bills") return insights ? <div className="space-y-3"><NextBillCard data={insights} /><SubscriptionsCard data={insights} /></div> : <CardSkeleton label={t("nextBill")} />;
-          return renderSection(id, data, isLoading, isError, "", skeletonLabels);
-        }} />
-      </div>
+        <div className="mx-auto w-full max-w-[1920px] px-4 pb-8 pt-3 md:px-6 lg:px-8">
+          <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
+          <Greeting name={settings?.displayName} />
+          {/* The same forecast card as Simple mode: forecast, rings, legend and the month so far. */}
+          <SimpleHome name={settings?.displayName} cardOnly extra={nextStep} heroAside={petAside} />
+          <SuggestionsTipsCard />
+          <HealthCard />
+          <MonthCelebration />
+          {!petAside && <WelcomePrompt />}
+          <PersonalGrid
+            render={(id) => {
+              if (id === "goals") return <GoalFocus />;
+              if (id === "planner") return <ScenarioCard />;
+              if (id === "bills")
+                return insights ? (
+                  <div className="space-y-3">
+                    <NextBillCard data={insights} />
+                    <SubscriptionsCard data={insights} />
+                  </div>
+                ) : (
+                  <CardSkeleton label={t("nextBill")} />
+                );
+              return renderSection(id, data, isLoading, isError, "", skeletonLabels);
+            }}
+          />
+        </div>
       )}
     </>
   );
@@ -181,10 +233,14 @@ function renderSection(
   isLoading: boolean,
   isError: boolean,
   spanClass: string,
-  skeletonLabels: Record<HomeSection, string>
+  skeletonLabels: Record<HomeSection, string>,
 ) {
   if (isError) {
-    return <div key={section} className={spanClass}><CardError label={skeletonLabels[section]} /></div>;
+    return (
+      <div key={section} className={spanClass}>
+        <CardError label={skeletonLabels[section]} />
+      </div>
+    );
   }
 
   if (isLoading || !data) {
@@ -195,8 +251,7 @@ function renderSection(
     );
   }
 
-  const sectionHasError =
-    isError || data.errors.some((e) => e.section === section);
+  const sectionHasError = isError || data.errors.some((e) => e.section === section);
 
   if (sectionHasError) {
     return (
@@ -225,25 +280,17 @@ function renderCard(section: HomeSection, data: HomePayload) {
     case "categories":
       return data.categories ? <CategoryScroll items={data.categories} /> : null;
     case "historicalTrend":
-      return data.historicalTrend ? (
-        <HistoricalTrendCard data={data.historicalTrend} />
-      ) : null;
+      return data.historicalTrend ? <HistoricalTrendCard data={data.historicalTrend} /> : null;
     case "recentTransactions":
       return data.recentTransactions ? (
         <RecentTransactionsCard items={data.recentTransactions} />
       ) : null;
     case "topMerchants":
-      return data.topMerchants ? (
-        <TopMerchantsCard items={data.topMerchants} />
-      ) : null;
+      return data.topMerchants ? <TopMerchantsCard items={data.topMerchants} /> : null;
     case "needsAttention":
-      return data.needsAttention ? (
-        <NeedsAttentionCard data={data.needsAttention} />
-      ) : null;
+      return data.needsAttention ? <NeedsAttentionCard data={data.needsAttention} /> : null;
     case "bankHealth":
-      return data.bankHealth ? (
-        <BankHealthCard items={data.bankHealth} />
-      ) : null;
+      return data.bankHealth ? <BankHealthCard items={data.bankHealth} /> : null;
   }
 }
 

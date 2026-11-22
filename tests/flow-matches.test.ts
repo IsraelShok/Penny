@@ -23,7 +23,9 @@ const txn = (accountNumber: string, description: string, chargedAmount: number, 
 });
 
 const row = (description: string) =>
-  db.prepare("SELECT * FROM transactions WHERE workspace_id = ? AND description = ?").get(ws, description) as {
+  db
+    .prepare("SELECT * FROM transactions WHERE workspace_id = ? AND description = ?")
+    .get(ws, description) as {
     id: number;
     kind: string;
     flow_type: string;
@@ -45,7 +47,7 @@ beforeAll(async () => {
   const cred = (provider: string) =>
     db
       .prepare(
-        "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, ?, ?, x'00', x'00', x'00')"
+        "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, ?, ?, x'00', x'00', x'00')",
       )
       .run(ws, provider, provider).lastInsertRowid as number;
 
@@ -56,14 +58,14 @@ beforeAll(async () => {
     [txn("B1", "העברה ללאומי", -1000, "2026-11-05")],
     "hapoalim",
     hapoalim,
-    createSyncRun(ws, "hapoalim", hapoalim, "2026-11-01")
+    createSyncRun(ws, "hapoalim", hapoalim, "2026-11-01"),
   );
   insertTransactions(
     ws,
     [txn("L1", "העברה מהפועלים", 1000, "2026-11-06")],
     "leumi",
     leumi,
-    createSyncRun(ws, "leumi", leumi, "2026-11-01")
+    createSyncRun(ws, "leumi", leumi, "2026-11-01"),
   );
   reconcileFlows(ws);
 });

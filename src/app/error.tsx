@@ -29,7 +29,10 @@ export default function AppError({ error, retry }: { error: unknown; retry: () =
 
   return (
     <div className="mx-auto w-full max-w-[1920px] px-4 pb-10 pt-6 md:px-6 lg:px-8">
-      <section role="alert" className="rounded-2xl border border-border/60 bg-card px-6 py-10 sm:px-10">
+      <section
+        role="alert"
+        className="rounded-2xl border border-border/60 bg-card px-6 py-10 sm:px-10"
+      >
         <TriangleAlert className="mb-5 size-7 text-muted-foreground" aria-hidden />
         <h1 className="text-xl font-semibold">{t("title")}</h1>
         <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">{t("hint")}</p>
@@ -54,7 +57,10 @@ export default function AppError({ error, retry }: { error: unknown; retry: () =
             )}
             {digest && (
               <p className="mt-1 text-xs">
-                {t("digest")}: <span className="font-mono" dir="ltr">{digest}</span>
+                {t("digest")}:{" "}
+                <span className="font-mono" dir="ltr">
+                  {digest}
+                </span>
               </p>
             )}
           </details>

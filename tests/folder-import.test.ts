@@ -3,14 +3,23 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
-vi.mock("@/server/db/queries/settings", () => ({ getGlobalSetting: () => null, setGlobalSetting: () => {} }));
+vi.mock("@/server/db/queries/settings", () => ({
+  getGlobalSetting: () => null,
+  setGlobalSetting: () => {},
+}));
 vi.mock("@/server/db/queries/transactions", () => ({}));
 vi.mock("@/server/db/queries/excluded-merchants", () => ({}));
 vi.mock("@/server/db/queries/rules", () => ({}));
 vi.mock("@/server/db", () => ({}));
 vi.mock("@/server/lib/encryption", () => ({ isKeyLocked: () => false }));
 
-import { accountForFolder, folderNameFor, isImportable, moveInto, pickStableFiles } from "@/server/lib/folder-import";
+import {
+  accountForFolder,
+  folderNameFor,
+  isImportable,
+  moveInto,
+  pickStableFiles,
+} from "@/server/lib/folder-import";
 import { statementRows } from "@/lib/file-import";
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "folder-import-"));
@@ -18,7 +27,11 @@ const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "folder-import-"));
 describe("folder import files", () => {
   it("accepts statement types and ignores temp/partial downloads", () => {
     expect(["a.csv", "B.XLSX", "c.xls"].every(isImportable)).toBe(true);
-    expect(["~$a.xlsx", "a.csv.crdownload", "a.part", ".hidden.csv", "a.pdf", "a.txt"].some(isImportable)).toBe(false);
+    expect(
+      ["~$a.xlsx", "a.csv.crdownload", "a.part", ".hidden.csv", "a.pdf", "a.txt"].some(
+        isImportable,
+      ),
+    ).toBe(false);
   });
 
   it("only returns files unchanged since the previous scan", () => {
@@ -60,7 +73,11 @@ describe("folder import files", () => {
 
 describe("account subfolders", () => {
   it("names a folder per account and reads the account back", () => {
-    const name = folderNameFor({ accountNumber: "1234", label: "Max: family/card", provider: "max" });
+    const name = folderNameFor({
+      accountNumber: "1234",
+      label: "Max: family/card",
+      provider: "max",
+    });
     expect(name).toBe("Max- family-card (1234)");
     expect(accountForFolder(name)).toBe("1234");
     expect(accountForFolder("Altshuler pension")).toBe("Altshuler pension");

@@ -103,10 +103,7 @@ export function encrypt(plaintext: string): EncryptedData {
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
-  const encrypted = Buffer.concat([
-    cipher.update(plaintext, "utf-8"),
-    cipher.final(),
-  ]);
+  const encrypted = Buffer.concat([cipher.update(plaintext, "utf-8"), cipher.final()]);
   const authTag = cipher.getAuthTag();
 
   return { encrypted, iv, authTag };
@@ -117,8 +114,5 @@ export function decrypt(data: EncryptedData): string {
   const decipher = crypto.createDecipheriv(ALGORITHM, key, data.iv);
   decipher.setAuthTag(data.authTag);
 
-  return Buffer.concat([
-    decipher.update(data.encrypted),
-    decipher.final(),
-  ]).toString("utf-8");
+  return Buffer.concat([decipher.update(data.encrypted), decipher.final()]).toString("utf-8");
 }

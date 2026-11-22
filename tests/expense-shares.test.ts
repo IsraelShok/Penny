@@ -9,7 +9,10 @@ describe("shareBalances", () => {
       { person: "Avi", amount: 300, settledAt: null },
       { person: "avi", amount: 999, settledAt: "2026-11-01" },
     ]);
-    expect(rows).toEqual([{ person: "Avi", owed: 300, count: 1 }, { person: "דנה", owed: 150, count: 2 }]);
+    expect(rows).toEqual([
+      { person: "Avi", owed: 300, count: 1 },
+      { person: "דנה", owed: 150, count: 2 },
+    ]);
   });
   it("is empty when everyone paid back", () => {
     expect(shareBalances([{ person: "x", amount: 5, settledAt: "2026-01-01" }])).toEqual([]);

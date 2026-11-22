@@ -26,9 +26,17 @@ export async function GET(request: Request) {
 
   const csv = toCsv([
     ["תאריך", "תיאור", "חשבון", "קטגוריה", "סכום שחויב", "חלק עסקי", "אחוז עסקי"],
-    ...report.rows.map((r) => [r.date, r.description, r.account, r.category, r.charged, r.business, r.pct]),
+    ...report.rows.map((r) => [
+      r.date,
+      r.description,
+      r.account,
+      r.category,
+      r.charged,
+      r.business,
+      r.pct,
+    ]),
     [],
-    ["סה\"כ", "", "", "", "", report.expenses - report.income, ""],
+    ['סה"כ', "", "", "", "", report.expenses - report.income, ""],
   ]);
   return new Response(`\uFEFF${csv}`, {
     headers: {

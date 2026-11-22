@@ -65,10 +65,11 @@ export function GET() {
   const database = checkDatabase();
   // Always 200: the setup script and the service wrapper read `ok` and expect a body even
   // when the database is the thing that is broken.
+  // SECURITY.md promises exactly these three fields: no table counts, no provider names,
+  // no filesystem paths (an error message from SQLite can contain the database path).
   return NextResponse.json({
     ok: database.state === "ok" || database.state === "empty",
     version: pkg.version,
     hasDb: database.state !== "empty", // kept for older callers
-    database,
   });
 }

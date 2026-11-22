@@ -10,7 +10,9 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   return (
     <AppShell>
       <PageHeader title={t("title")} largeTitle={false} />
-      <div className="mx-auto w-full max-w-[1920px] px-4 pb-8 pt-3 md:px-6 lg:px-8"><AccountDetail id={Number(id)} /></div>
+      <div className="mx-auto w-full max-w-[1920px] px-4 pb-8 pt-3 md:px-6 lg:px-8">
+        <AccountDetail id={Number(id)} />
+      </div>
     </AppShell>
   );
 }

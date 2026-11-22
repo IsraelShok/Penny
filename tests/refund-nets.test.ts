@@ -17,7 +17,7 @@ beforeAll(async () => {
   ws = (db.prepare("SELECT id FROM workspaces LIMIT 1").get() as { id: number }).id;
   cred = db
     .prepare(
-      "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, 'isracard', 'T', x'00', x'00', x'00')"
+      "INSERT INTO bank_credentials (workspace_id, provider, label, credentials_encrypted, iv, auth_tag) VALUES (?, 'isracard', 'T', x'00', x'00', x'00')",
     )
     .run(ws).lastInsertRowid as number;
   run = createSyncRun(ws, "isracard", cred, "2026-10-01");
@@ -44,7 +44,7 @@ describe("refunds reduce spending totals", () => {
       "isracard",
       cred,
       run,
-      ["1234"]
+      ["1234"],
     );
 
     expect(q.getPeriodTotal(ws, "2026-11-01", "2026-11-30")).toBe(300);
@@ -60,7 +60,7 @@ describe("refunds reduce spending totals", () => {
     const setConfidence = (score: number) =>
       db
         .prepare(
-          "UPDATE transactions SET ai_confidence = ?, category_source = 'ai' WHERE workspace_id = ? AND description = 'Amazon'"
+          "UPDATE transactions SET ai_confidence = ?, category_source = 'ai' WHERE workspace_id = ? AND description = 'Amazon'",
         )
         .run(score, ws);
 

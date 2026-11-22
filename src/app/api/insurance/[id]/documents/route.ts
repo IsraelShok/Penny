@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { addInsuranceDocument, INSURANCE_MIME, MAX_INSURANCE_FILE, setInsuranceDocumentKind } from "@/server/db/queries/insurance";
+import {
+  addInsuranceDocument,
+  INSURANCE_MIME,
+  MAX_INSURANCE_FILE,
+  setInsuranceDocumentKind,
+} from "@/server/db/queries/insurance";
 import { parseDocumentKind } from "@/server/lib/insurance-input";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
@@ -10,14 +15,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const workspaceId = getWorkspaceIdFromRequest(request);
   const { id } = await params;
   const policyId = Number(id);
-  if (!Number.isInteger(policyId)) return NextResponse.json({ error: "invalid id" }, { status: 400 });
+  if (!Number.isInteger(policyId))
+    return NextResponse.json({ error: "invalid id" }, { status: 400 });
 
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");
-  if (!form || !(file instanceof File)) return NextResponse.json({ error: "a file is required" }, { status: 400 });
-  if (!INSURANCE_MIME.includes(file.type)) return NextResponse.json({ error: "only PDF or image files" }, { status: 415 });
+  if (!form || !(file instanceof File))
+    return NextResponse.json({ error: "a file is required" }, { status: 400 });
+  if (!INSURANCE_MIME.includes(file.type))
+    return NextResponse.json({ error: "only PDF or image files" }, { status: 415 });
   if (file.size === 0) return NextResponse.json({ error: "empty file" }, { status: 400 });
-  if (file.size > MAX_INSURANCE_FILE) return NextResponse.json({ error: "file is too large" }, { status: 413 });
+  if (file.size > MAX_INSURANCE_FILE)
+    return NextResponse.json({ error: "file is too large" }, { status: 413 });
 
   const doc = addInsuranceDocument(workspaceId, policyId, {
     name: file.name || "document",

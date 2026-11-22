@@ -7,12 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Trash2, AlertTriangle, EyeOff, X } from "lucide-react";
 import {
   deleteAllTransactions,
@@ -42,9 +37,9 @@ export function DangerZone() {
         t("deletedToast", {
           txCount: data.deleted.txCount,
           memoryCount: data.deleted.memoryCount,
-        })
+        }),
       );
-      queryClient.invalidateQueries();
+      void queryClient.invalidateQueries();
       setConfirmOpen(false);
       setConfirmText("");
     },
@@ -53,7 +48,8 @@ export function DangerZone() {
     },
   });
 
-  const canConfirm = confirmText.trim().toLowerCase() === t("confirmInputPlaceholder").toLowerCase();
+  const canConfirm =
+    confirmText.trim().toLowerCase() === t("confirmInputPlaceholder").toLowerCase();
 
   return (
     <>
@@ -80,19 +76,13 @@ export function DangerZone() {
             <div
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
               style={{
-                background:
-                  "color-mix(in oklch, var(--status-over) 14%, transparent)",
+                background: "color-mix(in oklch, var(--status-over) 14%, transparent)",
               }}
             >
-              <AlertTriangle
-                className="h-5 w-5"
-                style={{ color: "var(--status-over)" }}
-              />
+              <AlertTriangle className="h-5 w-5" style={{ color: "var(--status-over)" }} />
             </div>
             <div>
-              <DialogTitle className="font-semibold text-xl">
-                {t("confirmDialogTitle")}
-              </DialogTitle>
+              <DialogTitle className="font-semibold text-xl">{t("confirmDialogTitle")}</DialogTitle>
               <DialogDescription className="mt-1 text-xs">
                 {t("confirmDialogDescription")}
               </DialogDescription>
@@ -106,17 +96,13 @@ export function DangerZone() {
               <li className="list-disc">{t("confirmRemovesSyncRuns")}</li>
               <li className="list-disc">{t("confirmRemovesMemory")}</li>
             </ul>
-            <p className="text-xs text-muted-foreground">
-              {t("confirmKeeps")}
-            </p>
+            <p className="text-xs text-muted-foreground">{t("confirmKeeps")}</p>
 
             <div className="pt-2">
-              <Label
-                htmlFor="confirm-input"
-                className="text-xs text-muted-foreground"
-              >
+              <Label htmlFor="confirm-input" className="text-xs text-muted-foreground">
                 {t("confirmTypePrefix")}{" "}
-                <code className="font-mono">{t("confirmInputPlaceholder")}</code> {t("confirmTypeSuffix")}
+                <code className="font-mono">{t("confirmInputPlaceholder")}</code>{" "}
+                {t("confirmTypeSuffix")}
               </Label>
               <Input
                 id="confirm-input"
@@ -141,7 +127,8 @@ export function DangerZone() {
             >
               <X className="size-4" aria-hidden />
             </IconButton>
-            <IconButton showLabel
+            <IconButton
+              showLabel
               label={mutation.isPending ? tCommon("deleting") : t("deleteEverything")}
               variant="default"
               disabled={!canConfirm || mutation.isPending}
@@ -175,10 +162,10 @@ export function ExcludedMerchantsCard() {
   const removeMutation = useMutation({
     mutationFn: deleteExcludedMerchantRule,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["excluded-merchants"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
-      queryClient.invalidateQueries({ queryKey: ["home"] });
+      void queryClient.invalidateQueries({ queryKey: ["excluded-merchants"] });
+      void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      void queryClient.invalidateQueries({ queryKey: ["summary"] });
+      void queryClient.invalidateQueries({ queryKey: ["home"] });
       toast.success(t("excludedRemoved"));
     },
     onError: (err) => {
@@ -189,10 +176,7 @@ export function ExcludedMerchantsCard() {
   const rules = data?.rules ?? [];
 
   return (
-    <SettingCard
-      title={t("excludedTitle")}
-      description={t("excludedDescription")}
-    >
+    <SettingCard title={t("excludedTitle")} description={t("excludedDescription")}>
       {isLoading ? (
         <div className="text-sm text-muted-foreground">{t("excludedLoading")}</div>
       ) : rules.length === 0 ? (
@@ -209,20 +193,13 @@ export function ExcludedMerchantsCard() {
               tBanks,
             );
             return (
-              <li
-                key={rule.id}
-                className="flex items-center justify-between gap-3 py-2.5"
-              >
+              <li key={rule.id} className="flex items-center justify-between gap-3 py-2.5">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 text-sm">
                     <EyeOff className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate font-medium">
-                      {rule.merchantKey}
-                    </span>
+                    <span className="truncate font-medium">{rule.merchantKey}</span>
                   </div>
-                  <div className="ms-5 text-xs text-muted-foreground">
-                    {providerName}
-                  </div>
+                  <div className="ms-5 text-xs text-muted-foreground">{providerName}</div>
                 </div>
                 <IconButton
                   label={t("excludedRemoveBtn")}
@@ -250,7 +227,7 @@ function ShowBrowserToggle({ initial }: { initial: boolean }) {
   const mutation = useMutation({
     mutationFn: (value: boolean) => updateSettings({ showBrowser: value }),
     onSuccess: (_, value) => {
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      void queryClient.invalidateQueries({ queryKey: ["settings"] });
       toast.success(value ? t("browserVisibleSaved") : t("browserHiddenSaved"));
     },
     onError: (err, value) => {
@@ -266,12 +243,12 @@ function ShowBrowserToggle({ initial }: { initial: boolean }) {
 
   return (
     <SettingCard title={t("debugTitle")}>
-      <SettingRow label={t("showBrowserLabel")} htmlFor="show-browser-toggle" hint={t("showBrowserHint")}>
-        <Switch
-          id="show-browser-toggle"
-          checked={enabled}
-          onCheckedChange={handleToggle}
-        />
+      <SettingRow
+        label={t("showBrowserLabel")}
+        htmlFor="show-browser-toggle"
+        hint={t("showBrowserHint")}
+      >
+        <Switch id="show-browser-toggle" checked={enabled} onCheckedChange={handleToggle} />
       </SettingRow>
     </SettingCard>
   );

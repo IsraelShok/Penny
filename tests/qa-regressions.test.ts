@@ -14,7 +14,7 @@ const insert = (description: string, charged: number, kind: string, date = "2026
       `INSERT INTO transactions (workspace_id, account_number, date, processed_date, original_amount,
          original_currency, charged_amount, charged_currency, description, type, status, provider,
          sync_run_id, dedup_hash, kind, is_excluded)
-       VALUES (?, 'cash', ?, ?, ?, 'ILS', ?, 'ILS', ?, 'normal', 'completed', 'cash', 1, ?, ?, 0)`
+       VALUES (?, 'cash', ?, ?, ?, 'ILS', ?, 'ILS', ?, 'normal', 'completed', 'cash', 1, ?, ?, 0)`,
     )
     .run(ws, date, date, charged, charged, description, `${description}-${charged}-${date}`, kind)
     .lastInsertRowid as number;
@@ -25,7 +25,7 @@ beforeAll(async () => {
   q = await import("@/server/db/queries/transactions");
   ws = (db.prepare("SELECT id FROM workspaces LIMIT 1").get() as { id: number }).id;
   db.prepare(
-    "INSERT OR IGNORE INTO sync_runs (id, workspace_id, provider, started_at, completed_at, status, scrape_from_date) VALUES (1, ?, 'cash', '1970-01-01', '1970-01-01', 'completed', '1970-01-01')"
+    "INSERT OR IGNORE INTO sync_runs (id, workspace_id, provider, started_at, completed_at, status, scrape_from_date) VALUES (1, ?, 'cash', '1970-01-01', '1970-01-01', 'completed', '1970-01-01')",
   ).run(ws);
 
   insert("Supermarket", -100, "expense");
@@ -47,18 +47,20 @@ describe("transaction list QA regressions", () => {
 
   it("treats % and _ in search as literal characters", () => {
     // Literal % and _ exist in one merchant name and must not match everything else.
-    expect(q.queryTransactions(ws, { search: "%", limit: 100 }).transactions.map((t) => t.description)).toEqual([
-      "50% off_coupon",
-    ]);
-    expect(q.queryTransactions(ws, { search: "_", limit: 100 }).transactions.map((t) => t.description)).toEqual([
-      "50% off_coupon",
-    ]);
-    expect(q.queryTransactions(ws, { search: "50%", limit: 100 }).transactions.map((t) => t.description)).toEqual([
-      "50% off_coupon",
-    ]);
-    expect(q.queryTransactions(ws, { search: "off_c", limit: 100 }).transactions.map((t) => t.description)).toEqual([
-      "50% off_coupon",
-    ]);
+    expect(
+      q.queryTransactions(ws, { search: "%", limit: 100 }).transactions.map((t) => t.description),
+    ).toEqual(["50% off_coupon"]);
+    expect(
+      q.queryTransactions(ws, { search: "_", limit: 100 }).transactions.map((t) => t.description),
+    ).toEqual(["50% off_coupon"]);
+    expect(
+      q.queryTransactions(ws, { search: "50%", limit: 100 }).transactions.map((t) => t.description),
+    ).toEqual(["50% off_coupon"]);
+    expect(
+      q
+        .queryTransactions(ws, { search: "off_c", limit: 100 })
+        .transactions.map((t) => t.description),
+    ).toEqual(["50% off_coupon"]);
   });
 
   it("keeps excluded rows out of the review inbox", () => {
@@ -84,9 +86,11 @@ describe("uncategorized spending on the budget screen", () => {
     db.prepare(
       `INSERT INTO transactions (workspace_id, account_number, date, processed_date, original_amount, original_currency,
          charged_amount, charged_currency, description, type, status, provider, sync_run_id, dedup_hash, kind, is_excluded)
-       VALUES (?, 'cash', '2026-11-08', '2026-11-08', -77, 'ILS', -77, 'ILS', 'No category yet', 'normal', 'completed', 'cash', 1, 'uncat-1', 'expense', 0)`
+       VALUES (?, 'cash', '2026-11-08', '2026-11-08', -77, 'ILS', -77, 'ILS', 'No category yet', 'normal', 'completed', 'cash', 1, 'uncat-1', 'expense', 0)`,
     ).run(ws);
-    db.prepare("UPDATE transactions SET category_id = NULL WHERE description = 'No category yet'").run();
+    db.prepare(
+      "UPDATE transactions SET category_id = NULL WHERE description = 'No category yet'",
+    ).run();
 
     const spend = q.getUncategorizedSpend(ws, "2026-11-01", "2026-11-30");
     expect(spend.count).toBeGreaterThanOrEqual(1);
@@ -116,14 +120,14 @@ describe("summary route params", () => {
     const body = await res.json();
     expect(body.monthLabel).not.toContain("Invalid");
     expect(body.periodTotal).toBe(177); // 100 - 30 + 20 + 10 categorized/unmatched, plus the 77 uncategorized row
-    expect(body.monthLabel).toBe(
-      new Date().toLocaleDateString("en-US", { month: "long" })
-    );
+    expect(body.monthLabel).toBe(new Date().toLocaleDateString("en-US", { month: "long" }));
   });
 
   it("sorts a reversed range instead of returning nothing", async () => {
     const { GET } = await import("@/app/api/summary/route");
-    const res = await GET(new Request("http://127.0.0.1/api/summary?from=2026-11-30&to=2026-11-01"));
+    const res = await GET(
+      new Request("http://127.0.0.1/api/summary?from=2026-11-30&to=2026-11-01"),
+    );
     expect((await res.json()).periodTotal).toBe(177);
   });
 });
@@ -131,7 +135,9 @@ describe("summary route params", () => {
 describe("settings PUT validation", () => {
   const put = async (body: Record<string, unknown>) => {
     const { PUT } = await import("@/app/api/settings/route");
-    return PUT(new Request("http://127.0.0.1/api/settings", { method: "PUT", body: JSON.stringify(body) }));
+    return PUT(
+      new Request("http://127.0.0.1/api/settings", { method: "PUT", body: JSON.stringify(body) }),
+    );
   };
 
   it("rejects a non-numeric monthlyTarget instead of wiping it", async () => {

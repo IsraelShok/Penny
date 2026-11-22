@@ -1,9 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_RULE, ledger, parseSplitRule, parseSplitRules, type SettleRow } from "@/lib/settle";
+import {
+  DEFAULT_RULE,
+  ledger,
+  parseSplitRule,
+  parseSplitRules,
+  type SettleRow,
+} from "@/lib/settle";
 import { childSummary } from "@/lib/kids";
 
 const acc = { A: "me", B: "p" };
-const row = (date: string, amount: number, owner: string | null, accountNumber: string): SettleRow => ({ id: 1, date, amount, owner, accountNumber, description: "x" });
+const row = (
+  date: string,
+  amount: number,
+  owner: string | null,
+  accountNumber: string,
+): SettleRow => ({ id: 1, date, amount, owner, accountNumber, description: "x" });
 
 describe("ledger", () => {
   it("splits shared costs 50/50 and counts one-sided costs in full", () => {
@@ -18,23 +29,59 @@ describe("ledger", () => {
   });
 
   it("uses a custom share, nets refunds and ignores future rows", () => {
-    const rows = [row("2026-01-02", -100, "shared", "A"), row("2026-01-03", 20, "shared", "A"), row("2027-01-01", -100, "shared", "A")];
-    expect(ledger(rows, acc, "me", "p", { myShare: 70, support: null }, [], "2026-12-31").balance).toBe(24);
+    const rows = [
+      row("2026-01-02", -100, "shared", "A"),
+      row("2026-01-03", 20, "shared", "A"),
+      row("2027-01-01", -100, "shared", "A"),
+    ];
+    expect(
+      ledger(rows, acc, "me", "p", { myShare: 70, support: null }, [], "2026-12-31").balance,
+    ).toBe(24);
     // Refund into the partner's account on their shared purchase: they owe me less.
-    expect(ledger([row("2026-01-02", -40, "shared", "B"), row("2026-01-04", 40, "shared", "B")], acc, "me", "p", DEFAULT_RULE, [], "2026-12-31").balance).toBe(0);
+    expect(
+      ledger(
+        [row("2026-01-02", -40, "shared", "B"), row("2026-01-04", 40, "shared", "B")],
+        acc,
+        "me",
+        "p",
+        DEFAULT_RULE,
+        [],
+        "2026-12-31",
+      ).balance,
+    ).toBe(0);
   });
 
   it("carries an unpaid remainder past a partial settle-up, and flips on overpay", () => {
     const rows = [row("2026-01-02", -100, "shared", "A"), row("2026-02-02", -10, "shared", "A")];
-    const partial = ledger(rows, acc, "me", "p", DEFAULT_RULE, [{ id: 1, counterpart: "p", date: "2026-01-31", amount: 30 }], "2026-12-31");
+    const partial = ledger(
+      rows,
+      acc,
+      "me",
+      "p",
+      DEFAULT_RULE,
+      [{ id: 1, counterpart: "p", date: "2026-01-31", amount: 30 }],
+      "2026-12-31",
+    );
     expect(partial.balance).toBe(25); // 50 - 30 paid + 5
     expect(partial.lines.map((l) => l.kind)).toEqual(["shared", "carry"]);
-    const over = ledger(rows, acc, "me", "p", DEFAULT_RULE, [{ id: 1, counterpart: "p", date: "2026-01-31", amount: 60 }], "2026-12-31");
+    const over = ledger(
+      rows,
+      acc,
+      "me",
+      "p",
+      DEFAULT_RULE,
+      [{ id: 1, counterpart: "p", date: "2026-01-31", amount: 60 }],
+      "2026-12-31",
+    );
     expect(over.balance).toBe(-5); // they overpaid by 10, then owe 5
   });
 
   it("rounds to agorot", () => {
-    const rows = [row("2026-01-02", -0.03, "shared", "A"), row("2026-01-02", -33.33, "shared", "A"), row("2026-01-02", -0.01, "shared", "A")];
+    const rows = [
+      row("2026-01-02", -0.03, "shared", "A"),
+      row("2026-01-02", -33.33, "shared", "A"),
+      row("2026-01-02", -0.01, "shared", "A"),
+    ];
     const l = ledger(rows, acc, "me", "p", { myShare: 33, support: null }, [], "2026-12-31");
     expect(l.balance).toBe(Math.round(l.lines.reduce((s, x) => s + x.amount, 0) * 100) / 100);
     expect(Number.isInteger(Math.round(l.balance * 100))).toBe(true);
@@ -43,14 +90,20 @@ describe("ledger", () => {
 
   it("zeroes from the last settle-up date", () => {
     const rows = [row("2026-01-02", -100, "shared", "A"), row("2026-02-02", -10, "shared", "A")];
-    const entries = [{ id: 1, counterpart: "p", date: "2026-01-31", amount: 50 }, { id: 2, counterpart: "q", date: "2026-03-01", amount: 1 }];
+    const entries = [
+      { id: 1, counterpart: "p", date: "2026-01-31", amount: 50 },
+      { id: 2, counterpart: "q", date: "2026-03-01", amount: 1 },
+    ];
     const l = ledger(rows, acc, "me", "p", DEFAULT_RULE, entries, "2026-12-31");
     expect(l.balance).toBe(5);
     expect(l.since).toBe("2026-01-31");
   });
 
   it("counts child support per month", () => {
-    const rule = { myShare: 50, support: { monthly: 1000, direction: "pay" as const, start: "2025-11" } };
+    const rule = {
+      myShare: 50,
+      support: { monthly: 1000, direction: "pay" as const, start: "2025-11" },
+    };
     expect(ledger([], acc, "me", "p", rule, [], "2026-02-15").balance).toBe(-4000);
     const after = [{ id: 1, counterpart: "p", date: "2026-01-10", amount: 3000 }];
     expect(ledger([], acc, "me", "p", rule, after, "2026-02-15").balance).toBe(-1000);
@@ -60,19 +113,33 @@ describe("ledger", () => {
 describe("parseSplitRule(s)", () => {
   it("validates input", () => {
     expect(() => parseSplitRule({ myShare: 120 })).toThrow();
-    expect(() => parseSplitRule({ myShare: 50, support: { monthly: 1, direction: "x", start: "2026-01" } })).toThrow();
-    expect(parseSplitRules({ p: { myShare: 40 }, gone: { myShare: 1 }, bad: {} }, ["p", "bad"])).toEqual({ p: { myShare: 40, support: null } });
+    expect(() =>
+      parseSplitRule({ myShare: 50, support: { monthly: 1, direction: "x", start: "2026-01" } }),
+    ).toThrow();
+    expect(
+      parseSplitRules({ p: { myShare: 40 }, gone: { myShare: 1 }, bad: {} }, ["p", "bad"]),
+    ).toEqual({ p: { myShare: 40, support: null } });
   });
 });
 
 describe("childSummary", () => {
   it("totals month, year and top categories", () => {
-    const s = childSummary([
-      { date: "2026-03-02", amount: -100, category: "חוגים" },
-      { date: "2026-01-02", amount: -50, category: "בגדים" },
-      { date: "2026-03-05", amount: 20, category: "חוגים" },
-      { date: "2025-03-05", amount: -999, category: "חוגים" },
-    ], "2026-03");
-    expect(s).toEqual({ month: 80, year: 130, top: [{ category: "חוגים", total: 80 }, { category: "בגדים", total: 50 }] });
+    const s = childSummary(
+      [
+        { date: "2026-03-02", amount: -100, category: "חוגים" },
+        { date: "2026-01-02", amount: -50, category: "בגדים" },
+        { date: "2026-03-05", amount: 20, category: "חוגים" },
+        { date: "2025-03-05", amount: -999, category: "חוגים" },
+      ],
+      "2026-03",
+    );
+    expect(s).toEqual({
+      month: 80,
+      year: 130,
+      top: [
+        { category: "חוגים", total: 80 },
+        { category: "בגדים", total: 50 },
+      ],
+    });
   });
 });

@@ -53,17 +53,44 @@ export function ReviewsView() {
 
   const money = (n: number) => shekels(Math.round(n), locale);
   const catName = (name: string) => translateCategoryName(name, tCat);
-  const monthLabel = new Date(`${month}-01T12:00:00`).toLocaleDateString(locale === "he" ? "he-IL" : "en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = new Date(`${month}-01T12:00:00`).toLocaleDateString(
+    locale === "he" ? "he-IL" : "en-US",
+    {
+      month: "long",
+      year: "numeric",
+    },
+  );
 
-  const recap = useQuery({ queryKey: ["recap", month], queryFn: () => getRecap({ month }), enabled: step === "month" });
-  const insights = useQuery({ queryKey: ["insights"], queryFn: getInsights, enabled: step === "subscriptions" });
-  const summary = useQuery({ queryKey: ["summary", month], queryFn: () => getSummary({ from, to }), enabled: step === "category" });
-  const tags = useQuery({ queryKey: ["tags"], queryFn: () => getTagReport(), enabled: step === "trip" });
-  const insurance = useQuery({ queryKey: ["insurance"], queryFn: getInsurance, enabled: step === "cover" });
-  const pension = useQuery({ queryKey: ["pension-reports"], queryFn: listPensionReports, enabled: step === "cover" });
+  const recap = useQuery({
+    queryKey: ["recap", month],
+    queryFn: () => getRecap({ month }),
+    enabled: step === "month",
+  });
+  const insights = useQuery({
+    queryKey: ["insights"],
+    queryFn: getInsights,
+    enabled: step === "subscriptions",
+  });
+  const summary = useQuery({
+    queryKey: ["summary", month],
+    queryFn: () => getSummary({ from, to }),
+    enabled: step === "category",
+  });
+  const tags = useQuery({
+    queryKey: ["tags"],
+    queryFn: () => getTagReport(),
+    enabled: step === "trip",
+  });
+  const insurance = useQuery({
+    queryKey: ["insurance"],
+    queryFn: getInsurance,
+    enabled: step === "cover",
+  });
+  const pension = useQuery({
+    queryKey: ["pension-reports"],
+    queryFn: listPensionReports,
+    enabled: step === "cover",
+  });
 
   const [pickedCategory, setPickedCategory] = useState<string | null>(null);
   const [pickedTag, setPickedTag] = useState<string | null>(null);
@@ -88,8 +115,12 @@ export function ReviewsView() {
       <p className="text-sm text-muted-foreground">{t("loading")}</p>
     ) : q.isError ? (
       <div className="grid gap-2">
-        <p className="text-sm text-destructive" role="alert">{t("failed")}</p>
-        <Button variant="outline" className="h-11 w-fit" onClick={() => void q.refetch()}>{t("retry")}</Button>
+        <p className="text-sm text-destructive" role="alert">
+          {t("failed")}
+        </p>
+        <Button variant="outline" className="h-11 w-fit" onClick={() => void q.refetch()}>
+          {t("retry")}
+        </Button>
       </div>
     ) : null;
 
@@ -103,7 +134,11 @@ export function ReviewsView() {
         const diff = r.spent - r.prevSpent;
         const pct = r.prevSpent > 0 ? Math.round((Math.abs(diff) / r.prevSpent) * 100) : null;
         return (
-          <StepCard title={t("month_title")} lede={t("month_lede", { month: monthLabel })} index={index}>
+          <StepCard
+            title={t("month_title")}
+            lede={t("month_lede", { month: monthLabel })}
+            index={index}
+          >
             <Figures
               items={[
                 { label: t("month_spent"), value: money(r.spent) },
@@ -115,21 +150,47 @@ export function ReviewsView() {
               <li>
                 {diff === 0 || pct == null
                   ? t("month_spentOnly", { month: monthLabel, total: money(r.spent) })
-                  : t(diff > 0 ? "month_more" : "month_less", { amount: money(Math.abs(diff)), pct })}
+                  : t(diff > 0 ? "month_more" : "month_less", {
+                      amount: money(Math.abs(diff)),
+                      pct,
+                    })}
               </li>
               {r.kept < 0 && <li>{t("month_over", { amount: money(-r.kept) })}</li>}
-              {r.top && <li>{t("month_top", { name: catName(r.top.name), total: money(r.top.spent) })}</li>}
-              {r.improved && <li>{t("month_improved", { name: catName(r.improved.name), amount: money(r.improved.drop) })}</li>}
+              {r.top && (
+                <li>{t("month_top", { name: catName(r.top.name), total: money(r.top.spent) })}</li>
+              )}
+              {r.improved && (
+                <li>
+                  {t("month_improved", {
+                    name: catName(r.improved.name),
+                    amount: money(r.improved.drop),
+                  })}
+                </li>
+              )}
               {r.biggest && (
-                <li>{t("month_biggest", { description: r.biggest.description, amount: money(r.biggest.amount) })}</li>
+                <li>
+                  {t("month_biggest", {
+                    description: r.biggest.description,
+                    amount: money(r.biggest.amount),
+                  })}
+                </li>
               )}
               <li>{t("month_noSpend", { days: r.noSpendDays, counted: r.daysCounted })}</li>
               {r.underBudgetMonths != null && r.underBudgetMonths > 1 && (
                 <li>{t("month_underBudget", { months: r.underBudgetMonths })}</li>
               )}
-              {r.trim && <li>{t("month_trim", { name: catName(r.trim.name), amount: money(r.trim.yearly) })}</li>}
+              {r.trim && (
+                <li>
+                  {t("month_trim", { name: catName(r.trim.name), amount: money(r.trim.yearly) })}
+                </li>
+              )}
             </ul>
-            <Links items={[{ href: "/recap", label: t("linkRecap") }, { href: "/transactions", label: t("linkTransactions") }]} />
+            <Links
+              items={[
+                { href: "/recap", label: t("linkRecap") },
+                { href: "/transactions", label: t("linkTransactions") },
+              ]}
+            />
           </StepCard>
         );
       }
@@ -155,13 +216,26 @@ export function ReviewsView() {
                 />
                 <ul className="grid gap-1.5 text-sm leading-relaxed">
                   {audit.biggest && (
-                    <li>{t("subs_biggest", { merchant: audit.biggest.merchant, monthly: money(audit.biggest.monthly) })}</li>
+                    <li>
+                      {t("subs_biggest", {
+                        merchant: audit.biggest.merchant,
+                        monthly: money(audit.biggest.monthly),
+                      })}
+                    </li>
                   )}
                   {audit.raised.slice(0, 3).map((x) => (
-                    <li key={`raised-${x.merchant}`}>{t("subs_raisedItem", { merchant: x.merchant, from: money(x.from), to: money(x.to) })}</li>
+                    <li key={`raised-${x.merchant}`}>
+                      {t("subs_raisedItem", {
+                        merchant: x.merchant,
+                        from: money(x.from),
+                        to: money(x.to),
+                      })}
+                    </li>
                   ))}
                   {audit.dormant.slice(0, 3).map((x) => (
-                    <li key={`dormant-${x.merchant}`}>{t("subs_dormantItem", { merchant: x.merchant, date: x.lastDate })}</li>
+                    <li key={`dormant-${x.merchant}`}>
+                      {t("subs_dormantItem", { merchant: x.merchant, date: x.lastDate })}
+                    </li>
                   ))}
                   {anomalies > 0 && <li>{t("subs_anomalies", { count: anomalies })}</li>}
                 </ul>
@@ -183,7 +257,9 @@ export function ReviewsView() {
           <StepCard title={t("cat_title")} lede={t("cat_lede")} index={index}>
             <Chips
               label={t("cat_pick")}
-              items={categories.slice(0, 6).map((c) => ({ id: String(c.categoryId), label: catName(c.name) }))}
+              items={categories
+                .slice(0, 6)
+                .map((c) => ({ id: String(c.categoryId), label: catName(c.name) }))}
               value={String(category.categoryId)}
               onChange={setPickedCategory}
             />
@@ -204,7 +280,13 @@ export function ReviewsView() {
                         : t(vs > 0 ? "cat_vsUp" : "cat_vsDown", { pct: Math.abs(Math.round(vs)) })}
                     </li>
                     {d.topMerchants.slice(0, 3).map((m) => (
-                      <li key={m.merchant}>{t("cat_merchantItem", { merchant: m.merchant, total: money(m.amount), count: m.count })}</li>
+                      <li key={m.merchant}>
+                        {t("cat_merchantItem", {
+                          merchant: m.merchant,
+                          total: money(m.amount),
+                          count: m.count,
+                        })}
+                      </li>
                     ))}
                   </ul>
                   <Links items={[{ href: "/budget", label: t("linkBudget") }]} />
@@ -241,7 +323,10 @@ export function ReviewsView() {
                   <ul className="grid gap-1.5 text-sm leading-relaxed">
                     {d.breakdown.slice(0, 3).map((b) => (
                       <li key={b.category ?? "none"}>
-                        {t("trip_catItem", { category: b.category ? catName(b.category) : t("trip_uncategorized"), total: money(b.total) })}
+                        {t("trip_catItem", {
+                          category: b.category ? catName(b.category) : t("trip_uncategorized"),
+                          total: money(b.total),
+                        })}
                       </li>
                     ))}
                   </ul>
@@ -273,7 +358,9 @@ export function ReviewsView() {
             />
             <ul className="grid gap-1.5 text-sm leading-relaxed">
               {ins.unlinked.length > 0 && (
-                <li>{t("cover_unlinked", { count: ins.unlinked.length, total: money(unlinkedTotal) })}</li>
+                <li>
+                  {t("cover_unlinked", { count: ins.unlinked.length, total: money(unlinkedTotal) })}
+                </li>
               )}
               {missingDocs > 0 && <li>{t("cover_missingDocs", { count: missingDocs })}</li>}
               <li>
@@ -302,7 +389,9 @@ export function ReviewsView() {
             onClick={() => go(s)}
             className={cn(
               "min-h-11 rounded-full px-3.5 text-footnote font-medium focus-visible:outline-2 focus-visible:outline-ring",
-              s === step ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-accent",
+              s === step
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-foreground hover:bg-accent",
             )}
           >
             {i + 1}. {t(`step_${s}`)}
@@ -311,10 +400,19 @@ export function ReviewsView() {
       </nav>
       {body()}
       <div className="flex items-center justify-between gap-3">
-        <Button variant="outline" className="h-11" disabled={index === 0} onClick={() => go(STEPS[index - 1])}>
+        <Button
+          variant="outline"
+          className="h-11"
+          disabled={index === 0}
+          onClick={() => go(STEPS[index - 1])}
+        >
           {t("back")}
         </Button>
-        <Button className="h-11" disabled={index === STEPS.length - 1} onClick={() => go(STEPS[index + 1])}>
+        <Button
+          className="h-11"
+          disabled={index === STEPS.length - 1}
+          onClick={() => go(STEPS[index + 1])}
+        >
           {t("next")}
         </Button>
       </div>
@@ -322,12 +420,24 @@ export function ReviewsView() {
   );
 }
 
-function StepCard({ title, lede, index, children }: { title: string; lede: string; index: number; children: ReactNode }) {
+function StepCard({
+  title,
+  lede,
+  index,
+  children,
+}: {
+  title: string;
+  lede: string;
+  index: number;
+  children: ReactNode;
+}) {
   const t = useTranslations("reviews");
   return (
     <Card>
       <CardHeader>
-        <p className="text-caption font-semibold text-primary">{t("stepOf", { n: index + 1, total: STEPS.length })}</p>
+        <p className="text-caption font-semibold text-primary">
+          {t("stepOf", { n: index + 1, total: STEPS.length })}
+        </p>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -376,7 +486,9 @@ function Chips({
             onClick={() => onChange(item.id)}
             className={cn(
               "min-h-9 rounded-full px-3 text-footnote font-medium focus-visible:outline-2 focus-visible:outline-ring",
-              item.id === value ? "bg-foreground text-background" : "bg-muted text-foreground hover:bg-accent",
+              item.id === value
+                ? "bg-foreground text-background"
+                : "bg-muted text-foreground hover:bg-accent",
             )}
           >
             {item.label}

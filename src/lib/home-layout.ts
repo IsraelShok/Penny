@@ -4,7 +4,10 @@ import type { Household } from "./household";
 export type HomeTeaser = "taxSetAside" | "childSpend" | "settleUp" | "freeToSpend";
 
 /** Data the teasers need; a teaser with nothing to show is skipped. */
-export interface TeaserData { childSpend: boolean; settleUp: boolean }
+export interface TeaserData {
+  childSpend: boolean;
+  settleUp: boolean;
+}
 
 const MAX_TEASERS = 2; // stay calm
 
@@ -16,6 +19,7 @@ export function homeTeasers(h: Household, data: TeaserData): HomeTeaser[] {
   if (roles.has("child") && data.childSpend) out.push("childSpend");
   const sharing = roles.has("partner") || roles.has("roommate") || roles.has("exPartner");
   if (sharing && h.moneyStyle !== "joint" && data.settleUp) out.push("settleUp");
-  if (h.incomeShape === "allowance" || h.incomeShape === "none" || h.incomeShape === "irregular") out.push("freeToSpend");
+  if (h.incomeShape === "allowance" || h.incomeShape === "none" || h.incomeShape === "irregular")
+    out.push("freeToSpend");
   return out.slice(0, MAX_TEASERS);
 }

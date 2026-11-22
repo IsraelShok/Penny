@@ -15,7 +15,10 @@ const TTL_MS = 24 * 60 * 60 * 1000;
 type Row = Record<string, string | number | null>;
 
 async function get(params: Record<string, string>): Promise<Row[]> {
-  const res = await fetch(`${API}?${new URLSearchParams(params)}`, { signal: AbortSignal.timeout(20_000), cache: "no-store" });
+  const res = await fetch(`${API}?${new URLSearchParams(params)}`, {
+    signal: AbortSignal.timeout(20_000),
+    cache: "no-store",
+  });
   if (!res.ok) throw new Error(`data.gov.il ${res.status}`);
   const json = (await res.json()) as { success: boolean; result: { records: Row[] } };
   if (!json.success) throw new Error("data.gov.il request failed");
@@ -46,18 +49,27 @@ function toFund(source: FundSource, r: Row): Fund {
 /** Every fund in the latest monthly report, cached a day; on failure the last cached copy is used. */
 export async function loadFunds(source: FundSource): Promise<Fund[]> {
   const db = getDb();
-  const cached = db.prepare("SELECT payload, fetched_at as fetchedAt FROM funds_cache WHERE source = ?").get(source) as
-    | { payload: string; fetchedAt: number }
-    | undefined;
+  const cached = db
+    .prepare("SELECT payload, fetched_at as fetchedAt FROM funds_cache WHERE source = ?")
+    .get(source) as { payload: string; fetchedAt: number } | undefined;
   if (cached && Date.now() - cached.fetchedAt < TTL_MS) return JSON.parse(cached.payload);
   if (recentlyFailed(`funds:${source}`)) return cached ? JSON.parse(cached.payload) : [];
   try {
     const resource = RESOURCES[source];
-    const [latest] = await get({ resource_id: resource, limit: "1", sort: "REPORT_PERIOD desc", fields: "REPORT_PERIOD" });
-    const rows = await get({ resource_id: resource, limit: "3000", filters: JSON.stringify({ REPORT_PERIOD: latest.REPORT_PERIOD }) });
+    const [latest] = await get({
+      resource_id: resource,
+      limit: "1",
+      sort: "REPORT_PERIOD desc",
+      fields: "REPORT_PERIOD",
+    });
+    const rows = await get({
+      resource_id: resource,
+      limit: "3000",
+      filters: JSON.stringify({ REPORT_PERIOD: latest.REPORT_PERIOD }),
+    });
     const funds = rows.map((r) => toFund(source, r)).filter((f) => f.id && f.name);
     db.prepare(
-      "INSERT INTO funds_cache (source, payload, fetched_at) VALUES (?, ?, ?) ON CONFLICT(source) DO UPDATE SET payload = excluded.payload, fetched_at = excluded.fetched_at"
+      "INSERT INTO funds_cache (source, payload, fetched_at) VALUES (?, ?, ?) ON CONFLICT(source) DO UPDATE SET payload = excluded.payload, fetched_at = excluded.fetched_at",
     ).run(source, JSON.stringify(funds), Date.now());
     return funds;
   } catch {

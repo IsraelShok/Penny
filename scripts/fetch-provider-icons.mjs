@@ -21,25 +21,41 @@ const outDir = path.join(root, "public", "banks");
 const manifest = path.join(root, "src", "lib", "provider-logos.generated.ts");
 const MAX_BYTES = 512 * 1024;
 // Some bank sites refuse requests that do not look like a browser.
-const headers = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36" };
+const headers = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36",
+};
 
 const typesSource = await fs.readFile(path.join(root, "src", "lib", "types.ts"), "utf8");
-const housesSource = await fs.readFile(path.join(root, "src", "lib", "investment-houses.ts"), "utf8");
-const domains = [...new Set([...(typesSource + housesSource).matchAll(/domain:\s*"([a-z0-9.-]+)"/g)].map((m) => m[1]))].sort();
+const housesSource = await fs.readFile(
+  path.join(root, "src", "lib", "investment-houses.ts"),
+  "utf8",
+);
+const domains = [
+  ...new Set(
+    [...(typesSource + housesSource).matchAll(/domain:\s*"([a-z0-9.-]+)"/g)].map((m) => m[1]),
+  ),
+].sort((a, b) => a.localeCompare(b));
 // Logos to take from a fixed source: Google's favicon for these is wrong, or the site is gone (Union merged into Mizrahi).
 const OVERRIDES = {
   // Cal's favicon is an abstract mark that does not read as Cal; use its wordmark.
-  "cal-online.co.il": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Israel_Credit_Cards_CAL_company_logo_2019.webp",
+  "cal-online.co.il":
+    "https://upload.wikimedia.org/wikipedia/commons/e/ef/Israel_Credit_Cards_CAL_company_logo_2019.webp",
   // Histadrut club card (issued by Max); its old domain is gone, so use the Histadrut icon.
   "beyahad-bishvilha.co.il": "https://www.google.com/s2/favicons?domain=hist.org.il&sz=128",
-  "unionbank.co.il": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d6/Bank_Igud_logo.svg/250px-Bank_Igud_logo.svg.png",
+  "unionbank.co.il":
+    "https://upload.wikimedia.org/wikipedia/en/thumb/d/d6/Bank_Igud_logo.svg/250px-Bank_Igud_logo.svg.png",
 };
 // Google returns another brand's icon for these, so try the site's own icons first.
 const SITE_FIRST = new Set([]);
 
 async function download(url) {
   try {
-    const res = await fetch(url, { headers, redirect: "follow", signal: AbortSignal.timeout(15000) });
+    const res = await fetch(url, {
+      headers,
+      redirect: "follow",
+      signal: AbortSignal.timeout(15000),
+    });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     return buf.length > 0 && buf.length <= MAX_BYTES ? buf : null;
@@ -95,7 +111,11 @@ function imageFromIco(buf) {
 
 // Icon links declared in the bank's homepage, largest declared size first.
 async function iconLinks(domain) {
-  const res = await fetch(`https://www.${domain}/`, { headers, redirect: "follow", signal: AbortSignal.timeout(15000) }).catch(() => null);
+  const res = await fetch(`https://www.${domain}/`, {
+    headers,
+    redirect: "follow",
+    signal: AbortSignal.timeout(15000),
+  }).catch(() => null);
   if (!res?.ok) return [];
   const html = (await res.text()).slice(0, 200_000);
   const links = [...html.matchAll(/<link\b[^>]*>/gi)]
@@ -113,7 +133,9 @@ async function toPng(downloaded) {
   const icon = imageFromIco(downloaded);
   try {
     const image = icon.raw
-      ? sharp(icon.raw.rgba, { raw: { width: icon.raw.width, height: icon.raw.height, channels: 4 } })
+      ? sharp(icon.raw.rgba, {
+          raw: { width: icon.raw.width, height: icon.raw.height, channels: 4 },
+        })
       : sharp(icon.buf, { limitInputPixels: 4096 * 4096 });
     const { width = 0, height = 0 } = await image.metadata();
     // Google answers an unknown domain with a 16px placeholder: treat it as missing.
@@ -131,12 +153,24 @@ await fs.mkdir(outDir, { recursive: true });
 const found = [];
 for (const domain of domains) {
   // A domain that no longer resolves (e.g. a bank that merged) can still get a stale or wrong icon from Google.
-  const live = OVERRIDES[domain] ? true : await lookup(`www.${domain}`).then(() => true, () => lookup(domain).then(() => true, () => false));
+  const live = OVERRIDES[domain]
+    ? true
+    : await lookup(`www.${domain}`).then(
+        () => true,
+        () =>
+          lookup(domain).then(
+            () => true,
+            () => false,
+          ),
+      );
   if (!live) {
     console.log(`skip ${domain} (domain no longer resolves)`);
     continue;
   }
-  const google = [`https://www.google.com/s2/favicons?domain=${domain}&sz=128`, `https://www.google.com/s2/favicons?domain=www.${domain}&sz=128`];
+  const google = [
+    `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+    `https://www.google.com/s2/favicons?domain=www.${domain}&sz=128`,
+  ];
   const site = [
     `https://www.${domain}/apple-touch-icon.png`,
     `https://${domain}/apple-touch-icon.png`,
@@ -144,7 +178,11 @@ for (const domain of domains) {
     `https://www.${domain}/favicon.ico`,
     `https://${domain}/favicon.ico`,
   ];
-  const sources = OVERRIDES[domain] ? [OVERRIDES[domain]] : SITE_FIRST.has(domain) ? [...site, ...google] : [...google, ...site];
+  const sources = OVERRIDES[domain]
+    ? [OVERRIDES[domain]]
+    : SITE_FIRST.has(domain)
+      ? [...site, ...google]
+      : [...google, ...site];
   let png = null;
   let from = "";
   for (const url of sources) {
@@ -169,6 +207,6 @@ await fs.writeFile(
   `// Generated by scripts/fetch-provider-icons.mjs. Domains with a logo in public/banks.\n` +
     `export const LOCAL_PROVIDER_LOGOS: ReadonlySet<string> = new Set([\n` +
     found.map((d) => `  "${d}",\n`).join("") +
-    `]);\n`
+    `]);\n`,
 );
 console.log(`\n${found.length}/${domains.length} logos saved.`);

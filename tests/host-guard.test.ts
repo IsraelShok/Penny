@@ -5,12 +5,26 @@ import { proxy as middleware } from "@/proxy";
 
 describe("isAllowedHost", () => {
   it("allows loopback names on any port", () => {
-    for (const h of ["127.0.0.1:41234", "localhost:3000", "127.0.0.1", "[::1]:3000", "penny.localhost:41234"]) {
+    for (const h of [
+      "127.0.0.1:41234",
+      "localhost:3000",
+      "127.0.0.1",
+      "[::1]:3000",
+      "penny.localhost:41234",
+    ]) {
       expect(isAllowedHost(h)).toBe(true);
     }
   });
   it("rejects other names, lookalikes and a missing host", () => {
-    for (const h of ["evil.com", "evil.com:41234", "127.0.0.1.evil.com", "localhost.evil.com:3000", "192.168.1.5:3000", "", null]) {
+    for (const h of [
+      "evil.com",
+      "evil.com:41234",
+      "127.0.0.1.evil.com",
+      "localhost.evil.com:3000",
+      "192.168.1.5:3000",
+      "",
+      null,
+    ]) {
       expect(isAllowedHost(h as string | null)).toBe(false);
     }
   });
@@ -39,7 +53,9 @@ describe("middleware host guard", () => {
     expect(middleware(req("127.0.0.1:41234")).headers.get("x-middleware-next")).toBe("1");
   });
   it("requires a same-origin referer for the Ollama model list, which fetches a URL", () => {
-    expect(middleware(req("127.0.0.1:41234", "GET", "/api/ai/ollama/models?url=http://10.0.0.1")).status).toBe(403);
+    expect(
+      middleware(req("127.0.0.1:41234", "GET", "/api/ai/ollama/models?url=http://10.0.0.1")).status,
+    ).toBe(403);
     const ok = new NextRequest("http://127.0.0.1:41234/api/ai/ollama/models", {
       headers: { host: "127.0.0.1:41234", referer: "http://127.0.0.1:41234/settings/ai" },
     });

@@ -10,7 +10,7 @@ const FORK_PROVIDERS = new Set(["isracard", "max"]);
  */
 export function usesScraperFork(
   provider: string,
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = process.env,
 ): boolean {
   return pennyEnv("SCRAPER_FORK", env) === "1" && FORK_PROVIDERS.has(provider);
 }

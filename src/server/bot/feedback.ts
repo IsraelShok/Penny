@@ -7,13 +7,23 @@ import { budgetMonthRange } from "@/lib/finance-period";
 import { computeCashAhead } from "../insights/cash-ahead";
 import { freeLine, moneyFor } from "./snapshot";
 
-interface NewSpend { amount: number; description: string; categoryId: number | null; category: string | null }
+interface NewSpend {
+  amount: number;
+  description: string;
+  categoryId: number | null;
+  category: string | null;
+}
 
 /**
  * The message sent right after a sync: the biggest new expenses, each with what is left in its
  * category budget, then the free-to-spend line. Null when the sync brought no new expense.
  */
-export function spendFeedback(ws: number, since: string, today: string, hide = false): string | null {
+export function spendFeedback(
+  ws: number,
+  since: string,
+  today: string,
+  hide = false,
+): string | null {
   const db = getDb();
   const rows = db
     .prepare(
@@ -21,7 +31,7 @@ export function spendFeedback(ws: number, since: string, today: string, hide = f
        FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
        WHERE t.workspace_id = ? AND t.created_at >= ? AND t.kind = 'expense' AND t.is_excluded = 0
          AND t.status IN ('completed', 'pending')
-       ORDER BY ABS(t.charged_amount) DESC`
+       ORDER BY ABS(t.charged_amount) DESC`,
     )
     .all(ws, since) as NewSpend[];
   if (rows.length === 0) return null;
@@ -35,14 +45,16 @@ export function spendFeedback(ws: number, since: string, today: string, hide = f
   const spentIn = db.prepare(
     `SELECT COALESCE(SUM(ABS(charged_amount)), 0) as total FROM transactions
      WHERE workspace_id = ? AND category_id = ? AND kind = 'expense' AND is_excluded = 0
-       AND status IN ('completed', 'pending') AND date >= ? AND date <= ?`
+       AND status IN ('completed', 'pending') AND date >= ? AND date <= ?`,
   );
 
   const lines = rows.slice(0, 3).map((r) => {
     const head = `• ${money(r.amount)} ${r.description}`;
     const budget = r.categoryId == null ? null : budgets.get(r.categoryId);
     if (!budget || budget.budget <= 0) return r.category ? `${head} (${r.category})` : head;
-    const spent = (spentIn.get(ws, r.categoryId, range.from, `${range.to}T23:59:59`) as { total: number }).total;
+    const spent = (
+      spentIn.get(ws, r.categoryId, range.from, `${range.to}T23:59:59`) as { total: number }
+    ).total;
     const left = budget.budget - spent;
     const ratio = spent / budget.budget;
     const dot = ratio >= 1 ? "🔴" : ratio >= 0.8 ? "🟡" : "🟢";
@@ -52,7 +64,13 @@ export function spendFeedback(ws: number, since: string, today: string, hide = f
   });
 
   const more = rows.length > 3 ? `ועוד ${rows.length - 3} עסקאות חדשות.` : null;
-  return [rows.length === 1 ? "💳 הוצאה חדשה" : `💳 ${rows.length} הוצאות חדשות`, ...lines, more, "", freeLine(cash, money)]
+  return [
+    rows.length === 1 ? "💳 הוצאה חדשה" : `💳 ${rows.length} הוצאות חדשות`,
+    ...lines,
+    more,
+    "",
+    freeLine(cash, money),
+  ]
     .filter((l) => l !== null)
     .join("\n");
 }

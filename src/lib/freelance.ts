@@ -2,7 +2,12 @@ import { IL } from "@/lib/il-defaults";
 import { bituachLeumi } from "@/lib/net-salary";
 
 /** Monthly set-asides for a self-employed person. An estimate, not tax advice. */
-export function freelanceSetAside({ income, expenses, advanceRate = 0.1, vatRegistered = false }: {
+export function freelanceSetAside({
+  income,
+  expenses,
+  advanceRate = 0.1,
+  vatRegistered = false,
+}: {
   income: number;
   expenses: number;
   /** Income-tax advance (מקדמות) as a share of turnover, as the Tax Authority sets it. */
@@ -15,7 +20,8 @@ export function freelanceSetAside({ income, expenses, advanceRate = 0.1, vatRegi
   const bituach = bituachLeumi(profit, IL.bituach.selfEmployed);
   const { averageWage, lowRate, highRate } = IL.selfEmployedPension;
   const half = averageWage / 2;
-  const pension = Math.min(profit, half) * lowRate + Math.max(0, Math.min(profit, averageWage) - half) * highRate;
+  const pension =
+    Math.min(profit, half) * lowRate + Math.max(0, Math.min(profit, averageWage) - half) * highRate;
   // Income is entered before VAT; this is the VAT collected on top that goes to the Tax Authority.
   const vat = vatRegistered ? income * IL.vat.rate : 0;
   return { profit, taxAdvance, bituach, pension, vat, total: taxAdvance + bituach };

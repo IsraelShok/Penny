@@ -16,7 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SectionShell, SettingCard, SettingList, SettingRow } from "@/components/settings/section-shell";
+import {
+  SectionShell,
+  SettingCard,
+  SettingList,
+  SettingRow,
+} from "@/components/settings/section-shell";
 import { useHousehold } from "@/hooks/use-household";
 import { useProfiles } from "@/components/layout/workspace-switcher";
 import { ProfileAvatar } from "@/components/profiles/profile-avatar";
@@ -55,7 +60,10 @@ export function HouseholdSettings() {
           <GentleModeCard />
           <LifeEventsCard />
           <SettingCard>
-            <Link href="/journey" className="-mx-4 -my-3 flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 font-medium hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-ring">
+            <Link
+              href="/journey"
+              className="-mx-4 -my-3 flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 font-medium hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-ring"
+            >
               <span className="min-w-0 flex-1">{tJ("settingsLink")}</span>
               <Forward className="text-muted-foreground" />
             </Link>
@@ -71,7 +79,8 @@ function ProfilesCard() {
   const t = useTranslations("profiles");
   const tOn = useTranslations("onboarding");
   const { profiles } = useProfiles();
-  const row = "-mx-4 flex min-h-11 items-center gap-3 rounded-2xl px-4 py-2 hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-ring";
+  const row =
+    "-mx-4 flex min-h-11 items-center gap-3 rounded-2xl px-4 py-2 hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-ring";
   return (
     <SettingCard title={t("household")} description={t("householdDescription")}>
       <ul className="flex flex-wrap gap-4">
@@ -101,7 +110,10 @@ function GentleSuggestion() {
     <div role="status" className="rounded-2xl border border-border bg-muted/40 p-5">
       <p className="text-sm">{t("gentleSuggestion")}</p>
       <div className="mt-3 flex gap-2">
-        <Button size="sm" onClick={() => save({ gentleMode: true, gentleSuggestionDismissed: true })}>
+        <Button
+          size="sm"
+          onClick={() => save({ gentleMode: true, gentleSuggestionDismissed: true })}
+        >
           {t("gentleTurnOn")}
         </Button>
         <Button size="sm" variant="ghost" onClick={() => save({ gentleSuggestionDismissed: true })}>
@@ -126,7 +138,9 @@ function MembersCard() {
     (year == null || (Number.isInteger(year) && year > 1900 && year <= new Date().getFullYear()));
 
   function add() {
-    save({ members: [...household.members, { id: newId(), name: name.trim(), role, birthYear: year }] });
+    save({
+      members: [...household.members, { id: newId(), name: name.trim(), role, birthYear: year }],
+    });
     setName("");
     setBirthYear("");
   }
@@ -134,49 +148,72 @@ function MembersCard() {
   return (
     <SettingCard title={t("membersTitle")} description={t("membersDescription")}>
       <SettingList>
-      {household.members.map((m) => (
-        <SettingRow key={m.id} label={m.name} hint={<>{t(`role.${m.role}`)}{m.birthYear ? ` · ${m.birthYear}` : ""}{m.role === "child" && <Link href="/investments#kids" className="ms-2 text-primary hover:underline">{t("kidsInvestLink")}</Link>}</>}>
-          <Button
-            size="icon"
-            variant="ghost"
-            aria-label={t("removeItem", { name: m.name })}
-            onClick={() => save({ members: household.members.filter((x) => x.id !== m.id) })}
+        {household.members.map((m) => (
+          <SettingRow
+            key={m.id}
+            label={m.name}
+            hint={
+              <>
+                {t(`role.${m.role}`)}
+                {m.birthYear ? ` · ${m.birthYear}` : ""}
+                {m.role === "child" && (
+                  <Link href="/investments#kids" className="ms-2 text-primary hover:underline">
+                    {t("kidsInvestLink")}
+                  </Link>
+                )}
+              </>
+            }
           >
-            <Trash2 className="h-4 w-4" />
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label={t("removeItem", { name: m.name })}
+              onClick={() => save({ members: household.members.filter((x) => x.id !== m.id) })}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </SettingRow>
+        ))}
+        <div className="grid grid-cols-2 items-end gap-3 py-3 first:pt-0 last:pb-0 sm:grid-cols-[1fr_160px_120px_auto]">
+          <div className="col-span-2 space-y-1 sm:col-span-1">
+            <Label htmlFor="member-name">{t("memberName")}</Label>
+            <Input
+              id="member-name"
+              value={name}
+              maxLength={80}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="member-role">{t("memberRole")}</Label>
+            <Select value={role} onValueChange={(v) => v && setRole(v as MemberRole)}>
+              <SelectTrigger id="member-role">
+                <SelectValue>{t(`role.${role}`)}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {MEMBER_ROLES.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {t(`role.${r}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="member-year">{t("birthYear")}</Label>
+            <Input
+              id="member-year"
+              type="number"
+              inputMode="numeric"
+              className="tabular-nums"
+              value={birthYear}
+              onChange={(e) => setBirthYear(e.target.value)}
+            />
+          </div>
+          <Button className="col-span-2 sm:col-span-1" onClick={add} disabled={!valid || saving}>
+            {tCommon("add")}
           </Button>
-        </SettingRow>
-      ))}
-      <div className="grid grid-cols-2 items-end gap-3 py-3 first:pt-0 last:pb-0 sm:grid-cols-[1fr_160px_120px_auto]">
-        <div className="col-span-2 space-y-1 sm:col-span-1">
-          <Label htmlFor="member-name">{t("memberName")}</Label>
-          <Input id="member-name" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} />
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="member-role">{t("memberRole")}</Label>
-          <Select value={role} onValueChange={(v) => v && setRole(v as MemberRole)}>
-            <SelectTrigger id="member-role">
-              <SelectValue>{t(`role.${role}`)}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {MEMBER_ROLES.map((r) => (
-                <SelectItem key={r} value={r}>{t(`role.${r}`)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="member-year">{t("birthYear")}</Label>
-          <Input
-            id="member-year"
-            type="number"
-            inputMode="numeric"
-            className="tabular-nums"
-            value={birthYear}
-            onChange={(e) => setBirthYear(e.target.value)}
-          />
-        </div>
-        <Button className="col-span-2 sm:col-span-1" onClick={add} disabled={!valid || saving}>{tCommon("add")}</Button>
-      </div>
       </SettingList>
     </SettingCard>
   );
@@ -200,7 +237,9 @@ function MoneyShapeCard() {
             </SelectTrigger>
             <SelectContent>
               {INCOME_SHAPES.map((s) => (
-                <SelectItem key={s} value={s}>{t(`income.${s}`)}</SelectItem>
+                <SelectItem key={s} value={s}>
+                  {t(`income.${s}`)}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -217,7 +256,9 @@ function MoneyShapeCard() {
             </SelectTrigger>
             <SelectContent>
               {MONEY_STYLES.map((s) => (
-                <SelectItem key={s} value={s}>{t(`style.${s}`)}</SelectItem>
+                <SelectItem key={s} value={s}>
+                  {t(`style.${s}`)}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -233,7 +274,11 @@ function GentleModeCard() {
   return (
     <SettingCard>
       <SettingRow label={t("gentleTitle")} hint={t("gentleDescription")} htmlFor="gentle-mode">
-        <Switch id="gentle-mode" checked={household.gentleMode} onCheckedChange={(v) => save({ gentleMode: v })} />
+        <Switch
+          id="gentle-mode"
+          checked={household.gentleMode}
+          onCheckedChange={(v) => save({ gentleMode: v })}
+        />
       </SettingRow>
     </SettingCard>
   );
@@ -264,14 +309,21 @@ function LifeEventsCard() {
             </SelectTrigger>
             <SelectContent>
               {LIFE_EVENTS.map((e) => (
-                <SelectItem key={e} value={e}>{t(`event.${e}`)}</SelectItem>
+                <SelectItem key={e} value={e}>
+                  {t(`event.${e}`)}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1">
           <Label htmlFor="event-date">{t("eventDate")}</Label>
-          <Input id="event-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <Input
+            id="event-date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
         </div>
         <Button
           className="col-span-2 sm:col-span-1"

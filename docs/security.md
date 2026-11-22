@@ -14,6 +14,7 @@ Legend: **Fixed** = changed in this commit. **OK** = already in place. **Open** 
 | Item | Status |
 |---|---|
 | Bind address: `next dev/start -H 127.0.0.1`; Docker publishes to `127.0.0.1` | OK |
+| Phone access (off by default): binds `0.0.0.0`, requires the app lock, plain HTTP on the home network | **Built**, documented in SECURITY.md |
 | DNS rebinding: `src/proxy.ts` rejects any `Host` not in the localhost list (`src/lib/host-guard.ts`, `PENNY_ALLOWED_HOSTS` to extend) | OK |
 | CSRF: every POST/PUT/PATCH/DELETE under `/api` needs an `Origin` (or `Referer`) equal to the host; `Origin: null` is rejected | OK, now tested (`tests/proxy.test.ts`) |
 | Cross-site reads and side-effect GETs (`<img src=/api/...>`): any `/api` request with `Sec-Fetch-Site: cross-site` or `same-site` is rejected | **Fixed** |
@@ -21,7 +22,8 @@ Legend: **Fixed** = changed in this commit. **OK** = already in place. **Open** 
 | App lock (optional, off by default) | **Built** |
 
 **App lock** (`src/server/lib/app-lock.ts`, Settings, Privacy & security). Passphrase of 8+ characters
-or a 6+ digit PIN, hashed with `crypto.scrypt` (N=2^15, r=8, p=1, random 16-byte salt) and compared with
+or a PIN of 8+ digits, hashed with `crypto.scrypt` (r=8, p=1, N=2^17 for new locks, N=2^15 for lock
+files written before that change, random 16-byte salt) and compared with
 `timingSafeEqual`. When on, `src/proxy.ts` lets through only `/lock`, `/api/lock/unlock` and static
 assets; pages redirect to `/lock`, `/api` answers 401. The session is a random 32-byte token in an
 HttpOnly, SameSite=Strict, Path=/ cookie (Secure over https), kept only in server memory with an idle
@@ -30,7 +32,9 @@ Failed unlocks back off exponentially (1s, 2s, 4s ... up to 15 min, in memory). 
 the lock needs the current passphrase. "נעילה עכשיו" in the sidebar footer ends the session at once.
 Trade-offs: a forgotten passphrase cannot be recovered (only a full wipe); the lock is per server, not
 per browser; an in-page fetch after idle expiry gets 401 until the next navigation shows the lock screen.
-A LAN self-hoster who adds a host to `PENNY_ALLOWED_HOSTS` should turn the lock on.
+A LAN self-hoster who adds a host to `PENNY_ALLOWED_HOSTS` should turn the lock on. Phone access
+(Settings -> Privacy & security) needs the lock by design and is plain HTTP: the PIN, the login and
+the session cookie cross the Wi-Fi unencrypted.
 
 ## 2. XSS and browser hardening (`next.config.ts`)
 
@@ -127,14 +131,17 @@ including credentials, settings, AI keys and Telegram), the key file or wrapped 
 `logs/` in the data folder, then returns to first run (migrations recreate an empty database).
 Files are overwritten before unlink, best effort as above.
 
-## 11. Dependencies (`npm audit --omit=dev`, 2026-11-06)
+## 11. Dependencies (`npm audit --omit=dev`, 2026-11-22)
 
-18 findings (13 high, 5 moderate), all transitive under the two bank scraper packages
-(`israeli-bank-scrapers` -> puppeteer, ws, zod, proxy-agent, basic-ftp, ip-address;
-`@sergienko4/israeli-bank-scrapers` -> camoufox-js, glob, minimatch, moment). Fixes need major
-upgrades (`israeli-bank-scrapers@6.7.1`, `@sergienko4/israeli-bank-scrapers@8.6.0`) which change
-scraper behaviour, so they are not applied here. Exposure is limited: the scraper only talks to bank
-domains and the proxy/FTP paths are unused. Upgrade with a full sync test per bank.
+12 findings, all high, all transitive under the `puppeteer` tree that
+`israeli-bank-scrapers` and `israeli-pension-scrapers` drive (extract-zip, basic-ftp, get-uri,
+proxy-agent, pac-proxy-agent, and zod inside chromium-bidi). The download-and-unpack path is
+dead in Penny: no browser is downloaded (`PUPPETEER_SKIP_DOWNLOAD`, system Chromium), no proxy is
+configured, and the scrapers speak CDP rather than BiDi, so chromium-bidi's zod validation never
+runs. **Triage documented, not fixable in range**: see SECURITY.md, "Known audit findings".
+`@sergienko4/israeli-bank-scrapers` is on 10.1.1 (browserless), which removed camoufox-js,
+playwright, glob and minimatch and the four moderate advisories that came with them. CI fails on
+any new critical advisory (`npm run security:audit:gate`).
 
 ## 12. Update check
 

@@ -96,7 +96,9 @@ export function detectRecurring(txns: RecurringTxn[]): Series[] {
       account: sorted[0].account,
       currency: sorted[0].currency,
       cadence: cadence.name,
-      expectedAmount: change ? amounts[amounts.length - 1] : amounts.reduce((a, b) => a + b, 0) / amounts.length,
+      expectedAmount: change
+        ? amounts[amounts.length - 1]
+        : amounts.reduce((a, b) => a + b, 0) / amounts.length,
       occurrences: chain.length,
       lastDate: chain[chain.length - 1].date,
       status: chain.length >= 3 ? "suggested" : "candidate",

@@ -3,9 +3,14 @@ import type { Asset } from "@/lib/types";
 export type WealthGroup = "portfolio" | "pension" | "funds";
 
 const GROUP: Partial<Record<Asset["type"], WealthGroup>> = {
-  stock: "portfolio", fund: "portfolio", bond: "portfolio", crypto: "portfolio", metal: "portfolio",
+  stock: "portfolio",
+  fund: "portfolio",
+  bond: "portfolio",
+  crypto: "portfolio",
+  metal: "portfolio",
   pension: "pension",
-  study_fund: "funds", provident: "funds",
+  study_fund: "funds",
+  provident: "funds",
 };
 
 /**
@@ -17,7 +22,8 @@ export function monthlyGrowth(a: Asset): number | null {
   if (a.valueIls == null) return null;
   const s = a.quote?.series;
   if (s && s.length >= 5) {
-    const now = s[s.length - 1], then = s[s.length - 5];
+    const now = s[s.length - 1],
+      then = s[s.length - 5];
     return then > 0 && now > 0 ? a.valueIls * (1 - then / now) : null;
   }
   const f = a.fund?.fund;
@@ -39,7 +45,10 @@ export function wealthGroups(assets: Asset[]) {
     if (!g || a.valueIls == null) continue;
     out[g].value += a.valueIls;
     const d = monthlyGrowth(a);
-    if (d != null) { out[g].growth += d; out[g].estimated = true; }
+    if (d != null) {
+      out[g].growth += d;
+      out[g].estimated = true;
+    }
   }
   return out;
 }

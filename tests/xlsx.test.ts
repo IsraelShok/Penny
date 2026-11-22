@@ -11,7 +11,11 @@ async function zip(files: Record<string, string>, deflate: string[]): Promise<Ui
     const raw = enc.encode(text);
     const method = deflate.includes(name) ? 8 : 0;
     const data = method
-      ? new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer())
+      ? new Uint8Array(
+          await new Response(
+            new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate-raw")),
+          ).arrayBuffer(),
+        )
       : raw;
     const n = enc.encode(name);
     const local = new Uint8Array(30 + n.length + data.length);
@@ -46,7 +50,10 @@ async function zip(files: Record<string, string>, deflate: string[]): Promise<Ui
   ev.setUint32(16, offset, true);
   const out = new Uint8Array(offset + cdSize + 22);
   let p = 0;
-  for (const part of [...locals, ...central, end]) { out.set(part, p); p += part.length; }
+  for (const part of [...locals, ...central, end]) {
+    out.set(part, p);
+    p += part.length;
+  }
   return out;
 }
 
@@ -60,7 +67,14 @@ const strings = `<sst><si><t>פירוט עסקאות</t></si><si><r><t>תארי�
 
 describe("readXlsx", () => {
   it("reads shared, inline and numeric cells from a deflated sheet", async () => {
-    const bytes = await zip({ "[Content_Types].xml": "<Types/>", "xl/sharedStrings.xml": strings, "xl/worksheets/sheet1.xml": sheet }, ["xl/worksheets/sheet1.xml"]);
+    const bytes = await zip(
+      {
+        "[Content_Types].xml": "<Types/>",
+        "xl/sharedStrings.xml": strings,
+        "xl/worksheets/sheet1.xml": sheet,
+      },
+      ["xl/worksheets/sheet1.xml"],
+    );
     expect(await readXlsx(bytes)).toEqual([
       ["פירוט עסקאות"],
       ["תאריך עסקה", "שם בית העסק", "סכום"],
@@ -69,8 +83,16 @@ describe("readXlsx", () => {
   });
 
   it("reads every sheet in order (sheet10 after sheet2)", async () => {
-    const one = (v: string) => `<worksheet><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>${v}</t></is></c></row></sheetData></worksheet>`;
-    const bytes = await zip({ "xl/worksheets/sheet10.xml": one("c"), "xl/worksheets/sheet2.xml": one("b"), "xl/worksheets/sheet1.xml": one("a") }, []);
+    const one = (v: string) =>
+      `<worksheet><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>${v}</t></is></c></row></sheetData></worksheet>`;
+    const bytes = await zip(
+      {
+        "xl/worksheets/sheet10.xml": one("c"),
+        "xl/worksheets/sheet2.xml": one("b"),
+        "xl/worksheets/sheet1.xml": one("a"),
+      },
+      [],
+    );
     expect(await readXlsx(bytes)).toEqual([["a"], ["b"], ["c"]]);
   });
 

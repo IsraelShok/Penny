@@ -31,7 +31,14 @@ export interface CreditAnswers {
   qualifyingTown: boolean;
 }
 
-export type CreditCheck = "form101" | "fatherKids" | "donations" | "lifeInsurance" | "privatePension" | "changedJobs" | "qualifyingTown";
+export type CreditCheck =
+  | "form101"
+  | "fatherKids"
+  | "donations"
+  | "lifeInsurance"
+  | "privatePension"
+  | "changedJobs"
+  | "qualifyingTown";
 
 /**
  * Points payroll usually applies (resident, sex, children) vs everything the answers entitle to.
@@ -41,18 +48,22 @@ export function creditCheck(a: CreditAnswers) {
   const table: readonly number[] = a.sex === "woman" ? R.childWoman : R.childMan;
   const childPoints = table.reduce((s: number, p, i) => s + p * Math.max(0, a.children[i] ?? 0), 0);
   const likely = IL.creditPoints[a.sex] + childPoints;
-  const extra = (a.singleParent ? R.singleParent : 0)
-    + (a.degree === "none" ? 0 : R.degree[a.degree])
-    + (a.service === "none" ? 0 : R.service[a.service])
-    + (R.aliyahByYear[a.aliyahYear - 1] ?? 0);
+  const extra =
+    (a.singleParent ? R.singleParent : 0) +
+    (a.degree === "none" ? 0 : R.degree[a.degree]) +
+    (a.service === "none" ? 0 : R.service[a.service]) +
+    (R.aliyahByYear[a.aliyahYear - 1] ?? 0);
 
   const income = a.monthlyGross * 12;
   const d = IL.donationCredit;
-  const donation = a.donations > d.min ? d.rate * Math.min(a.donations, d.maxShareOfIncome * income) : 0;
+  const donation =
+    a.donations > d.min ? d.rate * Math.min(a.donations, d.maxShareOfIncome * income) : 0;
   const life = IL.lifeInsuranceCreditRate * a.lifeInsurance;
   const se = IL.selfEmployedDeposits;
   // shortcut: treats all salary as eligible for the 5.5% credit part, ignores the 11% deduction; fine for a "worth checking" flag.
-  const pension = IL.pensionCredit.rate * Math.min(a.privatePension, se.pensionCreditPct * Math.min(income, se.pensionIncomeCap));
+  const pension =
+    IL.pensionCredit.rate *
+    Math.min(a.privatePension, se.pensionCreditPct * Math.min(income, se.pensionIncomeCap));
 
   const taxLeft = Math.max(0, bracketTax(a.monthlyGross) * 12 - likely * POINT_YEAR);
   const missedValue = extra * POINT_YEAR + donation + life + pension;
@@ -83,7 +94,12 @@ export interface DepositInput {
  * How much pension and study-fund deposit gets the full tax benefit, its ₪ value, and what is left this year.
  * shortcut: one marginal rate for the whole deduction (ignores dropping a bracket); upgrade if users sit on a bracket edge.
  */
-export function depositPlan({ selfEmployed, monthlyIncome, pensionMonthly, studyMonthly }: DepositInput) {
+export function depositPlan({
+  selfEmployed,
+  monthlyIncome,
+  pensionMonthly,
+  studyMonthly,
+}: DepositInput) {
   const annual = monthlyIncome * 12;
   const m = marginalRate(monthlyIncome);
   const se = IL.selfEmployedDeposits;
@@ -93,11 +109,17 @@ export function depositPlan({ selfEmployed, monthlyIncome, pensionMonthly, study
   if (selfEmployed) {
     const q = Math.min(annual, se.pensionIncomeCap);
     const creditPart = se.pensionCreditPct * q;
-    pension = { max: (se.pensionCreditPct + se.pensionDeductPct) * q, value: (d) => credit * Math.min(d, creditPart) + m * Math.min(Math.max(0, d - creditPart), se.pensionDeductPct * q) };
+    pension = {
+      max: (se.pensionCreditPct + se.pensionDeductPct) * q,
+      value: (d) =>
+        credit * Math.min(d, creditPart) +
+        m * Math.min(Math.max(0, d - creditPart), se.pensionDeductPct * q),
+    };
     const sMax = se.studyDeductPct * Math.min(annual, se.studyIncomeCap);
     study = { max: sMax, value: (d) => m * Math.min(d, sMax) };
   } else {
-    const pMax = IL.pensionCredit.ofSalary * Math.min(monthlyIncome, IL.pensionCredit.salaryCeiling) * 12;
+    const pMax =
+      IL.pensionCredit.ofSalary * Math.min(monthlyIncome, IL.pensionCredit.salaryCeiling) * 12;
     pension = { max: pMax, value: (d) => credit * Math.min(d, pMax) };
     // 10% of salary up to the ceiling (7.5% employer + 2.5% you); the employer's three quarters is untaxed income.
     const sMax = 0.1 * Math.min(monthlyIncome, IL.studyFundSalaryCeiling) * 12;
@@ -105,14 +127,30 @@ export function depositPlan({ selfEmployed, monthlyIncome, pensionMonthly, study
   }
   const row = (p: typeof pension, monthly: number) => {
     const now = monthly * 12;
-    return { max: p.max, now, unused: Math.max(0, p.max - now), benefit: p.value(now), benefitMax: p.value(p.max) };
+    return {
+      max: p.max,
+      now,
+      unused: Math.max(0, p.max - now),
+      benefit: p.value(now),
+      benefitMax: p.value(p.max),
+    };
   };
   const rows = { pension: row(pension, pensionMonthly), study: row(study, studyMonthly) };
-  return { ...rows, marginal: m, missed: rows.pension.benefitMax - rows.pension.benefit + rows.study.benefitMax - rows.study.benefit };
+  return {
+    ...rows,
+    marginal: m,
+    missed:
+      rows.pension.benefitMax - rows.pension.benefit + rows.study.benefitMax - rows.study.benefit,
+  };
 }
 
 /** Tax saved by selling at a loss in the same year as a gain (Form 867 / annual report). Real gains, 25%. */
 export function lossOffset(gains: number, losses: number) {
   const r = IL.capitalGainsTax;
-  return { taxBefore: r * gains, taxAfter: r * Math.max(0, gains - losses), saved: r * Math.min(gains, losses), carryForward: Math.max(0, losses - gains) };
+  return {
+    taxBefore: r * gains,
+    taxAfter: r * Math.max(0, gains - losses),
+    saved: r * Math.min(gains, losses),
+    carryForward: Math.max(0, losses - gains),
+  };
 }

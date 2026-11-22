@@ -7,7 +7,11 @@ export const dynamic = "force-dynamic";
 const KEY = "life_checklists";
 
 function read(ws: number) {
-  try { return parseProgress(JSON.parse(getWorkspaceSetting(ws, KEY) ?? "{}")); } catch { return {}; }
+  try {
+    return parseProgress(JSON.parse(getWorkspaceSetting(ws, KEY) ?? "{}"));
+  } catch {
+    return {};
+  }
 }
 
 export async function GET(request: Request) {

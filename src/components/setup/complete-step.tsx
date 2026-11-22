@@ -57,7 +57,13 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
         }}
         className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/15"
       >
-        <img src="/icons/icon-192.png" alt="Penny" width={48} height={48} className="h-12 w-12 rounded-xl" />
+        <img
+          src="/icons/icon-192.png"
+          alt="Penny"
+          width={48}
+          height={48}
+          className="h-12 w-12 rounded-xl"
+        />
       </motion.div>
 
       <div>
@@ -143,7 +149,13 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
       <ImportProgress />
 
       <div className="flex justify-center">
-        <IconButton showLabel label={t("completeOpenBudgets")} variant="default" size="icon-lg" onClick={onFinish}>
+        <IconButton
+          showLabel
+          label={t("completeOpenBudgets")}
+          variant="default"
+          size="icon-lg"
+          onClick={onFinish}
+        >
           <Check className="size-4" aria-hidden />
         </IconButton>
       </div>
@@ -169,7 +181,7 @@ function ImportProgress() {
           if (idx < i) return { ...s, state: "done" };
           if (idx === i) return { ...s, state: "active" };
           return { ...s, state: "todo" };
-        })
+        }),
       );
       if (i >= 4) clearInterval(id);
     }, 850);
@@ -186,20 +198,12 @@ function ImportProgress() {
       {steps.map((s, i) => (
         <div
           key={s.id}
-          className={`flex items-center gap-3 py-2 ${
-            i > 0 ? "border-t border-border/40" : ""
-          }`}
+          className={`flex items-center gap-3 py-2 ${i > 0 ? "border-t border-border/40" : ""}`}
         >
           <motion.div
-            animate={
-              s.state === "active"
-                ? { scale: [1, 1.06, 1] }
-                : { scale: 1 }
-            }
+            animate={s.state === "active" ? { scale: [1, 1.06, 1] } : { scale: 1 }}
             transition={
-              s.state === "active"
-                ? { duration: 1.2, repeat: Infinity }
-                : { duration: 0.2 }
+              s.state === "active" ? { duration: 1.2, repeat: Infinity } : { duration: 0.2 }
             }
             className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
             style={{

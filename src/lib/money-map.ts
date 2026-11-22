@@ -2,8 +2,16 @@ import type { Asset } from "@/lib/types";
 import { liquidCash } from "@/lib/allocation";
 import { wealthGroups } from "@/lib/wealth-growth";
 
-export type MapArea = "cashflow" | "cushion" | "investments" | "pension" | "debts" | "property" | "netWorth";
-export interface MapRow { area: MapArea; href: string; value: number | null; target?: number; months?: number; count?: number }
+export type MapArea =
+  "cashflow" | "cushion" | "investments" | "pension" | "debts" | "property" | "netWorth";
+export interface MapRow {
+  area: MapArea;
+  href: string;
+  value: number | null;
+  target?: number;
+  months?: number;
+  count?: number;
+}
 export interface MoneyMapInput {
   forecast: number | null;
   assets: Asset[] | null;
@@ -22,7 +30,9 @@ export function buildMoneyMap(i: MoneyMapInput): { rows: MapRow[]; more: MapRow[
   const cash = A ? pos(liquidCash(A)) : null;
   const g = A ? wealthGroups(A) : null;
   const liabs = A ? A.filter((a) => a.isLiability) : [];
-  const propertyVal = A ? pos(sum(A.filter((a) => !a.isLiability && a.type === "real_estate"))) : null;
+  const propertyVal = A
+    ? pos(sum(A.filter((a) => !a.isLiability && a.type === "real_estate")))
+    : null;
 
   const cushion: MapRow = { area: "cushion", href: "/investments", value: cash };
   if (cash != null && exp) cushion.months = Math.round((cash / exp) * 10) / 10;
@@ -31,7 +41,11 @@ export function buildMoneyMap(i: MoneyMapInput): { rows: MapRow[]; more: MapRow[
   const investments = g ? pos(g.portfolio.value) : null;
   const pension = g ? pos(g.pension.value + g.funds.value) : null;
   // a liability of unknown size must not read as "no debts": 0 only when every liability is known
-  const debts = A ? (liabs.some((a) => a.valueIls == null) && sum(liabs) === 0 ? null : sum(liabs)) : null;
+  const debts = A
+    ? liabs.some((a) => a.valueIls == null) && sum(liabs) === 0
+      ? null
+      : sum(liabs)
+    : null;
   const property: MapRow = { area: "property", href: "/investments", value: propertyVal };
 
   const rows: MapRow[] = [
@@ -44,7 +58,9 @@ export function buildMoneyMap(i: MoneyMapInput): { rows: MapRow[]; more: MapRow[
   const more: MapRow[] = [];
   (propertyVal != null || i.hasHomeEvent ? rows : more).push(property);
 
-  const filled = [cash, investments, pension, debts, propertyVal].filter((v) => v != null && v !== 0).length;
+  const filled = [cash, investments, pension, debts, propertyVal].filter(
+    (v) => v != null && v !== 0,
+  ).length;
   if (A && filled >= 2) {
     const assetsTotal = sum(A.filter((a) => !a.isLiability));
     rows.push({ area: "netWorth", href: "/fi", value: assetsTotal - (debts ?? 0) });

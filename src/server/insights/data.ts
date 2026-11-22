@@ -26,23 +26,25 @@ interface Row {
 }
 
 function loadRows(workspaceId: number): Row[] {
-  return getDb()
-    .prepare(
-      `SELECT t.description, t.charged_amount as amount, t.personal_amount as personal,
+  return (
+    getDb()
+      .prepare(
+        `SELECT t.description, t.charged_amount as amount, t.personal_amount as personal,
               COALESCE(t.charged_currency, t.original_currency) as currency,
               t.date as date, t.processed_date as billingDate,
               t.account_number as account, t.installment_number as num, t.installment_total as total,
               c.name as category, t.provider as provider
        FROM transactions t LEFT JOIN categories c ON t.category_id = c.id
-       WHERE t.workspace_id = ? AND t.status = 'completed' AND t.kind = 'expense' AND t.is_excluded = 0`
-    )
-    .all(workspaceId)
-    // Synced dates are stored as Israeli days (migration 073); israelDay is a no-op on those and still converts any
-    // instant-style date from an older import path.
-    .map((r) => {
-      const row = r as Row;
-      return { ...row, date: israelDay(row.date), billingDate: israelDay(row.billingDate) };
-    });
+       WHERE t.workspace_id = ? AND t.status = 'completed' AND t.kind = 'expense' AND t.is_excluded = 0`,
+      )
+      .all(workspaceId)
+      // Synced dates are stored as Israeli days (migration 073); israelDay is a no-op on those and still converts any
+      // instant-style date from an older import path.
+      .map((r) => {
+        const row = r as Row;
+        return { ...row, date: israelDay(row.date), billingDate: israelDay(row.billingDate) };
+      })
+  );
 }
 
 /** Pending card charges, net of pending refunds: not on a statement yet, so they land on each card's next bill. */
@@ -51,7 +53,7 @@ function loadPendingByAccount(workspaceId: number): Map<string, number> {
     .prepare(
       `SELECT account_number as account, charged_amount as amount, provider
        FROM transactions
-       WHERE workspace_id = ? AND status = 'pending' AND kind = 'expense' AND is_excluded = 0`
+       WHERE workspace_id = ? AND status = 'pending' AND kind = 'expense' AND is_excluded = 0`,
     )
     .all(workspaceId) as { account: string; amount: number; provider: string }[];
   const byAccount = new Map<string, number>();
@@ -75,7 +77,11 @@ export interface Insights {
 }
 
 const monthlyEquivalent = (s: Series) =>
-  s.cadence === "weekly" ? s.expectedAmount * 4.33 : s.cadence === "yearly" ? s.expectedAmount / 12 : s.expectedAmount;
+  s.cadence === "weekly"
+    ? s.expectedAmount * 4.33
+    : s.cadence === "yearly"
+      ? s.expectedAmount / 12
+      : s.expectedAmount;
 
 /** The day of month a card is billed on: the most common day among its billing dates. */
 function billingDayOf(billingDates: string[], fallback: number): number {
@@ -90,7 +96,11 @@ function billingDayOf(billingDates: string[], fallback: number): number {
   return best;
 }
 
-export function loadInsights(workspaceId: number, today: string, fallbackBillingDay = 10): Insights {
+export function loadInsights(
+  workspaceId: number,
+  today: string,
+  fallbackBillingDay = 10,
+): Insights {
   const rows = loadRows(workspaceId);
   // Scrapers store expenses negative; refunds (positive) are kept so recurring detection can ignore them.
   const norm = rows.map((r) => ({ ...r, merchant: normalizeMerchant(r.description) }));
@@ -99,11 +109,24 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
   const series = detectRecurring(
     norm
       .filter((r) => !(r.total != null && r.total > 1))
-      .map((r) => ({ merchant: r.merchant, account: r.account, currency: r.currency, amount: r.amount, date: r.date }))
-  ).filter((s) => isActive(s, today))
+      .map((r) => ({
+        merchant: r.merchant,
+        account: r.account,
+        currency: r.currency,
+        amount: r.amount,
+        date: r.date,
+      })),
+  )
+    .filter((s) => isActive(s, today))
     // Each subscription's own charge-to-bill lag, from its latest charge: the card's statement closes before billing day.
     .map((s) => {
-      const last = norm.find((r) => r.account === s.account && r.merchant === s.merchant && r.date === s.lastDate && r.billingDate > r.date);
+      const last = norm.find(
+        (r) =>
+          r.account === s.account &&
+          r.merchant === s.merchant &&
+          r.date === s.lastDate &&
+          r.billingDate > r.date,
+      );
       return last ? { ...s, billingLagDays: daysBetween(last.date, last.billingDate) } : s;
     });
 
@@ -118,11 +141,16 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
         total: r.total!,
         date: r.billingDate,
       })),
-    today
+    today,
   );
   const anomalies = findAnomalies(
-    norm.map((r) => ({ merchant: r.merchant, category: r.category ?? "Uncategorized", amount: r.amount, date: r.date })),
-    today
+    norm.map((r) => ({
+      merchant: r.merchant,
+      category: r.category ?? "Uncategorized",
+      amount: r.amount,
+      date: r.date,
+    })),
+    today,
   );
 
   // Net of refunds, the same rule as v_spend_rows: a refund is negative spending, not income.
@@ -146,10 +174,15 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
   const pending = loadPendingByAccount(workspaceId);
   // Only cards have bills; bank-account debits are spending but not part of a card forecast.
   const cardRows = rows.filter((r) => isCardProvider(r.provider));
-  const accounts = [...new Set([...cardRows.map((r) => r.account), ...pending.keys()])].sort();
+  const accounts = [...new Set([...cardRows.map((r) => r.account), ...pending.keys()])].sort(
+    (a, b) => a.localeCompare(b),
+  );
   const cards: CardForecastInput[] = accounts.map((account) => {
     const own = cardRows.filter((r) => r.account === account);
-    const billingDay = billingDayOf(own.map((r) => r.billingDate), fallbackBillingDay);
+    const billingDay = billingDayOf(
+      own.map((r) => r.billingDate),
+      fallbackBillingDay,
+    );
     const posted: Record<string, number> = {};
     for (const r of own) {
       // Charges are negative and refunds positive, so this nets refunds out of the bill.
@@ -162,7 +195,8 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
       posted[next] = (posted[next] ?? 0) + pendingTotal;
     }
     // shortcut: discretionary = prior 3-month mean spend minus recurring and next month's installments; refine once forecasts are compared with real bills.
-    const priorMean = own.filter((r) => prior.includes(r.date.slice(0, 7))).reduce((s, r) => s + spent(r), 0) / 3;
+    const priorMean =
+      own.filter((r) => prior.includes(r.date.slice(0, 7))).reduce((s, r) => s + spent(r), 0) / 3;
     const recurring = series
       .filter((s) => s.account === account && s.status === "suggested")
       .reduce((sum, s) => sum + monthlyEquivalent(s), 0);
@@ -170,7 +204,10 @@ export function loadInsights(workspaceId: number, today: string, fallbackBilling
       .filter((p) => p.account === account && p.month === nextMonth)
       .reduce((sum, p) => sum + p.amount, 0);
     // Median days from charge to bill over this card's single-payment charges: how late a new charge gets billed.
-    const lags = own.filter((r) => !(r.total != null && r.total > 1) && r.billingDate > r.date).map((r) => daysBetween(r.date, r.billingDate)).sort((a, b) => a - b);
+    const lags = own
+      .filter((r) => !(r.total != null && r.total > 1) && r.billingDate > r.date)
+      .map((r) => daysBetween(r.date, r.billingDate))
+      .sort((a, b) => a - b);
     return {
       account,
       billingDay,

@@ -8,7 +8,8 @@ import {
 } from "@/server/lib/legacy-export";
 
 const HTML_MAX = 2_000_000;
-const fail = (e: unknown) => NextResponse.json({ error: e instanceof Error ? e.message : "invalid" }, { status: 400 });
+const fail = (e: unknown) =>
+  NextResponse.json({ error: e instanceof Error ? e.message : "invalid" }, { status: 400 });
 
 /** Auto-export settings and last result. */
 export async function GET() {
@@ -32,7 +33,8 @@ export async function POST(request: Request) {
       openLegacyFolder();
       return NextResponse.json(getLegacyExportConfig());
     }
-    if (typeof body.html !== "string" || !body.html || body.html.length > HTML_MAX) throw new Error("invalid html");
+    if (typeof body.html !== "string" || !body.html || body.html.length > HTML_MAX)
+      throw new Error("invalid html");
     storeLegacySnapshot(body.html);
     const c = getLegacyExportConfig();
     return NextResponse.json(c.enabled ? runLegacyExport() : c);

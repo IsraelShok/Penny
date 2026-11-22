@@ -15,7 +15,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
   const parsed = parseAssetInput(body);
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
-  if (!updateAsset(workspaceId, id, parsed)) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!updateAsset(workspaceId, id, parsed))
+    return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ success: true });
 }
 
@@ -23,6 +24,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const workspaceId = getWorkspaceIdFromRequest(request);
   const id = Number((await params).id);
   if (!Number.isInteger(id)) return NextResponse.json({ error: "invalid id" }, { status: 400 });
-  if (!deleteAsset(workspaceId, id)) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!deleteAsset(workspaceId, id))
+    return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ success: true });
 }

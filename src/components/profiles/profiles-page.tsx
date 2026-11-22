@@ -8,8 +8,18 @@ import { Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { markProfileChosen, useProfiles, useSwitchProfile } from "@/components/layout/workspace-switcher";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  markProfileChosen,
+  useProfiles,
+  useSwitchProfile,
+} from "@/components/layout/workspace-switcher";
 import { deleteProfile, saveProfile } from "@/lib/api";
 import { profileName } from "@/lib/profile-avatar";
 import { cn } from "@/lib/utils";
@@ -19,7 +29,8 @@ import { AvatarEditor, type AvatarDraft } from "./avatar-editor";
 import { ProfileAvatar } from "./profile-avatar";
 
 // Immersive "who's using?" screen: always dark, whatever the app theme.
-const tile = "group flex min-h-11 flex-col items-center gap-3 rounded-3xl p-2 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+const tile =
+  "group flex min-h-11 flex-col items-center gap-3 rounded-3xl p-2 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 const square =
   "size-24 text-5xl md:size-36 md:text-6xl ring-white/0 ring-offset-4 ring-offset-[#0c0b14] motion-safe:transition motion-safe:duration-200 group-hover:ring-4 group-hover:ring-white group-focus-visible:ring-4 group-focus-visible:ring-white motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105 motion-safe:group-active:scale-95";
 
@@ -47,10 +58,11 @@ export function ProfilesPage() {
   const onError = (e: unknown) => toast.error(e instanceof Error ? e.message : t("error"));
 
   const save = useMutation({
-    mutationFn: (d: Draft) => saveProfile(d.id, d.name, { avatarColor: d.avatar.color, avatarPhoto: d.avatar.photo }),
+    mutationFn: (d: Draft) =>
+      saveProfile(d.id, d.name, { avatarColor: d.avatar.color, avatarPhoto: d.avatar.photo }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["profiles"] });
-      qc.invalidateQueries({ queryKey: ["settings"] });
+      void qc.invalidateQueries({ queryKey: ["profiles"] });
+      void qc.invalidateQueries({ queryKey: ["settings"] });
       setDraft(null);
     },
     onError,
@@ -62,7 +74,7 @@ export function ProfilesPage() {
     onSuccess: (_r, id) => {
       const next = profiles.find((p) => p.id !== id);
       if (id === activeId && next) switchProfile(next);
-      qc.invalidateQueries({ queryKey: ["profiles"] });
+      void qc.invalidateQueries({ queryKey: ["profiles"] });
       setDraft(null);
     },
     onError,
@@ -73,21 +85,31 @@ export function ProfilesPage() {
     setDraft(
       p
         ? { id: p.id, name: nameOf(p), avatar: { color: p.avatarColor, photo: p.avatarPhoto } }
-        : { id: null, name: "", avatar: { color: null, photo: null } }
+        : { id: null, name: "", avatar: { color: null, photo: null } },
     );
   };
 
   return (
     <main className="fixed inset-0 z-40 flex flex-col items-center justify-center overflow-y-auto bg-[#0c0b14] bg-[radial-gradient(ellipse_at_top,#2a2160_0%,transparent_60%)] px-4 py-12 text-white">
       {/* The brand lives here only; inside the app the sidebar stays free of it. */}
-      <p className="absolute top-6 text-lg font-semibold tracking-tight text-white/80" lang="en" dir="ltr">Penny</p>
+      <p
+        className="absolute top-6 text-lg font-semibold tracking-tight text-white/80"
+        lang="en"
+        dir="ltr"
+      >
+        Penny
+      </p>
       <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
         {managing ? t("manageTitle") : t("title")}
       </h1>
 
       <ul className="mt-10 flex max-w-3xl flex-wrap justify-center gap-6 sm:gap-10">
         {profiles.map((p, i) => (
-          <li key={p.id} className="motion-safe:animate-[fadeIn_0.45s_ease-out_both]" style={{ animationDelay: `${120 + i * 70}ms` }}>
+          <li
+            key={p.id}
+            className="motion-safe:animate-[fadeIn_0.45s_ease-out_both]"
+            style={{ animationDelay: `${120 + i * 70}ms` }}
+          >
             <button
               type="button"
               className={tile}
@@ -95,7 +117,11 @@ export function ProfilesPage() {
               aria-label={managing ? t("editProfile", { name: nameOf(p) }) : nameOf(p)}
             >
               <span className="relative">
-                <ProfileAvatar profile={p} px={px} className={cn(square, managing && "brightness-50")} />
+                <ProfileAvatar
+                  profile={p}
+                  px={px}
+                  className={cn(square, managing && "brightness-50")}
+                />
                 {managing ? (
                   <span className="absolute inset-0 flex items-center justify-center">
                     <span className="flex size-12 items-center justify-center rounded-full border-2 border-white bg-black/40">
@@ -110,17 +136,22 @@ export function ProfilesPage() {
             </button>
           </li>
         ))}
-        <li className="motion-safe:animate-[fadeIn_0.45s_ease-out_both]" style={{ animationDelay: `${120 + profiles.length * 70}ms` }}>
+        <li
+          className="motion-safe:animate-[fadeIn_0.45s_ease-out_both]"
+          style={{ animationDelay: `${120 + profiles.length * 70}ms` }}
+        >
           <button type="button" className={tile} onClick={() => openEditor()}>
             <span
               className={cn(
                 square,
-                "flex items-center justify-center rounded-[28%] bg-white/10 text-white/70 group-hover:bg-white/20 group-hover:text-white"
+                "flex items-center justify-center rounded-[28%] bg-white/10 text-white/70 group-hover:bg-white/20 group-hover:text-white",
               )}
             >
               <Plus className="size-10" />
             </span>
-            <span className="text-lg text-white/60 group-hover:text-white group-focus-visible:text-white">{t("add")}</span>
+            <span className="text-lg text-white/60 group-hover:text-white group-focus-visible:text-white">
+              {t("add")}
+            </span>
           </button>
         </li>
       </ul>
@@ -128,7 +159,10 @@ export function ProfilesPage() {
       <Button
         variant="outline"
         size="lg"
-        className={cn("mt-14 border-white/50 bg-transparent px-8 text-white/80 hover:bg-white hover:text-black", managing && "bg-white text-black")}
+        className={cn(
+          "mt-14 border-white/50 bg-transparent px-8 text-white/80 hover:bg-white hover:text-black",
+          managing && "bg-white text-black",
+        )}
         aria-pressed={managing}
         onClick={() => setManaging((m) => !m)}
       >
@@ -149,7 +183,12 @@ export function ProfilesPage() {
                 <DialogTitle>{draft.id == null ? t("add") : t("edit")}</DialogTitle>
               </DialogHeader>
 
-              <AvatarEditor id={draft.id ?? profiles.length + 1} name={draft.name} value={draft.avatar} onChange={(avatar) => setDraft({ ...draft, avatar })} />
+              <AvatarEditor
+                id={draft.id ?? profiles.length + 1}
+                name={draft.name}
+                value={draft.avatar}
+                onChange={(avatar) => setDraft({ ...draft, avatar })}
+              />
 
               <label className="flex flex-col gap-1.5 text-sm font-medium">
                 {t("name")}
@@ -162,7 +201,6 @@ export function ProfilesPage() {
                   className="h-11"
                 />
               </label>
-
 
               {confirmDelete ? (
                 <p role="alert" className="text-sm text-muted-foreground">

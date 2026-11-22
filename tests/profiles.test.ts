@@ -17,11 +17,17 @@ beforeAll(async () => {
 
 describe("parseAvatar", () => {
   it("accepts a short emoji and a palette colour", () => {
-    expect(parseAvatar({ avatarEmoji: "🦊", avatarColor: "#3D2FD3" })).toEqual({ avatarEmoji: "🦊", avatarColor: "#3d2fd3" });
+    expect(parseAvatar({ avatarEmoji: "🦊", avatarColor: "#3D2FD3" })).toEqual({
+      avatarEmoji: "🦊",
+      avatarColor: "#3d2fd3",
+    });
   });
   it("leaves absent fields untouched and clears null", () => {
     expect(parseAvatar({ name: "x" })).toEqual({});
-    expect(parseAvatar({ avatarEmoji: null, avatarColor: "" })).toEqual({ avatarEmoji: null, avatarColor: null });
+    expect(parseAvatar({ avatarEmoji: null, avatarColor: "" })).toEqual({
+      avatarEmoji: null,
+      avatarColor: null,
+    });
   });
   it("rejects long emoji and off-palette colours", () => {
     expect(parseAvatar({ avatarEmoji: "123456789" })).toHaveProperty("error");
@@ -32,15 +38,25 @@ describe("parseAvatar", () => {
 
 describe("Pip avatars", () => {
   it("keeps valid look fields and drops the rest", () => {
-    expect(parsePip({ color: "#30D158", skin: "301", name: " Bo " })).toEqual({ color: "#30d158", skin: "301", name: "Bo" });
+    expect(parsePip({ color: "#30D158", skin: "301", name: " Bo " })).toEqual({
+      color: "#30d158",
+      skin: "301",
+      name: "Bo",
+    });
     expect(parsePip({ color: "red", skin: "nope" })).toEqual({ color: "", skin: "", name: "" });
     expect(parseAvatar({ avatarPet: null })).toEqual({ avatarPet: null });
     expect(parseAvatar({ avatarPet: "x" })).toHaveProperty("error");
   });
   it("is stored per profile and survives a rename", () => {
-    const p = pq.createProfile("Pip owner", { avatarPet: { color: "#ff9f0a", skin: "", name: "Ziggy" } });
+    const p = pq.createProfile("Pip owner", {
+      avatarPet: { color: "#ff9f0a", skin: "", name: "Ziggy" },
+    });
     expect(p.avatarPet).toEqual({ color: "#ff9f0a", skin: "", name: "Ziggy" });
-    expect(pq.updateProfile(p.id, "Renamed").avatarPet).toEqual({ color: "#ff9f0a", skin: "", name: "Ziggy" });
+    expect(pq.updateProfile(p.id, "Renamed").avatarPet).toEqual({
+      color: "#ff9f0a",
+      skin: "",
+      name: "Ziggy",
+    });
     expect(pq.createProfile("No pip").avatarPet).toBeNull();
   });
 });
@@ -65,7 +81,10 @@ describe("profiles share the household", () => {
     const before = q.listWorkspaces().length;
     const p = pq.createProfile("Dana", { avatarEmoji: "@panda" });
     expect(p).toMatchObject({ name: "Dana", avatarEmoji: "@panda", workspaceId: pq.householdId() });
-    expect(pq.updateProfile(p.id, "Dani", { avatarEmoji: "@owl" })).toMatchObject({ name: "Dani", avatarEmoji: "@owl" });
+    expect(pq.updateProfile(p.id, "Dani", { avatarEmoji: "@owl" })).toMatchObject({
+      name: "Dani",
+      avatarEmoji: "@owl",
+    });
     expect(pq.updateProfile(p.id, "Dani")).toMatchObject({ avatarEmoji: "@owl" });
     expect(() => pq.createProfile("  ")).toThrow();
     expect(q.listWorkspaces().length).toBe(before);
@@ -73,13 +92,21 @@ describe("profiles share the household", () => {
   it("deletes a profile and its prefs only; never the last profile", async () => {
     const db = (await import("@/server/db/index")).getDb();
     const ws = pq.householdId();
-    db.prepare("INSERT INTO excluded_merchants (workspace_id, provider, merchant_key) VALUES (?, 'max', 'shop')").run(ws);
+    db.prepare(
+      "INSERT INTO excluded_merchants (workspace_id, provider, merchant_key) VALUES (?, 'max', 'shop')",
+    ).run(ws);
     const p = pq.createProfile("Temp");
-    db.prepare("INSERT INTO synced_preferences (workspace_id, profile, key, value) VALUES (?, ?, 'studio', '{}')").run(ws, `p${p.id}`);
+    db.prepare(
+      "INSERT INTO synced_preferences (workspace_id, profile, key, value) VALUES (?, ?, 'studio', '{}')",
+    ).run(ws, `p${p.id}`);
     pq.deleteProfile(p.id);
     expect(pq.getProfile(p.id)).toBeNull();
-    expect(db.prepare("SELECT COUNT(*) AS n FROM synced_preferences WHERE profile = ?").get(`p${p.id}`)).toEqual({ n: 0 });
-    expect(db.prepare("SELECT COUNT(*) AS n FROM excluded_merchants WHERE workspace_id = ?").get(ws)).toEqual({ n: 1 });
+    expect(
+      db.prepare("SELECT COUNT(*) AS n FROM synced_preferences WHERE profile = ?").get(`p${p.id}`),
+    ).toEqual({ n: 0 });
+    expect(
+      db.prepare("SELECT COUNT(*) AS n FROM excluded_merchants WHERE workspace_id = ?").get(ws),
+    ).toEqual({ n: 1 });
     for (const x of pq.listProfiles().slice(1)) pq.deleteProfile(x.id);
     expect(() => pq.deleteProfile(pq.listProfiles()[0].id)).toThrow();
     expect(q.getWorkspace(ws)).not.toBeNull();

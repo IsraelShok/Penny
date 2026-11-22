@@ -3,7 +3,8 @@ import type { Asset, AssetType } from "./types";
 /** Types whose value moves with a market. Shown under "ערך משתנה", never as cash. */
 export const VOLATILE_TYPES: AssetType[] = ["stock", "fund", "bond", "crypto", "metal"];
 
-export const isVolatile = (a: Asset) => !a.isLiability && a.source !== "bank" && (a.symbol != null || VOLATILE_TYPES.includes(a.type));
+export const isVolatile = (a: Asset) =>
+  !a.isLiability && a.source !== "bank" && (a.symbol != null || VOLATILE_TYPES.includes(a.type));
 
 /**
  * From daily snapshots (oldest first) and today's value: when the current value began, and the change from the value before it.
@@ -17,5 +18,10 @@ export function lastChange(snaps: { date: string; valueIls: number }[], current:
   const prev = snaps[i - 1];
   if (!prev) return { since, prevIls: null, changeIls: null, changePct: null };
   const changeIls = current - prev.valueIls;
-  return { since, prevIls: prev.valueIls, changeIls, changePct: prev.valueIls ? changeIls / prev.valueIls : null };
+  return {
+    since,
+    prevIls: prev.valueIls,
+    changeIls,
+    changePct: prev.valueIls ? changeIls / prev.valueIls : null,
+  };
 }

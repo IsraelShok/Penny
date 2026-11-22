@@ -2,22 +2,82 @@
 import type { Suggestion } from "./suggestions";
 import { TIP_ROWS } from "./tips-data";
 
-export const TIP_CATEGORIES = ["budget", "emergency", "debt", "pension", "savings", "tax", "insurance", "banking", "mortgage", "investing", "kids", "shopping", "seasonal", "income", "retirement"] as const;
+export const TIP_CATEGORIES = [
+  "budget",
+  "emergency",
+  "debt",
+  "pension",
+  "savings",
+  "tax",
+  "insurance",
+  "banking",
+  "mortgage",
+  "investing",
+  "kids",
+  "shopping",
+  "seasonal",
+  "income",
+  "retirement",
+] as const;
 export type TipCategory = (typeof TIP_CATEGORIES)[number];
 export type TipTrigger =
-  | "overdraft" | "fees" | "fx" | "taxRefund" | "noEmergency" | "debt" | "kids" | "leak" | "spike" | "idle" | "policy" | "portfolio" | "price" | "duplicate"
-  | "taxSeason" | "holidays" | "summer" | "backToSchool" | "yearStart" | "salesSeason";
+  | "overdraft"
+  | "fees"
+  | "fx"
+  | "taxRefund"
+  | "noEmergency"
+  | "debt"
+  | "kids"
+  | "leak"
+  | "spike"
+  | "idle"
+  | "policy"
+  | "portfolio"
+  | "price"
+  | "duplicate"
+  | "taxSeason"
+  | "holidays"
+  | "summer"
+  | "backToSchool"
+  | "yearStart"
+  | "salesSeason";
 
-export interface Tip { id: string; category: TipCategory; triggers: TipTrigger[]; href: string | null; he: { title: string; body: string }; en: { title: string; body: string } }
+export interface Tip {
+  id: string;
+  category: TipCategory;
+  triggers: TipTrigger[];
+  href: string | null;
+  he: { title: string; body: string };
+  en: { title: string; body: string };
+}
 
-export const TIPS: Tip[] = TIP_ROWS.map(([id, category, triggers, href, ht, hb, et, eb]) => ({ id, category, triggers, href, he: { title: ht, body: hb }, en: { title: et, body: eb } }));
+export const TIPS: Tip[] = TIP_ROWS.map(([id, category, triggers, href, ht, hb, et, eb]) => ({
+  id,
+  category,
+  triggers,
+  href,
+  he: { title: ht, body: hb },
+  en: { title: et, body: eb },
+}));
 
 /** Dismissal key, stored with suggestion dismissals. */
 export const tipKey = (id: string) => `tip:${id}`;
 
 const FROM_SUGGESTION: Partial<Record<Suggestion["type"], TipTrigger>> = {
-  interest: "overdraft", fees: "fees", fx: "fx", fxMarkup: "fx", taxRefund: "taxRefund", emergency: "noEmergency", debt: "debt",
-  leak: "leak", spike: "spike", idle: "idle", policy: "policy", portfolio: "portfolio", price: "price", duplicate: "duplicate",
+  interest: "overdraft",
+  fees: "fees",
+  fx: "fx",
+  fxMarkup: "fx",
+  taxRefund: "taxRefund",
+  emergency: "noEmergency",
+  debt: "debt",
+  leak: "leak",
+  spike: "spike",
+  idle: "idle",
+  policy: "policy",
+  portfolio: "portfolio",
+  price: "price",
+  duplicate: "duplicate",
 };
 
 /** Season triggers by month (1-12). Israeli holidays move, so Tishrei and Pesach seasons are approximate. */
@@ -33,9 +93,15 @@ function seasonal(month: number): TipTrigger[] {
 }
 
 /** Active signals from suggestion types (active, not dismissed), household and date. */
-export function tipSignals(suggestionTypes: string[], opts: { hasKids: boolean; today: string }): Set<TipTrigger> {
+export function tipSignals(
+  suggestionTypes: string[],
+  opts: { hasKids: boolean; today: string },
+): Set<TipTrigger> {
   const s = new Set<TipTrigger>(seasonal(Number(opts.today.slice(5, 7))));
-  for (const type of suggestionTypes) { const t = FROM_SUGGESTION[type as Suggestion["type"]]; if (t) s.add(t); }
+  for (const type of suggestionTypes) {
+    const t = FROM_SUGGESTION[type as Suggestion["type"]];
+    if (t) s.add(t);
+  }
   if (opts.hasKids) s.add("kids");
   return s;
 }
@@ -44,17 +110,32 @@ export function tipSignals(suggestionTypes: string[], opts: { hasKids: boolean; 
  * Tips not dismissed, triggered ones first (by how many signals match), then general tips (no triggers).
  * Tips with triggers that don't match are left out: they'd be noise.
  */
-export function relevantTips(signals: Set<TipTrigger>, dismissed: Set<string>, category?: TipCategory, tips = TIPS): Tip[] {
+export function relevantTips(
+  signals: Set<TipTrigger>,
+  dismissed: Set<string>,
+  category?: TipCategory,
+  tips = TIPS,
+): Tip[] {
   const score = (t: Tip) => t.triggers.filter((x) => signals.has(x)).length;
   return tips
-    .filter((t) => !dismissed.has(tipKey(t.id)) && (!category || t.category === category) && (t.triggers.length === 0 || score(t) > 0))
+    .filter(
+      (t) =>
+        !dismissed.has(tipKey(t.id)) &&
+        (!category || t.category === category) &&
+        (t.triggers.length === 0 || score(t) > 0),
+    )
     .map((t, i) => ({ t, i, s: score(t) }))
     .sort((a, b) => b.s - a.s || a.i - b.i)
     .map((x) => x.t);
 }
 
 /** One tip per day, stable all day: even days rotate through triggered tips, odd days through general ones. */
-export function tipOfDay(signals: Set<TipTrigger>, dismissed: Set<string>, today: string, tips = TIPS): Tip | null {
+export function tipOfDay(
+  signals: Set<TipTrigger>,
+  dismissed: Set<string>,
+  today: string,
+  tips = TIPS,
+): Tip | null {
   const list = relevantTips(signals, dismissed, undefined, tips);
   if (list.length === 0) return null;
   const triggered = list.filter((t) => t.triggers.length > 0);

@@ -9,14 +9,29 @@ import sharp from "sharp";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const COPY = {
-  he: { dir: "rtl", title: "כסף רגוע למשק הבית", line: "הבנקים, התקציב והעתיד במקום אחד. על המחשב שלכם, בחינם.", tag: "קוד פתוח · בלי ענן" },
-  en: { dir: "ltr", title: "Calm money for your household", line: "Banks, budget and future in one place. On your computer, free.", tag: "Open source · No cloud" },
+  he: {
+    dir: "rtl",
+    title: "כסף רגוע למשק הבית",
+    line: "הבנקים, התקציב והעתיד במקום אחד. על המחשב שלכם, בחינם.",
+    tag: "קוד פתוח · בלי ענן",
+  },
+  en: {
+    dir: "ltr",
+    title: "Calm money for your household",
+    line: "Banks, budget and future in one place. On your computer, free.",
+    tag: "Open source · No cloud",
+  },
 };
 
 const browser = await chromium.launch({ channel: process.env.CI ? undefined : "chrome" });
-const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
+const page = await browser.newPage({
+  viewport: { width: 1200, height: 630 },
+  deviceScaleFactor: 1,
+});
 for (const [lang, c] of Object.entries(COPY)) {
-  const shot = fs.readFileSync(path.join(ROOT, "website", "demo", lang, "home.webp")).toString("base64");
+  const shot = fs
+    .readFileSync(path.join(ROOT, "website", "demo", lang, "home.webp"))
+    .toString("base64");
   await page.setContent(`<!doctype html><html><head><style>
     /* The page stays LTR (an RTL page with an image past its edge scrolls sideways); only the text is RTL. */
     body{margin:0;width:1200px;height:630px;overflow:hidden;font-family:"Segoe UI",Rubik,Arial,sans-serif;color:#fff;
@@ -34,7 +49,9 @@ for (const [lang, c] of Object.entries(COPY)) {
     <div class="text" dir="${c.dir}"><div class="brand"><span class="mark"><i></i><i></i></span>Penny</div><h1>${c.title}</h1><p>${c.line}</p><span class="tag">${c.tag}</span></div>
   </body></html>`);
   await page.waitForTimeout(200);
-  await sharp(await page.screenshot()).jpeg({ quality: 86, mozjpeg: true }).toFile(path.join(ROOT, "website", "assets", `og-${lang}.jpg`));
+  await sharp(await page.screenshot())
+    .jpeg({ quality: 86, mozjpeg: true })
+    .toFile(path.join(ROOT, "website", "assets", `og-${lang}.jpg`));
   console.log(`og-${lang}.jpg`);
 }
 await browser.close();

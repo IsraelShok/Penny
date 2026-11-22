@@ -4,18 +4,56 @@
 import { isGentle, type Household, type LifeEventType } from "./household";
 import type { FinancialPlan } from "./plan";
 
-export interface L { he: string; en: string }
+export interface L {
+  he: string;
+  en: string;
+}
 export type LinkSource = "gov" | "kolzchut";
-export interface LifeLink { title: L; url: string; source: LinkSource; lastChecked: string }
-export interface LifeItem { id: string; text: L }
-export interface LifeStage { id: string; title: L; intro: L; items: LifeItem[]; links: LifeLink[]; gentle?: boolean; keyItem: string }
+export interface LifeLink {
+  title: L;
+  url: string;
+  source: LinkSource;
+  lastChecked: string;
+}
+export interface LifeItem {
+  id: string;
+  text: L;
+}
+export interface LifeStage {
+  id: string;
+  title: L;
+  intro: L;
+  items: LifeItem[];
+  links: LifeLink[];
+  gentle?: boolean;
+  keyItem: string;
+}
 
 const CHECKED = "2026-11";
-const btl = (title: L, path: string): LifeLink => ({ title, url: `https://www.btl.gov.il/benefits/${path}`, source: "gov", lastChecked: CHECKED });
-const kz = (title: L, article: string): LifeLink => ({ title, url: `https://www.kolzchut.org.il/he/${encodeURIComponent(article)}`, source: "kolzchut", lastChecked: CHECKED });
-const items = (stage: string, list: [string, string][]): LifeItem[] => list.map(([he, en], i) => ({ id: `${stage}-${i + 1}`, text: { he, en } }));
+const btl = (title: L, path: string): LifeLink => ({
+  title,
+  url: `https://www.btl.gov.il/benefits/${path}`,
+  source: "gov",
+  lastChecked: CHECKED,
+});
+const kz = (title: L, article: string): LifeLink => ({
+  title,
+  url: `https://www.kolzchut.org.il/he/${encodeURIComponent(article)}`,
+  source: "kolzchut",
+  lastChecked: CHECKED,
+});
+const items = (stage: string, list: [string, string][]): LifeItem[] =>
+  list.map(([he, en], i) => ({ id: `${stage}-${i + 1}`, text: { he, en } }));
 
-const SWIFTNESS: LifeLink = { title: { he: "המסלקה הפנסיונית — כל החסכונות במקום אחד", en: "Pension clearing house — all savings in one place" }, url: "https://www.swiftness.co.il/", source: "gov", lastChecked: CHECKED };
+const SWIFTNESS: LifeLink = {
+  title: {
+    he: "המסלקה הפנסיונית — כל החסכונות במקום אחד",
+    en: "Pension clearing house — all savings in one place",
+  },
+  url: "https://www.swiftness.co.il/",
+  source: "gov",
+  lastChecked: CHECKED,
+};
 const TAX_REFUND = kz({ he: "החזר מס הכנסה", en: "Income tax refund" }, "החזר_מס_הכנסה");
 
 export const LIFE_STAGES: LifeStage[] = [
@@ -23,18 +61,27 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "birth",
     keyItem: "birth-3",
     title: { he: "לידה ותינוק", en: "Birth and baby" },
-    intro: { he: "תקופה מרגשת. כמה צעדים קטנים עכשיו יחסכו דאגות בהמשך.", en: "An exciting time. A few small steps now save worry later." },
+    intro: {
+      he: "תקופה מרגשת. כמה צעדים קטנים עכשיו יחסכו דאגות בהמשך.",
+      en: "An exciting time. A few small steps now save worry later.",
+    },
     items: items("birth", [
       ["לבדוק את מענק הלידה ואת דמי הלידה", "Check the birth grant and maternity pay"],
       ["לוודא שקצבת הילדים נכנסת לחשבון", "Make sure the child allowance is arriving"],
-      ["ב״חיסכון לכל ילד״ לבחור בית השקעות (קופת גמל) ולא בנק: דמי ניהול נמוכים ומסלול מנייתי לטווח ארוך", "For the child savings plan pick an investment house (provident fund), not a bank: low fees and a long-term equity track"],
+      [
+        "ב״חיסכון לכל ילד״ לבחור בית השקעות (קופת גמל) ולא בנק: דמי ניהול נמוכים ומסלול מנייתי לטווח ארוך",
+        "For the child savings plan pick an investment house (provident fund), not a bank: low fees and a long-term equity track",
+      ],
       ["לתכנן את החודשים עם הכנסה נמוכה יותר בחופשה", "Plan the lower-income months of leave"],
       ["לקבוע תקציב חודשי לתינוק", "Set a monthly baby budget"],
     ]),
     links: [
       btl({ he: "מענק לידה", en: "Birth grant" }, "maternity/maanakleda/Pages/default.aspx"),
       btl({ he: "דמי לידה ואמהות", en: "Maternity benefits" }, "maternity/Pages/default.aspx"),
-      btl({ he: "חיסכון לכל ילד", en: "Savings for every child" }, "children/HisahoLayeled/Pages/default.aspx"),
+      btl(
+        { he: "חיסכון לכל ילד", en: "Savings for every child" },
+        "children/HisahoLayeled/Pages/default.aspx",
+      ),
       kz({ he: "מענק לידה — הסבר", en: "Birth grant — explained" }, "מענק_לידה"),
       kz({ he: "דמי לידה — הסבר", en: "Maternity pay — explained" }, "דמי_לידה"),
     ],
@@ -43,7 +90,10 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "kids",
     keyItem: "kids-2",
     title: { he: "ילדים ובני נוער", en: "Kids and teens" },
-    intro: { he: "ילדים גדלים, וגם ההוצאות. מעט סדר עוזר לכולם.", en: "Kids grow, and so do costs. A little order helps everyone." },
+    intro: {
+      he: "ילדים גדלים, וגם ההוצאות. מעט סדר עוזר לכולם.",
+      en: "Kids grow, and so do costs. A little order helps everyone.",
+    },
     items: items("kids", [
       ["לסכם דמי כיס קבועים", "Agree on regular pocket money"],
       ["לשים בצד לספטמבר ולקייטנות הקיץ", "Set money aside for September and summer camps"],
@@ -59,17 +109,34 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "young",
     keyItem: "young-5",
     title: { he: "צבא, שחרור ולימודים", en: "Army, discharge and studies" },
-    intro: { he: "ההתחלה של עצמאות כלכלית. אפשר ללמוד את זה צעד אחר צעד.", en: "The start of financial independence. You can learn it step by step." },
+    intro: {
+      he: "ההתחלה של עצמאות כלכלית. אפשר ללמוד את זה צעד אחר צעד.",
+      en: "The start of financial independence. You can learn it step by step.",
+    },
     items: items("young", [
       ["לבדוק את מענק השחרור ואת הפיקדון", "Check the discharge grant and deposit"],
       ["לתכנן תקציב סטודנט פשוט", "Make a simple student budget"],
-      ["להבין איך עובד כרטיס אשראי לפני שמוציאים", "Understand how a credit card works before using it"],
+      [
+        "להבין איך עובד כרטיס אשראי לפני שמוציאים",
+        "Understand how a credit card works before using it",
+      ],
       ["לקבוע תקרת מינוס — או בלי מינוס בכלל", "Set an overdraft limit — or none at all"],
       ["לפתוח קרן חירום קטנה", "Start a small emergency fund"],
     ]),
     links: [
-      { title: { he: "האגף לחיילים משוחררים", en: "Discharged soldiers department" }, url: "https://www.hachvana.mod.gov.il/", source: "gov", lastChecked: CHECKED },
-      btl({ he: "מענק לחייל משוחרר בעבודה מועדפת", en: "Grant for discharged soldiers in preferred work" }, "Demobilized_Soldier/Pages/default.aspx"),
+      {
+        title: { he: "האגף לחיילים משוחררים", en: "Discharged soldiers department" },
+        url: "https://www.hachvana.mod.gov.il/",
+        source: "gov",
+        lastChecked: CHECKED,
+      },
+      btl(
+        {
+          he: "מענק לחייל משוחרר בעבודה מועדפת",
+          en: "Grant for discharged soldiers in preferred work",
+        },
+        "Demobilized_Soldier/Pages/default.aspx",
+      ),
       kz({ he: "מענק שחרור", en: "Discharge grant" }, "מענק_שחרור_לחיילים_משוחררים"),
       kz({ he: "זכויות סטודנטים", en: "Student rights" }, "סטודנטים"),
     ],
@@ -78,7 +145,10 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "firstJob",
     keyItem: "firstJob-2",
     title: { he: "עבודה ראשונה", en: "First job" },
-    intro: { he: "משכורת ראשונה! זה הזמן להניח יסודות טובים.", en: "A first salary! A good time to lay solid foundations." },
+    intro: {
+      he: "משכורת ראשונה! זה הזמן להניח יסודות טובים.",
+      en: "A first salary! A good time to lay solid foundations.",
+    },
     items: items("firstJob", [
       ["לעבור על תלוש השכר הראשון", "Go over the first payslip"],
       ["לוודא שהפנסיה נפתחה ולבדוק את דמי הניהול", "Make sure pension started and check the fees"],
@@ -91,9 +161,15 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "movingIn",
     keyItem: "movingIn-1",
     title: { he: "דירה ראשונה ושותפים", en: "Moving in and roommates" },
-    intro: { he: "בית חדש מביא חשבונות חדשים. הסכמה מראש חוסכת אי-נעימות.", en: "A new home brings new bills. Agreeing early avoids friction." },
+    intro: {
+      he: "בית חדש מביא חשבונות חדשים. הסכמה מראש חוסכת אי-נעימות.",
+      en: "A new home brings new bills. Agreeing early avoids friction.",
+    },
     items: items("movingIn", [
-      ["לרשום את הפיקדון או הערבות ומתי הם חוזרים", "Note the deposit or guarantee and when it comes back"],
+      [
+        "לרשום את הפיקדון או הערבות ומתי הם חוזרים",
+        "Note the deposit or guarantee and when it comes back",
+      ],
       ["להחליט איך מתחלקים בחשבונות", "Decide how to split the bills"],
       ["להעביר חשמל, מים וארנונה על שמכם", "Move electricity, water and city tax to your name"],
       ["לצלם את מצב הדירה בכניסה", "Photograph the flat on move-in"],
@@ -104,7 +180,10 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "couple",
     keyItem: "couple-5",
     title: { he: "זוגיות וחתונה", en: "Couple and wedding" },
-    intro: { he: "שני אנשים, תמונה כלכלית אחת — בקצב שנוח לכם.", en: "Two people, one money picture — at your own pace." },
+    intro: {
+      he: "שני אנשים, תמונה כלכלית אחת — בקצב שנוח לכם.",
+      en: "Two people, one money picture — at your own pace.",
+    },
     items: items("couple", [
       ["לשבת יחד על התמונה הכלכלית המלאה", "Sit together over the full money picture"],
       ["להחליט: משותף, נפרד או משולב", "Decide: joint, separate or mixed"],
@@ -118,7 +197,10 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "home",
     keyItem: "home-3",
     title: { he: "בית ומשכנתא", en: "Home and mortgage" },
-    intro: { he: "החלטה גדולה, שאפשר לפרק לצעדים קטנים.", en: "A big decision you can break into small steps." },
+    intro: {
+      he: "החלטה גדולה, שאפשר לפרק לצעדים קטנים.",
+      en: "A big decision you can break into small steps.",
+    },
     items: items("home", [
       ["להשוות שכירות מול קנייה במחשבון", "Compare renting and buying in the calculator"],
       ["לפתוח יעד להון עצמי", "Open a down-payment goal"],
@@ -132,7 +214,10 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "growingFamily",
     keyItem: "growingFamily-3",
     title: { he: "המשפחה גדלה", en: "The family grows" },
-    intro: { he: "עוד ילד, עוד אהבה — ועוד כמה שורות בתקציב.", en: "Another child, more love — and a few more budget lines." },
+    intro: {
+      he: "עוד ילד, עוד אהבה — ועוד כמה שורות בתקציב.",
+      en: "Another child, more love — and a few more budget lines.",
+    },
     items: items("growingFamily", [
       ["לעבור שוב על רשימת הלידה", "Go through the birth checklist again"],
       ["לעדכן את התקציב לגודל המשפחה החדש", "Update the budget for the new family size"],
@@ -148,10 +233,16 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "career",
     keyItem: "career-4",
     title: { he: "שינוי בעבודה או פיטורים", en: "Career change or layoff" },
-    intro: { he: "זה קשה, וזה זמני. נעשה את זה צעד אחד בכל פעם.", en: "This is hard, and it is temporary. One step at a time." },
+    intro: {
+      he: "זה קשה, וזה זמני. נעשה את זה צעד אחד בכל פעם.",
+      en: "This is hard, and it is temporary. One step at a time.",
+    },
     gentle: true,
     items: items("career", [
-      ["להירשם בשירות התעסוקה כבר בימים הראשונים", "Register with the employment service in the first days"],
+      [
+        "להירשם בשירות התעסוקה כבר בימים הראשונים",
+        "Register with the employment service in the first days",
+      ],
       ["לבדוק דמי אבטלה", "Check unemployment benefits"],
       ["לבדוק את מכתב הסיום, הפיצויים והפנסיה", "Check the end letter, severance and pension"],
       ["לראות לכמה חודשים הכסף מספיק", "See how many months your money covers"],
@@ -167,11 +258,14 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "freelance",
     keyItem: "freelance-2",
     title: { he: "עצמאות ועסק", en: "Freelance and business" },
-    intro: { he: "הכנסה משתנה דורשת כרית — וקצת סדר בכל חודש.", en: "Changing income needs a cushion — and a little order each month." },
+    intro: {
+      he: "הכנסה משתנה דורשת כרית — וקצת סדר בכל חודש.",
+      en: "Changing income needs a cushion — and a little order each month.",
+    },
     items: items("freelance", [
       ["להפריד בין הוצאות העסק לבית", "Separate business and home spending"],
       ["לשים בצד בכל הכנסה למע״מ ולמס", "Set aside VAT and tax from every payment"],
-      ["לקבוע ״משכורת״ קבועה לעצמכם", "Pay yourself a steady \"salary\""],
+      ["לקבוע ״משכורת״ קבועה לעצמכם", 'Pay yourself a steady "salary"'],
       ["לבדוק הפקדה לפנסיה ולקרן השתלמות", "Check pension and study-fund deposits"],
       ["לבנות כרית לחודשים חלשים", "Build a cushion for slow months"],
     ]),
@@ -181,10 +275,16 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "divorce",
     keyItem: "divorce-2",
     title: { he: "פרידה וגירושין", en: "Separation and divorce" },
-    intro: { he: "תקופה רגישה. אין צורך לסדר הכול היום — רק את הצעד הבא.", en: "A tender time. No need to sort everything today — just the next step." },
+    intro: {
+      he: "תקופה רגישה. אין צורך לסדר הכול היום — רק את הצעד הבא.",
+      en: "A tender time. No need to sort everything today — just the next step.",
+    },
     gentle: true,
     items: items("divorce", [
-      ["לרשום את כל החשבונות, ההלוואות והחסכונות המשותפים", "List all joint accounts, loans and savings"],
+      [
+        "לרשום את כל החשבונות, ההלוואות והחסכונות המשותפים",
+        "List all joint accounts, loans and savings",
+      ],
       ["לפתוח חשבון על שמכם בלבד", "Open an account in your name only"],
       ["להבין את נושא המזונות", "Understand child support"],
       ["לבנות תקציב חדש לבית אחד", "Build a fresh budget for one home"],
@@ -193,14 +293,20 @@ export const LIFE_STAGES: LifeStage[] = [
     links: [
       kz({ he: "גירושין — מידע כללי", en: "Divorce — overview" }, "גירושין"),
       kz({ he: "מזונות ילדים", en: "Child support" }, "מזונות_ילדים"),
-      btl({ he: "מזונות דרך ביטוח לאומי", en: "Support via National Insurance" }, "Alimony/Pages/default.aspx"),
+      btl(
+        { he: "מזונות דרך ביטוח לאומי", en: "Support via National Insurance" },
+        "Alimony/Pages/default.aspx",
+      ),
     ],
   },
   {
     id: "illness",
     keyItem: "illness-1",
     title: { he: "מחלה או נכות", en: "Illness or disability" },
-    intro: { he: "הבריאות קודמת. הכסף יכול לחכות — הנה רק מה שחשוב עכשיו.", en: "Health comes first. Money can wait — here is only what matters now." },
+    intro: {
+      he: "הבריאות קודמת. הכסף יכול לחכות — הנה רק מה שחשוב עכשיו.",
+      en: "Health comes first. Money can wait — here is only what matters now.",
+    },
     gentle: true,
     items: items("illness", [
       ["לבדוק אילו ביטוחים יש לכם", "Check which insurance policies you have"],
@@ -219,7 +325,10 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "parents",
     keyItem: "parents-3",
     title: { he: "דאגה להורים", en: "Caring for parents" },
-    intro: { he: "לדאוג למי שדאג לנו. כדאי לחלק את העומס.", en: "Caring for those who cared for us. Share the load." },
+    intro: {
+      he: "לדאוג למי שדאג לנו. כדאי לחלק את העומס.",
+      en: "Caring for those who cared for us. Share the load.",
+    },
     items: items("parents", [
       ["לרשום את ההוצאות על ההורים", "Track spending on your parents"],
       ["לסכם עם האחים איך מתחלקים", "Agree with siblings how to share"],
@@ -235,9 +344,15 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "preRetirement",
     keyItem: "preRetirement-1",
     title: { he: "לקראת פרישה", en: "Getting ready to retire" },
-    intro: { he: "עוד יש זמן לכוונן. כמה בדיקות פשוטות נותנות שקט.", en: "There is still time to fine-tune. A few checks bring peace of mind." },
+    intro: {
+      he: "עוד יש זמן לכוונן. כמה בדיקות פשוטות נותנות שקט.",
+      en: "There is still time to fine-tune. A few checks bring peace of mind.",
+    },
     items: items("preRetirement", [
-      ["להוריד את דוח המסלקה ולראות את כל החסכונות", "Download the clearing-house report and see all savings"],
+      [
+        "להוריד את דוח המסלקה ולראות את כל החסכונות",
+        "Download the clearing-house report and see all savings",
+      ],
       ["להשוות דמי ניהול", "Compare management fees"],
       ["לבדוק את גיל הפרישה שלכם", "Check your retirement age"],
       ["להעריך כמה תצטרכו בכל חודש", "Estimate what you will need each month"],
@@ -249,7 +364,10 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "retirement",
     keyItem: "retirement-3",
     title: { he: "פרישה", en: "Retirement" },
-    intro: { he: "פרק חדש. המטרה: ״משכורת״ חודשית רגועה מהחסכונות.", en: "A new chapter. The aim: a calm monthly \"salary\" from savings." },
+    intro: {
+      he: "פרק חדש. המטרה: ״משכורת״ חודשית רגועה מהחסכונות.",
+      en: 'A new chapter. The aim: a calm monthly "salary" from savings.',
+    },
     items: items("retirement", [
       ["לבדוק קצבת זקנה", "Check the old-age pension"],
       ["לרשום את כל מקורות ההכנסה החודשיים", "List every monthly income source"],
@@ -257,7 +375,10 @@ export const LIFE_STAGES: LifeStage[] = [
       ["לבדוק אם מגיע לכם החזר מס", "Check whether you have a tax refund due"],
     ]),
     links: [
-      btl({ he: "אזרח ותיק (קצבת זקנה)", en: "Senior citizen (old-age pension)" }, "old_age/Pages/default.aspx"),
+      btl(
+        { he: "אזרח ותיק (קצבת זקנה)", en: "Senior citizen (old-age pension)" },
+        "old_age/Pages/default.aspx",
+      ),
       TAX_REFUND,
     ],
   },
@@ -265,7 +386,10 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "loss",
     keyItem: "loss-2",
     title: { he: "אובדן", en: "Loss" },
-    intro: { he: "אנחנו משתתפים בצערכם. אין כאן לחץ — רק מה שאפשר, כשאפשר.", en: "We are sorry for your loss. No pressure here — only what you can, when you can." },
+    intro: {
+      he: "אנחנו משתתפים בצערכם. אין כאן לחץ — רק מה שאפשר, כשאפשר.",
+      en: "We are sorry for your loss. No pressure here — only what you can, when you can.",
+    },
     gentle: true,
     items: items("loss", [
       ["לבקש ממישהו קרוב לעזור עם הסידורים", "Ask someone close to help with arrangements"],
@@ -284,12 +408,15 @@ export const LIFE_STAGES: LifeStage[] = [
     id: "estate",
     keyItem: "estate-2",
     title: { he: "סדר לבני המשפחה", en: "Order for the family" },
-    intro: { he: "מתנה של שקט למי שאוהבים אותנו. אפשר להתחיל במשהו קטן.", en: "A gift of calm to those who love us. Start with something small." },
+    intro: {
+      he: "מתנה של שקט למי שאוהבים אותנו. אפשר להתחיל במשהו קטן.",
+      en: "A gift of calm to those who love us. Start with something small.",
+    },
     gentle: true,
     items: items("estate", [
       ["לכתוב צוואה או לעדכן קיימת", "Write a will or update one"],
       ["לבדוק מוטבים בפנסיה ובביטוחים", "Check beneficiaries on pension and insurance"],
-      ["להכין מסמך ״איפה הכול נמצא״ למשפחה", "Prepare a \"where everything is\" document"],
+      ["להכין מסמך ״איפה הכול נמצא״ למשפחה", 'Prepare a "where everything is" document'],
       ["לרשום חשבונות דיגיטליים ומה לעשות בהם", "List digital accounts and what to do with them"],
     ]),
     links: [kz({ he: "צוואה", en: "Will" }, "צוואה"), SWIFTNESS],
@@ -297,19 +424,49 @@ export const LIFE_STAGES: LifeStage[] = [
 ];
 
 const EVENT_STAGE: Record<LifeEventType, string> = {
-  birth: "birth", newChild: "growingFamily", firstJob: "firstJob", armyRelease: "young", movedIn: "movingIn",
-  wedding: "couple", homePurchase: "home", jobLoss: "career", startedBusiness: "freelance", divorce: "divorce",
-  illness: "illness", caringParent: "parents", retirement: "retirement", loss: "loss",
+  birth: "birth",
+  newChild: "growingFamily",
+  firstJob: "firstJob",
+  armyRelease: "young",
+  movedIn: "movingIn",
+  wedding: "couple",
+  homePurchase: "home",
+  jobLoss: "career",
+  startedBusiness: "freelance",
+  divorce: "divorce",
+  illness: "illness",
+  caringParent: "parents",
+  retirement: "retirement",
+  loss: "loss",
 };
 // Hard stages come first so they are never pushed out of the top 3.
-const PRIORITY = ["loss", "illness", "divorce", "career", "birth", "growingFamily", "parents", "retirement", "preRetirement", "freelance", "young", "firstJob", "home", "couple", "movingIn", "kids", "estate"];
+const PRIORITY = [
+  "loss",
+  "illness",
+  "divorce",
+  "career",
+  "birth",
+  "growingFamily",
+  "parents",
+  "retirement",
+  "preRetirement",
+  "freelance",
+  "young",
+  "firstJob",
+  "home",
+  "couple",
+  "movingIn",
+  "kids",
+  "estate",
+];
 const RECENT_MONTHS = 24;
 
 /** Stage ids that fit this household now, most pressing first. */
 export function relevantStages(h: Household, today = new Date()): string[] {
   const year = today.getFullYear();
   const ids = new Set<string>();
-  const cutoff = new Date(today); cutoff.setMonth(cutoff.getMonth() - RECENT_MONTHS);
+  const cutoff = new Date(today);
+  cutoff.setMonth(cutoff.getMonth() - RECENT_MONTHS);
   for (const e of h.events) if (!e.date || new Date(e.date) >= cutoff) ids.add(EVENT_STAGE[e.type]);
   for (const m of h.members) {
     if (m.role === "parent") ids.add("parents");
@@ -329,17 +486,38 @@ export function relevantStages(h: Household, today = new Date()): string[] {
 }
 
 // "employee" deliberately has no stage: "career" is the layoff stage.
-const SITUATION_STAGE = { student: "young", selfEmployed: "freelance", family: "growingFamily", retired: "retirement" } as const;
+const SITUATION_STAGE = {
+  student: "young",
+  selfEmployed: "freelance",
+  family: "growingFamily",
+  retired: "retirement",
+} as const;
 
 /** The single stage that fits now: the most pressing relevant one, else a guess from the profile. */
-export function currentStage(h: Household, plan: Pick<FinancialPlan, "birthYear" | "profile">, today = new Date()): { stageId: string; gentle: boolean } | null {
-  const hh = plan.birthYear != null && !h.members.some((m) => m.role === "me" && m.birthYear != null)
-    ? { ...h, members: [...h.members, { id: "plan-me", name: "", role: "me" as const, birthYear: plan.birthYear }] }
-    : h;
+export function currentStage(
+  h: Household,
+  plan: Pick<FinancialPlan, "birthYear" | "profile">,
+  today = new Date(),
+): { stageId: string; gentle: boolean } | null {
+  const hh =
+    plan.birthYear != null && !h.members.some((m) => m.role === "me" && m.birthYear != null)
+      ? {
+          ...h,
+          members: [
+            ...h.members,
+            { id: "plan-me", name: "", role: "me" as const, birthYear: plan.birthYear },
+          ],
+        }
+      : h;
   const sit = plan.profile.situation;
-  const stageId = relevantStages(hh, today)[0] ?? (sit ? SITUATION_STAGE[sit as keyof typeof SITUATION_STAGE] : undefined);
+  const stageId =
+    relevantStages(hh, today)[0] ??
+    (sit ? SITUATION_STAGE[sit as keyof typeof SITUATION_STAGE] : undefined);
   if (!stageId) return null;
-  return { stageId, gentle: isGentle(h, today) || LIFE_STAGES.find((s) => s.id === stageId)?.gentle === true };
+  return {
+    stageId,
+    gentle: isGentle(h, today) || LIFE_STAGES.find((s) => s.id === stageId)?.gentle === true,
+  };
 }
 
 /** Validates stored checklist progress: { stageId: itemId[] }, known ids only. */

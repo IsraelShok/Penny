@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   const stmt = getDb().prepare(
     `SELECT description, -charged_amount AS amount FROM transactions
      WHERE workspace_id = ? AND kind = 'expense' AND status = 'completed' AND is_excluded = 0
-       AND flow_type IN ('expense', 'refund') AND date >= ? AND date <= ?`
+       AND flow_type IN ('expense', 'refund') AND date >= ? AND date <= ?`,
   );
   // Grouped by the normalized merchant; shown with the name as it most often appears.
   const names = new Map<string, Map<string, number>>();
@@ -40,7 +40,8 @@ export async function GET(request: Request) {
       return { merchant: key, amount: r.amount };
     });
   const result = explainChange(rows(before), rows(now));
-  const display = (key: string) => [...(names.get(key) ?? new Map([[key, 1]]))].sort((a, b) => b[1] - a[1])[0][0];
+  const display = (key: string) =>
+    [...(names.get(key) ?? new Map([[key, 1]]))].sort((a, b) => b[1] - a[1])[0][0];
   return NextResponse.json({
     compare,
     now: { from: now[0], to: now[1], total: result.now },

@@ -7,11 +7,7 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatLastSync, formatJerusalemTimeOfDay } from "@/lib/formatters";
 import { translateProviderName, useFormatterLabels } from "@/lib/i18n-data";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { ActivitySnapshot, HomeBankHealthItem } from "@/lib/types";
 
 interface Props {
@@ -93,7 +89,10 @@ function useTick(active: boolean): void {
 }
 
 /** The sync status in words and tone: the pill's tooltip, and the line in the profile menu. */
-export function useSyncState(items: HomeBankHealthItem[] | null, activity: ActivitySnapshot | null) {
+export function useSyncState(
+  items: HomeBankHealthItem[] | null,
+  activity: ActivitySnapshot | null,
+) {
   const tPill = useTranslations("syncPill");
   const tBanks = useTranslations("banks");
   const fmtLabels = useFormatterLabels();
@@ -131,8 +130,7 @@ export function useSyncState(items: HomeBankHealthItem[] | null, activity: Activ
     const oldestSync = everSynced.reduce<string | null>((oldest, i) => {
       if (!i.lastSyncAt) return oldest;
       if (!oldest) return i.lastSyncAt;
-      return new Date(i.lastSyncAt + "Z").getTime() <
-        new Date(oldest + "Z").getTime()
+      return new Date(i.lastSyncAt + "Z").getTime() < new Date(oldest + "Z").getTime()
         ? i.lastSyncAt
         : oldest;
     }, null);
@@ -163,9 +161,7 @@ export function useSyncState(items: HomeBankHealthItem[] | null, activity: Activ
     const elapsed = formatElapsed(activity?.sync.since ?? null, fmtLabels.justNow);
     state = {
       tone: "active",
-      label: elapsed
-        ? tPill("syncingNowElapsed", { elapsed })
-        : tPill("syncingNow"),
+      label: elapsed ? tPill("syncingNowElapsed", { elapsed }) : tPill("syncingNow"),
       detail: null,
     };
   }
@@ -185,7 +181,10 @@ export function SyncStatusPill({
   const locale = useLocale();
   // A minute clock for the compact age, so render stays pure.
   const [now, setNow] = useState(() => Date.now());
-  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 60_000); return () => clearInterval(id); }, []);
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const tPill = useTranslations("syncPill");
   const syncActive = activity?.sync.active === true;
   const { state, styles } = useSyncState(items, activity);
@@ -193,7 +192,12 @@ export function SyncStatusPill({
   const age = (since: string | null | undefined) => {
     if (!since) return null;
     const mins = Math.max(0, (now - new Date(since + "Z").getTime()) / 60_000);
-    const [n, unit] = mins < 60 ? [Math.round(mins), "minute"] : mins < 1440 ? [Math.round(mins / 60), "hour"] : [Math.round(mins / 1440), "day"];
+    const [n, unit] =
+      mins < 60
+        ? [Math.round(mins), "minute"]
+        : mins < 1440
+          ? [Math.round(mins / 60), "hour"]
+          : [Math.round(mins / 1440), "day"];
     return new Intl.NumberFormat(locale, { style: "unit", unit, unitDisplay: "narrow" }).format(n);
   };
 
@@ -216,27 +220,46 @@ export function SyncStatusPill({
                     compact
                       ? "inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       : labelled
-                      ? "flex min-h-9 w-full items-center gap-2 rounded-lg px-2 text-start text-sm transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-                      : "inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    styles.text
+                        ? "flex min-h-9 w-full items-center gap-2 rounded-lg px-2 text-start text-sm transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+                        : "inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    styles.text,
                   )}
                 />
               }
             />
           }
         >
-          {compact ? <>
-            <RefreshCw aria-hidden className={cn("size-4 shrink-0", styles.pulse && "motion-safe:animate-spin")} />
-            {age(state.since) && <span aria-hidden className="text-xs font-medium tabular-nums">{age(state.since)}</span>}
-            <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", styles.dot)} />
+          {compact ? (
+            <>
+              <RefreshCw
+                aria-hidden
+                className={cn("size-4 shrink-0", styles.pulse && "motion-safe:animate-spin")}
+              />
+              {age(state.since) && (
+                <span aria-hidden className="text-xs font-medium tabular-nums">
+                  {age(state.since)}
+                </span>
+              )}
+              <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", styles.dot)} />
+              <span className="sr-only">{tooltipText}</span>
+            </>
+          ) : (
+            <span
+              aria-hidden
+              className={cn(
+                "size-2 shrink-0 rounded-full",
+                styles.dot,
+                styles.pulse && "animate-pulse",
+              )}
+            />
+          )}
+          {compact ? null : labelled ? (
+            <span className="min-w-0 flex-1 truncate text-sidebar-foreground group-data-[collapsible=icon]:sr-only">
+              {state.label}
+            </span>
+          ) : (
             <span className="sr-only">{tooltipText}</span>
-          </> : <span
-            aria-hidden
-            className={cn("size-2 shrink-0 rounded-full", styles.dot, styles.pulse && "animate-pulse")}
-          />}
-          {compact ? null : labelled
-            ? <span className="min-w-0 flex-1 truncate text-sidebar-foreground group-data-[collapsible=icon]:sr-only">{state.label}</span>
-            : <span className="sr-only">{tooltipText}</span>}
+          )}
         </TooltipTrigger>
         <TooltipContent>{tooltipText}</TooltipContent>
       </Tooltip>
@@ -289,22 +312,12 @@ function ActivityPanel({ activity }: { activity: ActivitySnapshot | null }) {
       <Row label={t("syncLabel")} value={syncRow.text} tone={syncRow.tone} />
       <Row label={t("schedulerLabel")} value={schedulerRow.text} tone={schedulerRow.tone} />
       <Row label={t("ollamaLabel")} value={ollamaRow.text} tone={ollamaRow.tone} />
-      <p className="pt-1 text-xs leading-snug text-muted-foreground">
-        {t("footerNote")}
-      </p>
+      <p className="pt-1 text-xs leading-snug text-muted-foreground">{t("footerNote")}</p>
     </div>
   );
 }
 
-function Row({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: PillTone;
-}) {
+function Row({ label, value, tone }: { label: string; value: string; tone: PillTone }) {
   const styles = TONE_STYLES[tone];
   return (
     <div className="flex items-center justify-between gap-3 text-xs">
@@ -313,7 +326,7 @@ function Row({
           className={cn(
             "h-1.5 w-1.5 shrink-0 rounded-full",
             styles.dot,
-            styles.pulse && "animate-pulse"
+            styles.pulse && "animate-pulse",
           )}
         />
         {label}

@@ -8,7 +8,10 @@ describe("forecastBalance", () => {
     const f = forecastBalance({
       ...base,
       bank: 3_000,
-      bills: [{ date: "2026-11-08", total: 2_500 }, { date: "2026-12-08", total: 9_000 }],
+      bills: [
+        { date: "2026-11-08", total: 2_500 },
+        { date: "2026-12-08", total: 9_000 },
+      ],
       recurring: [{ cadence: "monthly", lastDate: "2026-10-01", amount: 1_000 }],
     });
     expect(f.points).toHaveLength(91);
@@ -24,15 +27,28 @@ describe("forecastBalance", () => {
   });
 
   it("reports the first day below zero", () => {
-    const f = forecastBalance({ ...base, monthlyIncome: 0, bank: 100, bills: [{ date: "2026-11-20", total: 300 }], recurring: [] });
+    const f = forecastBalance({
+      ...base,
+      monthlyIncome: 0,
+      bank: 100,
+      bills: [{ date: "2026-11-20", total: 300 }],
+      recurring: [],
+    });
     expect(f.firstNegative).toBe("2026-11-20");
     expect(f.low.balance).toBe(-200);
     expect(f.nextPayday).toBeNull();
   });
 
   it("clamps monthly dates to short months", () => {
-    expect(chargesBetween("monthly", "2026-01-31", "2026-02-01", "2026-04-30")).toEqual(["2026-02-28", "2026-03-31", "2026-04-30"]);
-    expect(chargesBetween("weekly", "2026-11-01", "2026-11-02", "2026-11-15")).toEqual(["2026-11-08", "2026-11-15"]);
+    expect(chargesBetween("monthly", "2026-01-31", "2026-02-01", "2026-04-30")).toEqual([
+      "2026-02-28",
+      "2026-03-31",
+      "2026-04-30",
+    ]);
+    expect(chargesBetween("weekly", "2026-11-01", "2026-11-02", "2026-11-15")).toEqual([
+      "2026-11-08",
+      "2026-11-15",
+    ]);
   });
 });
 
@@ -54,7 +70,14 @@ describe("projectAccounts", () => {
       { account: "B", name: "Bank B", provider: "leumi", balance: 500 },
     ],
     events: [
-      { date: "2026-11-08", account: "A", name: "card", amount: -2_500, kind: "card" as const, estimated: true },
+      {
+        date: "2026-11-08",
+        account: "A",
+        name: "card",
+        amount: -2_500,
+        kind: "card" as const,
+        estimated: true,
+      },
       { date: "2026-11-10", account: "A", name: "salary", amount: 10_000, kind: "income" as const },
       { date: "2026-11-06", account: "B", name: "rent", amount: -100, kind: "recurring" as const },
     ],
@@ -65,7 +88,8 @@ describe("projectAccounts", () => {
     const f = projectAccounts(base);
     const a = f.accounts.find((x) => x.account === "A")!;
     const b = f.accounts.find((x) => x.account === "B")!;
-    const at = (points: { date: string; expected: number }[], d: string) => points.find((p) => p.date === d)!.expected;
+    const at = (points: { date: string; expected: number }[], d: string) =>
+      points.find((p) => p.date === d)!.expected;
     expect(a.points).toHaveLength(11);
     expect(at(a.points, "2026-11-08")).toBe(500);
     expect(at(a.points, "2026-11-10")).toBe(10_500);
@@ -86,7 +110,9 @@ describe("projectAccounts", () => {
   it("takes everyday spending out every day, and widens that band too", () => {
     const f = projectAccounts({
       today: "2026-11-05",
-      accounts: [{ account: "A", name: "Bank A", provider: "hapoalim", balance: 100, dailyRate: 10 }],
+      accounts: [
+        { account: "A", name: "Bank A", provider: "hapoalim", balance: 100, dailyRate: 10 },
+      ],
       events: [],
       days: 3,
     });

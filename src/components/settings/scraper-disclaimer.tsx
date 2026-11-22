@@ -6,9 +6,15 @@ import { SettingCard } from "@/components/settings/section-shell";
 
 /** The open-source scrapers behind the automatic connection, linked so the reader can inspect them. */
 const LIBRARIES = [
-  { name: "@sergienko4/israeli-bank-scrapers", href: "https://github.com/sergienko4/israeli-bank-scrapers" },
+  {
+    name: "@sergienko4/israeli-bank-scrapers",
+    href: "https://github.com/sergienko4/israeli-bank-scrapers",
+  },
   { name: "israeli-bank-scrapers", href: "https://github.com/eshaham/israeli-bank-scrapers" },
-  { name: "israeli-pension-scrapers", href: "https://github.com/MotionPeak/israeli-pension-scrapers" },
+  {
+    name: "israeli-pension-scrapers",
+    href: "https://github.com/MotionPeak/israeli-pension-scrapers",
+  },
 ];
 
 /** What an automatic connection does, what it cannot do, and which code reads the bank's site. */
@@ -18,7 +24,10 @@ export function ScraperDisclaimer() {
     <SettingCard title={t("disclaimerTitle")}>
       <div className="space-y-3 text-footnote">
         <p className="flex items-start gap-2">
-          <ShieldAlert className="mt-0.5 size-4 shrink-0 text-[var(--status-heads-up)]" aria-hidden />
+          <ShieldAlert
+            className="mt-0.5 size-4 shrink-0 text-[var(--status-heads-up)]"
+            aria-hidden
+          />
           <span>{t("disclaimerBody")}</span>
         </p>
         <ul className="list-disc space-y-1 ps-5 text-muted-foreground">

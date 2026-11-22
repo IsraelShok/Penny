@@ -10,7 +10,13 @@ import { shekels } from "@/lib/money";
 import type { TransactionWithCategory } from "@/lib/types";
 
 /** Pairs a payback credit (a Bit transfer, say) with the expense it repays, and undoes it. */
-export function PaybackField({ txn, refresh }: { txn: TransactionWithCategory; refresh: () => void }) {
+export function PaybackField({
+  txn,
+  refresh,
+}: {
+  txn: TransactionWithCategory;
+  refresh: () => void;
+}) {
   const t = useTranslations("manualTxn");
   const locale = useLocale();
   const [target, setTarget] = useState("");
@@ -60,14 +66,25 @@ export function PaybackField({ txn, refresh }: { txn: TransactionWithCategory; r
           {data.links.map((l) => {
             const other = l.credit.id === txn.id ? l.expense : l.credit;
             return (
-              <li key={l.credit.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/60 px-3 py-2">
+              <li
+                key={l.credit.id}
+                className="flex items-center justify-between gap-2 rounded-lg bg-muted/60 px-3 py-2"
+              >
                 <span className="min-w-0">
                   <span className="block truncate text-sm">{other.description}</span>
                   <span className="block text-xs tabular-nums text-muted-foreground">
-                    <bdi>{other.date} · {money(other.amount)}</bdi>
+                    <bdi>
+                      {other.date} · {money(other.amount)}
+                    </bdi>
                   </span>
                 </span>
-                <Button type="button" variant="ghost" className="h-9 shrink-0 text-destructive" disabled={busy} onClick={() => void unlink(l.credit.id)}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-9 shrink-0 text-destructive"
+                  disabled={busy}
+                  onClick={() => void unlink(l.credit.id)}
+                >
                   {t("paybackUnlink")}
                 </Button>
               </li>
@@ -77,7 +94,10 @@ export function PaybackField({ txn, refresh }: { txn: TransactionWithCategory; r
       )}
       {data && data.coveredAbs > 0 && txn.chargedAmount < 0 && (
         <p className="text-xs tabular-nums text-muted-foreground">
-          {t("paybackCovered", { covered: money(data.coveredAbs), total: money(txn.chargedAmount) })}
+          {t("paybackCovered", {
+            covered: money(data.coveredAbs),
+            total: money(txn.chargedAmount),
+          })}
         </p>
       )}
       {data &&
@@ -91,10 +111,18 @@ export function PaybackField({ txn, refresh }: { txn: TransactionWithCategory; r
             >
               <option value="">{t("paybackPick")}</option>
               {data.candidates.map((c) => (
-                <option key={c.id} value={c.id}>{`${c.date} · ${c.description} · ${money(c.amount)}`}</option>
+                <option
+                  key={c.id}
+                  value={c.id}
+                >{`${c.date} · ${c.description} · ${money(c.amount)}`}</option>
               ))}
             </select>
-            <Button type="button" className="h-11" disabled={!target || busy} onClick={() => void link()}>
+            <Button
+              type="button"
+              className="h-11"
+              disabled={!target || busy}
+              onClick={() => void link()}
+            >
               {t("paybackLink")}
             </Button>
           </div>

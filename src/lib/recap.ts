@@ -3,9 +3,21 @@
  * month (the range in `periods`), or the calendar month when no ranges are given.
  */
 
-export interface RecapExpense { date: string; amount: number; categoryId: number | null; description: string }
-export interface RecapCategory { id: number; name: string; needType: string | null }
-export interface RecapRange { from: string; to: string }
+export interface RecapExpense {
+  date: string;
+  amount: number;
+  categoryId: number | null;
+  description: string;
+}
+export interface RecapCategory {
+  id: number;
+  name: string;
+  needType: string | null;
+}
+export interface RecapRange {
+  from: string;
+  to: string;
+}
 export interface RecapInput {
   expenses: RecapExpense[];
   /** Income per YYYY-MM. */
@@ -64,17 +76,29 @@ const daysIn = (month: string) => {
 /** Every YYYY-MM-DD in [from, to]. */
 function days(from: string, to: string) {
   const out: string[] = [];
-  for (let d = new Date(`${from}T00:00:00Z`); d.toISOString().slice(0, 10) <= to; d.setUTCDate(d.getUTCDate() + 1)) out.push(d.toISOString().slice(0, 10));
+  for (
+    let d = new Date(`${from}T00:00:00Z`);
+    d.toISOString().slice(0, 10) <= to;
+    d.setUTCDate(d.getUTCDate() + 1)
+  )
+    out.push(d.toISOString().slice(0, 10));
   return out;
 }
 
 function noSpend(expenses: RecapExpense[], from: string, to: string) {
   const spentOn = new Set(expenses.map((e) => e.date));
   const list = days(from, to);
-  let count = 0, run = 0, longest = 0;
+  let count = 0,
+    run = 0,
+    longest = 0;
   for (const d of list) {
-    if (spentOn.has(d)) { run = 0; continue; }
-    count++; run++; longest = Math.max(longest, run);
+    if (spentOn.has(d)) {
+      run = 0;
+      continue;
+    }
+    count++;
+    run++;
+    longest = Math.max(longest, run);
   }
   return { count, longest, counted: list.length };
 }
@@ -93,7 +117,8 @@ const inPeriod = (expenses: RecapExpense[], input: RecapInput, key: string) => {
 const sum = (expenses: RecapExpense[]) => expenses.reduce((s, e) => s + e.amount, 0);
 function byCategory(expenses: RecapExpense[]) {
   const map = new Map<number, number>();
-  for (const e of expenses) if (e.categoryId != null) map.set(e.categoryId, (map.get(e.categoryId) ?? 0) + e.amount);
+  for (const e of expenses)
+    if (e.categoryId != null) map.set(e.categoryId, (map.get(e.categoryId) ?? 0) + e.amount);
   return map;
 }
 export function monthRecap(month: string, input: RecapInput): MonthRecap {
@@ -110,7 +135,10 @@ export function monthRecap(month: string, input: RecapInput): MonthRecap {
   const prevBy = byCategory(prev);
   const ranked = [...curBy].sort((a, b) => b[1] - a[1]);
   const topEntry = ranked[0];
-  const biggest = cur.reduce<RecapExpense | null>((b, e) => (!b || e.amount > b.amount ? e : b), null);
+  const biggest = cur.reduce<RecapExpense | null>(
+    (b, e) => (!b || e.amount > b.amount ? e : b),
+    null,
+  );
 
   let improved: MonthRecap["improved"] = null;
   for (const [id, before] of prevBy) {
@@ -137,8 +165,14 @@ export function monthRecap(month: string, input: RecapInput): MonthRecap {
     prevSpent: sum(prev),
     income,
     kept: income - spent,
-    top: topEntry ? { name: name(topEntry[0]), spent: topEntry[1], prev: prevBy.get(topEntry[0]) ?? 0 } : null,
-    biggest: biggest && { description: biggest.description, amount: biggest.amount, date: biggest.date },
+    top: topEntry
+      ? { name: name(topEntry[0]), spent: topEntry[1], prev: prevBy.get(topEntry[0]) ?? 0 }
+      : null,
+    biggest: biggest && {
+      description: biggest.description,
+      amount: biggest.amount,
+      date: biggest.date,
+    },
     noSpendDays: ns.count,
     longestStreak: ns.longest,
     daysCounted: ns.counted,
@@ -175,7 +209,10 @@ export function yearRecap(year: number, input: RecapInput): YearRecap {
     income,
     kept,
     savingsRate: income > 0 ? kept / income : null,
-    top: [...byCategory(expenses)].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([id, s]) => ({ name: cat.get(id) ?? "", spent: s })),
+    top: [...byCategory(expenses)]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([id, s]) => ({ name: cat.get(id) ?? "", spent: s })),
     bestMonth,
     noSpendDays: ns.count,
     daysCounted: ns.counted,

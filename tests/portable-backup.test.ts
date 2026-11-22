@@ -27,7 +27,9 @@ describe("portable backup", () => {
   it("refuses a wrong passphrase and a foreign file", () => {
     const file = backup.encryptBackup(Buffer.from("x"), PASSPHRASE);
     expect(() => backup.decryptBackup(file, "wrong passphrase")).toThrow("badPassphrase");
-    expect(() => backup.decryptBackup(Buffer.from("not a backup at all"), PASSPHRASE)).toThrow("badFile");
+    expect(() => backup.decryptBackup(Buffer.from("not a backup at all"), PASSPHRASE)).toThrow(
+      "badFile",
+    );
   });
 
   it("requires a real passphrase", () => {
@@ -78,7 +80,15 @@ describe("portable backup", () => {
 
   it("refuses a file that decrypts but is not a database", () => {
     const fake = backup.encryptBackup(
-      Buffer.from(JSON.stringify({ format: 1, createdAt: new Date().toISOString(), appVersion: "x", database: Buffer.from("nope").toString("base64"), encryptionKey: null })),
+      Buffer.from(
+        JSON.stringify({
+          format: 1,
+          createdAt: new Date().toISOString(),
+          appVersion: "x",
+          database: Buffer.from("nope").toString("base64"),
+          encryptionKey: null,
+        }),
+      ),
       PASSPHRASE,
     );
     expect(() => backup.readBackup(fake, PASSPHRASE)).toThrow("badFile");

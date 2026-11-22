@@ -57,7 +57,7 @@ export function useActiveWorkspaceId(): number | null {
   return useSyncExternalStore(
     subscribe,
     () => memValue,
-    () => null
+    () => null,
   );
 }
 
@@ -82,12 +82,20 @@ export function getActiveProfileIdSync(): number | null {
 export function setActiveProfile(profile: { id: number; workspaceId: number }): void {
   if (profileValue !== profile.id) {
     profileValue = profile.id;
-    try { window.localStorage.setItem(PROFILE_KEY, String(profile.id)); } catch { /* memory still works */ }
+    try {
+      window.localStorage.setItem(PROFILE_KEY, String(profile.id));
+    } catch {
+      /* memory still works */
+    }
     for (const fn of listeners) fn();
   }
   setActiveWorkspaceId(profile.workspaceId);
 }
 
 export function useActiveProfileId(): number | null {
-  return useSyncExternalStore(subscribe, () => profileValue, () => null);
+  return useSyncExternalStore(
+    subscribe,
+    () => profileValue,
+    () => null,
+  );
 }

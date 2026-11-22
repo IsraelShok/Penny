@@ -14,7 +14,12 @@ export async function GET(request: Request) {
     items: [
       ...MARKETS.map((m) => ({ ...m, quote: quotes.get(m.symbol.toUpperCase()) ?? null })),
       // Watched symbols carry their own name from the quote: there is no translation for a ticker someone typed.
-      ...watched.map((symbol) => ({ symbol, key: symbol, group: "watch", quote: quotes.get(symbol.toUpperCase()) ?? null })),
+      ...watched.map((symbol) => ({
+        symbol,
+        key: symbol,
+        group: "watch",
+        quote: quotes.get(symbol.toUpperCase()) ?? null,
+      })),
     ],
   };
   return NextResponse.json(payload);

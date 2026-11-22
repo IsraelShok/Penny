@@ -49,16 +49,11 @@ export function TwoFactorSection({
           {hasTwoFactorToken && ` ${t("twoFaProgrammaticHintHasToken")}`}
         </p>
       ) : (
-        <p className="text-xs text-muted-foreground">
-          {t("twoFaManualHint", { bank })}
-        </p>
+        <p className="text-xs text-muted-foreground">{t("twoFaManualHint", { bank })}</p>
       )}
 
       <div className="flex items-center justify-between gap-3">
-        <Label
-          htmlFor={`${info.id}-manual-2fa`}
-          className="text-sm font-medium"
-        >
+        <Label htmlFor={`${info.id}-manual-2fa`} className="text-sm font-medium">
           {t("twoFaAccountRequires")}
         </Label>
         <Switch
@@ -69,18 +64,14 @@ export function TwoFactorSection({
         />
       </div>
       {supportsProgrammatic ? (
-        <p className="text-xs text-muted-foreground">
-          {t("twoFaProgrammaticNote", { bank })}
-        </p>
+        <p className="text-xs text-muted-foreground">{t("twoFaProgrammaticNote", { bank })}</p>
       ) : null}
 
       {showResetButton && supportsProgrammatic && hasTwoFactorToken ? (
         <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
           <div>
             <div className="text-sm font-medium">{t("twoFaSavedTokenTitle")}</div>
-            <div className="text-xs text-muted-foreground">
-              {t("twoFaSavedTokenHint")}
-            </div>
+            <div className="text-xs text-muted-foreground">{t("twoFaSavedTokenHint")}</div>
           </div>
           <IconButton
             label={resetPending ? t("twoFaResetting") : t("twoFaResetButton")}

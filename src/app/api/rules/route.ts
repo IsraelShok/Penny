@@ -21,6 +21,9 @@ export async function POST(request: Request) {
     const applied = body?.applyToPast === true ? applyRuleToPast(workspaceId, rule) : 0;
     return NextResponse.json({ id, applied }, { status: 201 });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Invalid rule" }, { status: 400 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Invalid rule" },
+      { status: 400 },
+    );
   }
 }

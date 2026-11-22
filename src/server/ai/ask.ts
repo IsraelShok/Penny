@@ -11,7 +11,11 @@ Answer in the same language as the question (Hebrew or English), in at most two 
 If the data cannot answer the question, say so plainly. Never give investment advice.`;
 
 /** One answer from the user's chosen provider (Ollama, Claude or a CLI agent). Null when none is set up. */
-export async function completeAI(system: string, user: string, maxTokens = 300): Promise<string | null> {
+export async function completeAI(
+  system: string,
+  user: string,
+  maxTokens = 300,
+): Promise<string | null> {
   const provider = getSetting("ai_provider");
 
   if (provider === "ollama") {
@@ -20,7 +24,14 @@ export async function completeAI(system: string, user: string, maxTokens = 300):
     const res = await fetch(`${base}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: getSetting("ai_ollama_model") ?? "llama3.1", stream: false, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
+      body: JSON.stringify({
+        model: getSetting("ai_ollama_model") ?? "llama3.1",
+        stream: false,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+      }),
       signal: AbortSignal.timeout(120_000),
     });
     if (!res.ok) throw new Error(`Ollama request failed: ${res.status}`);
@@ -33,7 +44,11 @@ export async function completeAI(system: string, user: string, maxTokens = 300):
     const iv = getSetting("ai_api_key_iv");
     const authTag = getSetting("ai_api_key_auth_tag");
     if (!encrypted || !iv || !authTag || isKeyLocked()) return null;
-    const apiKey = decrypt({ encrypted: Buffer.from(encrypted, "hex"), iv: Buffer.from(iv, "hex"), authTag: Buffer.from(authTag, "hex") });
+    const apiKey = decrypt({
+      encrypted: Buffer.from(encrypted, "hex"),
+      iv: Buffer.from(iv, "hex"),
+      authTag: Buffer.from(authTag, "hex"),
+    });
     const res = await new Anthropic({ apiKey }).messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: maxTokens,
@@ -45,10 +60,16 @@ export async function completeAI(system: string, user: string, maxTokens = 300):
   }
 
   if (isCliAgent(provider)) {
-    return (await runCliAgent(provider, `${system}
+    return (
+      (await runCliAgent(
+        provider,
+        `${system}
 Do not use any tools or read files.
 
-${user}`, 120_000)) || null;
+${user}`,
+        120_000,
+      )) || null
+    );
   }
 
   return null;

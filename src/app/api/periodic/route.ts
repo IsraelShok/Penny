@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { deletePeriodic, dismissSuggestion, listPeriodic, periodicSuggestions, upsertPeriodic } from "@/server/db/queries/periodic";
+import {
+  deletePeriodic,
+  dismissSuggestion,
+  listPeriodic,
+  periodicSuggestions,
+  upsertPeriodic,
+} from "@/server/db/queries/periodic";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { israelToday } from "@/server/lib/date-utils";
 import type { PeriodicPayload } from "@/lib/periodic";
@@ -7,7 +13,8 @@ import type { PeriodicPayload } from "@/lib/periodic";
 export const dynamic = "force-dynamic";
 
 const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
-const text = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);
+const text = (v: unknown, max: number) =>
+  typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null;
 const amount = (v: unknown) => {
   const n = Number(v);
   return v !== "" && v != null && Number.isFinite(n) && n >= 0 && n < 1e10 ? n : null;
@@ -15,7 +22,10 @@ const amount = (v: unknown) => {
 
 export async function GET(request: Request) {
   const ws = getWorkspaceIdFromRequest(request);
-  const payload: PeriodicPayload = { items: listPeriodic(ws), suggestions: periodicSuggestions(ws, israelToday()) };
+  const payload: PeriodicPayload = {
+    items: listPeriodic(ws),
+    suggestions: periodicSuggestions(ws, israelToday()),
+  };
   return NextResponse.json(payload);
 }
 
@@ -23,9 +33,27 @@ function parseItem(item: Record<string, unknown>) {
   const name = text(item.name, 60);
   const amt = amount(item.amount);
   const everyMonths = Number(item.everyMonths);
-  const nextDue = typeof item.nextDue === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(item.nextDue) ? item.nextDue : null;
-  if (!name || !amt || !Number.isInteger(everyMonths) || everyMonths < 1 || everyMonths > 24 || !nextDue) return null;
-  return { name, amount: amt, everyMonths, nextDue, savedSoFar: amount(item.savedSoFar) ?? 0, autoKey: text(item.autoKey, 120) };
+  const nextDue =
+    typeof item.nextDue === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(item.nextDue)
+      ? item.nextDue
+      : null;
+  if (
+    !name ||
+    !amt ||
+    !Number.isInteger(everyMonths) ||
+    everyMonths < 1 ||
+    everyMonths > 24 ||
+    !nextDue
+  )
+    return null;
+  return {
+    name,
+    amount: amt,
+    everyMonths,
+    nextDue,
+    savedSoFar: amount(item.savedSoFar) ?? 0,
+    autoKey: text(item.autoKey, 120),
+  };
 }
 
 const INVALID = "needs a name, an amount, every 1-24 months and a due month (YYYY-MM)";
@@ -54,7 +82,9 @@ export async function PUT(request: Request) {
   if (!Number.isInteger(id) || id < 1) return bad("invalid id");
   const item = parseItem(raw);
   if (!item) return bad(INVALID);
-  return upsertPeriodic(ws, { ...item, id }) ? NextResponse.json({ success: true }) : NextResponse.json({ error: "not found" }, { status: 404 });
+  return upsertPeriodic(ws, { ...item, id })
+    ? NextResponse.json({ success: true })
+    : NextResponse.json({ error: "not found" }, { status: 404 });
 }
 
 /** ?id=… */
@@ -62,5 +92,7 @@ export async function DELETE(request: Request) {
   const ws = getWorkspaceIdFromRequest(request);
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!Number.isInteger(id) || id < 1) return bad("invalid id");
-  return deletePeriodic(ws, id) ? NextResponse.json({ success: true }) : NextResponse.json({ error: "not found" }, { status: 404 });
+  return deletePeriodic(ws, id)
+    ? NextResponse.json({ success: true })
+    : NextResponse.json({ error: "not found" }, { status: 404 });
 }

@@ -8,7 +8,9 @@ import { MAX_SHEET_ROWS } from "@/lib/sheet-import";
 function namesByIds(workspaceId: number, ids: number[]): Map<number, string> {
   if (ids.length === 0) return new Map();
   const rows = getDb()
-    .prepare(`SELECT id, name FROM categories WHERE workspace_id = ? AND id IN (${ids.map(() => "?").join(",")})`)
+    .prepare(
+      `SELECT id, name FROM categories WHERE workspace_id = ? AND id IN (${ids.map(() => "?").join(",")})`,
+    )
     .all(workspaceId, ...ids) as { id: number; name: string }[];
   return new Map(rows.map((r) => [r.id, r.name]));
 }
@@ -20,11 +22,15 @@ function namesByIds(workspaceId: number, ids: number[]): Map<number, string> {
 export async function POST(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = ((await request.json().catch(() => null)) ?? {}) as { rows?: unknown };
-  if (!Array.isArray(body.rows) || body.rows.length === 0) return NextResponse.json({ suggestions: [] });
-  if (body.rows.length > MAX_SHEET_ROWS) return NextResponse.json({ error: "too many rows" }, { status: 400 });
+  if (!Array.isArray(body.rows) || body.rows.length === 0)
+    return NextResponse.json({ suggestions: [] });
+  if (body.rows.length > MAX_SHEET_ROWS)
+    return NextResponse.json({ error: "too many rows" }, { status: 400 });
 
   const rows = body.rows as { description?: unknown; kind?: unknown }[];
-  const descriptions = rows.map((r) => (typeof r?.description === "string" ? r.description : "")).filter(Boolean);
+  const descriptions = rows
+    .map((r) => (typeof r?.description === "string" ? r.description : ""))
+    .filter(Boolean);
   const found = lookupMerchantCategoriesBulk(workspaceId, descriptions);
   const names = namesByIds(workspaceId, [...new Set([...found.values()].map((m) => m.categoryId))]);
 

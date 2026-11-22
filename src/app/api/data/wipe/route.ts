@@ -13,11 +13,21 @@ const WIPE_WORDS = ["מחיקה", "delete"];
 
 /** Deletes everything: the database (credentials, settings, AI keys, Telegram), the key or wrapped key, and logs. Back to first run. */
 export async function POST(request: Request) {
-  const { confirm, secret } = (await request.json().catch(() => ({}))) as { confirm?: unknown; secret?: unknown };
-  if (typeof confirm !== "string" || !WIPE_WORDS.includes(confirm.trim().toLowerCase())) return NextResponse.json({ error: "confirm" }, { status: 400 });
+  const body = (await request.json().catch(() => null)) as {
+    confirm?: unknown;
+    secret?: unknown;
+  } | null;
+  const confirm = body?.confirm;
+  const secret = body?.secret;
+  if (typeof confirm !== "string" || !WIPE_WORDS.includes(confirm.trim().toLowerCase()))
+    return NextResponse.json({ error: "confirm" }, { status: 400 });
   if (isLockEnabled()) {
     const check = await checkSecret(secret);
-    if (!check.ok) return NextResponse.json({ error: check.reason, retryAfter: check.retryAfter }, { status: check.reason === "wait" ? 429 : 401 });
+    if (!check.ok)
+      return NextResponse.json(
+        { error: check.reason, retryAfter: check.retryAfter },
+        { status: check.reason === "wait" ? 429 : 401 },
+      );
   }
 
   // Stop background work that holds the bot token or would write to the database mid-wipe.
@@ -32,7 +42,8 @@ export async function POST(request: Request) {
   const files = [...dbFiles, ".app-lock.json.tmp"].map((f) => path.join(dir, f));
   for (const f of [...files, keyPath(), legacyKeyPath(), lockFilePath()]) shred(f);
   if (fs.existsSync(dir)) {
-    for (const f of fs.readdirSync(dir)) if (f.endsWith(".log")) fs.rmSync(path.join(dir, f), { force: true });
+    for (const f of fs.readdirSync(dir))
+      if (f.endsWith(".log")) fs.rmSync(path.join(dir, f), { force: true });
   }
   fs.rmSync(path.join(dir, "logs"), { recursive: true, force: true });
   setKeyInMemory(undefined);

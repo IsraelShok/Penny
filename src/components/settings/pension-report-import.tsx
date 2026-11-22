@@ -38,12 +38,15 @@ export function PensionReportImport() {
     onError: (e) => toast.error(e instanceof Error ? e.message : t("reportFailed")),
   });
 
-  const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso}T12:00:00`));
+  const date = (iso: string) =>
+    new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso}T12:00:00`));
 
   return (
     <section aria-labelledby="pension-report" className="mt-4 rounded-2xl bg-card px-4 py-4">
       <div className="flex items-center gap-1">
-        <h3 id="pension-report" className="text-sm font-semibold">{t("reportTitle")}</h3>
+        <h3 id="pension-report" className="text-sm font-semibold">
+          {t("reportTitle")}
+        </h3>
         <InfoTip text={t("reportHint")} />
       </div>
       <div className="mt-3 flex min-w-0 flex-wrap items-center gap-3">
@@ -67,15 +70,22 @@ export function PensionReportImport() {
           <FileUp className="size-4" aria-hidden />
           {upload.isPending ? t("reportImporting") : t("reportChoose")}
         </label>
-        <a href="/pension-report.example.json" download className="text-footnote text-primary underline underline-offset-4">
+        <a
+          href="/pension-report.example.json"
+          download
+          className="text-footnote text-primary underline underline-offset-4"
+        >
           {t("reportExample")}
         </a>
       </div>
       <p className="mt-2 text-caption text-pretty text-muted-foreground" role="status">
         {last
-          ? `${t("reportLast", { date: date(last.asOf), products: last.products, total: shekels(last.totalSavings, locale) })} · ${t("reportImportedAt", {
-              time: formatLastSync(`${last.importedAt.replace(" ", "T")}Z`, labels),
-            })}`
+          ? `${t("reportLast", { date: date(last.asOf), products: last.products, total: shekels(last.totalSavings, locale) })} · ${t(
+              "reportImportedAt",
+              {
+                time: formatLastSync(`${last.importedAt.replace(" ", "T")}Z`, labels),
+              },
+            )}`
           : t("reportNone")}
       </p>
     </section>

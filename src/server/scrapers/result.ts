@@ -42,8 +42,10 @@ const LOSS_CAVEATS = new Set([
 function windowProblem(account: RawAccount): string | null {
   const w = account.windowCoverage;
   if (!w) return null;
-  if (w.status === "unproven") return account.txns.length > 0 ? "the requested date range was not reached" : null;
-  if (w.status === "lowerBoundReached" && w.caveats?.some((c) => LOSS_CAVEATS.has(c))) return "some rows may be missing";
+  if (w.status === "unproven")
+    return account.txns.length > 0 ? "the requested date range was not reached" : null;
+  if (w.status === "lowerBoundReached" && w.caveats?.some((c) => LOSS_CAVEATS.has(c)))
+    return "some rows may be missing";
   return null;
 }
 
@@ -66,25 +68,26 @@ export function toScrapeResult(result: RawScrapeResult): ScrapeResult {
     success: true,
     accounts: accounts.map((account) => ({
       accountNumber: account.accountNumber,
-      balance: typeof account.balance === "number" && Number.isFinite(account.balance) ? account.balance : undefined,
-      transactions: account.txns.map(
-        (txn): ScrapedTransaction => ({
-          type: txn.type === "installments" ? "installments" : "normal",
-          identifier: txn.identifier ?? undefined,
-          date: txn.date,
-          processedDate: txn.processedDate,
-          originalAmount: txn.originalAmount,
-          originalCurrency: txn.originalCurrency,
-          chargedAmount: txn.chargedAmount,
-          chargedCurrency: txn.chargedCurrency ?? undefined,
-          description: txn.description,
-          memo: txn.memo ?? undefined,
-          installments: txn.installments
-            ? { number: txn.installments.number, total: txn.installments.total }
-            : undefined,
-          status: txn.status === "completed" ? "completed" : "pending",
-        })
-      ),
+      balance:
+        typeof account.balance === "number" && Number.isFinite(account.balance)
+          ? account.balance
+          : undefined,
+      transactions: account.txns.map((txn): ScrapedTransaction => ({
+        type: txn.type === "installments" ? "installments" : "normal",
+        identifier: txn.identifier ?? undefined,
+        date: txn.date,
+        processedDate: txn.processedDate,
+        originalAmount: txn.originalAmount,
+        originalCurrency: txn.originalCurrency,
+        chargedAmount: txn.chargedAmount,
+        chargedCurrency: txn.chargedCurrency ?? undefined,
+        description: txn.description,
+        memo: txn.memo ?? undefined,
+        installments: txn.installments
+          ? { number: txn.installments.number, total: txn.installments.total }
+          : undefined,
+        status: txn.status === "completed" ? "completed" : "pending",
+      })),
     })),
   };
 }

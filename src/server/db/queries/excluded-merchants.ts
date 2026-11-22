@@ -25,7 +25,7 @@ export function listExcludedMerchants(workspaceId: number): ExcludedMerchant[] {
       `SELECT id, provider, merchant_key, created_at
        FROM excluded_merchants
        WHERE workspace_id = ?
-       ORDER BY created_at DESC, id DESC`
+       ORDER BY created_at DESC, id DESC`,
     )
     .all(workspaceId) as RawExcludedMerchantRow[];
   return rows.map(mapRow);
@@ -34,24 +34,19 @@ export function listExcludedMerchants(workspaceId: number): ExcludedMerchant[] {
 export function addExcludedMerchant(
   workspaceId: number,
   provider: string,
-  merchantKey: string
+  merchantKey: string,
 ): void {
   getDb()
     .prepare(
       `INSERT OR IGNORE INTO excluded_merchants (workspace_id, provider, merchant_key)
-       VALUES (?, ?, ?)`
+       VALUES (?, ?, ?)`,
     )
     .run(workspaceId, provider, merchantKey);
 }
 
-export function deleteExcludedMerchant(
-  workspaceId: number,
-  id: number
-): boolean {
+export function deleteExcludedMerchant(workspaceId: number, id: number): boolean {
   const result = getDb()
-    .prepare(
-      `DELETE FROM excluded_merchants WHERE workspace_id = ? AND id = ?`
-    )
+    .prepare(`DELETE FROM excluded_merchants WHERE workspace_id = ? AND id = ?`)
     .run(workspaceId, id);
   return result.changes > 0;
 }
@@ -59,12 +54,12 @@ export function deleteExcludedMerchant(
 export function deleteExcludedMerchantByKey(
   workspaceId: number,
   provider: string,
-  merchantKey: string
+  merchantKey: string,
 ): boolean {
   const result = getDb()
     .prepare(
       `DELETE FROM excluded_merchants
-       WHERE workspace_id = ? AND provider = ? AND merchant_key = ?`
+       WHERE workspace_id = ? AND provider = ? AND merchant_key = ?`,
     )
     .run(workspaceId, provider, merchantKey);
   return result.changes > 0;
@@ -75,10 +70,7 @@ export function deleteExcludedMerchantByKey(
  * excluded_merchants rule. Called once per sync immediately after
  * insertTransactions returns. Cheap indexed join.
  */
-export function applyMerchantRulesToSyncRun(
-  workspaceId: number,
-  syncRunId: number
-): number {
+export function applyMerchantRulesToSyncRun(workspaceId: number, syncRunId: number): number {
   const result = getDb()
     .prepare(
       `UPDATE transactions
@@ -91,7 +83,7 @@ export function applyMerchantRulesToSyncRun(
            WHERE em.workspace_id = transactions.workspace_id
              AND em.provider = transactions.provider
              AND em.merchant_key = transactions.description
-         )`
+         )`,
     )
     .run(workspaceId, syncRunId);
   return result.changes;
@@ -101,16 +93,12 @@ export function applyMerchantRulesToSyncRun(
  * Flips is_excluded for a single transaction. Used by the row "Hide / Show"
  * action. Does NOT touch the rules table.
  */
-export function setTransactionExcluded(
-  workspaceId: number,
-  id: number,
-  excluded: boolean
-): void {
+export function setTransactionExcluded(workspaceId: number, id: number, excluded: boolean): void {
   getDb()
     .prepare(
       `UPDATE transactions
        SET is_excluded = ?, updated_at = datetime('now')
-       WHERE workspace_id = ? AND id = ?`
+       WHERE workspace_id = ? AND id = ?`,
     )
     .run(excluded ? 1 : 0, workspaceId, id);
 }

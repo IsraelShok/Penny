@@ -9,5 +9,11 @@ export function scenarioPoints(base: BalanceForecast["points"], scenario: Scenar
   const [y, m, d] = start.split("-").map(Number);
   const transfers: string[] = [];
   for (let k = 1; k <= 12; k++) transfers.push(monthDay(y, m - 1 + k, d));
-  return base.map(p => ({ date: p.date, balance: p.balance - (scenario.date >= start && p.date >= scenario.date ? expense : 0) - transfers.filter(date => date <= p.date).length * saving }));
+  return base.map((p) => ({
+    date: p.date,
+    balance:
+      p.balance -
+      (scenario.date >= start && p.date >= scenario.date ? expense : 0) -
+      transfers.filter((date) => date <= p.date).length * saving,
+  }));
 }

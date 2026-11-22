@@ -13,15 +13,12 @@ interface Props {
 
 export function ThisMonthCard({ data }: Props) {
   const t = useTranslations("home");
-  const {
-    spent,
-    budget,
-    deltaVsLastMonth,
-    daysUntilPayday,
-    timeElapsedPercent,
-  } = data;
+  const { spent, budget, deltaVsLastMonth, daysUntilPayday, timeElapsedPercent } = data;
   // The API's monthLabel is English; name the month in the reader's language.
-  const monthLabel = new Intl.DateTimeFormat(useLocale(), { month: "long", timeZone: "Asia/Jerusalem" }).format(new Date());
+  const monthLabel = new Intl.DateTimeFormat(useLocale(), {
+    month: "long",
+    timeZone: "Asia/Jerusalem",
+  }).format(new Date());
   const hasBudget = budget > 0;
   const percentSpent = hasBudget ? Math.min(100, (spent / budget) * 100) : 0;
   const pctSpent = hasBudget ? (spent / budget) * 100 : 0;
@@ -64,18 +61,12 @@ export function ThisMonthCard({ data }: Props) {
             </span>
             <span className={`mt-2 text-sm ${verdictClass}`}>{verdict}</span>
           </div>
-          {deltaVsLastMonth != null && (
-            <DeltaPill value={deltaVsLastMonth} />
-          )}
+          {deltaVsLastMonth != null && <DeltaPill value={deltaVsLastMonth} />}
         </div>
 
         {hasBudget && (
           <div className="space-y-2">
-            <ProgressBar
-              percent={percentSpent}
-              markPercent={timeElapsedPercent}
-              isOver={isOver}
-            />
+            <ProgressBar percent={percentSpent} markPercent={timeElapsedPercent} isOver={isOver} />
             <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
               <span>
                 {t("percentOfBudget", {
@@ -129,9 +120,7 @@ function ProgressBar({
   markPercent: number;
   isOver: boolean;
 }) {
-  const fillClass = isOver
-    ? "bg-[var(--status-over)]"
-    : "bg-[var(--status-on-track)]";
+  const fillClass = isOver ? "bg-[var(--status-over)]" : "bg-[var(--status-on-track)]";
   return (
     <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
       <div

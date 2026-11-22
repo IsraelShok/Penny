@@ -2,11 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import { Check, CheckCheck, ChevronDown, X } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +45,7 @@ export function TransactionMultiFilter({
       <PopoverTrigger
         className={cn(
           "flex h-8 min-w-[160px] max-w-[220px] items-center justify-between gap-1 rounded-lg border border-input bg-transparent py-2 pe-2 ps-2.5 text-sm transition-colors outline-none select-none hover:bg-accent/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring dark:bg-input/30",
-          triggerClassName
+          triggerClassName,
         )}
         title={triggerTitle}
       >
@@ -63,14 +59,26 @@ export function TransactionMultiFilter({
         </div>
         <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-60" />
       </PopoverTrigger>
-      <PopoverContent align="end" className="flex w-[360px] flex-col overflow-hidden p-0" onKeyDown={onListKeyDown}>
-        {header ? <div className="flex shrink-0 flex-col gap-2 border-b border-border p-2">{header}</div> : null}
+      <PopoverContent
+        align="end"
+        className="flex w-[360px] flex-col overflow-hidden p-0"
+        onKeyDown={onListKeyDown}
+      >
+        {header ? (
+          <div className="flex shrink-0 flex-col gap-2 border-b border-border p-2">{header}</div>
+        ) : null}
         {showBulkActions ? (
           <div className="flex shrink-0 items-center justify-between border-b border-border px-2 py-1.5">
             <IconButton label={selectAllLabel} type="button" size="icon-xs" onClick={onSelectAll}>
               <CheckCheck className="size-3.5" aria-hidden />
             </IconButton>
-            <IconButton label={clearLabel} type="button" size="icon-xs" className="text-muted-foreground" onClick={onClear}>
+            <IconButton
+              label={clearLabel}
+              type="button"
+              size="icon-xs"
+              className="text-muted-foreground"
+              onClick={onClear}
+            >
               <X className="size-3.5" aria-hidden />
             </IconButton>
           </div>
@@ -103,13 +111,13 @@ export function MultiFilterOption({
       onClick={onToggle}
       className={cn(
         "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm transition-colors hover:bg-accent",
-        className
+        className,
       )}
     >
       <span
         className={cn(
           "flex h-4 w-4 shrink-0 items-center justify-center rounded border border-input",
-          selected && "border-primary bg-primary text-primary-foreground"
+          selected && "border-primary bg-primary text-primary-foreground",
         )}
       >
         {selected ? <Check className="h-3 w-3" /> : null}

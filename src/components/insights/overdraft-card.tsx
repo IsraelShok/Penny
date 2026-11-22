@@ -32,14 +32,22 @@ export function OverdraftCard({ subscriptionsMonthly }: { subscriptionsMonthly: 
         <dl className="grid grid-cols-2 gap-3 text-center">
           <div className="rounded-xl bg-muted/60 p-3">
             <dt className="text-xs text-muted-foreground">{t("yearlyInterest")}</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums">{money(cost.data.yearlyInterest)}</dd>
+            <dd className="mt-1 text-lg font-semibold tabular-nums">
+              {money(cost.data.yearlyInterest)}
+            </dd>
           </div>
           <div className="rounded-xl bg-muted/60 p-3">
             <dt className="text-xs text-muted-foreground">{t("monthsIn")}</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums">{t("monthsValue", { count: cost.data.monthsInOverdraft })}</dd>
+            <dd className="mt-1 text-lg font-semibold tabular-nums">
+              {t("monthsValue", { count: cost.data.monthsInOverdraft })}
+            </dd>
           </div>
         </dl>
-        {low != null && low < 0 && <p className="text-sm leading-relaxed text-muted-foreground">{t("forecastDips", { amount: money(-low) })}</p>}
+        {low != null && low < 0 && (
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {t("forecastDips", { amount: money(-low) })}
+          </p>
+        )}
 
         <div className="grid gap-3">
           <h3 className="text-base font-semibold">{t("planTitle")}</h3>
@@ -49,9 +57,14 @@ export function OverdraftCard({ subscriptionsMonthly }: { subscriptionsMonthly: 
                 label={t("monthsLabel")}
                 value={months}
                 onChange={setMonths}
-                options={[3, 6, 12].map((m) => ({ value: m as 3 | 6 | 12, label: t("monthsOption", { count: m }) }))}
+                options={[3, 6, 12].map((m) => ({
+                  value: m as 3 | 6 | 12,
+                  label: t("monthsOption", { count: m }),
+                }))}
               />
-              <p className="text-base leading-relaxed">{t("monthly", { amount: money(monthly), months, depth: money(depth) })}</p>
+              <p className="text-base leading-relaxed">
+                {t("monthly", { amount: money(monthly), months, depth: money(depth) })}
+              </p>
             </>
           ) : (
             <p className="text-sm leading-relaxed text-muted-foreground">{t("notNow")}</p>
@@ -60,8 +73,13 @@ export function OverdraftCard({ subscriptionsMonthly }: { subscriptionsMonthly: 
             <li>{t("stepSetAside")}</li>
             <li>{t("stepSavings")}</li>
             <li>
-              {subscriptionsMonthly > 0 ? t("stepSubscriptions", { amount: money(subscriptionsMonthly) }) : t("stepSubscriptionsNone")}{" "}
-              <a href="/recurring#subscriptions" className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+              {subscriptionsMonthly > 0
+                ? t("stepSubscriptions", { amount: money(subscriptionsMonthly) })
+                : t("stepSubscriptionsNone")}{" "}
+              <a
+                href="/recurring#subscriptions"
+                className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              >
                 {t("seeSubscriptions")}
               </a>
             </li>

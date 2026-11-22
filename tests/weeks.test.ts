@@ -21,7 +21,12 @@ describe("weekStart (Sunday)", () => {
 
 describe("groupByWeek", () => {
   it("groups consecutive dates by week, in list order, with the week's end", () => {
-    const groups = groupByWeek([{ date: "2026-12-01" }, { date: "2026-11-29" }, { date: "2026-11-28" }, { date: "2026-11-22" }]);
+    const groups = groupByWeek([
+      { date: "2026-12-01" },
+      { date: "2026-11-29" },
+      { date: "2026-11-28" },
+      { date: "2026-11-22" },
+    ]);
     expect(groups.map((g) => [g.start, g.end, g.items.length])).toEqual([
       ["2026-11-29", "2026-12-05", 2],
       ["2026-11-22", "2026-11-28", 2],
@@ -37,5 +42,6 @@ describe("weekRelation", () => {
     expect(weekRelation("2026-10-25", "2026-11-14")).toBeNull();
     expect(weekRelation("2026-12-27", "2027-01-05")).toBe("last");
   });
-  it("localToday formats the device date", () => expect(localToday(new Date(2026, 0, 5))).toBe("2026-01-05"));
+  it("localToday formats the device date", () =>
+    expect(localToday(new Date(2026, 0, 5))).toBe("2026-01-05"));
 });

@@ -25,7 +25,11 @@ import {
 } from "@/lib/api";
 import { useSyncErrorText } from "@/hooks/use-sync-error-text";
 import { TwoFactorSection } from "@/components/setup/two-factor-section";
-import { translateCredentialField, translateProviderBlurb, translateProviderName } from "@/lib/i18n-data";
+import {
+  translateCredentialField,
+  translateProviderBlurb,
+  translateProviderName,
+} from "@/lib/i18n-data";
 import { AlertTriangle, Loader2, Check, PlugZap, Unplug, X } from "lucide-react";
 
 export interface BankDetailSheetProps {
@@ -45,9 +49,7 @@ export function BankDetailSheet({
   connected,
   onClose,
 }: BankDetailSheetProps) {
-  const info = providerId
-    ? BANK_PROVIDERS.find((b) => b.id === providerId) ?? null
-    : null;
+  const info = providerId ? (BANK_PROVIDERS.find((b) => b.id === providerId) ?? null) : null;
   return (
     <Sheet
       open={open}
@@ -55,10 +57,7 @@ export function BankDetailSheet({
         if (!o) onClose();
       }}
     >
-      <SheetContent
-        side="right"
-        className="w-full p-0 sm:max-w-md! md:max-w-lg!"
-      >
+      <SheetContent side="right" className="w-full p-0 sm:max-w-md! md:max-w-lg!">
         {info ? (
           <SheetBody
             info={info}
@@ -163,9 +162,7 @@ function CredentialsForm({
   const name = translateProviderName(info.id, info.name, tBanks);
   const queryClient = useQueryClient();
   const [label, setLabel] = useState(initialLabel);
-  const [savedCredentialId, setSavedCredentialId] = useState<number | null>(
-    credentialId
-  );
+  const [savedCredentialId, setSavedCredentialId] = useState<number | null>(credentialId);
   const [credentials, setCredentials] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState(!isEdit);
   const [testing, setTesting] = useState(false);
@@ -187,7 +184,7 @@ function CredentialsForm({
   useEffect(() => {
     if (!isEdit || credentialId == null) return;
     let cancelled = false;
-    (async () => {
+    void (async () => {
       try {
         const res = await getIntegrationCredentials(credentialId);
         if (cancelled) return;
@@ -237,18 +234,18 @@ function CredentialsForm({
       const existingId = savedCredentialId;
       let testId = existingId;
       if (existingId != null) {
-        const saved = await saveBankCredentials(
-          info.id,
-          credentials,
-          saveOptions(existingId)
-        );
+        const saved = await saveBankCredentials(info.id, credentials, saveOptions(existingId));
         testId = saved.credentialId;
         setSavedCredentialId(testId);
       }
       const res = await testBankConnection(info.id, {
         ...(testId != null ? { credentialId: testId } : { credentials }),
       });
-      setResult(res.success ? { ...res, message: tSetup("bankConnectionWorks") } : { ...res, message: errorText(res.message).message });
+      setResult(
+        res.success
+          ? { ...res, message: tSetup("bankConnectionWorks") }
+          : { ...res, message: errorText(res.message).message },
+      );
     } catch (err) {
       setResult({
         success: false,
@@ -262,14 +259,10 @@ function CredentialsForm({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const saved = await saveBankCredentials(
-        info.id,
-        credentials,
-        saveOptions(savedCredentialId)
-      );
+      const saved = await saveBankCredentials(info.id, credentials, saveOptions(savedCredentialId));
       setSavedCredentialId(saved.credentialId);
-      queryClient.invalidateQueries({ queryKey: ["integrations"] });
-      queryClient.invalidateQueries({ queryKey: ["setupStatus"] });
+      void queryClient.invalidateQueries({ queryKey: ["integrations"] });
+      void queryClient.invalidateQueries({ queryKey: ["setupStatus"] });
       toast.success(t("credentialsSaved", { name }));
       onSaved();
     } catch (err) {
@@ -290,7 +283,7 @@ function CredentialsForm({
         resetTwoFactorToken: true,
       });
       setHasTwoFactorToken(false);
-      queryClient.invalidateQueries({ queryKey: ["integrations"] });
+      void queryClient.invalidateQueries({ queryKey: ["integrations"] });
       toast.success(t("tokenCleared", { name }));
     } catch {
       toast.error(t("tokenResetFailed"));
@@ -318,9 +311,7 @@ function CredentialsForm({
           onChange={(e) => setLabel(e.target.value)}
           placeholder={t("accountLabelPlaceholder", { name })}
         />
-        <p className="text-xs text-muted-foreground">
-          {t("accountLabelHint")}
-        </p>
+        <p className="text-xs text-muted-foreground">{t("accountLabelHint")}</p>
       </div>
 
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -330,9 +321,7 @@ function CredentialsForm({
         const field = { ...rawField, ...translateCredentialField(info.id, rawField, tBanks) };
         const value = credentials[field.key] ?? "";
         const tooShort =
-          field.exactLength != null &&
-          value.length > 0 &&
-          value.length !== field.exactLength;
+          field.exactLength != null && value.length > 0 && value.length !== field.exactLength;
         const placeholder = field.placeholder;
         const hint = field.hint;
         return (
@@ -397,7 +386,8 @@ function CredentialsForm({
         >
           <PlugZap className="size-4" aria-hidden />
         </IconButton>
-        <IconButton showLabel
+        <IconButton
+          showLabel
           label={saving ? tCommon("saving") : tCommon("save")}
           variant="default"
           onClick={handleSave}
@@ -426,9 +416,7 @@ function RecentSyncCard({
         {t("recentSync")}
       </div>
       <div className="mt-2 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm">
-        <div className="font-medium">
-          {t("transactionCount", { count: transactionCount })}
-        </div>
+        <div className="font-medium">{t("transactionCount", { count: transactionCount })}</div>
         <div className="mt-0.5 text-xs text-muted-foreground">
           {lastSyncAt
             ? t("lastSynced", {
@@ -441,13 +429,7 @@ function RecentSyncCard({
   );
 }
 
-function DangerZone({
-  credentialId,
-  onRemoved,
-}: {
-  credentialId: number;
-  onRemoved: () => void;
-}) {
+function DangerZone({ credentialId, onRemoved }: { credentialId: number; onRemoved: () => void }) {
   const t = useTranslations("settings.bankDetail");
   const tCommon = useTranslations("common");
   const queryClient = useQueryClient();
@@ -455,8 +437,8 @@ function DangerZone({
   const mutation = useMutation({
     mutationFn: () => deleteIntegration(credentialId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["integrations"] });
-      queryClient.invalidateQueries({ queryKey: ["setupStatus"] });
+      void queryClient.invalidateQueries({ queryKey: ["integrations"] });
+      void queryClient.invalidateQueries({ queryKey: ["setupStatus"] });
       toast.success(t("disconnected"));
       onRemoved();
     },
@@ -468,11 +450,10 @@ function DangerZone({
         <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium">{t("disconnectTitle")}</div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {t("disconnectHint")}
-          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("disconnectHint")}</p>
           {!confirming ? (
-            <IconButton showLabel
+            <IconButton
+              showLabel
               label={t("disconnect")}
               variant="outline"
               className="mt-3 text-destructive hover:text-destructive"
@@ -482,13 +463,11 @@ function DangerZone({
             </IconButton>
           ) : (
             <div className="mt-3 flex items-center gap-2">
-              <IconButton
-                label={tCommon("cancel")}
-                onClick={() => setConfirming(false)}
-              >
+              <IconButton label={tCommon("cancel")} onClick={() => setConfirming(false)}>
                 <X className="size-4" aria-hidden />
               </IconButton>
-              <IconButton showLabel
+              <IconButton
+                showLabel
                 label={mutation.isPending ? t("disconnecting") : t("confirmDisconnect")}
                 variant="destructive"
                 onClick={() => mutation.mutate()}
@@ -507,7 +486,7 @@ function DangerZone({
 function formatRelative(
   iso: string,
   t: ReturnType<typeof useTranslations<"settings.bank">>,
-  locale: string
+  locale: string,
 ): string {
   const then = new Date(iso.replace(" ", "T") + "Z");
   const diffSec = (Date.now() - then.getTime()) / 1000;

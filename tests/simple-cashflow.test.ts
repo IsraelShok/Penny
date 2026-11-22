@@ -2,9 +2,35 @@ import { describe, expect, it } from "vitest";
 import { buildCashflow, cashflowMonth } from "@/lib/simple-cashflow";
 import type { Budget, Category, OverviewPayload, TransactionWithCategory } from "@/lib/types";
 
-const cat = (id: number, p: Partial<Category>) => ({ id, parentId: null, name: `c${id}`, color: "#000", kind: "expense", budgetMode: "tracking", needType: "want", costType: "variable", ...p }) as Category;
-const tx = (id: number, date: string, amount: number, categoryId: number | null, p: Partial<TransactionWithCategory> = {}) =>
-  ({ id, date, description: `t${id}`, chargedAmount: amount, categoryId, kind: amount > 0 ? "income" : "expense", isExcluded: false, ...p }) as TransactionWithCategory;
+const cat = (id: number, p: Partial<Category>) =>
+  ({
+    id,
+    parentId: null,
+    name: `c${id}`,
+    color: "#000",
+    kind: "expense",
+    budgetMode: "tracking",
+    needType: "want",
+    costType: "variable",
+    ...p,
+  }) as Category;
+const tx = (
+  id: number,
+  date: string,
+  amount: number,
+  categoryId: number | null,
+  p: Partial<TransactionWithCategory> = {},
+) =>
+  ({
+    id,
+    date,
+    description: `t${id}`,
+    chargedAmount: amount,
+    categoryId,
+    kind: amount > 0 ? "income" : "expense",
+    isExcluded: false,
+    ...p,
+  }) as TransactionWithCategory;
 
 /** The whole previous month. */
 const previousMonth = {
@@ -15,8 +41,16 @@ const range = { from: new Date(2026, 10, 1), to: new Date(2026, 10, 30) };
 const today = new Date(2026, 10, 13);
 
 describe("buildCashflow", () => {
-  const cats = [cat(1, {}), cat(2, { costType: "fixed" }), cat(3, { budgetMode: "budgeted" }), cat(4, { needType: "saving" })];
-  const budgets: Budget[] = [{ categoryId: 2, monthlyAmount: 3000, isAuto: false }, { categoryId: 3, monthlyAmount: 500, isAuto: false }];
+  const cats = [
+    cat(1, {}),
+    cat(2, { costType: "fixed" }),
+    cat(3, { budgetMode: "budgeted" }),
+    cat(4, { needType: "saving" }),
+  ];
+  const budgets: Budget[] = [
+    { categoryId: 2, monthlyAmount: 3000, isAuto: false },
+    { categoryId: 3, monthlyAmount: 500, isAuto: false },
+  ];
   const txns = [
     tx(1, "2026-11-02", -100, 1),
     tx(2, "2026-11-09", -50, null),
@@ -44,7 +78,9 @@ describe("buildCashflow", () => {
     expect(r.weeks[0].share).toBeCloseTo((700 * 7) / 30);
     const perDay = 600 / 23;
     // This week (week 2) and the weeks after it share the rest evenly by days, and it all adds up to the budget.
-    expect(r.weeks.slice(1).map((w) => w.share / perDay)).toEqual([7, 7, 7, 2].map((n) => expect.closeTo(n)));
+    expect(r.weeks.slice(1).map((w) => w.share / perDay)).toEqual(
+      [7, 7, 7, 2].map((n) => expect.closeTo(n)),
+    );
     expect(r.weeks.reduce((s, w, i) => s + (i === 0 ? w.spent : w.share), 0)).toBeCloseTo(700);
     expect(r.weeks.map((w) => w.current)).toEqual([false, true, false, false, false]);
     expect(r.weeks[4].to).toEqual(new Date(2026, 10, 30));
@@ -57,13 +93,25 @@ describe("buildCashflow", () => {
   });
 
   it("treats a refund on an expense category as less spend, not income", () => {
-    const x = buildCashflow([tx(1, "2026-11-02", -300, 1), tx(2, "2026-11-03", 100, 1)], cats, budgets, previousMonth, range, today);
+    const x = buildCashflow(
+      [tx(1, "2026-11-02", -300, 1), tx(2, "2026-11-03", 100, 1)],
+      cats,
+      budgets,
+      previousMonth,
+      range,
+      today,
+    );
     expect(x.variable.spent).toBe(200);
     expect(x.income.received).toBe(0);
   });
 
   it("charges each part of a split to its own category", () => {
-    const split = tx(1, "2026-11-02", -1000, 1, { allocations: [{ categoryId: 1, amount: 600 }, { categoryId: 2, amount: 400 }] });
+    const split = tx(1, "2026-11-02", -1000, 1, {
+      allocations: [
+        { categoryId: 1, amount: 600 },
+        { categoryId: 2, amount: 400 },
+      ],
+    });
     const x = buildCashflow([split], cats, budgets, previousMonth, range, today);
     expect(x.variable.spent).toBe(600);
     expect(x.fixed.spent).toBe(400);
@@ -71,14 +119,33 @@ describe("buildCashflow", () => {
 
   it("keeps a budget of 0 and expects nothing from parent categories", () => {
     const tree = [cat(10, {}), cat(11, { parentId: 10 })];
-    const prev = { totals: { income: 0 }, categories: [{ categoryId: 10, spent: 900 }, { categoryId: 11, spent: 900 }] } as unknown as OverviewPayload;
-    const x = buildCashflow([], tree, [{ categoryId: 11, monthlyAmount: 0, isAuto: false }], prev, range, today);
+    const prev = {
+      totals: { income: 0 },
+      categories: [
+        { categoryId: 10, spent: 900 },
+        { categoryId: 11, spent: 900 },
+      ],
+    } as unknown as OverviewPayload;
+    const x = buildCashflow(
+      [],
+      tree,
+      [{ categoryId: 11, monthlyAmount: 0, isAuto: false }],
+      prev,
+      range,
+      today,
+    );
     expect(x.variable.expected).toBe(0);
   });
 
   it("starts the month on payday", () => {
     const d = new Date(2026, 10, 5);
-    expect(cashflowMonth(10, 0, d)).toEqual({ from: new Date(2026, 9, 10), to: new Date(2026, 10, 9) });
-    expect(cashflowMonth(1, 1, d)).toEqual({ from: new Date(2026, 9, 1), to: new Date(2026, 9, 31) });
+    expect(cashflowMonth(10, 0, d)).toEqual({
+      from: new Date(2026, 9, 10),
+      to: new Date(2026, 10, 9),
+    });
+    expect(cashflowMonth(1, 1, d)).toEqual({
+      from: new Date(2026, 9, 1),
+      to: new Date(2026, 9, 31),
+    });
   });
 });

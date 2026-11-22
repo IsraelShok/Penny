@@ -32,15 +32,23 @@ export function detectMilestones(i: MilestoneInput): Milestone[] {
     if (hit) out.push({ kind: "netWorth", amount, date: hit.date.slice(0, 10) });
   }
   for (const l of i.liabilities) {
-    if (l.value === 0) out.push({ kind: "debtPaid", name: l.name, date: l.updatedAt?.slice(0, 10) ?? null });
+    if (l.value === 0)
+      out.push({ kind: "debtPaid", name: l.name, date: l.updatedAt?.slice(0, 10) ?? null });
   }
   for (const g of i.goals) {
-    if (g.targetAmount > 0 && g.savedAmount >= g.targetAmount) out.push({ kind: "goalReached", name: g.name, date: null });
+    if (g.targetAmount > 0 && g.savedAmount >= g.targetAmount)
+      out.push({ kind: "goalReached", name: g.name, date: null });
   }
   const first = [...i.months]
     .sort((a, b) => a.month.localeCompare(b.month))
     .find((m) => m.income > 0 && m.kept / m.income >= 0.2);
-  if (first) out.push({ kind: "savingsRate", month: first.month, rate: first.kept / first.income, date: `${first.month}-01` });
+  if (first)
+    out.push({
+      kind: "savingsRate",
+      month: first.month,
+      rate: first.kept / first.income,
+      date: `${first.month}-01`,
+    });
   if (i.monthlyExpenses > 0) {
     const cover = i.cashReserve / i.monthlyExpenses;
     // The bigger one says it all.

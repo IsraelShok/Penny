@@ -92,7 +92,7 @@ Plus a **knowledge center** of short original guides in Hebrew and English, and 
 ### Also
 - **Ask your money** in plain language, and a **Telegram bot** for instant spending feedback.
 - **Phone access on your Wi-Fi** (opt-in), installable as a web app.
-- **Menu bar / tray companion** on macOS and Windows.
+- **Desktop app** for macOS and Windows, with an installer and self-updates on Windows.
 
 ## Screenshots
 
@@ -160,7 +160,7 @@ flowchart LR
 
 - **Node.js 22+**, only when installing from source
 - **Windows 11, macOS 13+ or Ubuntu 22+** (with systemd)
-- For the tray companion, built locally: Xcode Command Line Tools on macOS, .NET 8 SDK on Windows. `npm run setup` offers to install them.
+- To build the desktop app from source (optional): `npm run desktop:build`. The ready-made installers need no Node.js.
 - Bank accounts with **2FA disabled** for automatic sync (One Zero is the exception). Without that, use statement files.
 
 ## Install
@@ -205,9 +205,9 @@ npm install
 npm run setup
 ```
 
-For developers, or if you want an always-on service and a tray app. `npm run setup` builds the app, installs the always-on service (LaunchAgent on macOS, systemd on Linux, Task Scheduler on Windows), builds and registers the tray companion, and opens the app. On Windows it also adds `127.0.0.1 penny.localhost` to your hosts file, the only step that asks for Administrator.
+For developers, or if you want an always-on service. `npm run setup` builds the app, installs the always-on service (LaunchAgent on macOS, systemd on Linux, Task Scheduler on Windows), and opens the app. The desktop app comes from the installer; build it from source with `npm run desktop:build`. On Windows it also adds `127.0.0.1 penny.localhost` to your hosts file, the only step that asks for Administrator.
 
-The first launch of the tray app shows an unsigned-binary warning, because you built it locally: right-click → Open (macOS) or "More info" → "Run anyway" (Windows). Once.
+The first launch of the desktop app shows an unsigned-binary warning, because it is not signed yet: right-click → Open (macOS) or "More info" → "Run anyway" (Windows). Once.
 
 Then open **`http://penny.localhost:41234`** and bookmark it.
 
@@ -278,7 +278,7 @@ Or `claude mcp add penny -- node /path/to/Penny/scripts/mcp.mjs`, or run `npm ru
 npm run uninstall
 ```
 
-Stops and removes the service, removes the hosts entry on Windows, and removes the tray app and its login item.
+Stops and removes the service, removes the hosts entry on Windows, and removes earlier desktop-app installs if any are left.
 
 **Kept on purpose:** `data/` (your transactions, budgets and encryption key) and the repository itself. To remove everything: `rm -rf data/ && cd .. && rm -rf Penny/`.
 
@@ -333,7 +333,7 @@ Penny/
 │       └── lib/          Encryption, dedupe, transfer detection, import folder
 ├── tests/                Vitest unit tests (and tests/e2e scanners for overlap and contrast)
 ├── e2e/                  Playwright end-to-end tests
-├── menubar/              Tray companions (Swift for macOS, C# for Windows)
+├── desktop/              Electron desktop shell and installer
 ├── scripts/service/      Service installers
 └── data/                 Database and key (gitignored)
 ```

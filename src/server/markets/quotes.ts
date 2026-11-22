@@ -18,15 +18,25 @@ interface ChartMeta {
 
 /** Parse a Yahoo chart response into a Quote. Exported for tests. */
 export function parseChart(symbol: string, json: unknown, now = new Date()): Quote | null {
-  const result = (json as { chart?: { result?: { meta: ChartMeta; timestamp?: number[]; indicators: { quote: { close: (number | null)[] }[] } }[] } })
-    ?.chart?.result?.[0];
+  const result = (
+    json as {
+      chart?: {
+        result?: {
+          meta: ChartMeta;
+          timestamp?: number[];
+          indicators: { quote: { close: (number | null)[] }[] };
+        }[];
+      };
+    }
+  )?.chart?.result?.[0];
   const marketPrice = result?.meta?.regularMarketPrice;
   if (!result || !marketPrice) return null;
   const meta = result.meta;
   // Tel Aviv prices come in agorot, London in pence, Johannesburg in cents: report the main unit.
   const MINOR: Record<string, string> = { ILA: "ILS", GBp: "GBP", GBX: "GBP", ZAc: "ZAR" };
   const scale = meta.currency && MINOR[meta.currency] ? 0.01 : 1;
-  const currency = meta.currency && MINOR[meta.currency] ? MINOR[meta.currency] : (meta.currency ?? "USD");
+  const currency =
+    meta.currency && MINOR[meta.currency] ? MINOR[meta.currency] : (meta.currency ?? "USD");
   const stamps = result.timestamp ?? [];
   const raw = result.indicators.quote[0]?.close ?? [];
   const points = stamps
@@ -38,7 +48,7 @@ export function parseChart(symbol: string, json: unknown, now = new Date()): Quo
   const yearStart = new Date(now.getFullYear(), 0, 1).getTime();
   const firstThisYear = points.findIndex((p) => p.t >= yearStart);
   // The last close before 1 Jan is the YTD base.
-  const ytdBase = firstThisYear > 0 ? closes[firstThisYear - 1] : closes[0] ?? null;
+  const ytdBase = firstThisYear > 0 ? closes[firstThisYear - 1] : (closes[0] ?? null);
   const change = (base: number | null) => (base ? price / base - 1 : null);
   const step = Math.max(1, Math.floor(closes.length / 52));
 
@@ -69,9 +79,11 @@ async function fetchQuote(symbol: string): Promise<Quote | null> {
 /** Cached quotes; on a failed fetch the last known quote is returned with stale = true, or null if there is none. */
 export async function getQuotes(symbols: string[]): Promise<Map<string, Quote | null>> {
   const db = getDb();
-  const read = db.prepare("SELECT payload, fetched_at as fetchedAt FROM quotes_cache WHERE symbol = ?");
+  const read = db.prepare(
+    "SELECT payload, fetched_at as fetchedAt FROM quotes_cache WHERE symbol = ?",
+  );
   const write = db.prepare(
-    "INSERT INTO quotes_cache (symbol, payload, fetched_at) VALUES (?, ?, ?) ON CONFLICT(symbol) DO UPDATE SET payload = excluded.payload, fetched_at = excluded.fetched_at"
+    "INSERT INTO quotes_cache (symbol, payload, fetched_at) VALUES (?, ?, ?) ON CONFLICT(symbol) DO UPDATE SET payload = excluded.payload, fetched_at = excluded.fetched_at",
   );
   const unique = [...new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean))];
   // The demo is offline: no quotes are fetched and every tile reads "unavailable".
@@ -79,15 +91,18 @@ export async function getQuotes(symbols: string[]): Promise<Map<string, Quote | 
   const entries = await Promise.all(
     unique.map(async (symbol): Promise<[string, Quote | null]> => {
       const cached = read.get(symbol) as { payload: string; fetchedAt: number } | undefined;
-      if (cached && Date.now() - cached.fetchedAt < TTL_MS) return [symbol, JSON.parse(cached.payload)];
-      const fresh = recentlyFailed(`quote:${symbol}`) ? null : await fetchQuote(symbol).catch(() => null);
+      if (cached && Date.now() - cached.fetchedAt < TTL_MS)
+        return [symbol, JSON.parse(cached.payload)];
+      const fresh = recentlyFailed(`quote:${symbol}`)
+        ? null
+        : await fetchQuote(symbol).catch(() => null);
       if (!fresh) markFailed(`quote:${symbol}`);
       if (fresh) {
         write.run(symbol, JSON.stringify(fresh), Date.now());
         return [symbol, fresh];
       }
       return [symbol, cached ? { ...JSON.parse(cached.payload), stale: true } : null];
-    })
+    }),
   );
   return new Map(entries);
 }
