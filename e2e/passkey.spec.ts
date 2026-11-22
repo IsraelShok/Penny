@@ -16,7 +16,9 @@ test.describe("passkey unlock", () => {
     });
   });
 
-  test("register a passkey, lock, unlock with it; recovery code shown at setup", async ({ page }) => {
+  test("register a passkey, lock, unlock with it; recovery code shown at setup", async ({
+    page,
+  }) => {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send("WebAuthn.enable");
     await cdp.send("WebAuthn.addVirtualAuthenticator", {
