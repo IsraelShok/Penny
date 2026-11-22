@@ -13,7 +13,7 @@ const who = (request: Request, ws: number, key?: unknown) => {
 };
 const valid = (key: unknown): key is string =>
   typeof key === "string" &&
-  /^(studio|a11y|home-desktop|home-mobile|goal-focus|activation|sidebar-accounts|home-board|trackers|transaction-views|transactions-upcoming|card-limits|ventures|transaction-templates|transaction-defaults)$/.test(
+  /^(studio|a11y|home-desktop|home-mobile|goal-focus|activation|sidebar-accounts|home-board|trackers|transaction-views|transactions-upcoming|card-limits|ventures|transaction-templates|transaction-defaults|import-profiles)$/.test(
     key,
   );
 export async function GET(request: Request) {

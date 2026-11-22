@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import qrcode from "qrcode-generator";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { SettingCard, SettingRow, StatusChip } from "@/components/settings/section-shell";
@@ -14,6 +15,28 @@ interface LanStatus {
   restartable: boolean;
   urls: string[];
   platform: string;
+}
+
+/** The phone URL as a QR code, drawn locally as SVG squares. */
+function UrlQr({ url, label }: { url: string; label: string }) {
+  const qr = qrcode(0, "M");
+  qr.addData(url);
+  qr.make();
+  const n = qr.getModuleCount();
+  const cells: string[] = [];
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++) if (qr.isDark(r, c)) cells.push(`M${c + 4},${r + 4}h1v1h-1z`);
+  return (
+    <svg
+      role="img"
+      aria-label={label}
+      viewBox={`0 0 ${n + 8} ${n + 8}`}
+      className="size-40 rounded bg-white"
+      shapeRendering="crispEdges"
+    >
+      <path d={cells.join("")} fill="#000" />
+    </svg>
+  );
 }
 
 /** Phone access on the home network: off by default, needs the app lock, applies on restart. */
@@ -65,6 +88,7 @@ export function LanAccessCard() {
             {s.urls.length > 0 ? (
               <div className="space-y-1">
                 <p className="text-sm">{t("lanOpenOnPhone")}</p>
+                {s.urls[0] && <UrlQr url={s.urls[0]} label={t("lanQr")} />}
                 {s.urls.map((u) => (
                   <code
                     key={u}

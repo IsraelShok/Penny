@@ -1,14 +1,9 @@
 import { israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import { completeAI } from "@/server/ai/ask";
-import { MAX_TEXT_IMPORT, parseExtractedRows } from "@/lib/text-import";
+import { EXTRACT_SYSTEM, MAX_TEXT_IMPORT, parseExtractedRows } from "@/lib/text-import";
 
 export const dynamic = "force-dynamic";
-
-const SYSTEM = `You read a bank or card statement, a receipt, or any pasted text, and list the money movements in it.
-Reply with ONLY a JSON array, no prose. Each item: {"date":"YYYY-MM-DD","description":"merchant or payee as written","amount":number,"kind":"expense"|"income"}.
-amount is positive; kind says the direction. Dates without a year are in the current year. Skip balances, totals and headers.
-If there are no movements, reply [].`;
 
 /**
  * Import from any text: the pasted text goes to the user's own AI provider, and the rows come back for
@@ -23,7 +18,7 @@ export async function POST(request: Request) {
   const today = israelToday();
   let reply: string | null;
   try {
-    reply = await completeAI(SYSTEM, `Today is ${today}.\n\nText:\n${text}`, 4000);
+    reply = await completeAI(EXTRACT_SYSTEM, `Today is ${today}.\n\nText:\n${text}`, 4000);
   } catch {
     return NextResponse.json({ error: "aiFailed" }, { status: 502 });
   }

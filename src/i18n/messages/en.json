@@ -650,7 +650,12 @@
       "failedToSave": "Settings were not saved. Try saving again.",
       "displayNameTitle": "Display name",
       "displayNameDescription": "Used in the greeting on Home.",
-      "displayNameLabel": "First name"
+      "displayNameLabel": "First name",
+      "billRemindersTitle": "Bill reminders",
+      "billRemindersDescription": "A heads-up before an expected recurring charge or commitment, in the bell and on Telegram when it is linked.",
+      "billRemindersOn": "Remind me before bills",
+      "billRemindersDays": "How early",
+      "billRemindersDaysValue": "{n, plural, one {# day} other {# days}} before"
     },
     "appearance": {
       "themeTitle": "Theme",
@@ -1150,7 +1155,21 @@
       "passkeyUnavailable_insecure": "Passkeys need a secure connection. Open the app on this computer at http://localhost to add one; they can't be used over the home network.",
       "passkeyUnavailable_ip": "Passkeys don't work on a numeric address. Open the app at http://localhost (same port) to add one.",
       "passkeyUnavailable_unsupported": "This browser doesn't support passkeys.",
-      "passkeyUnavailable_noprf": "This browser can't derive an encryption key from a passkey (no PRF support), so passkey unlock isn't available here."
+      "passkeyUnavailable_noprf": "This browser can't derive an encryption key from a passkey (no PRF support), so passkey unlock isn't available here.",
+      "lanQr": "QR code of the phone address",
+      "quickAddTitle": "Quick add from the phone",
+      "quickAddDescription": "Add an expense from a phone shortcut. Each phone gets its own key; revoke it any time.",
+      "quickAddName": "Device name, for example: my iPhone",
+      "quickAddCreate": "Create key",
+      "quickAddShownOnce": "Copy this key now. It will not be shown again.",
+      "quickAddLastUsed": "Last used {date}",
+      "quickAddNeverUsed": "Not used yet",
+      "quickAddRevoke": "Revoke",
+      "quickAddIphoneTitle": "iPhone: Shortcuts",
+      "quickAddIphoneSteps": "1. Open Shortcuts and create a new shortcut.\n2. Add Ask for Input (Number), prompt: Amount.\n3. Add Ask for Input (Text), prompt: Description.\n4. Add Get Contents of URL with the address:\n{url}\n5. Tap Show More: Method POST. Header: Authorization, value: Bearer {token}\n6. Request Body: JSON. Add a Number field named amount set to the first input, and a Text field named description set to the second input.\n7. Add the shortcut to the Home Screen.",
+      "quickAddAndroidTitle": "Android: automation app",
+      "quickAddAndroidSteps": "In any automation app that can send an HTTP request, create a task:\n1. Method POST, address:\n{url}\n2. Header: Authorization, value: Bearer {token}\n3. Header: Content-Type, value: application/json\n4. JSON body with amount (number) and description (text). Optional: date (YYYY-MM-DD) and kind set to income.\n5. Have the task ask for the amount and description, then add it as a home screen shortcut.",
+      "quickAddNote": "Works on the home network while phone access is on, and after the app was unlocked once since it started. New expenses are categorized automatically when the merchant is known."
     },
     "openBanking": {
       "title": "Connect the bank's API",
@@ -3029,7 +3048,12 @@
     "save": "Save {count} transactions",
     "saved": "Saved {added} transactions · {duplicates} duplicates skipped · {review} awaiting review",
     "saveFailed": "Saving failed. Try again.",
-    "undo": "Undo"
+    "undo": "Undo",
+    "docRead": "Read a PDF or image",
+    "docHint": "A PDF statement or a screenshot of one. The PDF's text is read on this computer and sent to your AI provider.",
+    "docNeedsVision": "Reading images needs a vision-capable AI provider (Claude). A PDF works with any provider.",
+    "docUnsupported": "Choose a PDF or an image (PNG, JPG, WebP).",
+    "docNoText": "No text in this PDF — it is probably a scan. Try a screenshot of it with a vision-capable provider."
   },
   "fileImport": {
     "title": "Import a bank or card statement",
@@ -3123,9 +3147,16 @@
     "dateMdy": "Month/day/year",
     "skipped": "{count} rows skipped — no date, description or amount",
     "savedCategorized": "Saved {added} transactions · {categorized} categorised automatically · {review} to review",
-    "pdf": "This is a PDF. Export a CSV or Excel file from the bank — or paste the table into Excel and save it as xlsx.",
+    "pdf": "This is a PDF. Use “Read a PDF or image” in the smart sheet below, or export a CSV or Excel file from the bank.",
     "tooLarge": "This file is too large (over 25MB). Try exporting a shorter period.",
-    "emptyFile": "The file is empty."
+    "emptyFile": "The file is empty.",
+    "profileApplied": "Using the column layout you saved for this file type.",
+    "profileReset": "Forget this layout",
+    "historyTitle": "Import history",
+    "historyEmpty": "No imports yet.",
+    "historyRow": "{date} · {account} · {rows} rows",
+    "historyUndo": "Undo this import",
+    "historyUndone": "Removed {count} rows."
   },
   "ask": {
     "title": "Ask your money",
@@ -5102,7 +5133,15 @@
     "ended": "Reached",
     "behindBadge": "Behind",
     "needShort": "You save {save} a month on average, so you're {gap} a month short.",
-    "needCovered": "You save {save} a month on average, which covers it."
+    "needCovered": "You save {save} a month on average, which covers it.",
+    "slipNever": "{name}: nothing left for it at this pace",
+    "slipBy": "{name}: {months, plural, one {# month} other {# months}} late ({date})",
+    "tryOpen": "Try other numbers for {name}",
+    "tryHint": "Try a monthly amount or a date. Nothing is saved.",
+    "tryMonthly": "Save a month",
+    "tryDate": "Reach by",
+    "tryReach": "At {monthly} a month you get there in {date}",
+    "tryNeed": "To get there by {date}: {need} a month"
   },
   "vacation": {
     "title": "Vacation planning",
@@ -5848,7 +5887,8 @@
     "editAssigned": "Edit the budget for {name}",
     "saveFailed": "The budget was not saved. Try again.",
     "lines": "{n, plural, one {# line} other {# lines}}",
-    "paceHint": "The thin mark on each bar is {pct}% of the month gone. A bar past it is spending faster than the month."
+    "paceHint": "The thin mark on each bar is {pct}% of the month gone. A bar past it is spending faster than the month.",
+    "carried": "{amount} carried over"
   },
   "ownerFilter": {
     "filter": "Whose:",
@@ -6260,7 +6300,8 @@
     "new": "New",
     "syncDone": "{bank}: {count, plural, one {# new transaction} other {# new transactions}}",
     "syncFailed": "{bank}: the sync failed. Check the connection.",
-    "goalReached": "Goal reached: \"{name}\" ({amount})"
+    "goalReached": "Goal reached: \"{name}\" ({amount})",
+    "billDue": "{name} ({amount}) is due {days, plural, =0 {today} =1 {tomorrow} other {in # days}}"
   },
   "analyticsHub": {
     "reports": "Reports",
@@ -6292,5 +6333,54 @@
     "parts": "What it is made of",
     "assets": "Assets",
     "debts": "Debts"
+  },
+  "reconcile": {
+    "open": "Clean up transactions",
+    "title": "Clean up",
+    "tab": {
+      "duplicates": "Duplicates",
+      "pending": "Stuck pending",
+      "generic": "Vague descriptions",
+      "recurring": "Manual recurring"
+    },
+    "loading": "Loading…",
+    "noPairs": "No likely duplicates.",
+    "pendingLabel": "pending",
+    "bookedLabel": "booked",
+    "fileLabel": "file import",
+    "keepLabel": "kept",
+    "merge": "Merge",
+    "notDuplicate": "Not a duplicate",
+    "removeOther": "Hide the extra row",
+    "merged": "Merged. The extra row is hidden.",
+    "dismissed": "Marked as not a duplicate",
+    "removed": "Row hidden",
+    "undo": "Undo",
+    "failed": "Something went wrong. Try again.",
+    "staleDays": "Pending for more than (days)",
+    "noStale": "No pending rows that old.",
+    "clearStale": "Hide {count, plural, one {# pending row} other {# pending rows}}",
+    "confirmClear": "Hide {count, plural, one {# pending row that never settled} other {# pending rows that never settled}}? You can undo right after, or show them again from hidden rows.",
+    "cleared": "{count, plural, one {# row hidden} other {# rows hidden}}",
+    "genericHelp": "Rows whose description contains one of these words are never categorized automatically. They wait for you in review.",
+    "genericPattern": "Vague description",
+    "genericPlaceholder": "e.g. bank transfer",
+    "add": "Add",
+    "remove": "Remove",
+    "genericRemoved": "Removed",
+    "seriesName": "Name",
+    "cadence": "How often",
+    "cadences": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "amount": "Amount",
+    "day": "Day of month",
+    "fromCharges": "From the charges",
+    "create": "Add recurring item",
+    "attach": "Attach charges",
+    "detach": "Detach",
+    "seriesDeleted": "Recurring item removed"
   }
 }

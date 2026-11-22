@@ -23,12 +23,30 @@ import { isLanEnabled } from "@/server/lib/lan-access";
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 // GET routes with side effects: the Ollama model list makes the server fetch a URL (and may start Ollama).
 const ORIGIN_CHECKED_GETS = new Set(["/api/ai/ollama/models"]);
+const QUICK_ADD = "/api/quick-add";
 
 export function proxy(request: NextRequest) {
   // Every request, page or API, must be addressed to localhost (blocks DNS rebinding).
   // Phone access admits private LAN hosts, but only while the app lock guards every request.
   if (!isAllowedHost(request.headers.get("host"), undefined, isLanEnabled() && isLockEnabled())) {
     return new NextResponse("Forbidden: unexpected host", { status: 403 });
+  }
+
+  // Phone quick-add: a bearer device token (checked by the route) replaces the session cookie and Origin.
+  // A browser cannot attach that header cross-origin without a CORS preflight, which is never answered.
+  if (request.nextUrl.pathname === QUICK_ADD) {
+    const fetchSite = request.headers.get("sec-fetch-site");
+    if (
+      request.method !== "POST" ||
+      !request.headers.get("authorization") ||
+      fetchSite === "cross-site" ||
+      fetchSite === "same-site"
+    )
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    const headers = new Headers(request.headers);
+    headers.delete("x-workspace-id"); // the token decides the workspace
+    headers.delete("cookie");
+    return NextResponse.next({ request: { headers } });
   }
 
   const locked = lockGate(request);

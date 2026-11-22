@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteFileImport } from "@/server/db/queries/transactions";
+import { deleteFileImport, listFileImports } from "@/server/db/queries/transactions";
 import { saveStatementImport } from "@/server/lib/folder-import";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { MAX_IMPORT_ROWS, parseImportDate, type ImportRow } from "@/lib/file-import";
@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     rows?: unknown;
     dryRun?: unknown;
     source?: unknown;
+    fileName?: unknown;
   };
   const account = typeof body.account === "string" ? body.account.trim().slice(0, 40) : "";
   if (!account) return bad("account is required");
@@ -45,8 +46,20 @@ export async function POST(request: Request) {
   }
   const source = body.source === "card" ? "card" : "bank";
   return NextResponse.json(
-    saveStatementImport(workspaceId, account, rows, body.dryRun === true, source),
+    saveStatementImport(
+      workspaceId,
+      account,
+      rows,
+      body.dryRun === true,
+      source,
+      typeof body.fileName === "string" ? body.fileName.slice(0, 120) || null : null,
+    ),
   );
+}
+
+/** Import history: past statement imports with their account and row count. */
+export async function GET(request: Request) {
+  return NextResponse.json({ imports: listFileImports(getWorkspaceIdFromRequest(request)) });
 }
 
 /** Undo one import: ?batch=. */

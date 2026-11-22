@@ -98,6 +98,7 @@ export default function GeneralSettingsPage() {
           />
           <SyncCard key={`time:${settings.autoSyncTime}`} settings={settings} />
           <TransactionDefaultsCard />
+          <BillRemindersCard settings={settings} />
         </>
       ) : isError ? (
         <DataState error onRetry={() => void refetch()} />
@@ -250,6 +251,48 @@ function SyncCard({ settings }: { settings: AppSettings }) {
         </SettingList>
       </SettingCard>
     </>
+  );
+}
+
+/** Reminders before an expected bill: in the bell, and on Telegram when it is linked. */
+function BillRemindersCard({ settings }: { settings: AppSettings }) {
+  const t = useTranslations("settings.general");
+  const mutation = useAutosave(["notifications"]);
+  const on = settings.billReminderDays > 0;
+  return (
+    <SettingCard title={t("billRemindersTitle")} description={t("billRemindersDescription")}>
+      <SettingList>
+        <SettingRow label={t("billRemindersOn")} htmlFor="bill-reminders-toggle">
+          <Switch
+            id="bill-reminders-toggle"
+            checked={on}
+            disabled={mutation.isPending}
+            onCheckedChange={(v) => mutation.mutate({ billReminderDays: v ? 2 : 0 })}
+          />
+        </SettingRow>
+        {on && (
+          <SettingRow label={t("billRemindersDays")} labelId="bill-reminders-days-label">
+            <Select
+              value={String(settings.billReminderDays)}
+              onValueChange={(v) => v && mutation.mutate({ billReminderDays: Number(v) })}
+            >
+              <SelectTrigger aria-labelledby="bill-reminders-days-label" className="w-40">
+                <SelectValue>
+                  {(v: string) => t("billRemindersDaysValue", { n: Number(v) })}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 5, 7].map((d) => (
+                  <SelectItem key={d} value={String(d)}>
+                    {t("billRemindersDaysValue", { n: d })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingRow>
+        )}
+      </SettingList>
+    </SettingCard>
   );
 }
 

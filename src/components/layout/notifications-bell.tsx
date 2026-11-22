@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { AlertTriangle, Bell, CheckCircle2, Flag } from "lucide-react";
+import { AlertTriangle, Bell, CalendarClock, CheckCircle2, Flag } from "lucide-react";
 import { getNotifications } from "@/lib/api";
 import { markAllRead, unread, type AppNotification } from "@/lib/notifications";
 import { shekels } from "@/lib/money";
@@ -37,11 +37,17 @@ function saveRead(keys: string[]) {
   listeners.forEach((l) => l());
 }
 
-const ICON = { syncDone: CheckCircle2, syncFailed: AlertTriangle, goalReached: Flag } as const;
+const ICON = {
+  syncDone: CheckCircle2,
+  syncFailed: AlertTriangle,
+  goalReached: Flag,
+  billDue: CalendarClock,
+} as const;
 const TONE = {
   syncDone: "text-status-on-track bg-status-on-track/10",
   syncFailed: "text-expense bg-expense/10",
   goalReached: "text-primary bg-primary/10",
+  billDue: "text-[var(--status-heads-up)] bg-[var(--status-heads-up)]/10",
 } as const;
 
 /** The bell: what happened (a sync finished or failed, a goal reached), with unread ones marked. */
@@ -81,7 +87,9 @@ export function NotificationsBell() {
       ? t("syncDone", { bank: bank(n.provider), count: n.count })
       : n.kind === "syncFailed"
         ? t("syncFailed", { bank: bank(n.provider) })
-        : t("goalReached", { name: n.name, amount: shekels(n.amount, locale) });
+        : n.kind === "billDue"
+          ? t("billDue", { name: n.name, amount: shekels(n.amount, locale), days: n.daysLeft })
+          : t("goalReached", { name: n.name, amount: shekels(n.amount, locale) });
 
   return (
     <Popover>

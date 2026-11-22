@@ -19,6 +19,7 @@ Legend: **Fixed** = changed in this commit. **OK** = already in place. **Open** 
 | CSRF: every POST/PUT/PATCH/DELETE under `/api` needs an `Origin` (or `Referer`) equal to the host; `Origin: null` is rejected | OK, now tested (`tests/proxy.test.ts`) |
 | Cross-site reads and side-effect GETs (`<img src=/api/...>`): any `/api` request with `Sec-Fetch-Site: cross-site` or `same-site` is rejected | **Fixed** |
 | Host + Origin checks are the boundary when the app lock is off | OK |
+| Phone quick-add `POST /api/quick-add`: the one path that skips the session cookie, lock gate and Origin check; needs `Authorization: Bearer` with a per-device token (32 random bytes, stored as SHA-256, shown once, revocable). Host allowlist and cross-site rejection still apply; cookies and `x-workspace-id` are stripped, the token names the workspace. A browser cannot attach the header cross-origin without a preflight, which is never answered | **Built**, tested (`tests/quick-add-route.test.ts`) |
 | App lock (optional, off by default) | **Built** |
 
 **App lock** (`src/server/lib/app-lock.ts`, Settings, Privacy & security). Passphrase of 8+ characters

@@ -10,11 +10,18 @@ const SYSTEM = `You answer questions about a person's own household money, using
 Answer in the same language as the question (Hebrew or English), in at most two short, calm sentences, numbers in ₪.
 If the data cannot answer the question, say so plainly. Never give investment advice.`;
 
+export type VisionMediaType = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+
+/** Whether the configured provider reads images. shortcut: Claude only; a vision Ollama model would need a model check. */
+export const aiSupportsImages = () => getSetting("ai_provider") === "claude";
+
 /** One answer from the user's chosen provider (Ollama, Claude or a CLI agent). Null when none is set up. */
 export async function completeAI(
   system: string,
   user: string,
   maxTokens = 300,
+  /** Only for a vision-capable provider (see aiSupportsImages); others ignore it. */
+  image?: { base64: string; mediaType: VisionMediaType },
 ): Promise<string | null> {
   const provider = getSetting("ai_provider");
 
@@ -53,7 +60,20 @@ export async function completeAI(
       model: "claude-haiku-4-5-20251001",
       max_tokens: maxTokens,
       system,
-      messages: [{ role: "user", content: user }],
+      messages: [
+        {
+          role: "user",
+          content: image
+            ? [
+                {
+                  type: "image",
+                  source: { type: "base64", media_type: image.mediaType, data: image.base64 },
+                },
+                { type: "text", text: user },
+              ]
+            : user,
+        },
+      ],
     });
     const block = res.content[0];
     return block?.type === "text" ? block.text.trim() || null : null;

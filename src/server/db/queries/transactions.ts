@@ -1,4 +1,5 @@
 import "server-only";
+import { isGeneric, listGenericPatterns } from "../../lib/generic-descriptions";
 import { israelDay } from "@/server/lib/date-utils";
 
 import { ownerClause } from "@/server/lib/owner-scope";
@@ -6,6 +7,7 @@ import { getDb } from "../index";
 import { computeDedupHash } from "../../lib/dedup";
 import { detectKind } from "../../lib/transfers";
 import { BANK_PROVIDERS } from "@/lib/types";
+import { CAPTURED_PREFIX, matchCapturedCharges } from "./manual-transactions";
 import type {
   TransactionWithCategory,
   MonthlySummary,
@@ -414,7 +416,7 @@ export function getTransactionsForCategorization(
 }[] {
   if (ids.length === 0) return [];
   const placeholders = ids.map(() => "?").join(",");
-  return getDb()
+  const rows = getDb()
     .prepare(
       `SELECT id, description, charged_amount as chargedAmount,
               original_currency as originalCurrency, memo
@@ -427,6 +429,9 @@ export function getTransactionsForCategorization(
     originalCurrency: string;
     memo: string | null;
   }[];
+  // Generic descriptions ("העברה") say nothing about the merchant: memory, dictionary and AI all skip them, so they stay in review.
+  const generic = listGenericPatterns(workspaceId);
+  return generic.length ? rows.filter((r) => !isGeneric(r.description, generic)) : rows;
 }
 
 export function updateTransactionCategory(
@@ -976,6 +981,8 @@ export function saveSyncTransactions(
   const db = getDb();
   return db.transaction(() => {
     const result = insertTransactions(workspaceId, transactions, provider, credentialId, syncRunId);
+    // A charge captured from a bank text folds into its bank twin here, so it never counts twice.
+    matchCapturedCharges(db, workspaceId);
     const accounts = [...new Set(scrapedAccounts)];
     if (accounts.length === 0) return { ...result, prunedPending: 0 };
     const keep = [...new Set(transactions.filter((t) => t.status === "pending").map(dedupHashFor))];
@@ -987,6 +994,7 @@ export function saveSyncTransactions(
       .prepare(
         `DELETE FROM transactions
          WHERE workspace_id = ? AND credential_id = ? AND status = 'pending'
+           AND dedup_hash NOT LIKE '${CAPTURED_PREFIX}%'
            AND account_number IN (${accountList}) ${keepClause}`,
       )
       .run(workspaceId, credentialId, ...accounts, ...keep).changes;
@@ -1210,15 +1218,16 @@ export function insertFileImport(
   rows: { date: string; description: string; amount: number; seq: number }[],
   /** Card statements carry refunds as positive amounts, which must stay expenses (not income). */
   source: "bank" | "card" = "bank",
+  fileName: string | null = null,
 ): { batchId: number; added: number } {
   const db = getDb();
   return db.transaction(() => {
     const runId = Number(
       db
         .prepare(
-          "INSERT INTO sync_runs (workspace_id, provider, started_at, completed_at, status, scrape_from_date) VALUES (?, 'file', '1970-01-01', '1970-01-01', 'completed', '1970-01-01')",
+          "INSERT INTO sync_runs (workspace_id, provider, started_at, completed_at, status, scrape_from_date, file_name) VALUES (?, 'file', '1970-01-01', '1970-01-01', 'completed', '1970-01-01', ?)",
         )
-        .run(workspaceId).lastInsertRowid,
+        .run(workspaceId, fileName).lastInsertRowid,
     );
     const stmt = db.prepare(
       `INSERT INTO transactions (workspace_id, account_number, date, processed_date, original_amount, original_currency,
@@ -1302,6 +1311,25 @@ export function deleteFileImport(workspaceId: number, batchId: number): number {
     );
     return n;
   })();
+}
+
+/** Past statement imports, newest first, for the import history list. Undo is deleteFileImport. */
+export function listFileImports(workspaceId: number, limit = 50) {
+  return getDb()
+    .prepare(
+      `SELECT r.id, r.created_at AS createdAt, r.file_name AS fileName,
+         MIN(t.account_number) AS account, COUNT(t.id) AS rows
+       FROM sync_runs r JOIN transactions t ON t.sync_run_id = r.id AND t.provider = 'file' AND t.workspace_id = r.workspace_id
+       WHERE r.workspace_id = ? AND r.provider = 'file'
+       GROUP BY r.id ORDER BY r.id DESC LIMIT ?`,
+    )
+    .all(workspaceId, limit) as {
+    id: number;
+    createdAt: string;
+    fileName: string | null;
+    account: string;
+    rows: number;
+  }[];
 }
 
 // ---- Settle-up and per-child -----------------------------------------------

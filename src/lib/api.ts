@@ -689,6 +689,16 @@ export async function fetchReceipt(id: number) {
   return res.blob();
 }
 
+/** Rows read from a PDF or a statement image by the user's AI provider. Nothing is saved. */
+export function extractDocumentRows(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return fetchJSON<{ rows: import("./text-import").ExtractedRow[] }>(`/api/import/document`, {
+    method: "POST",
+    body: form,
+  });
+}
+
 /** Rows read from pasted text by the user's AI provider, for the sheet import preview. Nothing is saved. */
 export function extractTextRows(text: string) {
   return fetchJSON<{ rows: import("./text-import").ExtractedRow[] }>(`/api/import/text`, {
@@ -1528,6 +1538,7 @@ export function importStatement(
   rows: { date: string; description: string; amount: number }[],
   dryRun = false,
   source: ImportSource = "bank",
+  fileName?: string,
 ) {
   return fetchJSON<{
     ready: number;
@@ -1539,8 +1550,20 @@ export function importStatement(
   }>(`/api/import`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ account, rows, dryRun, source }),
+    body: JSON.stringify({ account, rows, dryRun, source, fileName }),
   });
+}
+
+export function listStatementImports() {
+  return fetchJSON<{
+    imports: {
+      id: number;
+      createdAt: string;
+      fileName: string | null;
+      account: string;
+      rows: number;
+    }[];
+  }>(`/api/import`);
 }
 
 export function undoStatementImport(batchId: number) {
@@ -1982,4 +2005,66 @@ export function updateAutoBackup(patch: {
 
 export function autoBackupAction(action: "run" | "open") {
   return fetchJSON<AutoBackupConfig>("/api/backup/auto", jsonBody("POST", { action }));
+}
+
+// Reconciliation: likely duplicates, stale pending rows, generic descriptions and hand-made recurring series.
+export type ReconcileRow = import("@/server/finance/reconcile").DupRow;
+export interface ReconcilePayload {
+  pairs: { a: ReconcileRow; b: ReconcileRow; keepId: number }[];
+  stale: { id: number; description: string; amount: number; date: string; account: string }[];
+  days: number;
+}
+export function getReconcile(days: number) {
+  return fetchJSON<ReconcilePayload>(`/api/transactions/reconcile?days=${days}`);
+}
+export function reconcileAction(
+  body:
+    | { action: "merge"; keepId: number; dropId: number }
+    | { action: "dismiss" | "remove"; ids: number[] }
+    | { action: "undo"; token: string },
+) {
+  return fetchJSON<{ undoToken: string | null }>(
+    "/api/transactions/reconcile",
+    jsonBody("POST", body),
+  );
+}
+export function getGenericPatterns() {
+  return fetchJSON<{ patterns: string[] }>("/api/transactions/generic");
+}
+export function setGenericPattern(pattern: string, remove = false) {
+  return fetchJSON<{ pattern?: string }>(
+    "/api/transactions/generic",
+    jsonBody("POST", { pattern, remove }),
+  );
+}
+export type ManualRecurring = ReturnType<
+  ReturnType<typeof import("@/server/insights/manual-recurring").createManualRecurring>["list"]
+>[number];
+export type ManualRecurringInput = {
+  name?: string;
+  account?: string | null;
+  cadence?: "weekly" | "monthly" | "yearly";
+  amount?: number | null;
+  dayOfMonth?: number | null;
+  startDate?: string;
+};
+export function listManualRecurring() {
+  return fetchJSON<{ items: ManualRecurring[] }>("/api/recurring/manual");
+}
+export function createManualRecurringItem(input: ManualRecurringInput) {
+  return fetchJSON<{ id: number }>("/api/recurring/manual", jsonBody("POST", input));
+}
+export function updateManualRecurring(
+  id: number,
+  body: ManualRecurringInput | { attach: number } | { detach: number } | { restore: true },
+) {
+  return fetchJSON<unknown>(`/api/recurring/manual/${id}`, jsonBody("PATCH", body));
+}
+export function deleteManualRecurring(id: number) {
+  return fetchJSON<unknown>(`/api/recurring/manual/${id}`, { method: "DELETE" });
+}
+export function getManualRecurringCandidates(id: number) {
+  return fetchJSON<{
+    candidates: { id: number; date: string; amount: number; description: string }[];
+  }>(`/api/recurring/manual/${id}`);
 }

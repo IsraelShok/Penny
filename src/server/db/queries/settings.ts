@@ -57,6 +57,12 @@ export const setSetting = setGlobalSetting;
 
 const AUTO_SYNC_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+/** Days before an expected bill to remind; 2 until the user picks, 0 = off. */
+export function getBillReminderDays(workspaceId: number): number {
+  const n = Number(getWorkspaceSetting(workspaceId, "bill_reminder_days") ?? "2");
+  return Number.isInteger(n) && n >= 0 && n <= 14 ? n : 2;
+}
+
 /** profileName: the active profile (X-Profile-ID); its name is the greeting. */
 export function getAppSettings(workspaceId: number, profileName?: string): AppSettings {
   const targetRaw = getWorkspaceSetting(workspaceId, "monthly_target");
@@ -73,6 +79,7 @@ export function getAppSettings(workspaceId: number, profileName?: string): AppSe
     monthlyTarget: Number.isFinite(target) && target > 0 ? target : null,
     autoSyncEnabled: getGlobalSetting("auto_sync_enabled") !== "false",
     autoSyncTime: storedTime && AUTO_SYNC_TIME_RE.test(storedTime) ? storedTime : "06:00",
+    billReminderDays: getBillReminderDays(workspaceId),
     language: storedLang === "en" ? "en" : "he",
     displayName:
       profileName && profileName !== "Default" ? profileName : profileDisplayName(workspaceId),
@@ -137,6 +144,13 @@ export function updateAppSettings(
         "scraper_show_browser",
         settings.showBrowser ? "true" : "false",
       );
+    }
+    if (settings.billReminderDays !== undefined) {
+      const d = settings.billReminderDays;
+      if (!Number.isInteger(d) || d < 0 || d > 14) {
+        throw new Error("billReminderDays must be 0-14");
+      }
+      setWorkspaceSetting(workspaceId, "bill_reminder_days", String(d));
     }
     if (settings.paydayDay !== undefined) {
       if (typeof settings.paydayDay !== "number" || !Number.isFinite(settings.paydayDay)) {
