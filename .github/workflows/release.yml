@@ -57,6 +57,14 @@ jobs:
       # The Windows app installs updates itself only when the installer matches this list.
       - name: Checksums
         run: cd out && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      # The app installs an update only when this list is signed by the release key (desktop/update.cjs).
+      # No key, no release: an unsigned list would turn every user's auto-update off.
+      - name: Sign the checksums
+        env:
+          PENNY_UPDATE_SIGNING_KEY: ${{ secrets.PENNY_UPDATE_SIGNING_KEY }}
+        run: |
+          test -n "$PENNY_UPDATE_SIGNING_KEY" || { echo "::error::Secret PENNY_UPDATE_SIGNING_KEY is not set"; exit 1; }
+          node -e "const c=require('crypto'),f=require('fs');f.writeFileSync('out/SHA256SUMS.txt.sig',c.sign(null,f.readFileSync('out/SHA256SUMS.txt'),process.env.PENNY_UPDATE_SIGNING_KEY).toString('base64'))"
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}

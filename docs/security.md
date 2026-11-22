@@ -147,3 +147,11 @@ any new critical advisory (`npm run security:audit:gate`).
 
 `src/server/update/check.ts` calls `api.github.com` for the latest commit on the branch. It sends no
 user data; GitHub sees the IP and a request per check. **Open:** a setting to turn it off.
+
+## 13. Desktop self-update
+
+The Windows app installs an update only when the installer's SHA-256 is in the release's `SHA256SUMS.txt`
+**and** that list carries a valid Ed25519 signature (`SHA256SUMS.txt.sig`) by the release key. The private key
+lives only in the `PENNY_UPDATE_SIGNING_KEY` GitHub secret (and the maintainer's offline copy); the public key is
+built into `desktop/update.cjs`. A release published without the key (a stolen token, a hijacked workflow) is
+never installed silently. The release workflow fails when the secret is missing. **Fixed.**
