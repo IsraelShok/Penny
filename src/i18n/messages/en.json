@@ -1104,7 +1104,7 @@
       "deleteDescription": "Delete transactions or fully reset the app, on the Accounts & import page.",
       "deleteCta": "Go to delete data",
       "lockTitle": "App lock",
-      "lockDescription": "Asks for a passphrase to open the app and locks after idle time. The encryption key is stored wrapped with the passphrase, so a copy of the data folder does not expose bank logins. After a restart, unlock once so scheduled sync and the bot can work. Forgot it? The only way back is to delete everything.",
+      "lockDescription": "Asks for a passphrase to open the app and locks after idle time. The encryption key is stored wrapped with the passphrase, so a copy of the data folder does not expose bank logins. After a restart, unlock once so scheduled sync and the bot can work. Forgot it? Use the recovery code shown when you turn the lock on. Without it, the only way back is to delete everything.",
       "lockOn": "Lock is on",
       "lockOff": "Lock is off",
       "lockSecret": "New passphrase",
