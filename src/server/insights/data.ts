@@ -6,11 +6,13 @@ import { addDays, daysBetween, israelDay, monthKey } from "../lib/date-utils";
 import { isCardProvider } from "../lib/card-providers";
 import { usesScraperFork } from "../scrapers/select";
 import { detectRecurring, isActive, type Series } from "./recurring";
+import { createManualRecurring } from "./manual-recurring";
 import { projectInstallments, type ProjectedPayment } from "./installments";
 import { findAnomalies, type Anomaly } from "./anomalies";
 import { upcomingBillingDates, type CardForecastInput } from "./forecast";
 
 interface Row {
+  id: number;
   description: string;
   amount: number;
   /** The household's own part of the amount, after any business share. */
@@ -29,7 +31,7 @@ function loadRows(workspaceId: number): Row[] {
   return (
     getDb()
       .prepare(
-        `SELECT t.description, t.charged_amount as amount, t.personal_amount as personal,
+        `SELECT t.id, t.description, t.charged_amount as amount, t.personal_amount as personal,
               COALESCE(t.charged_currency, t.original_currency) as currency,
               t.date as date, t.processed_date as billingDate,
               t.account_number as account, t.installment_number as num, t.installment_total as total,
@@ -106,9 +108,11 @@ export function loadInsights(
   const norm = rows.map((r) => ({ ...r, merchant: normalizeMerchant(r.description) }));
 
   // Installment plans are projected separately; as monthly charges they would also look like subscriptions.
-  const series = detectRecurring(
+  // Series the person made by hand own their attached charges; detection only looks at the rest.
+  const manual = createManualRecurring(getDb(), workspaceId).forInsights();
+  const detected = detectRecurring(
     norm
-      .filter((r) => !(r.total != null && r.total > 1))
+      .filter((r) => !(r.total != null && r.total > 1) && !manual.owned.has(r.id))
       .map((r) => ({
         merchant: r.merchant,
         account: r.account,
@@ -129,6 +133,7 @@ export function loadInsights(
       );
       return last ? { ...s, billingLagDays: daysBetween(last.date, last.billingDate) } : s;
     });
+  const series: Series[] = [...detected, ...manual.series];
 
   const installments = projectInstallments(
     norm

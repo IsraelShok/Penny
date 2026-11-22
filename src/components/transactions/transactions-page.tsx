@@ -21,7 +21,8 @@ import { OwnerSummary } from "./owner-summary";
 import { SettleLedger } from "./settle-ledger";
 import { KidSummary } from "./kid-summary";
 import { useHousehold } from "@/hooks/use-household";
-import { Plus, X, EyeOff } from "lucide-react";
+import { Plus, X, EyeOff, ListChecks } from "lucide-react";
+import { CleanupSheet } from "./cleanup-sheet";
 import { IconButton } from "@/components/ui/icon-button";
 import { TransactionSheet } from "./transaction-sheet";
 import type { TransactionWithCategory } from "@/lib/types";
@@ -58,6 +59,8 @@ export function TransactionsPage() {
   const tKids = useTranslations("kids");
   const tOwner = useTranslations("ownerFilter");
   const tHidden = useTranslations("hiddenRows");
+  const tReconcile = useTranslations("reconcile");
+  const [cleanup, setCleanup] = useState(false);
   const [kidFilter, setKidFilter] = useState<string>("");
   const locale = useLocale() as Locale;
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -219,6 +222,13 @@ export function TransactionsPage() {
         largeTitle={false}
         actions={
           <div className="flex items-center gap-2">
+            <IconButton
+              label={tReconcile("open")}
+              variant="outline"
+              onClick={() => setCleanup(true)}
+            >
+              <ListChecks className="size-4" aria-hidden />
+            </IconButton>
             {headerAdd && (
               <IconButton
                 label={tManual("addTitle")}
@@ -233,6 +243,7 @@ export function TransactionsPage() {
         }
       />
 
+      <CleanupSheet open={cleanup} onOpenChange={setCleanup} />
       <TransactionSheet
         open={sheet !== null}
         onOpenChange={(o) => {

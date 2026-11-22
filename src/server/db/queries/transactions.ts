@@ -1,4 +1,5 @@
 import "server-only";
+import { isGeneric, listGenericPatterns } from "../../lib/generic-descriptions";
 import { israelDay } from "@/server/lib/date-utils";
 
 import { ownerClause } from "@/server/lib/owner-scope";
@@ -414,7 +415,7 @@ export function getTransactionsForCategorization(
 }[] {
   if (ids.length === 0) return [];
   const placeholders = ids.map(() => "?").join(",");
-  return getDb()
+  const rows = getDb()
     .prepare(
       `SELECT id, description, charged_amount as chargedAmount,
               original_currency as originalCurrency, memo
@@ -427,6 +428,9 @@ export function getTransactionsForCategorization(
     originalCurrency: string;
     memo: string | null;
   }[];
+  // Generic descriptions ("העברה") say nothing about the merchant: memory, dictionary and AI all skip them, so they stay in review.
+  const generic = listGenericPatterns(workspaceId);
+  return generic.length ? rows.filter((r) => !isGeneric(r.description, generic)) : rows;
 }
 
 export function updateTransactionCategory(
