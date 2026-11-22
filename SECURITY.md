@@ -104,7 +104,7 @@ Configured in `next.config.ts`:
 
 - `X-Frame-Options: DENY` — no embedding in iframes
 - `X-Content-Type-Options: nosniff`
-- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Referrer-Policy: no-referrer`
 - `Permissions-Policy` — camera, microphone, geolocation, payment all disabled
 - `Content-Security-Policy` — restricts script/style/connect sources
 

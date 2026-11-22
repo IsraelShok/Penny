@@ -132,7 +132,9 @@ async function unwrap(lock: LockFile, secret: string): Promise<Buffer> {
     32,
     scryptOptions(lock.n ?? SCRYPT_LEGACY),
   );
-  const decipher = crypto.createDecipheriv("aes-256-gcm", kek, Buffer.from(lock.iv, "hex"));
+  const decipher = crypto.createDecipheriv("aes-256-gcm", kek, Buffer.from(lock.iv, "hex"), {
+    authTagLength: 16,
+  });
   decipher.setAuthTag(Buffer.from(lock.tag, "hex"));
   return Buffer.concat([decipher.update(Buffer.from(lock.wrapped, "hex")), decipher.final()]);
 }

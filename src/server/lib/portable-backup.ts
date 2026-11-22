@@ -93,7 +93,9 @@ export function decryptBackup(file: Buffer, passphrase: string): Buffer {
   const tag = file.subarray(MAGIC.length + SALT_BYTES + IV_BYTES, header);
   const body = file.subarray(header);
   try {
-    const decipher = crypto.createDecipheriv("aes-256-gcm", derive(passphrase, salt), iv);
+    const decipher = crypto.createDecipheriv("aes-256-gcm", derive(passphrase, salt), iv, {
+      authTagLength: 16,
+    });
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(body), decipher.final()]);
   } catch {

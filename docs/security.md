@@ -83,7 +83,7 @@ BitLocker/FileVault.
 ## 5. Logs
 
 New `src/server/lib/redact.ts` scrubs API keys, Telegram tokens, bearer values, `password/otp/id/...`
-pairs, emails, card-number groups and any 5+ digit run (IDs, accounts, cards); dates and amounts stay.
+pairs, emails, card-number groups and any 5+ digit run (IDs, accounts, cards). Dates and short amounts stay; an amount of 5+ digits written inside a description is hidden too (the transaction's own amount field is not touched).
 Applied to scraper errors (replaces the older narrower `sanitizeError` rules), sync route and
 orchestrator errors, AI batch failures (previously logged the raw error object, which can include
 the provider response), the scheduler, and the bot. **Fixed** (`tests/redact.test.ts`).
@@ -118,8 +118,8 @@ numbers never flash on load. Screen readers still read the values (blur is visua
 ## 9. Backups and exports
 
 CSV/XLSX exports and copies of the data folder are plaintext and the folder copy includes the key.
-**Open:** password-protected export (AES-GCM with an scrypt-derived key, `.penny` file) and a warning
-on export. The privacy page already warns that a folder backup contains the key.
+**Built:** password-protected backup (AES-GCM with an scrypt-derived key, `.pennybak` file, Settings → Data).
+**Open:** a warning on CSV/XLSX export, which stays plaintext. The privacy page already warns that a folder backup contains the key.
 
 ## 10. Deletion
 

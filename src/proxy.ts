@@ -40,12 +40,13 @@ export function proxy(request: NextRequest) {
     !path.startsWith("/api/") && (path.startsWith("/_next/") || /\.[a-z0-9]+$/i.test(path));
   if (
     !staticAsset &&
-    accessEnabled() &&
     path !== "/api/access" &&
     path !== "/access" &&
     path !== "/lock" &&
     path !== "/api/lock/unlock" &&
-    path !== "/api/health"
+    path !== "/api/health" &&
+    // Last, so /api/health answers even when the database cannot open.
+    accessEnabled()
   ) {
     const user = currentUser(request);
     if (!user)
