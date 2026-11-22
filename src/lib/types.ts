@@ -135,6 +135,8 @@ export interface CategoryWithData {
   transactionCount: number;
   topMerchant: string | null;
   budget: number;
+  /** The part of `budget` carried in from last month by the line's rollover rule (+ leftover, − overspend). */
+  carryIn?: number;
   isAutoBudget: boolean;
   vsLastMonth: number | null;
   remaining: number;
@@ -332,6 +334,8 @@ export interface AppSettings {
   monthlyTarget: number | null;
   autoSyncEnabled: boolean;
   autoSyncTime: string;
+  /** Days before an expected bill to remind about it; 0 = off. */
+  billReminderDays: number;
   language: "en" | "he";
   displayName: string;
   household: Household;

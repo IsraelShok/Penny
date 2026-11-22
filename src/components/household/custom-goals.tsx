@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
 import { getCashflowHealth, getPlan, savePlanItem } from "@/lib/api";
 import { shekels } from "@/lib/money";
 import { GOAL_COLORS, goalMonthly, goalReachMonth, type GoalColor } from "@/lib/plan";
+import { goalsFit } from "@/lib/goal-feasibility";
 import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import { CardShell } from "@/components/home/card-shell";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,10 @@ export function CustomGoals() {
   const needTotal = goals
     .filter((g) => g.dated !== false && g.savedAmount < g.targetAmount)
     .reduce((sum, g) => sum + goalMonthly(g.targetAmount, g.savedAmount, g.targetDate, now), 0);
+  const fit = saving !== null ? goalsFit(goals, saving, now) : [];
+  const slipping = fit.filter((f) => f.slipMonths !== 0);
+  // What-if on one goal: a monthly amount or a date to try, never saved.
+  const [trial, setTrial] = useState<{ id: number; monthly: string; date: string } | null>(null);
   const monthName = (ym: string) =>
     new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
       new Date(`${ym}-15T12:00:00`),
@@ -278,7 +283,7 @@ export function CustomGoals() {
               // What the goals need a month against what is actually saved a month.
               const short = saving !== null && saving < needTotal;
               return (
-                <p
+                <div
                   className={`mb-3 rounded-xl border px-4 py-3 text-sm ${short ? "border-[var(--status-heads-up)]/30 bg-[var(--status-heads-up)]/10 text-[var(--status-heads-up)]" : "border-status-on-track/30 bg-status-on-track/10 text-status-on-track"}`}
                 >
                   {t("needTotal", { need: $(needTotal) })}
@@ -291,7 +296,22 @@ export function CustomGoals() {
                       })}
                     </>
                   )}
-                </p>
+                  {short && slipping.length > 0 && (
+                    <ul className="mt-1.5 list-disc space-y-0.5 ps-5 text-foreground">
+                      {slipping.map((f) => (
+                        <li key={f.id}>
+                          {f.slipMonths === null
+                            ? t("slipNever", { name: goals.find((g) => g.id === f.id)?.name ?? "" })
+                            : t("slipBy", {
+                                name: goals.find((g) => g.id === f.id)?.name ?? "",
+                                months: f.slipMonths,
+                                date: monthName(f.reach ?? ""),
+                              })}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               );
             })()}
           <div role="group" aria-label={t("filterLabel")} className="mb-3 flex gap-1.5">
@@ -341,6 +361,27 @@ export function CustomGoals() {
                               {t("savedOf", { saved: $(g.savedAmount), total: $(g.targetAmount) })}
                             </p>
                           </div>
+                          {g.savedAmount < g.targetAmount && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              aria-label={t("tryOpen", { name: g.name })}
+                              aria-expanded={trial?.id === g.id}
+                              onClick={() =>
+                                setTrial(
+                                  trial?.id === g.id
+                                    ? null
+                                    : {
+                                        id: g.id,
+                                        monthly: g.monthly ? String(g.monthly) : "",
+                                        date: g.dated === false ? "" : g.targetDate,
+                                      },
+                                )
+                              }
+                            >
+                              <SlidersHorizontal aria-hidden />
+                            </Button>
+                          )}
                           <Button
                             size="icon"
                             variant="ghost"
@@ -401,6 +442,60 @@ export function CustomGoals() {
                             <bdi className="font-semibold tabular-nums">{Math.round(pct)}%</bdi>
                           </span>
                         </p>
+                        {trial?.id === g.id && (
+                          <div className="mt-3 space-y-2 rounded-lg border border-dashed border-border p-3">
+                            <p className="text-footnote text-muted-foreground">{t("tryHint")}</p>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <NumberField
+                                id={`try-monthly-${g.id}`}
+                                label={t("tryMonthly")}
+                                unit="₪"
+                                value={trial.monthly}
+                                onChange={(v) => setTrial({ ...trial, monthly: v })}
+                                error={numberError(trial.monthly, tc("invalid"))}
+                              />
+                              <div className="space-y-1.5">
+                                <Label htmlFor={`try-date-${g.id}`} className="leading-5">
+                                  {t("tryDate")}
+                                </Label>
+                                <Input
+                                  id={`try-date-${g.id}`}
+                                  type="month"
+                                  dir="ltr"
+                                  value={trial.date}
+                                  onChange={(e) => setTrial({ ...trial, date: e.target.value })}
+                                />
+                              </div>
+                            </div>
+                            <ul className="space-y-0.5 text-sm font-medium" aria-live="polite">
+                              {Number(trial.monthly) > 0 && (
+                                <li>
+                                  {t("tryReach", {
+                                    monthly: $(Number(trial.monthly)),
+                                    date: monthName(
+                                      goalReachMonth(
+                                        g.targetAmount,
+                                        g.savedAmount,
+                                        Number(trial.monthly),
+                                        now,
+                                      ) ?? "",
+                                    ),
+                                  })}
+                                </li>
+                              )}
+                              {/^\d{4}-\d{2}$/.test(trial.date) && (
+                                <li>
+                                  {t("tryNeed", {
+                                    date: monthName(trial.date),
+                                    need: $(
+                                      goalMonthly(g.targetAmount, g.savedAmount, trial.date, now),
+                                    ),
+                                  })}
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
                       </li>
                     );
                   })}
