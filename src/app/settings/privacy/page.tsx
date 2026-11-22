@@ -11,6 +11,7 @@ import {
 import { PrivacyModeCard } from "@/components/settings/privacy-mode-switch";
 import { AppLockCard } from "@/components/settings/app-lock-card";
 import { LanAccessCard } from "@/components/settings/lan-access-card";
+import { UpdateCheckCard } from "@/components/settings/update-check-card";
 import { InfoTip } from "@/components/ui/info-tip";
 import { dataDir } from "@/server/lib/data-dir";
 
@@ -39,6 +40,8 @@ export default async function PrivacySettingsPage() {
       <PrivacyModeCard />
 
       <LanAccessCard />
+
+      <UpdateCheckCard />
 
       <SettingCard title={t("dataTitle")}>
         <SettingList>

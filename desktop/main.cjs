@@ -139,6 +139,7 @@ async function start() {
   });
 
   const url = `http://127.0.0.1:${port}`;
+  appUrl = url;
   win = new BrowserWindow({
     width: 1360,
     height: 900,
@@ -197,6 +198,7 @@ function runInstaller(relaunch) {
 }
 
 /** Windows only: fetch a newer release in the background, then ask to restart (or install on quit). Off with PENNY_UPDATE_CHECK=0. */
+let appUrl = null;
 async function checkForUpdate() {
   if (
     process.platform !== "win32" ||
@@ -206,6 +208,14 @@ async function checkForUpdate() {
   )
     return;
   try {
+    // The Settings > Privacy switch lives in the app's database; a locked app (401) keeps the default.
+    const setting =
+      appUrl &&
+      (await fetch(`${appUrl}/api/update`).then(
+        (r) => (r.ok ? r.json() : null),
+        () => null,
+      ));
+    if (setting && setting.enabled === false) return;
     const found = await downloadUpdate({
       repo: process.env.PENNY_UPDATE_REPO || "Sergey-Bar/Penny",
       current: app.getVersion(),

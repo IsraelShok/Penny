@@ -36,6 +36,7 @@ export class OllamaProvider implements AIProvider {
       categories,
       allowProposals,
       pastCorrections,
+      true,
     );
 
     const baseUrl = normalizeOllamaUrl(this.baseUrl);

@@ -202,6 +202,9 @@ function ProviderSheet({
   const [ollamaModel, setOllamaModel] = useState(settings.ollamaModel);
   const row = ROWS.find((r) => r.id === provider)!;
   const active = settings.aiProvider === provider;
+  // A cloud model sees transaction text: the person agrees to that before turning one on (Ollama stays on this machine).
+  const cloud = provider !== "ollama";
+  const [consent, setConsent] = useState(active);
 
   const mutation = useMutation({
     mutationFn: (target: AppSettings["aiProvider"]) =>
@@ -302,6 +305,17 @@ function ProviderSheet({
             <OllamaModelStatus ollamaUrl={ollamaUrl} model={ollamaModel} />
           </div>
         )}
+        {cloud && (
+          <label className="flex items-start gap-3 rounded-xl border border-border bg-muted/40 p-3 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 shrink-0 accent-primary"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+            />
+            <span>{t("cloudConsent")}</span>
+          </label>
+        )}
       </div>
 
       <div className="flex justify-end gap-2 border-t border-border/40 p-4">
@@ -321,7 +335,7 @@ function ProviderSheet({
           }
           variant="default"
           onClick={() => mutation.mutate(provider)}
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || (cloud && !consent)}
         >
           <Check className="size-4" aria-hidden />
         </IconButton>

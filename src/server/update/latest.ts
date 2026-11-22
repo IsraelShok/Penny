@@ -9,12 +9,18 @@ import {
   type UpdateInfo,
 } from "./check";
 import { isDemoMode } from "@/server/demo/mode";
+import { getGlobalSetting, setGlobalSetting } from "@/server/db/queries/settings";
 
 const SIX_HOURS = 6 * 60 * 60 * 1000;
 let cache: { at: number; info: UpdateInfo | null } | null = null;
 
 // The demo asks no outside service, GitHub included, even if someone sets UPDATE_CHECK=1.
-export const updatesEnabled = () => !isDemoMode() && pennyEnv("UPDATE_CHECK") !== "0";
+/** The person's own switch (Settings > Privacy), on by default. */
+export const updateCheckSetting = () => getGlobalSetting("update_check") !== "off";
+export const setUpdateCheckSetting = (on: boolean) =>
+  setGlobalSetting("update_check", on ? "on" : "off");
+export const updatesEnabled = () =>
+  !isDemoMode() && pennyEnv("UPDATE_CHECK") !== "0" && updateCheckSetting();
 export const currentInstall = (): InstallKind => installKind(pennyEnv("INSTALL"));
 
 /** The newest release if it is newer than this build; asks GitHub at most every six hours. Off with PENNY_UPDATE_CHECK=0. */

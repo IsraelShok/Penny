@@ -68,3 +68,14 @@ it("open banking sends its token only over https (plain http only to this machin
   expect(fetchSpy).toHaveBeenCalledTimes(1);
   fetchSpy.mockRestore();
 });
+
+it("cloud prompts keep a transfer's kind but not the person's name; local prompts keep it", async () => {
+  const { buildCategorizationPrompt, hideTransferNames } = await import("@/server/ai/prompts");
+  expect(hideTransferNames("העברה לדנה כהן")).toBe("העברה [name hidden]");
+  expect(hideTransferNames("bit - Dana Cohen")).toBe("bit [name hidden]");
+  expect(hideTransferNames("שופרסל דיל")).toBe("שופרסל דיל");
+  const tx = [{ description: "העברה לדנה כהן", amount: -100, currency: "ILS" }];
+  const cats = [{ name: "Gifts" }] as never;
+  expect(buildCategorizationPrompt(tx, cats)).not.toContain("דנה");
+  expect(buildCategorizationPrompt(tx, cats, false, [], true)).toContain("דנה");
+});

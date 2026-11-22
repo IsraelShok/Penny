@@ -164,7 +164,7 @@ export function friendlyError(status: number | "network", body = "", lang = uiLa
   return status in m ? m[status as keyof typeof m] : status >= 500 ? m.server : m[400];
 }
 
-async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
+export async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${url}`, withWorkspaceHeader(init)).catch(() => {
     throw new ApiError(friendlyError("network"), "network");
   });
