@@ -2,6 +2,39 @@
 
 All notable changes to Penny. Versions follow [Semantic Versioning](https://semver.org/); dates are Israel time.
 
+## [0.3.0] - 2026-11-22
+
+Three database migrations (078–080). Your data is upgraded in place on first start, with a backup first.
+
+### New
+
+- **Statements from PDF and images.** Read a bank or card statement from a PDF (text is extracted on your
+  computer) or a photo, through your AI provider, into the same preview you know: account, duplicates, categories,
+  undo.
+- **Import remembers your columns.** A file layout you mapped once is recognised next time, and an import history
+  lists every import with undo.
+- **Quick add from the phone.** Give each phone its own revocable key and add an expense from an iPhone Shortcut
+  or an Android automation over the home network.
+- **Card texts through Telegram.** Paste a card-charge text message from your bank into the bot and save it; the
+  next bank sync merges it with the bank's own row, so it counts once and keeps your category, tags and split.
+- **Phone access QR code.**
+- **Clean up.** A screen for likely duplicates (merge, not a duplicate, hide), pending charges that never
+  settled, vague bank descriptions that should always wait for you, and recurring charges you build by hand.
+  Everything can be undone.
+- **Goals: what if.** Try another monthly amount or date and see the effect, and see which goals slip when they
+  don't all fit what you save.
+- **Budget carry-over** is shown on every line of the budget table.
+- **Bill reminders** a few days before a recurring charge or obligation, in the bell and in Telegram.
+- **Passkey unlock.** With the app lock on, unlock with a fingerprint, face or security key; the passkey itself
+  opens the encryption key. A recovery code is shown once when you turn the lock on.
+- **Docker network lock (optional).** The app reaches only bank sites, through an allowlist.
+
+### Fixes
+
+- A charge captured from a text could disappear when it matched an older bank row.
+- A saved import layout was not reused for Hebrew files.
+- Quick add accepts at most 20 adds a minute per device.
+
 ## [0.2.1] - 2026-11-22
 
 Security, privacy and install fixes. No database migrations.
