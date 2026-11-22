@@ -11,7 +11,7 @@ Your banks, your budget and your future in one place, on your own computer.
 [![CI](https://img.shields.io/github/actions/workflow/status/Sergey-Bar/Penny/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/Sergey-Bar/Penny/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](#license)
 
-[עברית](README.md) · [Download](#install) · [Clickable demo](https://sergey-bar.github.io/Penny/en/demo/) · [What's new](#whats-new-in-020) · [Features](#features) · [How it works](#how-it-works) · [Security](#security-at-a-glance) · [Contributing](#contributing) · [Website](https://sergey-bar.github.io/Penny/en/)
+[עברית](README.md) · [Download](#install) · [Clickable demo](https://sergey-bar.github.io/Penny/en/demo/) · [What's new](#whats-new-in-020) · [Who it's for](#who-its-for) · [Features](#features) · [How it works](#how-it-works) · [Security](#security-at-a-glance) · [Contributing](#contributing) · [Website](https://sergey-bar.github.io/Penny/en/)
 
 **Download:** [![Windows](https://img.shields.io/badge/Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![macOS](https://img.shields.io/badge/macOS-111111?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#docker)
 
@@ -39,6 +39,15 @@ Israeli banks have poor exports, global budgeting apps don't understand shekels,
 Penny runs on your laptop. It pulls transactions straight from your banks and credit cards, keeps them in one SQLite file you can copy and back up, and lets an AI of your choice sort them into categories, or none at all. Then it helps with the questions that actually matter in Israel: am I on track this month, do I have a safety net, am I paying too much in fees, and am I getting every tax benefit I'm owed.
 
 Nothing leaves your machine except the calls you choose: to your bank, and to an AI provider if you pick a cloud one.
+
+## Who it's for
+
+- **Israeli households** that want all their money in one place: checking, credit cards, loans, savings and pension, in shekels and with local terms.
+- **People who won't hand their bank password to a cloud service.** Penny runs on your computer, listens only on 127.0.0.1, and keeps your data in a local file (bank credentials encrypted with AES-256-GCM).
+- **Couples and families** who share money, each with their own profile.
+- **Hebrew speakers first** (full right-to-left), with a complete English interface too.
+
+It is a poor fit if you want a cloud service you can reach from anywhere, or bookkeeping for a business.
 
 ## Features
 
@@ -93,6 +102,20 @@ Plus a **knowledge center** of short original guides in Hebrew and English, and 
 - **Ask your money** in plain language, and a **Telegram bot** for instant spending feedback.
 - **Phone access on your Wi-Fi** (opt-in), installable as a web app.
 - **Desktop app** for macOS and Windows, with an installer and self-updates on Windows.
+
+
+### Everything else, one line each
+- **Rules** for recurring merchants: category, tags and owner are set on every sync and import.
+- **Insights:** balance forecast, recurring charges and subscriptions, spending anomalies, remaining installments and upcoming obligations.
+- **Trackers** for a period (say, "eating out until month end"), **guided reviews** in five short rounds, a **monthly recap**, and **your journey** with the household's big moments.
+- **Financial independence (FI):** when your investments can cover your spending, with life events.
+- **Markets:** indices, currencies and commodities, FX rates and fund prices for holdings; **ventures** (private deals) with invested, outstanding and realized gain.
+- **Import from any text:** paste a statement, receipt or message and your chosen AI provider pulls out the transactions.
+- **Your choice of AI:** Claude, local Ollama (with model downloads inside the app), CLI agents you already have installed, or no AI. Plus an MCP server for AI agents.
+- **One-time codes (OTP)** from the bank go straight into the app or Telegram during a sync.
+- **Backup and restore:** automatic backups, a backup before every schema change, restore from file, full data export, and a full wipe.
+- **App lock** with a passphrase or PIN, and separate **workspaces** with multi-user access.
+- **Desktop app** (Electron) for Windows and macOS, or an **OS service** that starts with the computer, with a friendly local address.
 
 ## Screenshots
 
