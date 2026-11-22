@@ -6,7 +6,8 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory={{repoRoot}}
-ExecStart={{nodePath}} {{repoRoot}}/scripts/serve.mjs {{port}}
+# Quoted so a path with spaces stays one argument.
+ExecStart="{{nodePath}}" "{{repoRoot}}/scripts/serve.mjs" {{port}}
 Environment=NODE_ENV=production
 Environment=PATH={{pathEnv}}
 Restart=on-failure
@@ -19,7 +20,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
 ProtectHome=read-only
-ReadWritePaths={{repoRoot}}/data {{logDir}}
+ReadWritePaths="{{repoRoot}}/data" "{{logDir}}"
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 
 [Install]

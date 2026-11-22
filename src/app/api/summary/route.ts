@@ -58,6 +58,8 @@ async function summary(request: Request) {
   const range = budgetMonthByKey(startDay, key);
   const from = range.from;
   const to = range.to;
+  // Synced dates carry a time, so the range ends at the close of its last day.
+  const toEnd = `${to}T23:59:59`;
   const monthsRaw = Number(searchParams.get("months") ?? "12");
   const months = Number.isFinite(monthsRaw) ? Math.min(Math.max(Math.trunc(monthsRaw), 1), 36) : 12;
 
@@ -74,12 +76,12 @@ async function summary(request: Request) {
   const prevTo = previous.to;
 
   const categories = getAllCategories(workspaceId, "expense");
-  const currentSpend = getCategorySpendInRange(workspaceId, from, to);
+  const currentSpend = getCategorySpendInRange(workspaceId, from, toEnd);
   const prevSpend = getCategorySpendInRange(workspaceId, prevFrom, prevTo);
-  const topMerchants = getTopMerchantPerCategory(workspaceId, from, to);
+  const topMerchants = getTopMerchantPerCategory(workspaceId, from, toEnd);
   // Base plus carry-in plus moves for this household month, never the raw default.
   const effectiveBudgets = getEffectiveBudgets(workspaceId, range, startDay);
-  const needsReviewCounts = getNeedsReviewCountByCategory(workspaceId, from, to);
+  const needsReviewCounts = getNeedsReviewCountByCategory(workspaceId, from, toEnd);
   const needsReviewMap = new Map(needsReviewCounts.map((r) => [r.categoryId, r.count]));
 
   const currentMap = new Map(currentSpend.map((s) => [s.categoryId, s]));
@@ -254,8 +256,8 @@ async function summary(request: Request) {
 
   const categoriesWithData: CategoryWithData[] = [...parentRows, ...leafRows];
 
-  const periodTotal = getPeriodTotal(workspaceId, from, to);
-  const transactionCount = getPeriodCount(workspaceId, from, to);
+  const periodTotal = getPeriodTotal(workspaceId, from, toEnd);
+  const transactionCount = getPeriodCount(workspaceId, from, toEnd);
 
   // Hero total comes from the workspace-level monthly target. ALL spend
   // counts against it — tracking-mode is a per-category organizational tag
@@ -295,15 +297,15 @@ async function summary(request: Request) {
     periodTotal,
     transactionCount,
     monthlySpend: getMonthlySummary(workspaceId, months),
-    topMerchants: getTopMerchants(workspaceId, from, to),
-    categoryBreakdown: getCategoryBreakdown(workspaceId, from, to),
+    topMerchants: getTopMerchants(workspaceId, from, toEnd),
+    categoryBreakdown: getCategoryBreakdown(workspaceId, from, toEnd),
     // New fields for the budgets dashboard:
     categoriesWithData,
     // Spending with no category never reaches a category card; the budget screen shows it as its own row.
-    uncategorized: getUncategorizedSpend(workspaceId, from, to),
+    uncategorized: getUncategorizedSpend(workspaceId, from, toEnd),
     totalBudget,
     budgetedSpent,
-    income: cashBetween(workspaceId, from, to).income,
+    income: cashBetween(workspaceId, from, toEnd).income,
     overallPercentSpent,
     timeElapsedPercent,
     daysUntilPayday,

@@ -159,7 +159,7 @@ flowchart LR
 ## Requirements
 
 - **Node.js 22+**, only when installing from source
-- **Windows 11, macOS 13+ or Ubuntu 22+** (with systemd)
+- **Windows 10/11, macOS 13+ or Ubuntu 22+** (with systemd)
 - To build the desktop app from source (optional): `npm run desktop:build`. The ready-made installers need no Node.js.
 - Bank accounts with **2FA disabled** for automatic sync (One Zero is the exception). Without that, use statement files.
 
@@ -207,7 +207,7 @@ npm run setup
 
 For developers, or if you want an always-on service. `npm run setup` builds the app, installs the always-on service (LaunchAgent on macOS, systemd on Linux, Task Scheduler on Windows), and opens the app. The desktop app comes from the installer; build it from source with `npm run desktop:build`. On Windows it also adds `127.0.0.1 penny.localhost` to your hosts file, the only step that asks for Administrator.
 
-The first launch of the desktop app shows an unsigned-binary warning, because it is not signed yet: right-click → Open (macOS) or "More info" → "Run anyway" (Windows). Once.
+The first launch of the desktop app shows an unsigned-binary warning, because it is not signed yet: **System Settings → Privacy & Security → Open Anyway** (macOS) or "More info" → "Run anyway" (Windows). Once.
 
 Then open **`http://penny.localhost:41234`** and bookmark it.
 

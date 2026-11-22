@@ -70,6 +70,13 @@ const HIDE = "telegram_hide_amounts";
 export const getHideAmounts = () => getGlobalSetting(HIDE) === "true";
 export const setHideAmounts = (on: boolean) => setGlobalSetting(HIDE, on ? "true" : "false");
 
+/** A restored backup may carry someone else's chat: drop the link and issue a new code, so the owner links again. */
+export function requireRelink(): void {
+  if (!getGlobalSetting(CHAT)) return;
+  deleteGlobalSetting(CHAT);
+  setGlobalSetting(CODE, crypto.randomBytes(6).toString("hex"));
+}
+
 export function clearBot(): void {
   for (const k of [TOKEN, CHAT, CODE, USERNAME]) deleteGlobalSetting(k);
 }

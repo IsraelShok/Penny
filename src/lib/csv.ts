@@ -81,7 +81,9 @@ export function toCsv(rows: (string | number | null | undefined)[][]): string {
     .map((row) =>
       row
         .map((cell) => {
-          const text = cell == null ? "" : String(cell);
+          const raw = cell == null ? "" : String(cell);
+          // Text starting with = + - @ runs as a formula in Excel; plain numbers like -84.90 stay as they are.
+          const text = /^[=+\-@\t\r]/.test(raw) && !/^[+-]?\d[\d.,]*$/.test(raw) ? `'${raw}` : raw;
           return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
         })
         .join(","),

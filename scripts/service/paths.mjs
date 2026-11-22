@@ -40,10 +40,18 @@ export function assertNotRoot() {
 
 export function renderTemplate(name, vars) {
   const tpl = fs.readFileSync(path.join(TEMPLATES_DIR, name), "utf-8");
+  // XML templates (task, plist) break on a raw & or < in a path like "C:\Users\Tom & Ann".
+  const xml = /\.(xml|plist)$/.test(name);
   return tpl.replace(/\{\{(\w+)\}\}/g, (_, key) => {
     if (!(key in vars)) {
       throw new Error(`Template ${name} references unknown var: ${key}`);
     }
-    return String(vars[key]);
+    return xml ? escapeXml(String(vars[key])) : String(vars[key]);
   });
 }
+
+export const escapeXml = (s) =>
+  s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c],
+  );

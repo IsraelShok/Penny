@@ -14,7 +14,7 @@ export function GET(request: Request) {
   const months = lastMonths(n);
   // "-31" works for every month: dates are compared as strings.
   const perMonth = months.map((m) =>
-    getCategoryBreakdown(workspaceId, `${m}-01`, `${m}-31`).map((c) => ({
+    getCategoryBreakdown(workspaceId, `${m}-01`, `${m}-31T23:59:59`).map((c) => ({
       categoryId: c.categoryId,
       name: c.name,
       color: c.color,

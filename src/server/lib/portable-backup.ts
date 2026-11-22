@@ -10,6 +10,7 @@ import { backupBeforeMigration, backupDir } from "@/server/db/backup";
 import { dataDir, dbPath } from "@/server/lib/data-dir";
 import { getKey, keyPath, setKeyInMemory } from "@/server/lib/encryption";
 import { isLockEnabled } from "@/server/lib/app-lock";
+import { requireRelink } from "@/server/bot/config";
 
 /**
  * One portable, passphrase-encrypted file holding the database and the key that decrypts the
@@ -281,6 +282,7 @@ export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
   const fresh = getDb();
   const check = fresh.pragma("quick_check") as { quick_check: string }[];
   if (!check.every((row) => row.quick_check === "ok")) throw new Error("corruptRestore");
+  requireRelink();
   return { counts: countsOf(fresh), preRestoreBackup, createdAt: payload.createdAt };
 }
 

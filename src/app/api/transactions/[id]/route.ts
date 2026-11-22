@@ -23,6 +23,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "categoryId is required" }, { status: 400 });
   }
 
+  const category = getAllCategories(workspaceId).find((c) => c.id === body.categoryId);
+  if (!category) return NextResponse.json({ error: "Unknown category" }, { status: 400 });
+
   const numericId = Number(id);
 
   const before = getTransactionContext(workspaceId, numericId);
@@ -30,8 +33,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   setTransactionNeedsReview(workspaceId, numericId, false);
 
   if (before && (before.kind === "expense" || before.kind === "income")) {
-    const category = getAllCategories(workspaceId).find((c) => c.id === body.categoryId);
-    if (category && (category.kind === "expense" || category.kind === "income")) {
+    if (category.kind === "expense" || category.kind === "income") {
       recordMerchantCategory(
         workspaceId,
         before.description,

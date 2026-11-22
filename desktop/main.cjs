@@ -29,14 +29,29 @@ function findBrowser() {
   const candidates =
     process.platform === "win32"
       ? [
-          path.join(process.env.PROGRAMFILES || "C:\\Program Files", "Google\\Chrome\\Application\\chrome.exe"),
-          path.join(process.env["PROGRAMFILES(X86)"] || "C:\\Program Files (x86)", "Google\\Chrome\\Application\\chrome.exe"),
+          path.join(
+            process.env.PROGRAMFILES || "C:\\Program Files",
+            "Google\\Chrome\\Application\\chrome.exe",
+          ),
+          path.join(
+            process.env["PROGRAMFILES(X86)"] || "C:\\Program Files (x86)",
+            "Google\\Chrome\\Application\\chrome.exe",
+          ),
           path.join(process.env.LOCALAPPDATA || "", "Google\\Chrome\\Application\\chrome.exe"),
-          path.join(process.env["PROGRAMFILES(X86)"] || "C:\\Program Files (x86)", "Microsoft\\Edge\\Application\\msedge.exe"),
-          path.join(process.env.PROGRAMFILES || "C:\\Program Files", "Microsoft\\Edge\\Application\\msedge.exe"),
+          path.join(
+            process.env["PROGRAMFILES(X86)"] || "C:\\Program Files (x86)",
+            "Microsoft\\Edge\\Application\\msedge.exe",
+          ),
+          path.join(
+            process.env.PROGRAMFILES || "C:\\Program Files",
+            "Microsoft\\Edge\\Application\\msedge.exe",
+          ),
         ]
       : process.platform === "darwin"
-        ? ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"]
+        ? [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+          ]
         : ["/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser"];
   return candidates.find((p) => p && fs.existsSync(p)) || null;
 }
@@ -79,7 +94,9 @@ async function start() {
   fs.mkdirSync(dataDir, { recursive: true });
   // Phone access (Settings > Privacy) listens on the network, on a fixed port so the phone URL stays the same.
   // Phone access only behind the app lock: a leftover flag without a lock never opens the network.
-  const lan = fs.existsSync(path.join(dataDir, "lan-access.json")) && fs.existsSync(path.join(dataDir, ".app-lock.json"));
+  const lan =
+    fs.existsSync(path.join(dataDir, "lan-access.json")) &&
+    fs.existsSync(path.join(dataDir, ".app-lock.json"));
   const host = lan ? "0.0.0.0" : "127.0.0.1";
   const port = await freePort(lan ? 41234 : 0, host);
   const browser = findBrowser();
@@ -102,7 +119,9 @@ async function start() {
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
   });
-  const log = fs.createWriteStream(path.join(app.getPath("userData"), "server.log"), { flags: "a" });
+  const log = fs.createWriteStream(path.join(app.getPath("userData"), "server.log"), {
+    flags: "a",
+  });
   server.stdout.pipe(log);
   server.stderr.pipe(log);
   server.on("exit", (code) => {
@@ -112,7 +131,11 @@ async function start() {
       app.relaunch();
       return app.exit(0);
     }
-    if (!app.isQuitting) dialog.showErrorBox("Penny", `Penny stopped unexpectedly (code ${code}). Details: ${path.join(app.getPath("userData"), "server.log")}`);
+    if (!app.isQuitting)
+      dialog.showErrorBox(
+        "Penny",
+        `Penny stopped unexpectedly (code ${code}). Details: ${path.join(app.getPath("userData"), "server.log")}`,
+      );
   });
 
   const url = `http://127.0.0.1:${port}`;
@@ -127,14 +150,29 @@ async function start() {
     webPreferences: { contextIsolation: true, sandbox: true },
   });
   // Links to other sites open in the user's browser, never inside the app.
+  // Compare origins, not prefixes (http://127.0.0.1:port@evil.com starts with the app URL),
+  // and hand only web and mail links to the OS: file:, ms-msdt: and the like can launch programs.
+  const parse = (target) => {
+    try {
+      return new URL(target);
+    } catch {
+      return null;
+    }
+  };
+  const appOrigin = new URL(url).origin;
+  const isApp = (target) => parse(target)?.origin === appOrigin;
+  const openOutside = (target) => {
+    const u = parse(target);
+    if (u && ["https:", "http:", "mailto:"].includes(u.protocol)) shell.openExternal(u.href);
+  };
   win.webContents.setWindowOpenHandler(({ url: target }) => {
-    if (!target.startsWith(url)) shell.openExternal(target);
+    if (!isApp(target)) openOutside(target);
     return { action: "deny" };
   });
   win.webContents.on("will-navigate", (e, target) => {
-    if (!target.startsWith(url)) {
+    if (!isApp(target)) {
       e.preventDefault();
-      shell.openExternal(target);
+      openOutside(target);
     }
   });
   win.once("ready-to-show", () => win.show());
@@ -151,13 +189,22 @@ const he = () => app.getLocale().startsWith("he");
 /** Runs the installer silently after this process exits; with `relaunch` it opens Penny again when done. */
 function runInstaller(relaunch) {
   if (!pendingUpdate) return;
-  spawn(pendingUpdate.file, ["/S", ...(relaunch ? ["--force-run"] : [])], { detached: true, stdio: "ignore" }).unref();
+  spawn(pendingUpdate.file, ["/S", ...(relaunch ? ["--force-run"] : [])], {
+    detached: true,
+    stdio: "ignore",
+  }).unref();
   pendingUpdate = null;
 }
 
 /** Windows only: fetch a newer release in the background, then ask to restart (or install on quit). Off with PENNY_UPDATE_CHECK=0. */
 async function checkForUpdate() {
-  if (process.platform !== "win32" || !app.isPackaged || pendingUpdate || process.env.PENNY_UPDATE_CHECK === "0") return;
+  if (
+    process.platform !== "win32" ||
+    !app.isPackaged ||
+    pendingUpdate ||
+    process.env.PENNY_UPDATE_CHECK === "0"
+  )
+    return;
   try {
     const found = await downloadUpdate({
       repo: process.env.PENNY_UPDATE_REPO || "Sergey-Bar/Penny",

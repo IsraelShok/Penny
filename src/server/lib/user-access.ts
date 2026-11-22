@@ -127,7 +127,7 @@ export function allowedMemberRoute(path: string, method: string, role: "viewer" 
   )
     return true;
   const reads =
-    /^\/api\/(home|summary|cash-ahead|balance-forecast|control|plan|assets|fi|overview|recap|resilience|wellbeing|suggestions|insights|periodic|budgets|categories|transactions|insurance|planned)(\/|$)/;
+    /^\/api\/(home|summary|cash-ahead|balance-forecast|control|plan|assets|fi|overview|recap|resilience|wellbeing|suggestions|insights|periodic|budgets|categories|transactions|insurance|planned|notifications|pivot)(\/|$)/;
   if (method === "GET") return reads.test(path);
   if (role !== "editor") return false;
   return /^\/api\/(control|plan|periodic|budgets|categories|transactions|insurance|planned)(\/|$)/.test(

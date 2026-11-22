@@ -439,9 +439,11 @@ export function updateTransactionCategory(
     .prepare(
       `UPDATE transactions
        SET category_id = ?, category_source = ?, updated_at = datetime('now')
-       WHERE workspace_id = ? AND id = ?`,
+       WHERE workspace_id = ? AND id = ?
+       AND EXISTS (SELECT 1 FROM categories c WHERE c.id = ? AND c.workspace_id = transactions.workspace_id)`,
     )
-    .run(categoryId, source, workspaceId, id);
+    // The category must belong to the same workspace, so a member can't point rows at another's.
+    .run(categoryId, source, workspaceId, id, categoryId);
 }
 
 export function batchUpdateCategories(
@@ -452,12 +454,13 @@ export function batchUpdateCategories(
   const stmt = db.prepare(
     `UPDATE transactions
      SET category_id = ?, category_source = 'ai', ai_confidence = ?, updated_at = datetime('now')
-     WHERE workspace_id = ? AND id = ? AND category_source IS NOT 'user'`,
+     WHERE workspace_id = ? AND id = ? AND category_source IS NOT 'user'
+     AND EXISTS (SELECT 1 FROM categories c WHERE c.id = ? AND c.workspace_id = transactions.workspace_id)`,
   );
 
   db.transaction(() => {
     for (const { id, categoryId, aiConfidence } of updates) {
-      stmt.run(categoryId, aiConfidence ?? null, workspaceId, id);
+      stmt.run(categoryId, aiConfidence ?? null, workspaceId, id, categoryId);
     }
   })();
 }
