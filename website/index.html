@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=0.4.0">
+<link rel="stylesheet" href="styles.css?v=0.4.1">
 <meta property="og:image" content="https://sergey-bar.github.io/Penny/assets/og-he.jpg">
 <link rel="canonical" href="https://sergey-bar.github.io/Penny/">
 <link rel="alternate" hreflang="he" href="https://sergey-bar.github.io/Penny/">
@@ -56,7 +56,7 @@
           <a class="btn btn-demo btn-dl" href="https://penny-finance-demo.vercel.app"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span><b>לנסות את הדמו החי</b><small>בלי התקנה, משק בית לדוגמה</small></span></a>
         </div>
         <ul class="proof"><li><b>18</b> בנקים וחברות אשראי</li><li><b>5</b> גופי פנסיה</li><li><b>25+</b> מחשבונים לכסף בישראל</li><li><b>1,200+</b> בדיקות אוטומטיות</li></ul>
-        <p class="more-links"><a href="https://github.com/Sergey-Bar/Penny/releases/download/v0.3.0/Penny-0.3.0-x64.dmg">Mac עם מעבד Intel</a> · <a data-os="linux" href="#install">Docker לשרת או לנאס</a> · <a href="https://github.com/Sergey-Bar/Penny/releases">כל הגרסאות</a> · <a href="demo/">סיור מודרך</a> · <a href="https://github.com/Sergey-Bar/Penny">הקוד בגיטהאב</a></p>
+        <p class="more-links"><a href="https://github.com/Sergey-Bar/Penny/releases/download/v0.3.0/Penny-0.3.0-x64.dmg">Mac עם מעבד Intel</a> · <a data-os="linux" href="#install">Docker לשרת או לנאס</a> · <a href="https://github.com/Sergey-Bar/Penny/releases">כל הגרסאות</a> · <a href="https://github.com/Sergey-Bar/Penny">הקוד בגיטהאב</a></p>
         <ul class="gh-stats" data-gh-stats hidden><li><span aria-hidden="true">★</span> <b data-gh="stars"></b> כוכבים בגיטהאב</li><li><span aria-hidden="true">⬇</span> <b data-gh="downloads"></b> הורדות</li><li>גרסה <b data-gh="version"></b></li></ul>
       </div>
       <div class="hero-art">
@@ -101,47 +101,44 @@
     <div class="wrap">
       <div class="section-head">
         <h2>מסך אחרי מסך.</h2>
-        <p>אלה צילומי מסך אמיתיים מהאפליקציה עם נתוני דוגמה. לחיצה על צילום פותחת אותו בגודל מלא.</p>
+        <p>בחרו נושא כדי לראות את המסך, או פתחו אותו בדמו החי ועברו על הכול בעצמכם.</p>
       </div>
-      <div class="split">
+      <div class="tabs" role="tablist" aria-label="מסכים באפליקציה"><button type="button" role="tab" id="t-0" aria-controls="p-0" aria-selected="true">בית</button><button type="button" role="tab" id="t-1" aria-controls="p-1" aria-selected="false" tabindex="-1">תנועות</button><button type="button" role="tab" id="t-2" aria-controls="p-2" aria-selected="false" tabindex="-1">תקציב</button><button type="button" role="tab" id="t-3" aria-controls="p-3" aria-selected="false" tabindex="-1">עתיד</button></div>
+      <div class="split panel" role="tabpanel" id="p-0" aria-labelledby="t-0" tabindex="0">
         <div>
-          <span class="kicker">בית</span>
           <h3>כל הבית במבט אחד</h3>
           <p>לוח בקרה עם אריחים שאפשר להסתיר ולהחזיר: יתרה צפויה, כסף על השולחן, תזרים, מבנה ההוצאות ומי הוציא מה. ומסך פוקוס רגוע למי שרוצה רק את השורה התחתונה.</p>
-          <ul><li>צפוי להישאר, וכמה יצא עד עכשיו מתוך התקציב</li><li>מעבר בין חודשי השנה בלחיצה</li><li>הוספת תנועה במזומן בשנייה</li><li>פיפ מראה אם משהו דורש טיפול, והצעד הבא מוצג מתחת</li></ul>
+          <ul><li>צפוי להישאר, וכמה יצא עד עכשיו מתוך התקציב</li><li>מעבר בין חודשי השנה בלחיצה</li><li>הוספת תנועה במזומן בשנייה</li><li>פיפ מראה אם משהו דורש טיפול, והצעד הבא מוצג מתחת</li></ul><a class="btn btn-ghost open-live" href="https://penny-finance-demo.vercel.app/">לפתוח את המסך הזה בדמו החי</a>
         </div>
         <div>
           <a class="shot" href="demo/he/home.webp" title="פתיחת הצילום בגודל מלא"><img src="demo/he/home.webp" width="1440" height="900" alt="מסך הבית במחשב" loading="lazy"></a>
         </div>
       </div>
-      <div class="split flip">
+      <div class="split panel" role="tabpanel" id="p-1" aria-labelledby="t-1" tabindex="0" hidden>
         <div>
-          <span class="kicker">תנועות</span>
           <h3>כל התנועות, מכל הבנקים והכרטיסים <small style="font-size:.6em;font-weight:600;color:var(--warn);vertical-align:middle">סנכרון אוטומטי בבטא</small></h3>
           <p>סנכרון אוטומטי מ-18 בנקים וחברות אשראי, או ייבוא מקובץ. הכול ברשימה אחת, מסודרת לפי שבועות ובצבעי הקטגוריות.</p>
-          <ul><li>חיפוש, סינון לפי קטגוריה, פיצול ותגיות</li><li>תור "לבדיקה" לתנועות חדשות, והתחשבנויות בנפרד</li><li>AI לבחירתכם מסווג תנועות, או בלי AI בכלל</li><li>כללים אוטומטיים לבתי עסק שחוזרים</li></ul>
+          <ul><li>חיפוש, סינון לפי קטגוריה, פיצול ותגיות</li><li>תור "לבדיקה" לתנועות חדשות, והתחשבנויות בנפרד</li><li>AI לבחירתכם מסווג תנועות, או בלי AI בכלל</li><li>כללים אוטומטיים לבתי עסק שחוזרים</li></ul><a class="btn btn-ghost open-live" href="https://penny-finance-demo.vercel.app/transactions">לפתוח את המסך הזה בדמו החי</a>
         </div>
         <div>
           <a class="shot" href="demo/he/transactions.webp" title="פתיחת הצילום בגודל מלא"><img src="demo/he/transactions.webp" width="1440" height="900" alt="רשימת התנועות לפי שבועות" loading="lazy"></a>
         </div>
       </div>
-      <div class="split">
+      <div class="split panel" role="tabpanel" id="p-2" aria-labelledby="t-2" tabindex="0" hidden>
         <div>
-          <span class="kicker">תקציב</span>
           <h3>תקציב שמראה את הקצב, לא רק את הסכום</h3>
           <p>לכל קטגוריה יש תקציב, כמה כבר יצא וכמה נשאר. אפשר לבנות תקציב מהממוצע שלכם בלחיצה אחת.</p>
-          <ul><li>לאן הכסף הולך, לפי קטגוריות</li><li>תצוגת 50/30/20</li><li>סיכום לפי חודש, רבעון, חצי שנה ושנה, כולל שיעור חיסכון</li><li>לוח שנה של חיובים צפויים וחיובים קבועים</li></ul>
+          <ul><li>לאן הכסף הולך, לפי קטגוריות</li><li>תצוגת 50/30/20</li><li>סיכום לפי חודש, רבעון, חצי שנה ושנה, כולל שיעור חיסכון</li><li>לוח שנה של חיובים צפויים וחיובים קבועים</li></ul><a class="btn btn-ghost open-live" href="https://penny-finance-demo.vercel.app/budget">לפתוח את המסך הזה בדמו החי</a>
         </div>
         <div>
           <a class="shot" href="demo/he/budget.webp" title="פתיחת הצילום בגודל מלא"><img src="demo/he/budget.webp" width="1440" height="900" alt="לוח התקציב" loading="lazy"></a><div class="pair"><figure><a class="shot" href="assets/shots/he/summary.webp" title="פתיחת הצילום בגודל מלא"><img src="assets/shots/he/summary.webp" width="1440" height="900" alt="סיכום רבעוני: הכנסות, הוצאות ושיעור חיסכון" loading="lazy"></a><figcaption>סיכום רבעוני: הכנסות, הוצאות ושיעור חיסכון</figcaption></figure><figure><a class="shot" href="assets/shots/he/ahead.webp" title="פתיחת הצילום בגודל מלא"><img src="assets/shots/he/ahead.webp" width="1440" height="900" alt="מה צפוי: חיובים קרובים בלוח שנה" loading="lazy"></a><figcaption>מה צפוי: חיובים קרובים בלוח שנה</figcaption></figure></div>
         </div>
       </div>
-      <div class="split flip">
+      <div class="split panel" role="tabpanel" id="p-3" aria-labelledby="t-3" tabindex="0" hidden>
         <div>
-          <span class="kicker">עתיד</span>
           <h3>השקעות, עצמאות כלכלית ושלבי החיים</h3>
           <p>השווי הנקי של הבית במקום אחד, ולצידו תכנון קדימה: מתי הכסף יוכל לפרנס אתכם, ומה כדאי לסדר בשלב שבו אתם נמצאים.</p>
-          <ul><li>נכסים, התחייבויות ושווי נקי</li><li>הקצאה לפי סוג ומטבע, והשוואה ל-S&P 500 ולת"א 125</li><li>מחשבון עצמאות כלכלית עם אירועים בחיים ויעדים</li><li>רשימות לפי שלב חיים, עם קישורים למקורות רשמיים</li></ul>
+          <ul><li>נכסים, התחייבויות ושווי נקי</li><li>הקצאה לפי סוג ומטבע, והשוואה ל-S&P 500 ולת"א 125</li><li>מחשבון עצמאות כלכלית עם אירועים בחיים ויעדים</li><li>רשימות לפי שלב חיים, עם קישורים למקורות רשמיים</li></ul><a class="btn btn-ghost open-live" href="https://penny-finance-demo.vercel.app/investments">לפתוח את המסך הזה בדמו החי</a>
         </div>
         <div>
           <a class="shot" href="assets/shots/he/investments.webp" title="פתיחת הצילום בגודל מלא"><img src="assets/shots/he/investments.webp" width="1440" height="900" alt="מסך ההשקעות והשווי הנקי" loading="lazy"></a><div class="pair"><figure><a class="shot" href="assets/shots/he/fi.webp" title="פתיחת הצילום בגודל מלא"><img src="assets/shots/he/fi.webp" width="1440" height="900" alt="עצמאות כלכלית: כמה זמן נשאר" loading="lazy"></a><figcaption>עצמאות כלכלית: כמה זמן נשאר</figcaption></figure><figure><a class="shot" href="assets/shots/he/life.webp" title="פתיחת הצילום בגודל מלא"><img src="assets/shots/he/life.webp" width="1440" height="900" alt="שלבי החיים: מה רלוונטי לכם עכשיו" loading="lazy"></a><figcaption>שלבי החיים: מה רלוונטי לכם עכשיו</figcaption></figure></div>
@@ -261,6 +258,13 @@
     </div>
   </section>
 
+  <section id="live" class="band">
+    <div class="wrap live">
+      <div><h2>הדמו החי הוא האפליקציה המלאה.</h2><p>משק בית מומצא עם שנה של תנועות, תקציב, פנסיה ויעדים. בלי הרשמה ובלי התקנה, וכל שינוי שתעשו נמחק לבד. שום דבר לא יוצא לבנק, ל-AI או לטלגרם.</p></div>
+      <a class="btn btn-primary" href="https://penny-finance-demo.vercel.app">לפתוח את הדמו החי</a>
+    </div>
+  </section>
+
   <section id="install" class="band">
     <div class="wrap">
       <div class="section-head">
@@ -293,6 +297,29 @@ npm run setup</pre></div></div>
     new IntersectionObserver((entries, o) => { if (entries[0].isIntersecting) { tv.play().catch(() => {}); o.disconnect(); } }, { threshold: 0.4 }).observe(tv);
   }
   import './gh-stats.js';
+  // Screens: one tab panel at a time; arrow keys move between tabs.
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const pick = (t, focus) => {
+    for (const x of tabs) {
+      const on = x === t;
+      x.setAttribute('aria-selected', on);
+      x.tabIndex = on ? 0 : -1;
+      document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
+    }
+    if (focus) t.focus();
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => pick(t));
+    t.addEventListener('keydown', (e) => {
+      const dir = { ArrowRight: 1, ArrowLeft: -1 }[e.key] * (document.dir === 'rtl' ? -1 : 1);
+      if (e.key === 'Home') pick(tabs[0], true);
+      else if (e.key === 'End') pick(tabs.at(-1), true);
+      else if (dir) pick(tabs[(i + dir + tabs.length) % tabs.length], true);
+      else return;
+      e.preventDefault();
+    });
+  });
+
   const pip = document.querySelector('boop-face'), say = document.getElementById('pip-say'), moods = [...document.querySelectorAll('[data-pip]')];
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) pip.setAttribute('motion', 'reduce');
   for (const b of moods) b.addEventListener('click', () => {

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../styles.css?v=0.4.0">
+<link rel="stylesheet" href="../styles.css?v=0.4.1">
 <meta property="og:image" content="https://sergey-bar.github.io/Penny/assets/og-en.jpg">
 <link rel="canonical" href="https://sergey-bar.github.io/Penny/en/">
 <link rel="alternate" hreflang="en" href="https://sergey-bar.github.io/Penny/en/">
@@ -56,7 +56,7 @@
           <a class="btn btn-demo btn-dl" href="https://penny-finance-demo.vercel.app"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span><b>Try the live demo</b><small>No install, sample household</small></span></a>
         </div>
         <ul class="proof"><li><b>18</b> banks and card companies</li><li><b>5</b> pension providers</li><li><b>25+</b> calculators for money in Israel</li><li><b>1,200+</b> automated tests</li></ul>
-        <p class="more-links"><a href="https://github.com/Sergey-Bar/Penny/releases/download/v0.3.0/Penny-0.3.0-x64.dmg">Intel Mac</a> · <a data-os="linux" href="#install">Docker for a server or NAS</a> · <a href="https://github.com/Sergey-Bar/Penny/releases">All versions</a> · <a href="demo/">Guided tour</a> · <a href="https://github.com/Sergey-Bar/Penny">Code on GitHub</a></p>
+        <p class="more-links"><a href="https://github.com/Sergey-Bar/Penny/releases/download/v0.3.0/Penny-0.3.0-x64.dmg">Intel Mac</a> · <a data-os="linux" href="#install">Docker for a server or NAS</a> · <a href="https://github.com/Sergey-Bar/Penny/releases">All versions</a> · <a href="https://github.com/Sergey-Bar/Penny">Code on GitHub</a></p>
         <ul class="gh-stats" data-gh-stats hidden><li><span aria-hidden="true">★</span> <b data-gh="stars"></b> stars on GitHub</li><li><span aria-hidden="true">⬇</span> <b data-gh="downloads"></b> downloads</li><li>Version <b data-gh="version"></b></li></ul>
       </div>
       <div class="hero-art">
@@ -102,47 +102,44 @@
     <div class="wrap">
       <div class="section-head">
         <h2>Screen by screen.</h2>
-        <p>These are real screenshots of the app with sample data. Select a screenshot to open it full size.</p>
+        <p>Pick a topic to see its screen, or open it in the live demo and explore everything yourself.</p>
       </div>
-      <div class="split">
+      <div class="tabs" role="tablist" aria-label="Screens in the app"><button type="button" role="tab" id="t-0" aria-controls="p-0" aria-selected="true">Home</button><button type="button" role="tab" id="t-1" aria-controls="p-1" aria-selected="false" tabindex="-1">Transactions</button><button type="button" role="tab" id="t-2" aria-controls="p-2" aria-selected="false" tabindex="-1">Budget</button><button type="button" role="tab" id="t-3" aria-controls="p-3" aria-selected="false" tabindex="-1">Future</button></div>
+      <div class="split panel" role="tabpanel" id="p-0" aria-labelledby="t-0" tabindex="0">
         <div>
-          <span class="kicker">Home</span>
           <h3>The whole household at a glance</h3>
           <p>A dashboard of tiles you can show or hide: expected balance, money on the table, cash flow, spending and who spent what. And a calm Focus screen for when you just want the bottom line.</p>
-          <ul><li>What you'll have left, and spending so far against the budget</li><li>Move between the months of the year in one click</li><li>Add a cash transaction in a second</li><li>Pip shows when something needs care, with the next step underneath</li></ul>
+          <ul><li>What you'll have left, and spending so far against the budget</li><li>Move between the months of the year in one click</li><li>Add a cash transaction in a second</li><li>Pip shows when something needs care, with the next step underneath</li></ul><a class="btn btn-ghost open-live" href="https://penny-finance-demo.vercel.app/">Open this screen in the live demo</a>
         </div>
         <div>
           <a class="shot" href="../demo/en/home.webp" title="Open the screenshot full size"><img src="../demo/en/home.webp" width="1440" height="900" alt="Home on a computer" loading="lazy"></a>
         </div>
       </div>
-      <div class="split flip">
+      <div class="split panel" role="tabpanel" id="p-1" aria-labelledby="t-1" tabindex="0" hidden>
         <div>
-          <span class="kicker">Transactions</span>
           <h3>Every transaction, from every bank and card <small style="font-size:.6em;font-weight:600;color:var(--warn);vertical-align:middle">automatic sync in beta</small></h3>
           <p>Automatic sync from 18 banks and card companies, or import from a file. Everything in one list, grouped by week, in category colours.</p>
-          <ul><li>Search, filter by category, splits and tags</li><li>A "To review" queue for new transactions, with settle-ups kept apart</li><li>An AI of your choice sorts transactions, or no AI at all</li><li>Automatic rules for merchants that keep coming back</li></ul>
+          <ul><li>Search, filter by category, splits and tags</li><li>A "To review" queue for new transactions, with settle-ups kept apart</li><li>An AI of your choice sorts transactions, or no AI at all</li><li>Automatic rules for merchants that keep coming back</li></ul><a class="btn btn-ghost open-live" href="https://penny-finance-demo.vercel.app/transactions">Open this screen in the live demo</a>
         </div>
         <div>
           <a class="shot" href="../demo/en/transactions.webp" title="Open the screenshot full size"><img src="../demo/en/transactions.webp" width="1440" height="900" alt="Transactions grouped by week" loading="lazy"></a>
         </div>
       </div>
-      <div class="split">
+      <div class="split panel" role="tabpanel" id="p-2" aria-labelledby="t-2" tabindex="0" hidden>
         <div>
-          <span class="kicker">Budget</span>
           <h3>A budget that shows the pace, not just the total</h3>
           <p>Every category has a budget, what's gone and what's left. You can build a budget from your own average in one click.</p>
-          <ul><li>Where the money goes, by category</li><li>50/30/20 view</li><li>Summary by month, quarter, half-year and year, with savings rate</li><li>A calendar of expected and recurring charges</li></ul>
+          <ul><li>Where the money goes, by category</li><li>50/30/20 view</li><li>Summary by month, quarter, half-year and year, with savings rate</li><li>A calendar of expected and recurring charges</li></ul><a class="btn btn-ghost open-live" href="https://penny-finance-demo.vercel.app/budget">Open this screen in the live demo</a>
         </div>
         <div>
           <a class="shot" href="../demo/en/budget.webp" title="Open the screenshot full size"><img src="../demo/en/budget.webp" width="1440" height="900" alt="Budget dashboard" loading="lazy"></a><div class="pair"><figure><a class="shot" href="../assets/shots/en/summary.webp" title="Open the screenshot full size"><img src="../assets/shots/en/summary.webp" width="1440" height="900" alt="Quarterly summary: income, spending and savings rate" loading="lazy"></a><figcaption>Quarterly summary: income, spending and savings rate</figcaption></figure><figure><a class="shot" href="../assets/shots/en/ahead.webp" title="Open the screenshot full size"><img src="../assets/shots/en/ahead.webp" width="1440" height="900" alt="What's ahead: upcoming charges on a calendar" loading="lazy"></a><figcaption>What's ahead: upcoming charges on a calendar</figcaption></figure></div>
         </div>
       </div>
-      <div class="split flip">
+      <div class="split panel" role="tabpanel" id="p-3" aria-labelledby="t-3" tabindex="0" hidden>
         <div>
-          <span class="kicker">Future</span>
           <h3>Investments, financial independence and life stages</h3>
           <p>Your household's net worth in one place, next to planning ahead: when your money could support you, and what's worth sorting at the stage you're in.</p>
-          <ul><li>Assets, liabilities and net worth</li><li>Allocation by type and currency, compared with the S&P 500 and TA-125</li><li>Financial-independence calculator with life events and goals</li><li>Checklists by life stage, linking to official sources</li></ul>
+          <ul><li>Assets, liabilities and net worth</li><li>Allocation by type and currency, compared with the S&P 500 and TA-125</li><li>Financial-independence calculator with life events and goals</li><li>Checklists by life stage, linking to official sources</li></ul><a class="btn btn-ghost open-live" href="https://penny-finance-demo.vercel.app/investments">Open this screen in the live demo</a>
         </div>
         <div>
           <a class="shot" href="../assets/shots/en/investments.webp" title="Open the screenshot full size"><img src="../assets/shots/en/investments.webp" width="1440" height="900" alt="Investments and net worth" loading="lazy"></a><div class="pair"><figure><a class="shot" href="../assets/shots/en/fi.webp" title="Open the screenshot full size"><img src="../assets/shots/en/fi.webp" width="1440" height="900" alt="Financial independence: how long to go" loading="lazy"></a><figcaption>Financial independence: how long to go</figcaption></figure><figure><a class="shot" href="../assets/shots/en/life.webp" title="Open the screenshot full size"><img src="../assets/shots/en/life.webp" width="1440" height="900" alt="Life stages: what's relevant to you now" loading="lazy"></a><figcaption>Life stages: what's relevant to you now</figcaption></figure></div>
@@ -262,6 +259,13 @@
     </div>
   </section>
 
+  <section id="live" class="band">
+    <div class="wrap live">
+      <div><h2>The live demo is the full app.</h2><p>A made-up household with a year of transactions, budgets, pension and goals. No signup and no install, and any change you make resets by itself. Nothing reaches a bank, an AI provider or Telegram.</p></div>
+      <a class="btn btn-primary" href="https://penny-finance-demo.vercel.app">Open the live demo</a>
+    </div>
+  </section>
+
   <section id="install" class="band">
     <div class="wrap">
       <div class="section-head">
@@ -294,6 +298,29 @@ npm run setup</pre></div></div>
     new IntersectionObserver((entries, o) => { if (entries[0].isIntersecting) { tv.play().catch(() => {}); o.disconnect(); } }, { threshold: 0.4 }).observe(tv);
   }
   import '../gh-stats.js';
+  // Screens: one tab panel at a time; arrow keys move between tabs.
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const pick = (t, focus) => {
+    for (const x of tabs) {
+      const on = x === t;
+      x.setAttribute('aria-selected', on);
+      x.tabIndex = on ? 0 : -1;
+      document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
+    }
+    if (focus) t.focus();
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => pick(t));
+    t.addEventListener('keydown', (e) => {
+      const dir = { ArrowRight: 1, ArrowLeft: -1 }[e.key] * (document.dir === 'rtl' ? -1 : 1);
+      if (e.key === 'Home') pick(tabs[0], true);
+      else if (e.key === 'End') pick(tabs.at(-1), true);
+      else if (dir) pick(tabs[(i + dir + tabs.length) % tabs.length], true);
+      else return;
+      e.preventDefault();
+    });
+  });
+
   const pip = document.querySelector('boop-face'), say = document.getElementById('pip-say'), moods = [...document.querySelectorAll('[data-pip]')];
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) pip.setAttribute('motion', 'reduce');
   for (const b of moods) b.addEventListener('click', () => {
