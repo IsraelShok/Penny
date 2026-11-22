@@ -240,6 +240,13 @@ export function BudgetTable({
                         </td>
                         <td className="px-4 py-2 text-end">
                           <AssignedCell c={c} money={money} />
+                          {!!c.carryIn && Math.round(c.carryIn) !== 0 && (
+                            <div
+                              className={`text-[11px] tabular-nums ${c.carryIn < 0 ? "text-expense" : "text-muted-foreground"}`}
+                            >
+                              {t("carried", { amount: money(c.carryIn) })}
+                            </div>
+                          )}
                         </td>
                         <td
                           className="px-4 py-2 text-end tabular-nums text-muted-foreground"

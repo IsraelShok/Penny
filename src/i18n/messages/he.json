@@ -650,7 +650,12 @@
       "failedToSave": "ההגדרות לא נשמרו. נסו לשמור שוב.",
       "displayNameTitle": "שם לתצוגה",
       "displayNameDescription": "יופיע בברכה בעמוד הבית.",
-      "displayNameLabel": "שם פרטי"
+      "displayNameLabel": "שם פרטי",
+      "billRemindersTitle": "תזכורות לחיובים",
+      "billRemindersDescription": "התראה לפני חיוב קבוע או התחייבות צפויים, בפעמון ובטלגרם אם הוא מחובר.",
+      "billRemindersOn": "להזכיר לפני חיובים",
+      "billRemindersDays": "כמה זמן מראש",
+      "billRemindersDaysValue": "{n, plural, one {יום} two {יומיים} other {# ימים}} לפני"
     },
     "appearance": {
       "themeTitle": "ערכת צבע",
@@ -5083,7 +5088,15 @@
     "ended": "הושגו",
     "behindBadge": "מפגר",
     "needShort": "אתם חוסכים בממוצע {save} בחודש, כלומר חסרים {gap} בחודש.",
-    "needCovered": "אתם חוסכים בממוצע {save} בחודש, וזה מספיק."
+    "needCovered": "אתם חוסכים בממוצע {save} בחודש, וזה מספיק.",
+    "slipNever": "{name}: בקצב הזה לא נשאר לו כלום",
+    "slipBy": "{name}: באיחור של {months, plural, one {חודש} two {חודשיים} other {# חודשים}} ({date})",
+    "tryOpen": "לנסות מספרים אחרים עבור {name}",
+    "tryHint": "נסו סכום חודשי או תאריך. שום דבר לא נשמר.",
+    "tryMonthly": "חיסכון בחודש",
+    "tryDate": "להגיע עד",
+    "tryReach": "ב-{monthly} בחודש תגיעו לשם ב{date}",
+    "tryNeed": "כדי להגיע עד {date}: {need} בחודש"
   },
   "vacation": {
     "title": "תכנון חופשה",
@@ -5829,7 +5842,8 @@
     "editAssigned": "עריכת התקציב של {name}",
     "saveFailed": "התקציב לא נשמר. נסו שוב.",
     "lines": "{n, plural, one {שורה אחת} other {# שורות}}",
-    "paceHint": "הקו האנכי בכל פס הוא {pct}% מהחודש שעבר. פס שעבר אותו מתקדם מהר מהקצב."
+    "paceHint": "הקו האנכי בכל פס הוא {pct}% מהחודש שעבר. פס שעבר אותו מתקדם מהר מהקצב.",
+    "carried": "{amount} הועברו מהחודש הקודם"
   },
   "ownerFilter": {
     "filter": "של מי:",
@@ -6241,7 +6255,8 @@
     "new": "חדש",
     "syncDone": "{bank}: נוספו {count, plural, one {תנועה חדשה} other {# תנועות חדשות}}",
     "syncFailed": "{bank}: הסנכרון נכשל. כדאי לבדוק את החיבור.",
-    "goalReached": "הגעתם ליעד \"{name}\" ({amount})"
+    "goalReached": "הגעתם ליעד \"{name}\" ({amount})",
+    "billDue": "{name} ({amount}) יורד {days, plural, =0 {היום} =1 {מחר} other {בעוד # ימים}}"
   },
   "analyticsHub": {
     "reports": "דוחות",

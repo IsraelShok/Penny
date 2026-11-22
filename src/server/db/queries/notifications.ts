@@ -2,6 +2,8 @@ import "server-only";
 
 import { getDb } from "../index";
 import { listGoals } from "./plan";
+import { billReminders } from "@/server/insights/bill-reminders";
+import { israelToday } from "@/server/lib/date-utils";
 import type { AppNotification } from "@/lib/notifications";
 
 /**
@@ -53,5 +55,16 @@ export function listNotifications(workspaceId: number): AppNotification[] {
       amount: g.targetAmount,
       href: "/journey",
     }));
-  return [...goals, ...syncs];
+  // Each charge occurrence has its own key, so a bill is unread once and never repeats.
+  const bills: AppNotification[] = billReminders(workspaceId, israelToday()).map((b) => ({
+    key: b.key,
+    kind: "billDue",
+    at: null,
+    name: b.name,
+    amount: b.amount,
+    date: b.date,
+    daysLeft: b.daysLeft,
+    href: "/recurring",
+  }));
+  return [...bills, ...goals, ...syncs];
 }

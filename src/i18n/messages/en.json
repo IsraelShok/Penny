@@ -650,7 +650,12 @@
       "failedToSave": "Settings were not saved. Try saving again.",
       "displayNameTitle": "Display name",
       "displayNameDescription": "Used in the greeting on Home.",
-      "displayNameLabel": "First name"
+      "displayNameLabel": "First name",
+      "billRemindersTitle": "Bill reminders",
+      "billRemindersDescription": "A heads-up before an expected recurring charge or commitment, in the bell and on Telegram when it is linked.",
+      "billRemindersOn": "Remind me before bills",
+      "billRemindersDays": "How early",
+      "billRemindersDaysValue": "{n, plural, one {# day} other {# days}} before"
     },
     "appearance": {
       "themeTitle": "Theme",
@@ -5083,7 +5088,15 @@
     "ended": "Reached",
     "behindBadge": "Behind",
     "needShort": "You save {save} a month on average, so you're {gap} a month short.",
-    "needCovered": "You save {save} a month on average, which covers it."
+    "needCovered": "You save {save} a month on average, which covers it.",
+    "slipNever": "{name}: nothing left for it at this pace",
+    "slipBy": "{name}: {months, plural, one {# month} other {# months}} late ({date})",
+    "tryOpen": "Try other numbers for {name}",
+    "tryHint": "Try a monthly amount or a date. Nothing is saved.",
+    "tryMonthly": "Save a month",
+    "tryDate": "Reach by",
+    "tryReach": "At {monthly} a month you get there in {date}",
+    "tryNeed": "To get there by {date}: {need} a month"
   },
   "vacation": {
     "title": "Vacation planning",
@@ -5829,7 +5842,8 @@
     "editAssigned": "Edit the budget for {name}",
     "saveFailed": "The budget was not saved. Try again.",
     "lines": "{n, plural, one {# line} other {# lines}}",
-    "paceHint": "The thin mark on each bar is {pct}% of the month gone. A bar past it is spending faster than the month."
+    "paceHint": "The thin mark on each bar is {pct}% of the month gone. A bar past it is spending faster than the month.",
+    "carried": "{amount} carried over"
   },
   "ownerFilter": {
     "filter": "Whose:",
@@ -6241,7 +6255,8 @@
     "new": "New",
     "syncDone": "{bank}: {count, plural, one {# new transaction} other {# new transactions}}",
     "syncFailed": "{bank}: the sync failed. Check the connection.",
-    "goalReached": "Goal reached: \"{name}\" ({amount})"
+    "goalReached": "Goal reached: \"{name}\" ({amount})",
+    "billDue": "{name} ({amount}) is due {days, plural, =0 {today} =1 {tomorrow} other {in # days}}"
   },
   "analyticsHub": {
     "reports": "Reports",

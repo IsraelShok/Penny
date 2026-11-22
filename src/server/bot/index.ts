@@ -148,14 +148,43 @@ export function startBot(): void {
   }
   if (!globalThis.__pennyDigest) {
     globalThis.__pennyDigest = true;
-    setInterval(
-      () => void sendDigest().catch((err) => console.error("[digest]", redactError(err))),
-      15 * 60_000,
-    ).unref();
+    setInterval(() => {
+      void sendDigest().catch((err) => console.error("[digest]", redactError(err)));
+      void sendBillReminders().catch((err) => console.error("[bills]", redactError(err)));
+    }, 15 * 60_000).unref();
   }
 }
 
 const DIGEST_SENT = "telegram_digest_sent";
+const BILLS_SENT = "telegram_bill_reminders_sent";
+
+/** Bills due within the reminder window, each sent once; amounts follow the "hide amounts" switch. */
+async function sendBillReminders(): Promise<void> {
+  const { chatId } = getBotConfig();
+  const bot = globalThis.__pennyBot;
+  const ws = listAllWorkspaceIds()[0];
+  if (!bot || !chatId || ws === undefined || isKeyLocked()) return;
+  const [{ billReminders }, { pendingToSend }] = await Promise.all([
+    import("../insights/bill-reminders"),
+    import("@/lib/bill-reminders"),
+  ]);
+  let sent: string[] = [];
+  try {
+    const raw: unknown = JSON.parse(getGlobalSetting(BILLS_SENT) ?? "[]");
+    if (Array.isArray(raw)) sent = raw.filter((k): k is string => typeof k === "string");
+  } catch {}
+  const { send, keep } = pendingToSend(billReminders(ws, israelToday()), sent);
+  // Remember first: a failed send is not retried every 15 minutes into a flood.
+  setGlobalSetting(BILLS_SENT, JSON.stringify(keep));
+  if (!send.length) return;
+  const hide = getHideAmounts();
+  const when = (d: number) => (d === 0 ? "היום" : d === 1 ? "מחר" : `בעוד ${d} ימים`);
+  const lines = send.map(
+    (b) =>
+      `• ${b.name}${hide ? "" : ` · ₪${Math.round(b.amount).toLocaleString("he-IL")}`} · ${when(b.daysLeft)}`,
+  );
+  await bot.api.sendMessage(chatId, `🔔 חיובים קרובים\n\n${lines.join("\n")}`);
+}
 
 /** Sunday, Tuesday and Thursday mornings: the full snapshot, unasked. Remembers the day so a restart doesn't resend it. */
 async function sendDigest(): Promise<void> {

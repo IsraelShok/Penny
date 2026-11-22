@@ -162,6 +162,7 @@ async function summary(request: Request) {
       transactionCount: count,
       topMerchant,
       budget,
+      carryIn: explicit?.carryIn ?? 0,
       isAutoBudget: false,
       vsLastMonth,
       remaining,
