@@ -11,6 +11,7 @@ import {
   type BotConfig,
 } from "./commands";
 import { categorizeAction, categorizeCard, CAT_PREFIX } from "./categorize";
+import { smsAction, smsCard, SMS_PREFIX } from "./sms";
 import { getBotConfig, getHideAmounts, linkChat } from "./config";
 import { APP_LOCKED_MESSAGE, isKeyLocked } from "../lib/encryption";
 
@@ -89,6 +90,13 @@ export function startBot(): void {
       await ctx.reply(APP_LOCKED_MESSAGE);
       return;
     }
+    if (ctx.chat.id === chatId && !text.startsWith("/")) {
+      const card = smsCard(text, israelToday());
+      if (card) {
+        await ctx.reply(card.text, { reply_markup: card.markup });
+        return;
+      }
+    }
     if (ctx.chat.id === chatId && cmdOf(text) === "/categorize") {
       const ws = listAllWorkspaceIds()[0];
       if (ws === undefined) return;
@@ -121,6 +129,12 @@ export function startBot(): void {
         await ctx
           .editMessageText(card.text, { parse_mode: "HTML", reply_markup: card.markup })
           .catch(ignoreUnchanged);
+      return;
+    }
+    if (data.startsWith(SMS_PREFIX)) {
+      const ws = listAllWorkspaceIds()[0];
+      await ctx.answerCallbackQuery();
+      if (ws !== undefined) await ctx.editMessageText(smsAction(ws, data)).catch(ignoreUnchanged);
       return;
     }
     if (!data.startsWith(MENU_PREFIX)) return ctx.answerCallbackQuery();

@@ -1140,7 +1140,21 @@
       "wipeTitle": "Delete all data",
       "wipeDescription": "Deletes everything: transactions, bank connections and logins, settings, AI keys, the bot, the encryption key and logs. The app returns to a fresh install. This cannot be undone.",
       "wipeConfirm": "To confirm, type \"{word}\"",
-      "wipeCta": "Delete all data"
+      "wipeCta": "Delete all data",
+      "lanQr": "QR code of the phone address",
+      "quickAddTitle": "Quick add from the phone",
+      "quickAddDescription": "Add an expense from a phone shortcut. Each phone gets its own key; revoke it any time.",
+      "quickAddName": "Device name, for example: my iPhone",
+      "quickAddCreate": "Create key",
+      "quickAddShownOnce": "Copy this key now. It will not be shown again.",
+      "quickAddLastUsed": "Last used {date}",
+      "quickAddNeverUsed": "Not used yet",
+      "quickAddRevoke": "Revoke",
+      "quickAddIphoneTitle": "iPhone: Shortcuts",
+      "quickAddIphoneSteps": "1. Open Shortcuts and create a new shortcut.\n2. Add Ask for Input (Number), prompt: Amount.\n3. Add Ask for Input (Text), prompt: Description.\n4. Add Get Contents of URL with the address:\n{url}\n5. Tap Show More: Method POST. Header: Authorization, value: Bearer {token}\n6. Request Body: JSON. Add a Number field named amount set to the first input, and a Text field named description set to the second input.\n7. Add the shortcut to the Home Screen.",
+      "quickAddAndroidTitle": "Android: automation app",
+      "quickAddAndroidSteps": "In any automation app that can send an HTTP request, create a task:\n1. Method POST, address:\n{url}\n2. Header: Authorization, value: Bearer {token}\n3. Header: Content-Type, value: application/json\n4. JSON body with amount (number) and description (text). Optional: date (YYYY-MM-DD) and kind set to income.\n5. Have the task ask for the amount and description, then add it as a home screen shortcut.",
+      "quickAddNote": "Works on the home network while phone access is on, and after the app was unlocked once since it started. New expenses are categorized automatically when the merchant is known."
     },
     "openBanking": {
       "title": "Connect the bank's API",
