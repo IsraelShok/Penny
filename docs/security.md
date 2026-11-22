@@ -106,8 +106,8 @@ Local Ollama is the default. With a cloud provider, the categorisation prompt se
 the merchant description, currency, absolute amount and memo, plus category names. Now the description
 and memo pass through `redact()`, so account, card and ID digits and emails never leave (they do not
 help categorisation). **Fixed.** Names in transfer descriptions (for example a person's name in a bank
-transfer) still go out. **Open:** explicit consent screen when switching to a cloud provider, and skipping
-transfer-type transactions in cloud prompts. The "ask" feature sends aggregates; review it in the same pass.
+transfer) no longer go out: a cloud prompt keeps only the transfer's kind ("העברה", "bit") and drops the name. Turning on a
+cloud provider needs a consent checkbox that lists exactly what is sent. **Fixed.** The "ask" feature sends aggregates; review it in the same pass.
 
 ## 8. Screen privacy
 
@@ -119,7 +119,7 @@ numbers never flash on load. Screen readers still read the values (blur is visua
 
 CSV/XLSX exports and copies of the data folder are plaintext and the folder copy includes the key.
 **Built:** password-protected backup (AES-GCM with an scrypt-derived key, `.pennybak` file, Settings → Data).
-**Open:** a warning on CSV/XLSX export, which stays plaintext. The privacy page already warns that a folder backup contains the key.
+The export card warns that CSV/OFX files are plaintext and points to the encrypted backup. **Fixed.** The privacy page already warns that a folder backup contains the key.
 
 ## 10. Deletion
 
@@ -146,7 +146,8 @@ any new critical advisory (`npm run security:audit:gate`).
 ## 12. Update check
 
 `src/server/update/check.ts` calls `api.github.com` for the latest commit on the branch. It sends no
-user data; GitHub sees the IP and a request per check. **Open:** a setting to turn it off.
+user data; GitHub sees the IP and a request per check. Settings > Privacy has a switch that turns it off (banner,
+bot notice and the Windows self-update). **Fixed.**
 
 ## 13. Desktop self-update
 
