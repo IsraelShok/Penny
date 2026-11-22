@@ -4,7 +4,6 @@ import { useHousehold } from "@/hooks/use-household";
 import { BudgetSidePanel } from "./budget-side-panel";
 import { BudgetTable } from "./budget-table";
 import { useState, useCallback, useSyncExternalStore } from "react";
-import { readStored } from "@/lib/legacy-names";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { MonthNav, monthKey } from "@/components/ui/month-nav";
@@ -27,12 +26,11 @@ import type { CategoryViewMode } from "@/lib/types";
 import { VacationPlans } from "@/components/household/vacation-plans";
 
 const VIEW_MODE_KEY = "penny.dashboard.viewMode";
-const LEGACY_VIEW_MODE_KEY = "spent.dashboard.viewMode"; // legacy: spent.dashboard.viewMode from installs before the Penny rename
 
 function readViewMode(): CategoryViewMode {
   if (typeof window === "undefined") return "collapsed";
   try {
-    const raw = readStored(VIEW_MODE_KEY, LEGACY_VIEW_MODE_KEY);
+    const raw = window.localStorage.getItem(VIEW_MODE_KEY);
     if (raw === "expanded" || raw === "collapsed" || raw === "table") return raw;
     // Not chosen yet: the table on wide screens, the cards on phones (a table scrolls sideways there).
     return matchMedia("(max-width: 767px)").matches ? "collapsed" : "table";

@@ -14,7 +14,6 @@ const KEEP = 5;
 
 export async function backupData(dataDir, stamp) {
   let dbFile = path.join(dataDir, "penny.db");
-  if (!fs.existsSync(dbFile)) dbFile = path.join(dataDir, "spent.db"); // legacy: spent.db from installs before the Penny rename
   if (!fs.existsSync(dbFile)) return null;
 
   const root = path.join(dataDir, "backups");
@@ -44,9 +43,7 @@ export async function backupData(dataDir, stamp) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const dataDir = path.resolve(
-    process.argv[2] ?? process.env.PENNY_DATA_DIR ?? process.env.SPENT_DATA_DIR ?? "data",
-  ); // legacy: SPENT_DATA_DIR from installs before the Penny rename
+  const dataDir = path.resolve(process.argv[2] ?? process.env.PENNY_DATA_DIR ?? "data");
   const stamp =
     process.argv[3] ?? new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
   const target = await backupData(dataDir, stamp);

@@ -28,15 +28,42 @@ if (git remote) {
 }
 
 # 2. Back up the database and encryption key inside the data volume (newest five are kept).
-# legacy: "spent" container and image from installs before the Penny rename
-$running = @("penny", "spent") | Where-Object { (docker inspect --format "{{.State.Running}}" $_ 2>$null) -eq "true" } | Select-Object -First 1
+$running = @("penny") | Where-Object { (docker inspect --format "{{.State.Running}}" $_ 2>$null) -eq "true" } | Select-Object -First 1
 if ($running) {
     docker exec $running node scripts/backup-data.mjs /data
     if ($LASTEXITCODE -ne 0) { Write-Host "Backup failed. Nothing was changed."; exit 1 }
 }
 
+# An install from before 0.4 keeps its data in another volume. Copy it into penny-data once, with the app stopped
+# so the database is consistent; the old volume is removed only after the new one comes up healthy.
+$script:OldVolume = $null
+function Move-DataVolume {
+    docker volume inspect penny-data *> $null
+    if ($LASTEXITCODE -eq 0) { return $true }
+    $old = docker inspect penny --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Name}}{{end}}{{end}}' 2>$null
+    if (-not $old -or $old -eq "penny-data") { return $true }
+    Write-Host "Moving your data to the penny-data volume (one time)..."
+    docker stop penny *> $null
+    docker volume create penny-data *> $null
+    docker run --rm --user 0 --entrypoint sh -v "${old}:/from:ro" -v penny-data:/to penny:latest -c "cp -a /from/. /to/"
+    if ($LASTEXITCODE -ne 0) {
+        docker volume rm penny-data *> $null
+        Write-Host "Could not copy your data. Nothing was changed."
+        return $false
+    }
+    # The old container still holds the name and the old volume; compose makes a new one.
+    docker rm penny *> $null
+    $script:OldVolume = $old
+    return $true
+}
+function Remove-OldVolume {
+    if ($script:OldVolume) { docker volume rm $script:OldVolume *> $null; if ($LASTEXITCODE -eq 0) { Write-Host "Removed the old data volume." } }
+}
+
+if (-not (Move-DataVolume)) { exit 1 }
+
 # 3. Keep the current image so we can go back to it.
-$current = @("penny:latest", "spent:latest") | Where-Object { docker image inspect $_ *> $null; $LASTEXITCODE -eq 0 } | Select-Object -First 1
+$current = @("penny:latest") | Where-Object { docker image inspect $_ *> $null; $LASTEXITCODE -eq 0 } | Select-Object -First 1
 $hadPrevious = [bool]$current
 if ($hadPrevious) { docker tag $current penny:previous }
 
@@ -54,6 +81,7 @@ if ($LASTEXITCODE -ne 0) {
 docker compose up -d --remove-orphans
 if (Wait-Healthy) {
     Write-Host "Updated to $env:PENNY_COMMIT."
+    Remove-OldVolume
     exit 0
 }
 Write-Host "The new version did not become healthy. Rolling back."

@@ -8,7 +8,7 @@ interface SyncLockState {
 }
 
 declare global {
-  var __spentSyncLock: SyncLockState | undefined;
+  var __pennySyncLock: SyncLockState | undefined;
 }
 
 /**
@@ -25,11 +25,11 @@ export class SyncBusyError extends Error {
 }
 
 export function isSyncRunning(now = Date.now()): boolean {
-  const lock = globalThis.__spentSyncLock;
+  const lock = globalThis.__pennySyncLock;
   if (!lock) return false;
   if (now - lock.since > STALE_MS) {
     console.warn("[sync] releasing a stale sync lock");
-    globalThis.__spentSyncLock = undefined;
+    globalThis.__pennySyncLock = undefined;
     return false;
   }
   return true;
@@ -39,11 +39,11 @@ export function isSyncRunning(now = Date.now()): boolean {
 export function tryAcquireSync(kind: SyncLockKind): (() => void) | null {
   if (isSyncRunning()) return null;
   const state: SyncLockState = { kind, since: Date.now() };
-  globalThis.__spentSyncLock = state;
+  globalThis.__pennySyncLock = state;
   let released = false;
   return () => {
     if (released) return;
     released = true;
-    if (globalThis.__spentSyncLock === state) globalThis.__spentSyncLock = undefined;
+    if (globalThis.__pennySyncLock === state) globalThis.__pennySyncLock = undefined;
   };
 }

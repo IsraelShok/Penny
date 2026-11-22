@@ -2,7 +2,7 @@
 // where a hostile site's name is pointed at 127.0.0.1 so the browser treats this app as same-origin.
 // Self-hosters who reach the app by another name (home server, LAN IP) list it in PENNY_ALLOWED_HOSTS.
 import { pennyEnv } from "./legacy-names";
-const ALLOWED = new Set(["127.0.0.1", "localhost", "[::1]", "penny.localhost", "spent.localhost"]); // legacy: spent.localhost from installs before the Penny rename
+const ALLOWED = new Set(["127.0.0.1", "localhost", "[::1]", "penny.localhost"]);
 
 const fromEnv = (pennyEnv("ALLOWED_HOSTS") ?? "")
   .split(",")

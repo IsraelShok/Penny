@@ -20,12 +20,13 @@ services:
       # Tell the user (in the app and Telegram) when a newer release exists. Nothing is installed automatically. 0 turns it off.
       PENNY_UPDATE_CHECK: ${PENNY_UPDATE_CHECK:-1}
     volumes:
-      # legacy: spent-data volume from installs before the Penny rename (renaming it would orphan existing data)
-      - spent-data:/data
+      # The database, encryption key and backups. Penny-docker and Penny-update move an older install's data here once.
+      - penny-data:/data
       # Drop bank and investment-house statements here, one subfolder per account (created on the first scan).
       - ./imports:/data/import
     security_opt:
       - no-new-privileges:true
 
 volumes:
-  spent-data:
+  penny-data:
+    name: penny-data

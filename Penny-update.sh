@@ -32,6 +32,32 @@ if [ "$(docker inspect --format '{{.State.Running}}' penny 2>/dev/null)" = "true
   docker exec penny node scripts/backup-data.mjs /data || { echo "Backup failed. Nothing was changed."; exit 1; }
 fi
 
+# An install from before 0.4 keeps its data in another volume. Copy it into penny-data once, with the app stopped
+# so the database is consistent; the old volume is removed only after the new one comes up healthy.
+OLD_VOLUME=""
+move_data_volume() {
+  docker volume inspect penny-data >/dev/null 2>&1 && return 0
+  local old
+  old="$(docker inspect penny --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Name}}{{end}}{{end}}' 2>/dev/null)"
+  [ -n "$old" ] && [ "$old" != "penny-data" ] || return 0
+  echo "Moving your data to the penny-data volume (one time)..."
+  docker stop penny >/dev/null 2>&1
+  docker volume create penny-data >/dev/null || return 1
+  if ! docker run --rm --user 0 --entrypoint sh -v "$old":/from:ro -v penny-data:/to penny:latest -c 'cp -a /from/. /to/'; then
+    docker volume rm penny-data >/dev/null 2>&1
+    echo "Could not copy your data. Nothing was changed."
+    return 1
+  fi
+  # The old container still holds the name and the old volume; compose makes a new one.
+  docker rm penny >/dev/null 2>&1
+  OLD_VOLUME="$old"
+}
+remove_old_volume() {
+  [ -n "$OLD_VOLUME" ] && docker volume rm "$OLD_VOLUME" >/dev/null 2>&1 && echo "Removed the old data volume."
+  return 0
+}
+move_data_volume || exit 1
+
 # 3. Keep the current image so we can go back to it.
 had_previous=0
 if docker image inspect penny:latest >/dev/null 2>&1; then docker tag penny:latest penny:previous; had_previous=1; fi
@@ -47,7 +73,7 @@ fi
 
 # 5. Switch, and roll back if the new version is not healthy.
 docker compose up -d --remove-orphans
-if wait_healthy; then echo "Updated to $PENNY_COMMIT."; exit 0; fi
+if wait_healthy; then echo "Updated to $PENNY_COMMIT."; remove_old_volume; exit 0; fi
 echo "The new version did not become healthy. Rolling back."
 docker compose logs --tail 30 penny
 if [ "$had_previous" = 1 ]; then

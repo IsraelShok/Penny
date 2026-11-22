@@ -41,13 +41,6 @@ function removeLauncherVbs() {
   }
 }
 
-// legacy: "Spent" task and %LOCALAPPDATA%\Spent launcher from installs before the Penny rename
-function removeLegacyTask() {
-  schtasks(["/End", "/TN", "Spent"]);
-  schtasks(["/Delete", "/TN", "Spent", "/F"]);
-  fs.rmSync(path.join(os.homedir(), "AppData", "Local", "Spent"), { recursive: true, force: true });
-}
-
 function userId() {
   return `${process.env.USERDOMAIN ?? os.hostname()}\\${process.env.USERNAME ?? os.userInfo().username}`;
 }
@@ -103,7 +96,6 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
   switch (cmd) {
     case "install": {
       preflight();
-      removeLegacyTask();
       writeLauncherVbs();
       const xmlPath = writeTaskXml();
       try {
@@ -150,7 +142,6 @@ export async function run(cmd, { friendlyUrl, loopbackUrl }) {
         console.error(r.stderr || r.stdout);
       }
       removeLauncherVbs();
-      removeLegacyTask();
       try {
         removeManagedBlock();
       } catch (err) {

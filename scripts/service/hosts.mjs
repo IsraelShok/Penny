@@ -7,11 +7,7 @@ import { HOST, FRIENDLY_HOST } from "./paths.mjs";
 
 const MARKER_START = "# >>> penny (managed) >>>";
 const MARKER_END = "# <<< penny <<<";
-// legacy: "spent" hosts block and spent.localhost from installs before the Penny rename
-const LEGACY_START = "# >>> spent (managed) >>>";
-const LEGACY_END = "# <<< spent <<<";
-const LEGACY_HOST = "spent.localhost";
-const MANAGED_LINE = `${HOST}\t${FRIENDLY_HOST} ${LEGACY_HOST}`;
+const MANAGED_LINE = `${HOST}\t${FRIENDLY_HOST}`;
 
 export function hostsFilePath() {
   if (process.platform === "win32") {
@@ -32,7 +28,7 @@ function buildManagedBlock() {
 }
 
 function hasAnyBlock(content) {
-  return content.includes(MARKER_START) || content.includes(LEGACY_START);
+  return content.includes(MARKER_START);
 }
 
 function stripBlock(content, startMarker, endMarker) {
@@ -45,7 +41,7 @@ function stripBlock(content, startMarker, endMarker) {
 
 function stripManagedBlock(content) {
   if (!hasAnyBlock(content)) return content;
-  let trimmed = stripBlock(stripBlock(content, MARKER_START, MARKER_END), LEGACY_START, LEGACY_END);
+  let trimmed = stripBlock(content, MARKER_START, MARKER_END);
   trimmed = trimmed.replace(/\n{3,}/g, "\n\n");
   if (!trimmed.endsWith(os.EOL)) trimmed += os.EOL;
   return trimmed;
@@ -104,11 +100,6 @@ function writeWindows(targetPath, newContent) {
   }
 }
 
-// A block written before the rename (any hostname under the old markers) needs migration.
-function hasLegacyLocalBlock(content) {
-  return content.includes(LEGACY_START);
-}
-
 function hasCurrentBlock(content) {
   if (!content.includes(MARKER_START)) return false;
   const start = content.indexOf(MARKER_START);
@@ -121,7 +112,6 @@ function hasCurrentBlock(content) {
 export function addManagedBlock() {
   const { path: p, content } = readCurrent();
   const isWindows = process.platform === "win32";
-  const legacy = hasLegacyLocalBlock(content);
 
   if (!isWindows) {
     // macOS and Linux resolve *.localhost natively (macOS via the system
@@ -131,11 +121,6 @@ export function addManagedBlock() {
     // detour or the now-wrong loopback line).
     if (!hasAnyBlock(content)) {
       return false;
-    }
-    if (legacy) {
-      console.log(
-        "Removing the old hosts entry (no longer needed on this OS; *.localhost resolves natively).",
-      );
     }
     const newContent = stripManagedBlock(content);
     writeWithPrivilege(p, newContent);
@@ -153,14 +138,10 @@ export function addManagedBlock() {
   const base = stripped.endsWith("\n") || stripped === "" ? stripped : stripped + os.EOL;
   const newContent = base + block + os.EOL;
 
-  if (legacy) {
-    console.log(`Migrating the old hosts entry to ${FRIENDLY_HOST}.`);
-  } else {
-    console.log(`Will append these lines to ${p}:`);
-    console.log("---");
-    console.log(block);
-    console.log("---");
-  }
+  console.log(`Will append these lines to ${p}:`);
+  console.log("---");
+  console.log(block);
+  console.log("---");
 
   writeWithPrivilege(p, newContent);
   return true;
