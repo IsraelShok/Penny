@@ -9,6 +9,12 @@ export interface ExtractedRow {
 }
 
 export const MAX_TEXT_IMPORT = 20_000;
+
+/** The instructions for the model that reads a statement (pasted text, a PDF's text or an image). */
+export const EXTRACT_SYSTEM = `You read a bank or card statement, a receipt, or any pasted text, and list the money movements in it.
+Reply with ONLY a JSON array, no prose. Each item: {"date":"YYYY-MM-DD","description":"merchant or payee as written","amount":number,"kind":"expense"|"income"}.
+amount is positive; kind says the direction. Dates without a year are in the current year. Skip balances, totals and headers.
+If there are no movements, reply [].`;
 const MAX_ROWS = 500;
 
 /** Keeps the well-formed rows from a model's reply, which may wrap the JSON array in prose or a code fence. */
@@ -43,6 +49,21 @@ export function parseExtractedRows(raw: string): ExtractedRow[] {
     if (out.length >= MAX_ROWS) break;
   }
   return out;
+}
+
+/** The image type from the file's first bytes (names and browser types lie), or null when it is not an image a model reads. */
+export function sniffImageType(
+  b: Uint8Array,
+): "image/jpeg" | "image/png" | "image/gif" | "image/webp" | null {
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return "image/png";
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return "image/gif";
+  if (
+    String.fromCharCode(...b.slice(0, 4)) === "RIFF" &&
+    String.fromCharCode(...b.slice(8, 12)) === "WEBP"
+  )
+    return "image/webp";
+  return null;
 }
 
 /** The rows as a pasted sheet: a header the column guesser knows, then one line per row. */

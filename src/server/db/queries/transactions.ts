@@ -1210,15 +1210,16 @@ export function insertFileImport(
   rows: { date: string; description: string; amount: number; seq: number }[],
   /** Card statements carry refunds as positive amounts, which must stay expenses (not income). */
   source: "bank" | "card" = "bank",
+  fileName: string | null = null,
 ): { batchId: number; added: number } {
   const db = getDb();
   return db.transaction(() => {
     const runId = Number(
       db
         .prepare(
-          "INSERT INTO sync_runs (workspace_id, provider, started_at, completed_at, status, scrape_from_date) VALUES (?, 'file', '1970-01-01', '1970-01-01', 'completed', '1970-01-01')",
+          "INSERT INTO sync_runs (workspace_id, provider, started_at, completed_at, status, scrape_from_date, file_name) VALUES (?, 'file', '1970-01-01', '1970-01-01', 'completed', '1970-01-01', ?)",
         )
-        .run(workspaceId).lastInsertRowid,
+        .run(workspaceId, fileName).lastInsertRowid,
     );
     const stmt = db.prepare(
       `INSERT INTO transactions (workspace_id, account_number, date, processed_date, original_amount, original_currency,
@@ -1302,6 +1303,25 @@ export function deleteFileImport(workspaceId: number, batchId: number): number {
     );
     return n;
   })();
+}
+
+/** Past statement imports, newest first, for the import history list. Undo is deleteFileImport. */
+export function listFileImports(workspaceId: number, limit = 50) {
+  return getDb()
+    .prepare(
+      `SELECT r.id, r.created_at AS createdAt, r.file_name AS fileName,
+         MIN(t.account_number) AS account, COUNT(t.id) AS rows
+       FROM sync_runs r JOIN transactions t ON t.sync_run_id = r.id AND t.provider = 'file' AND t.workspace_id = r.workspace_id
+       WHERE r.workspace_id = ? AND r.provider = 'file'
+       GROUP BY r.id ORDER BY r.id DESC LIMIT ?`,
+    )
+    .all(workspaceId, limit) as {
+    id: number;
+    createdAt: string;
+    fileName: string | null;
+    account: string;
+    rows: number;
+  }[];
 }
 
 // ---- Settle-up and per-child -----------------------------------------------

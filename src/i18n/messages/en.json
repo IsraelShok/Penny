@@ -3019,7 +3019,12 @@
     "save": "Save {count} transactions",
     "saved": "Saved {added} transactions · {duplicates} duplicates skipped · {review} awaiting review",
     "saveFailed": "Saving failed. Try again.",
-    "undo": "Undo"
+    "undo": "Undo",
+    "docRead": "Read a PDF or image",
+    "docHint": "A PDF statement or a screenshot of one. The PDF's text is read on this computer and sent to your AI provider.",
+    "docNeedsVision": "Reading images needs a vision-capable AI provider (Claude). A PDF works with any provider.",
+    "docUnsupported": "Choose a PDF or an image (PNG, JPG, WebP).",
+    "docNoText": "No text in this PDF — it is probably a scan. Try a screenshot of it with a vision-capable provider."
   },
   "fileImport": {
     "title": "Import a bank or card statement",
@@ -3113,9 +3118,16 @@
     "dateMdy": "Month/day/year",
     "skipped": "{count} rows skipped — no date, description or amount",
     "savedCategorized": "Saved {added} transactions · {categorized} categorised automatically · {review} to review",
-    "pdf": "This is a PDF. Export a CSV or Excel file from the bank — or paste the table into Excel and save it as xlsx.",
+    "pdf": "This is a PDF. Use “Read a PDF or image” in the smart sheet below, or export a CSV or Excel file from the bank.",
     "tooLarge": "This file is too large (over 25MB). Try exporting a shorter period.",
-    "emptyFile": "The file is empty."
+    "emptyFile": "The file is empty.",
+    "profileApplied": "Using the column layout you saved for this file type.",
+    "profileReset": "Forget this layout",
+    "historyTitle": "Import history",
+    "historyEmpty": "No imports yet.",
+    "historyRow": "{date} · {account} · {rows} rows",
+    "historyUndo": "Undo this import",
+    "historyUndone": "Removed {count} rows."
   },
   "ask": {
     "title": "Ask your money",
