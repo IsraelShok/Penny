@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // The empty test install would otherwise start at first-run onboarding.
 test.beforeAll(async ({ playwright }) => {
-  const base = "http://127.0.0.1:3100"; // playwright.config.ts PORT; the API wants a same-origin header
+  const base = `http://127.0.0.1:${process.env.PENNY_E2E_PORT ?? 3100}`; // playwright.config.ts PORT; the API wants a same-origin header
   const api = await playwright.request.newContext({
     baseURL: base,
     extraHTTPHeaders: { origin: base },

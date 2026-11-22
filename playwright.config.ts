@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 3100;
+// PENNY_E2E_PORT: run beside another checkout's test server.
+const PORT = Number(process.env.PENNY_E2E_PORT ?? 3100);
 
 // Runs against a production server with its own empty data folder, so tests never touch your real database.
 export default defineConfig({

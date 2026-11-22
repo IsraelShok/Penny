@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // Fullstack security checks against the real production server: the headers the browser
 // actually receives, the proxy's CSRF and cross-site rules, and the contract that a bad
 // request is a 4xx rather than a 500. No state is changed, so these can run in any order.
-const ORIGIN = "http://127.0.0.1:3100";
+const ORIGIN = `http://127.0.0.1:${process.env.PENNY_E2E_PORT ?? 3100}`;
 
 test.describe("security over real HTTP", () => {
   test("ships the hardened headers on pages and on API responses", async ({ request }) => {

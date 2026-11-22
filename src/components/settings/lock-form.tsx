@@ -5,9 +5,10 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { unlockWithPasskey } from "@/lib/passkey-client";
 
 /** The one field on the lock screen. A wrong try waits longer each time (the server enforces it). */
-export function LockForm({ next }: { next: string }) {
+export function LockForm({ next, hasPasskey = false }: { next: string; hasPasskey?: boolean }) {
   const t = useTranslations("lock");
   const [secret, setSecret] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +54,35 @@ export function LockForm({ next }: { next: string }) {
       <Button type="submit" className="w-full" disabled={busy || !secret}>
         {t("submit")}
       </Button>
+      {hasPasskey && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              await unlockWithPasskey();
+              return window.location.assign(next);
+            } catch (err) {
+              const e = err as Error & { retryAfter?: number };
+              const key =
+                e.message === "wait"
+                  ? "wait"
+                  : e.message === "no_prf"
+                    ? "noPrf"
+                    : e.name === "NotAllowedError"
+                      ? "cancelled"
+                      : "passkeyWrong";
+              setError(t(key, { seconds: e.retryAfter ?? 1 }));
+            }
+            setBusy(false);
+          }}
+        >
+          {t("passkey")}
+        </Button>
+      )}
     </form>
   );
 }

@@ -132,6 +132,9 @@ async function runScrape(
   if (pennyEnv("DISABLE_CHROMIUM_SANDBOX") === "1") {
     chromiumArgs.push("--no-sandbox");
   }
+  // Egress allowlist (docker-compose.egress.yml): the browser reaches the internet only through the proxy.
+  const proxy = process.env.HTTPS_PROXY ?? process.env.https_proxy;
+  if (proxy) chromiumArgs.push(`--proxy-server=${proxy}`);
 
   const forkCompany = !usesScraperFork(provider)
     ? null

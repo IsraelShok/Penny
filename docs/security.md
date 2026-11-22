@@ -31,7 +31,29 @@ HttpOnly, SameSite=Strict, Path=/ cookie (Secure over https), kept only in serve
 expiry of 5, 15 (default) or 60 minutes that each request refreshes. A restart ends every session.
 Failed unlocks back off exponentially (1s, 2s, 4s ... up to 15 min, in memory). Changing or turning off
 the lock needs the current passphrase. "נעילה עכשיו" in the sidebar footer ends the session at once.
-Trade-offs: a forgotten passphrase cannot be recovered (only a full wipe); the lock is per server, not
+
+**Recovery code.** Turning the lock on shows a 25-character recovery code once (Crockford base32, 125
+bits). It is another wrap of the data key (AES-256-GCM under HKDF-SHA256 of the code, fresh salt); only
+the wrap is stored, never the code. It works wherever the passphrase does (lock screen, change, turn off),
+so a forgotten passphrase is reset with it. "New recovery code" (needs the current passphrase) replaces
+the wrap, which cancels the old code. Wrong codes count toward the same back-off.
+
+**Passkey unlock (WebAuthn + PRF).** With the lock on, Settings can register one or more passkeys after
+the current passphrase is checked. The RP id is the host in use (`localhost`, `penny.localhost`); a
+passkey works only on the host it was made on. WebAuthn needs a secure context and a domain name, so the
+option is hidden, with the reason, on `127.0.0.1` and on plain-http LAN addresses. Each passkey must
+support the PRF extension: its PRF output on a random per-passkey input is the HKDF input for a
+key-encryption key, and the data key wrapped under it is stored in `.app-lock.json` beside the
+passphrase wrap (public key, counter, RP id, PRF input, wrap; no key in the clear). Browsers that report
+no PRF support are not offered registration; an authenticator without PRF is refused at registration and
+nothing is saved. Registration verifies the attestation (none) and a follow-up assertion that yields the
+PRF output. Unlock: the server issues a single-use challenge (5 min), verifies the assertion with
+`@simplewebauthn/server` (challenge, origin, RP id, user verification, signature, counter must not go
+back), then unwraps with the PRF output; a wrong output fails the GCM tag, so the browser cannot invent
+one. Failures share the passphrase back-off. Changing the passphrase keeps passkey and recovery wraps
+(same data key); removing a passkey drops its wrap; turning the lock off shreds the whole file with
+every wrap in it. The PRF output passes through the browser and the server's memory, like the passphrase.
+Trade-offs: the lock is per server, not
 per browser; an in-page fetch after idle expiry gets 401 until the next navigation shows the lock screen.
 A LAN self-hoster who adds a host to `PENNY_ALLOWED_HOSTS` should turn the lock on. Phone access
 (Settings -> Privacy & security) needs the lock by design and is plain HTTP: the PIN, the login and
@@ -149,6 +171,28 @@ any new critical advisory (`npm run security:audit:gate`).
 `src/server/update/check.ts` calls `api.github.com` for the latest commit on the branch. It sends no
 user data; GitHub sees the IP and a request per check. Settings > Privacy has a switch that turns it off (banner,
 bot notice and the Windows self-update). **Fixed.**
+
+## 12a. Docker egress allowlist (optional, off by default)
+
+`docker-compose.egress.yml` puts the app container on an internal-only network: it has no route and no
+DNS to the internet. Its only way out is the `egress` container (tinyproxy, `docker/egress/`), which
+allows CONNECT to port 443 only for the domains in `docker/egress/allowlist.txt` (a domain admits its
+subdomains): the banks, card companies and pension funds the scrapers use, plus `api.github.com` for the
+update check. Everything else gets 403 from the proxy, and anything that ignores the proxy fails closed.
+The egress container also publishes the app's port on `127.0.0.1` (an internal network cannot).
+Node's `fetch`/`http(s)` use the proxy via `HTTP(S)_PROXY` + `NODE_USE_ENV_PROXY=1`; the bank scraper's
+Chromium gets `--proxy-server`, and Chromium launched by the pension scraper reads the same variables.
+
+    docker compose -f docker-compose.yml -f docker-compose.egress.yml up -d --build
+
+**Adding a domain:** add a line to `docker/egress/allowlist.txt` (for example your AI provider's API
+host, or the optional market-data hosts listed there commented out), then
+`docker compose -f docker-compose.yml -f docker-compose.egress.yml restart egress`. Or set
+`PENNY_EGRESS_EXTRA=host1,host2` in `.env` and run the `up -d` command again. Refused hosts show in
+`docker compose ... logs egress` as "Proxying refused on filtered domain". Features whose host is not
+listed (market prices, public datasets, an AI provider) fail until it is added.
+Verified with `docker compose`: an allowed host (api.github.com, a bank) answers through the proxy; a
+host not listed (example.com, a look-alike `evil<bank>.co.il`) is refused; a direct connection has no DNS.
 
 ## 13. Desktop self-update
 

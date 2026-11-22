@@ -1,0 +1,47 @@
+# Hosts the app container may reach, one per line: a domain covers its subdomains.
+# Lines starting with # are ignored. Restart the egress service after editing:
+#   docker compose -f docker-compose.yml -f docker-compose.egress.yml restart egress
+# Add a host for one run without editing: PENNY_EGRESS_EXTRA=host1,host2 in .env.
+
+# Banks
+bankhapoalim.co.il
+bankleumi.co.il
+leumi.co.il
+discountbank.co.il
+telebank.co.il
+mercantile.co.il
+mizrahi-tefahot.co.il
+fibi.co.il
+bankmassad.co.il
+bankotsar.co.il
+pagi.co.il
+unionbank.co.il
+yahav.co.il
+tfd-bank.com
+onezerobank.com
+pepper.co.il
+payboxapp.com
+behatsdaa.org.il
+hist.org.il
+
+# Credit cards
+isracard.co.il
+americanexpress.co.il
+cal-online.co.il
+max.co.il
+
+# Pension and provident funds
+migdal.co.il
+clalbit.co.il
+harel-group.co.il
+menoramivt.co.il
+meitav.co.il
+
+# Update check (only whether a newer release exists)
+api.github.com
+
+# Optional, off by default. Uncomment for the features that need them:
+# query1.finance.yahoo.com   # market prices
+# data.gov.il                # public datasets
+# api.cbs.gov.il             # consumer price index
+# Your AI provider's API host: add it here or in PENNY_EGRESS_EXTRA.
