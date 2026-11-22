@@ -98,3 +98,23 @@ export function parseBankSms(raw: string, today: string): CapturedCharge | null 
     ...(last4 ? { last4 } : {}),
   };
 }
+
+/**
+ * At most `limit` adds per device in any `windowMs`: a leaked key can't flood the ledger before it is revoked.
+ * `hits` is the caller's per-device memory (a restart forgets it, which only loosens the limit once).
+ */
+export function underRateLimit(
+  hits: Map<number, number[]>,
+  device: number,
+  now: number,
+  limit = 20,
+  windowMs = 60_000,
+): boolean {
+  const recent = (hits.get(device) ?? []).filter((t) => now - t < windowMs);
+  if (recent.length >= limit) {
+    hits.set(device, recent);
+    return false;
+  }
+  hits.set(device, [...recent, now]);
+  return true;
+}

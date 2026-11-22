@@ -7,9 +7,11 @@ import { getAppSettings } from "@/server/db/queries/settings";
 import { EditError } from "@/server/db/queries/transaction-edits";
 import { createManualTransaction } from "@/server/db/queries/manual-transactions";
 import { categorizeLocally } from "@/server/sync/categorize-local";
-import { quickAddInput } from "@/lib/quick-add";
+import { quickAddInput, underRateLimit } from "@/lib/quick-add";
 
 export const dynamic = "force-dynamic";
+
+const hits = new Map<number, number[]>();
 
 /**
  * Quick-add from a phone automation. The proxy lets this one path skip the browser session and
@@ -19,6 +21,8 @@ export async function POST(request: Request) {
   if (isKeyLocked()) return NextResponse.json({ error: "locked" }, { status: 423 });
   const device = verifyDeviceToken(getDb(), request.headers.get("authorization"));
   if (!device) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!underRateLimit(hits, device.id, Date.now()))
+    return NextResponse.json({ error: "too_many" }, { status: 429 });
   const ws = device.workspaceId;
   const body = await request.json().catch(() => null);
   try {

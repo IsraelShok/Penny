@@ -117,4 +117,54 @@ describe("captured charges", () => {
     expect(row(b)).toBeDefined();
     expect(row(twin)).toBeDefined();
   });
+
+  it("carries tags, owner, split and shares from the texted charge to the bank row", () => {
+    const { db, ws, bank, row, run } = fixture();
+    const cats = (
+      db
+        .prepare("SELECT id FROM categories WHERE workspace_id=? AND kind='expense' LIMIT 2")
+        .all(ws) as {
+        id: number;
+      }[]
+    ).map((c) => c.id);
+    const t = createCapturedCharge(db, ws, {
+      amount: 100,
+      description: "x",
+      date: "2026-11-20",
+      last4: "1234",
+    });
+    db.prepare("UPDATE transactions SET owner='dana' WHERE id=?").run(t);
+    db.prepare(
+      "INSERT INTO transaction_tags (workspace_id,transaction_id,tag) VALUES (?,?,'trip')",
+    ).run(ws, t);
+    db.prepare("INSERT INTO transaction_allocations VALUES (?,0,?,6000),(?,1,?,4000)").run(
+      t,
+      cats[0],
+      t,
+      cats[1],
+    );
+    const twin = bank("1234", "2026-11-21", 100);
+    expect(matchCapturedCharges(db, ws, run())).toBe(1);
+    expect(row(t)).toBeUndefined();
+    expect(row(twin)?.owner).toBe("dana");
+    expect(db.prepare("SELECT tag FROM transaction_tags WHERE transaction_id=?").all(twin)).toEqual(
+      [{ tag: "trip" }],
+    );
+    expect(
+      db
+        .prepare(
+          "SELECT amount_cents AS c FROM transaction_allocations WHERE transaction_id=? ORDER BY position",
+        )
+        .all(twin),
+    ).toEqual([{ c: 6000 }, { c: 4000 }]);
+  });
+});
+
+it("quick-add allows 20 adds a minute per device, then refuses until the window passes", async () => {
+  const { underRateLimit } = await import("@/lib/quick-add");
+  const hits = new Map<number, number[]>();
+  for (let i = 0; i < 20; i++) expect(underRateLimit(hits, 1, 1000 + i)).toBe(true);
+  expect(underRateLimit(hits, 1, 1500)).toBe(false);
+  expect(underRateLimit(hits, 2, 1500)).toBe(true); // other devices are not affected
+  expect(underRateLimit(hits, 1, 61_100)).toBe(true);
 });
