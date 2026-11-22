@@ -353,9 +353,10 @@ export function createCapturedCharge(
 /**
  * After a sync: each captured charge that now has its bank twin (same amount, same card when known,
  * dated up to a week later) is folded into it, so the expense counts once. The bank row keeps the
- * captured category and note when it has none of its own.
+ * captured category and note when it has none of its own. Only rows this sync run added can be a
+ * twin: an older row is another charge, or a twin that already absorbed its own text.
  */
-export function matchCapturedCharges(db: Database.Database, ws: number): number {
+export function matchCapturedCharges(db: Database.Database, ws: number, syncRunId: number): number {
   const captured = db
     .prepare(
       `SELECT id, provider, account_number AS account, date, ABS(charged_amount) AS amount, category_id AS categoryId, category_source AS categorySource, memo
@@ -374,7 +375,7 @@ export function matchCapturedCharges(db: Database.Database, ws: number): number 
   if (captured.length === 0) return 0;
   const twin = db.prepare(
     `SELECT id FROM transactions
-     WHERE workspace_id=? AND provider NOT IN ('cash','manual') AND kind='expense'
+     WHERE workspace_id=? AND sync_run_id=? AND provider NOT IN ('cash','manual') AND kind='expense'
        AND ABS(ABS(charged_amount) - ?) < 0.005
        AND substr(date,1,10) BETWEEN date(?, '-1 day') AND date(?, '+7 day')
        AND (? OR account_number = ?)
@@ -386,6 +387,7 @@ export function matchCapturedCharges(db: Database.Database, ws: number): number 
   for (const c of captured) {
     const bank = twin.get(
       ws,
+      syncRunId,
       c.amount,
       c.date,
       c.date,

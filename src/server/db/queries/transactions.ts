@@ -982,7 +982,7 @@ export function saveSyncTransactions(
   return db.transaction(() => {
     const result = insertTransactions(workspaceId, transactions, provider, credentialId, syncRunId);
     // A charge captured from a bank text folds into its bank twin here, so it never counts twice.
-    matchCapturedCharges(db, workspaceId);
+    matchCapturedCharges(db, workspaceId, syncRunId);
     const accounts = [...new Set(scrapedAccounts)];
     if (accounts.length === 0) return { ...result, prunedPending: 0 };
     const keep = [...new Set(transactions.filter((t) => t.status === "pending").map(dedupHashFor))];

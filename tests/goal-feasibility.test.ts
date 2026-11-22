@@ -48,4 +48,12 @@ describe("goalsFit", () => {
     const late = { id: 5, targetAmount: 1000, savedAmount: 0, targetDate: "2025-10" };
     expect(goalsFit([late], 1000, today)[0]).toMatchObject({ reach: "2026-02", slipMonths: 4 });
   });
+
+  it("two goals on the same date are funded in creation order, and the second only gets what is left", () => {
+    const a = { id: 7, targetAmount: 6000, savedAmount: 0, targetDate: "2026-07" };
+    const b = { ...a, id: 3 };
+    const [first, second] = goalsFit([a, b], 1500, today);
+    expect([first.id, first.allocated, first.slipMonths]).toEqual([3, 1000, 0]);
+    expect([second.id, second.allocated, second.reach]).toEqual([7, 500, "2027-01"]);
+  });
 });
