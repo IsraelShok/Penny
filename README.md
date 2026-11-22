@@ -15,6 +15,8 @@
 
 [הורדה](#התקנה) · [דמו לחיץ](https://sergey-bar.github.io/Penny/demo/) · [מה חדש](#מה-חדש-ב-020) · [למי זה](#למי-זה-מתאים) · [יכולות](#יכולות) · [איך זה עובד](#איך-זה-עובד) · [אבטחה](#אבטחה-במבט-אחד) · [תרומה לפרויקט](#תרומה-לפרויקט) · [אתר](https://sergey-bar.github.io/Penny/) · [English](README.en.md)
 
+**דמו חי** (משק בית מומצא, מתאפס לבד, שום דבר לא יוצא ממנו): <https://penny-finance-demo.vercel.app>
+
 **הורדה:** [![Windows](https://img.shields.io/badge/Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![macOS](https://img.shields.io/badge/macOS-111111?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#docker)
 
 ![לוח הבקרה של Penny עם משק בית לדוגמה](website/demo/he/home.webp)

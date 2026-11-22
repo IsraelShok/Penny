@@ -13,6 +13,8 @@ Your banks, your budget and your future in one place, on your own computer.
 
 [עברית](README.md) · [Download](#install) · [Clickable demo](https://sergey-bar.github.io/Penny/en/demo/) · [What's new](#whats-new-in-020) · [Who it's for](#who-its-for) · [Features](#features) · [How it works](#how-it-works) · [Security](#security-at-a-glance) · [Contributing](#contributing) · [Website](https://sergey-bar.github.io/Penny/en/)
 
+**Live demo** (made-up household, resets itself, nothing leaves it): <https://penny-finance-demo.vercel.app>
+
 **Download:** [![Windows](https://img.shields.io/badge/Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![macOS](https://img.shields.io/badge/macOS-111111?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Sergey-Bar/Penny/releases/latest) [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#docker)
 
 ![Penny's dashboard with a sample household](website/demo/en/home.webp)
