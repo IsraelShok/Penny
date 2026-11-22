@@ -1135,7 +1135,22 @@
       "wipeTitle": "Delete all data",
       "wipeDescription": "Deletes everything: transactions, bank connections and logins, settings, AI keys, the bot, the encryption key and logs. The app returns to a fresh install. This cannot be undone.",
       "wipeConfirm": "To confirm, type \"{word}\"",
-      "wipeCta": "Delete all data"
+      "wipeCta": "Delete all data",
+      "lockError_no_prf": "This browser or security key doesn't support the PRF extension, so it can't hold the encryption key. Nothing was saved; try a different passkey or browser.",
+      "lockError_cancelled": "Cancelled.",
+      "lockError_passkey_failed": "The passkey couldn't be verified. Nothing was saved.",
+      "recoveryNew": "New recovery code",
+      "recoveryShown": "Your recovery code. It's shown only now:",
+      "recoveryHint": "Write it down and keep it offline. It unlocks the app like the passphrase and can set a new one. Making a new code cancels this one.",
+      "passkeyTitle": "Passkeys",
+      "passkeyHint": "Unlock with a fingerprint, face or security key. Enter the current passphrase above to add one. Works only on the address you add it on.",
+      "passkeyAdd": "Add passkey",
+      "passkeyRemove": "Remove",
+      "passkeyItem": "Passkey {n} ({host})",
+      "passkeyUnavailable_insecure": "Passkeys need a secure connection. Open the app on this computer at http://localhost to add one; they can't be used over the home network.",
+      "passkeyUnavailable_ip": "Passkeys don't work on a numeric address. Open the app at http://localhost (same port) to add one.",
+      "passkeyUnavailable_unsupported": "This browser doesn't support passkeys.",
+      "passkeyUnavailable_noprf": "This browser can't derive an encryption key from a passkey (no PRF support), so passkey unlock isn't available here."
     },
     "openBanking": {
       "title": "Connect the bank's API",
@@ -4060,10 +4075,14 @@
   },
   "lock": {
     "title": "App locked",
-    "label": "Passphrase or PIN",
+    "label": "Passphrase, PIN or recovery code",
     "submit": "Unlock",
     "wrong": "Not right. You can try again in {seconds} seconds.",
-    "wait": "Too many tries. Try again in {seconds} seconds."
+    "wait": "Too many tries. Try again in {seconds} seconds.",
+    "passkey": "Unlock with passkey",
+    "passkeyWrong": "That passkey didn't unlock it. Try again, or use the passphrase.",
+    "noPrf": "This passkey can't unlock the app here (no PRF support). Use the passphrase.",
+    "cancelled": "Cancelled."
   },
   "allocation": {
     "title": "Automatic 50/30/20 split",
