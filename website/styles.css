@@ -253,3 +253,16 @@ footer a { color: var(--muted); }
 .more-links a:hover { color: var(--text); }
 :lang(en) body, body:lang(en) { font-family: "Inter", "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif; }
 pre:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Screens as tabs: pick a topic, see its screen, open it in the live demo. */
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 8px; }
+.tabs [role="tab"] { font: inherit; font-weight: 600; min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--muted); cursor: pointer; }
+.tabs [role="tab"]:hover { color: var(--text); }
+.tabs [role="tab"][aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.panel[hidden] { display: none; }
+.panel { margin-top: 24px; }
+.open-live { margin-top: 18px; min-height: 44px; }
+/* The live demo band before installing. */
+.live { display: flex; align-items: center; justify-content: space-between; gap: 24px 40px; flex-wrap: wrap; padding-block: 56px; }
+.live h2 { margin: 0 0 8px; font-size: clamp(1.5rem, 3vw, 2rem); letter-spacing: -0.01em; }
+.live p { margin: 0; color: var(--muted); max-width: 46rem; }
