@@ -2,6 +2,22 @@
 
 All notable changes to Penny. Versions follow [Semantic Versioning](https://semver.org/); dates are Israel time.
 
+## [0.4.0] - 2026-11-22
+
+### Changed
+
+- **Docker keeps your data in a `penny-data` volume.** The start and update scripts move an existing install's data
+  into it once: they stop the app, copy everything, start the new container, and remove the old volume only after
+  the app comes up healthy. If the copy fails, nothing changes.
+- **A public live demo.** On Vercel, Penny always runs as the demo with a made-up household, resets itself, reaches
+  no bank, AI provider or Telegram, and refuses anything that would lock, wipe or take it over.
+- Compatibility paths for installs older than 0.1.0 are removed.
+
+### Website
+
+- Explains what Penny does and how deep it goes, compares it with the money apps available in Israel (checked
+  facts with sources), lists what isn't good enough yet, and uses the app's own colours and type. WCAG 2.2 AA.
+
 ## [0.3.0] - 2026-11-22
 
 Three database migrations (078–080). Your data is upgraded in place on first start, with a backup first.
