@@ -127,7 +127,14 @@ export interface ImportProfile {
 
 /** Same header cells (ignoring case, spacing and trailing empty cells) = same file layout. "" when there is no header. */
 export function headerFingerprint(header: string[]): string {
-  const cells = header.map((c) => c.replace(/\s+/g, " ").trim().toLowerCase());
+  // Direction marks (RLM/LRM, embeddings) are invisible and come and go between exports of one layout.
+  const cells = header.map((c) =>
+    c
+      .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase(),
+  );
   while (cells.length && !cells[cells.length - 1]) cells.pop();
   return cells.some(Boolean) ? cells.join("|") : "";
 }
