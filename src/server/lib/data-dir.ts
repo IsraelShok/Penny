@@ -7,7 +7,10 @@ import { pennyEnv } from "@/lib/legacy-names";
 /** Where the database and the encryption key live: PENNY_DATA_DIR, or ./data. */
 export function dataDir(): string {
   const dir = pennyEnv("DATA_DIR");
-  return dir ? path.resolve(dir) : path.join(process.cwd(), "data");
+  if (dir) return path.resolve(dir);
+  // Vercel: only /tmp is writable. Each new instance seeds a fresh demo household there.
+  if (process.env.VERCEL) return "/tmp/penny-demo";
+  return path.join(process.cwd(), "data");
 }
 
 /** The new name unless only the old one exists, so existing data keeps being found. */

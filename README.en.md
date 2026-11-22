@@ -238,6 +238,15 @@ The first launch of the desktop app shows an unsigned-binary warning, because it
 
 Then open **`http://penny.localhost:41234`** and bookmark it.
 
+### Public demo on Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSergey-Bar%2FPenny)
+
+Deploys the full app with a made-up household, so anyone can click through every screen. On Vercel Penny always
+runs as the demo: the data lives in `/tmp` and starts fresh on each new instance, nothing reaches a bank, an AI
+provider or Telegram, and nothing can lock, wipe or take over the shared demo. It answers only on the deployment's
+own Vercel addresses; add a custom domain to `PENNY_ALLOWED_HOSTS`. Not for real data.
+
 ## Importing statement files
 
 For accounts Penny can't sync, or months the bank no longer shows:

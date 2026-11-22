@@ -8,7 +8,19 @@ const fromEnv = (pennyEnv("ALLOWED_HOSTS") ?? "")
   .split(",")
   .map((h) => h.trim().toLowerCase())
   .filter(Boolean)
-  .map((h) => (h.includes(":") && !h.startsWith("[") ? `[${h}]` : h));
+  .map((h) => (h.includes(":") && !h.startsWith("[") ? `[${h}]` : h))
+  // The public demo on Vercel answers on the deployment's own names (always demo mode there).
+  .concat(
+    process.env.VERCEL
+      ? [
+          process.env.VERCEL_URL,
+          process.env.VERCEL_BRANCH_URL,
+          process.env.VERCEL_PROJECT_PRODUCTION_URL,
+        ]
+          .filter((h): h is string => !!h)
+          .map((h) => h.toLowerCase())
+      : [],
+  );
 
 /** Private LAN names only (10/8, 172.16/12, 192.168/16, fe80::/10, *.local). Never public addresses. */
 export function isPrivateLanName(name: string): boolean {

@@ -9,6 +9,7 @@ import {
 import { isAllowedHost } from "@/lib/host-guard";
 import { isLockEnabled, SESSION_COOKIE, touchSession } from "@/server/lib/app-lock";
 import { isLanEnabled } from "@/server/lib/lan-access";
+import { DEMO_BLOCKED_MESSAGE, isHostedDemo } from "@/server/demo/mode";
 
 /**
  * Same-origin enforcement for mutating API requests.
@@ -25,12 +26,22 @@ const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const ORIGIN_CHECKED_GETS = new Set(["/api/ai/ollama/models"]);
 const QUICK_ADD = "/api/quick-add";
 
+const HOSTED_DEMO_BLOCKED =
+  /^\/api\/(lock|data|backup|access|profiles|workspaces|device-tokens|quick-add|lan|import\/folder|legacy|telegram|setup\/(bank|ai))(\/|$)/;
+
 export function proxy(request: NextRequest) {
   // Every request, page or API, must be addressed to localhost (blocks DNS rebinding).
   // Phone access admits private LAN hosts, but only while the app lock guards every request.
   if (!isAllowedHost(request.headers.get("host"), undefined, isLanEnabled() && isLockEnabled())) {
     return new NextResponse("Forbidden: unexpected host", { status: 403 });
   }
+  // The public demo is shared by every visitor: nothing may lock it, wipe it or change who can use it.
+  if (
+    isHostedDemo() &&
+    request.method !== "GET" &&
+    HOSTED_DEMO_BLOCKED.test(request.nextUrl.pathname)
+  )
+    return NextResponse.json({ error: DEMO_BLOCKED_MESSAGE }, { status: 403 });
 
   // Phone quick-add: a bearer device token (checked by the route) replaces the session cookie and Origin.
   // A browser cannot attach that header cross-origin without a CORS preflight, which is never answered.
