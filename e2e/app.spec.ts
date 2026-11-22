@@ -190,6 +190,20 @@ test.describe("money features", () => {
     await expect(sheet).toBeVisible();
   });
 
+  test("clean-up sheet: add a vague description, remove it, undo", async ({ page }) => {
+    await page.goto("/transactions");
+    await page.getByRole("button", { name: "ניקוי תנועות" }).first().click();
+    const sheet = page.getByRole("dialog");
+    await sheet.getByRole("radio", { name: "תיאורים כלליים" }).click();
+    await sheet.getByLabel("תיאור כללי").fill("משיכת מזומן");
+    await sheet.getByRole("button", { name: "הוספה" }).click();
+    await expect(sheet.getByText("משיכת מזומן")).toBeVisible();
+    await sheet.getByRole("button", { name: "הסרה" }).click();
+    await expect(sheet.getByText("משיכת מזומן")).toHaveCount(0);
+    await page.getByRole("button", { name: "ביטול" }).click();
+    await expect(sheet.getByText("משיכת מזומן")).toBeVisible();
+  });
+
   test("Groups with data fit a phone", async ({ browser, baseURL }) => {
     const phone = await browser.newContext({
       viewport: { width: 375, height: 812 },
