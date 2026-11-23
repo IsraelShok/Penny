@@ -6,6 +6,7 @@ import { getGlobalSetting, setGlobalSetting } from "@/server/db/queries/settings
 import { failInterruptedSyncRuns } from "@/server/db/queries/sync-runs";
 import { redactError } from "@/server/lib/redact";
 import { isKeyLocked } from "@/server/lib/encryption";
+import { isDemoMode } from "@/server/demo/mode";
 import { dueRun, msUntilNextSlot, type ScheduleState } from "@/lib/sync-schedule";
 
 interface SchedulerState {
@@ -79,6 +80,8 @@ export function retryableFailures(summaries: WorkspaceSummary[]): number[] {
 async function tick(): Promise<void> {
   const state = getState();
   if (state.running) return;
+  // The demo household's bank logins are made up: a sync there can only fail and paint every connection as broken.
+  if (isDemoMode()) return;
   const { enabled, time } = readSettings();
   if (!enabled) return;
   // After a restart with the app lock on, bank passwords stay wrapped until someone unlocks once.

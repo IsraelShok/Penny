@@ -149,6 +149,16 @@ describe("scheduler", () => {
     expect(scheduler.getNextRunAt()).not.toBeNull();
   });
 
+  it("never syncs in demo mode", async () => {
+    process.env.PENNY_DEMO = "1";
+    try {
+      await scheduler.runSchedulerTick();
+      expect(runs.calls).toEqual([]);
+    } finally {
+      delete process.env.PENNY_DEMO;
+    }
+  });
+
   it("closes runs that a crash left as running", async () => {
     const { failInterruptedSyncRuns } = await import("@/server/db/queries/sync-runs");
     const ws = (db.getDb().prepare("SELECT id FROM workspaces LIMIT 1").get() as { id: number }).id;
