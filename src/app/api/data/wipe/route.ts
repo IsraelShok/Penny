@@ -1,9 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
-import { checkSecret, endAllSessions, isLockEnabled, shred } from "@/server/lib/app-lock";
+import { endAllSessions, shred } from "@/server/lib/app-lock";
+import { lockReauth } from "@/server/lib/lock-reauth";
 import { keyPath, legacyKeyPath, lockFilePath, setKeyInMemory } from "@/server/lib/encryption";
 import { dataDir } from "@/server/lib/data-dir";
+import { LAN_FLAG } from "@/server/lib/lan-access";
 import { withSession } from "../../lock/session-cookie";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +13,15 @@ export const dynamic = "force-dynamic";
 // The typed confirmation word, in either UI language.
 const WIPE_WORDS = ["מחיקה", "delete"];
 
-/** Deletes everything: the database (credentials, settings, AI keys, Telegram), the key or wrapped key, and logs. Back to first run. */
+// Plain copies of the data that live beside the database: pre-migration and pre-restore snapshots,
+// insurance documents, receipts, and statements waiting in the import folder.
+const WIPED_DIRS = ["backups", "policies", "receipts", "import", "logs"];
+
+/**
+ * Deletes everything: the database (credentials, settings, AI keys, Telegram), the key or wrapped key,
+ * every copy and document in the data folder, and logs. Back to first run. Backup files the user
+ * saved elsewhere are theirs to delete.
+ */
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as {
     confirm?: unknown;
@@ -21,14 +31,8 @@ export async function POST(request: Request) {
   const secret = body?.secret;
   if (typeof confirm !== "string" || !WIPE_WORDS.includes(confirm.trim().toLowerCase()))
     return NextResponse.json({ error: "confirm" }, { status: 400 });
-  if (isLockEnabled()) {
-    const check = await checkSecret(secret);
-    if (!check.ok)
-      return NextResponse.json(
-        { error: check.reason, retryAfter: check.retryAfter },
-        { status: check.reason === "wait" ? 429 : 401 },
-      );
-  }
+  const refused = await lockReauth(secret);
+  if (refused) return refused;
 
   // Stop background work that holds the bot token or would write to the database mid-wipe.
   const bot = globalThis.__pennyBot;
@@ -45,7 +49,21 @@ export async function POST(request: Request) {
     for (const f of fs.readdirSync(dir))
       if (f.endsWith(".log")) fs.rmSync(path.join(dir, f), { force: true });
   }
-  fs.rmSync(path.join(dir, "logs"), { recursive: true, force: true });
+  for (const d of WIPED_DIRS) fs.rmSync(path.join(dir, d), { recursive: true, force: true });
+  // Left by older migrations next to the database: full copies and a report naming accounts.
+  if (fs.existsSync(dir)) {
+    for (const f of fs.readdirSync(dir))
+      if (f.endsWith(".bak") || f === "profiles-migration-report.json" || f === LAN_FLAG)
+        fs.rmSync(path.join(dir, f), { force: true });
+  }
+  // The desktop shell keeps the server output one folder up and holds it open, so it is emptied, not removed.
+  if (process.env.PENNY_INSTALL === "desktop") {
+    try {
+      fs.truncateSync(path.join(dir, "..", "server.log"));
+    } catch {
+      // The OS can refuse while the file is open; nothing more to do from here.
+    }
+  }
   setKeyInMemory(undefined);
   endAllSessions();
 

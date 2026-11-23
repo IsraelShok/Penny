@@ -12,8 +12,8 @@ export function backupDir(): string {
 }
 
 /**
- * Copies the database before a migration touches it. WAL contents are checkpointed into the main
- * file first, so the copy is a complete snapshot rather than a half-written one.
+ * Copies the database before a migration touches it. VACUUM INTO writes a consistent snapshot even
+ * while another connection (the MCP reader, a second process) has the file open; a raw file copy does not.
  * Returns the backup path, or null when there is nothing to back up yet.
  */
 export function backupBeforeMigration(db: Database.Database, reason: string): string | null {
@@ -31,10 +31,9 @@ export function backupBeforeMigration(db: Database.Database, reason: string): st
   const dir = backupDir();
   fs.mkdirSync(dir, { recursive: true });
 
-  db.pragma("wal_checkpoint(TRUNCATE)");
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const target = path.join(dir, `penny-${stamp}-${reason}.db`);
-  fs.copyFileSync(dbPath, target);
+  db.prepare("VACUUM INTO ?").run(target);
 
   pruneBackups(dir);
   console.log(`[db] backed up before ${reason}: ${target}`);

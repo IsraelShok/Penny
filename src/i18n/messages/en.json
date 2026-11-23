@@ -962,6 +962,7 @@
       "backupRestored": "Restore finished: {count} transactions",
       "backupListTitle": "Recent backups",
       "backupNone": "No backups yet.",
+      "backupCorrupt": "This backup is damaged and was not restored. Your current data is unchanged.",
       "backupLockOn": "The app lock is on. Turn it off in Privacy settings, restore the backup, then turn the lock on again.",
       "exportOfx": "Export OFX (for other money apps)",
       "diagTitle": "Support file",

@@ -152,7 +152,19 @@ export function backupFileName(now = new Date()): string {
   return `penny-backup-${stamp}.pennybak`;
 }
 
-/** Checkpoints WAL, then encrypts the database file and the key into one buffer. */
+/** A consistent copy of the live database as bytes (VACUUM INTO a temp file, read, delete). */
+function snapshotDatabase(db: Database.Database): Buffer {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "penny-backup-"));
+  const file = path.join(dir, "snapshot.db");
+  try {
+    db.prepare("VACUUM INTO ?").run(file);
+    return fs.readFileSync(file);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** Snapshots the database, then encrypts it and the key into one buffer. */
 export function createBackup(passphrase: string): {
   bytes: Buffer;
   fileName: string;
@@ -160,14 +172,11 @@ export function createBackup(passphrase: string): {
 } {
   if (passphrase.length < MIN_PASSPHRASE) throw new Error("weakPassphrase");
   const db = getDb();
-  db.pragma("wal_checkpoint(TRUNCATE)");
-  const file = dbPath();
-  if (!fs.existsSync(file)) throw new Error("noDatabase");
   const payload: BackupPayload = {
     format: 1,
     createdAt: new Date().toISOString(),
     appVersion: process.env.npm_package_version ?? "1.0.0",
-    database: fs.readFileSync(file).toString("base64"),
+    database: snapshotDatabase(db).toString("base64"),
     // The raw 32-byte key, also when the app lock keeps it only in memory: without it saved logins are unreadable.
     encryptionKey: currentKey()?.toString("base64") ?? null,
     files: collectDataFiles(dataDir()),
@@ -212,7 +221,9 @@ function opensAsPennyDatabase(bytes: Buffer): boolean {
         name: string;
       }[];
       return (
-        tables.some((t) => t.name === "transactions") && tables.some((t) => t.name === "workspaces")
+        tables.some((t) => t.name === "transactions") &&
+        tables.some((t) => t.name === "workspaces") &&
+        probe.pragma("quick_check", { simple: true }) === "ok"
       );
     } finally {
       probe.close();
@@ -249,7 +260,8 @@ export interface RestoreResult {
 
 /**
  * Replaces the live database with a backup, once the passphrase is checked. The current database is
- * copied to data/backups first, so a wrong file is one more restore away from being undone.
+ * copied to data/backups first. If the restored file does not open, migrate and pass an integrity
+ * check, that copy is put back and "corruptRestore" is thrown: a bad backup never costs the data in use.
  */
 export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
   const payload = readBackup(file, passphrase);
@@ -265,9 +277,27 @@ export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
   const db = getDb();
   const preRestoreBackup = backupBeforeMigration(db, "restore");
   const target = dbPath();
-  closeDb();
-  for (const suffix of ["-wal", "-shm"]) fs.rmSync(`${target}${suffix}`, { force: true });
-  fs.writeFileSync(target, database);
+  // Written beside the target first, so a full disk fails here, before the live file is touched.
+  const staged = `${target}.restore-tmp`;
+  fs.writeFileSync(staged, database);
+  const swapIn = (source: string | null) => {
+    closeDb();
+    for (const suffix of ["", "-wal", "-shm"]) fs.rmSync(`${target}${suffix}`, { force: true });
+    if (source) fs.copyFileSync(source, target);
+  };
+  let fresh: Database.Database;
+  try {
+    swapIn(staged);
+    // Opening runs the migrations, so a backup from a newer version or one that fails to migrate is caught here.
+    fresh = getDb();
+    if (fresh.pragma("quick_check", { simple: true }) !== "ok") throw new Error("quick_check");
+  } catch (e) {
+    console.error("[restore] restored database rejected, putting the previous one back:", e);
+    swapIn(preRestoreBackup);
+    throw new Error("corruptRestore");
+  } finally {
+    fs.rmSync(staged, { force: true });
+  }
   // Credentials in the backup were encrypted with this key, so the restored database needs it, stored the way
   // getOrCreateKey reads it (hex text) and loaded into memory now.
   if (key && !isLockEnabled()) {
@@ -282,9 +312,6 @@ export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, Buffer.from(data, "base64"));
   }
-  const fresh = getDb();
-  const check = fresh.pragma("quick_check") as { quick_check: string }[];
-  if (!check.every((row) => row.quick_check === "ok")) throw new Error("corruptRestore");
   requireRelink();
   resetFolderImportDir();
   return { counts: countsOf(fresh), preRestoreBackup, createdAt: payload.createdAt };

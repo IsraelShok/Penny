@@ -33,6 +33,11 @@ file alone cannot decrypt them.
   `scrypt` N=2^17 (about a quarter second per guess per CPU core), which
   puts a brute force in the days-to-weeks range on a desktop, not hours.
   A long passphrase is much stronger than the shortest accepted PIN.
+- A backup file holds the database and the key to the saved logins, under
+  a passphrase the caller picks. With the app lock on, creating or
+  restoring one asks for the lock PIN again, so a borrowed session is not
+  enough. With the lock off, any program running on the machine can ask
+  for one: **on a computer other people use, turn the app lock on.**
 
 The right defense for both is **full-disk encryption on your laptop**
 (FileVault on macOS, BitLocker on Windows, LUKS on Linux). Turn it on.

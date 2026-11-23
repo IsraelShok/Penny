@@ -22,6 +22,20 @@ describe("full wipe", () => {
     encrypt("x");
     setGlobalSetting("telegram_chat_id", "9");
     fs.writeFileSync(path.join(dir, "sync.log"), "log");
+    // Plain copies of the data that sit beside the database.
+    const leftovers = [
+      "backups/penny-old-migration.db",
+      "policies/1/policy.pdf",
+      "receipts/r.jpg",
+      "import/statement.xlsx",
+      "penny.db.2026.before-profiles.bak",
+      "profiles-migration-report.json",
+      "lan-access.json",
+    ];
+    for (const f of leftovers) {
+      fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
+      fs.writeFileSync(path.join(dir, f), "private");
+    }
     const { POST } = await import("@/app/api/data/wipe/route");
 
     expect((await POST(post({ confirm: "nope" }))).status).toBe(400);
@@ -30,6 +44,8 @@ describe("full wipe", () => {
     expect((await POST(post({ confirm: "מחיקה" }))).status).toBe(200);
     expect(fs.existsSync(path.join(dir, ".encryption-key"))).toBe(false);
     expect(fs.existsSync(path.join(dir, "sync.log"))).toBe(false);
+    for (const f of leftovers) expect(fs.existsSync(path.join(dir, f)), f).toBe(false);
+    expect(fs.existsSync(path.join(dir, "backups"))).toBe(false);
     expect(getGlobalSetting("telegram_chat_id")).toBeNull();
     expect(
       (getDb().prepare("SELECT COUNT(*) c FROM categories").get() as { c: number }).c,
