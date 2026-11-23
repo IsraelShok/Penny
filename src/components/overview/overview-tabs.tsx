@@ -29,7 +29,9 @@ export function OverviewTabs() {
   const go = (next: Tab, replace = false) => {
     try {
       localStorage.setItem(KEY, next);
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
     const url = `${pathname}?tab=${next}`;
     if (replace) router.replace(url, { scroll: false });
     else router.push(url, { scroll: false });
@@ -41,7 +43,9 @@ export function OverviewTabs() {
     let saved: string | null = null;
     try {
       saved = localStorage.getItem(KEY);
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
     if (saved && saved !== "period" && TABS.includes(saved as Tab))
       router.replace(`${pathname}?tab=${saved}`, { scroll: false });
   }, [fromUrl, pathname, router]);

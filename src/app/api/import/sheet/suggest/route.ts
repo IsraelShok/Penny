@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { lookupMerchantCategoriesBulk } from "@/server/lib/merchant-memory";
@@ -19,7 +20,7 @@ function namesByIds(workspaceId: number, ids: number[]): Map<number, string> {
  * Suggests a category per row from merchant memory (what the user chose for this merchant before).
  * Never writes anything: the card shows the suggestion as a chip the user accepts.
  */
-export async function POST(request: Request) {
+export const POST = handle("import/sheet/suggest", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = ((await request.json().catch(() => null)) ?? {}) as { rows?: unknown };
   if (!Array.isArray(body.rows) || body.rows.length === 0)
@@ -43,4 +44,4 @@ export async function POST(request: Request) {
     return name ? [{ index, categoryId: match.categoryId, name, kind }] : [];
   });
   return NextResponse.json({ suggestions });
-}
+});

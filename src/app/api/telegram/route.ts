@@ -1,3 +1,5 @@
+import { fetchExternal } from "@/server/lib/fetch-external";
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import {
   clearBot,
@@ -12,7 +14,7 @@ import { demoBlockedResponse } from "@/server/demo/guard";
 export const dynamic = "force-dynamic";
 
 /** Never returns the token itself. */
-export async function GET() {
+export const GET = handle("telegram", async () => {
   const { token, chatId, username, code } = getBotConfig();
   return NextResponse.json({
     connected: !!token,
@@ -21,9 +23,9 @@ export async function GET() {
     code: chatId ? null : code,
     hideAmounts: getHideAmounts(),
   });
-}
+});
 
-export async function POST(request: Request) {
+export const POST = handle("telegram", async (request: Request) => {
   // Verifying a bot calls api.telegram.org; the demo keeps every key and message local.
   const blocked = demoBlockedResponse();
   if (blocked) return blocked;
@@ -32,7 +34,10 @@ export async function POST(request: Request) {
   if (typeof token !== "string" || !/^\d+:[\w-]{30,}$/.test(token.trim())) {
     return NextResponse.json({ error: "invalid_token" }, { status: 400 });
   }
-  const res = await fetch(`https://api.telegram.org/bot${token.trim()}/getMe`).catch(() => null);
+  // Offline or blocked: answered below as a token that could not be checked.
+  const res = await fetchExternal(`https://api.telegram.org/bot${token.trim()}/getMe`).catch(
+    () => null,
+  );
   const me = res?.ok
     ? ((await res.json()) as { result?: { username?: string } }).result
     : undefined;
@@ -40,18 +45,18 @@ export async function POST(request: Request) {
   saveBot(token.trim(), me.username);
   await restartBot();
   return GET();
-}
+});
 
-export async function DELETE() {
+export const DELETE = handle("telegram", async () => {
   clearBot();
   await restartBot();
   return GET();
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = handle("telegram", async (request: Request) => {
   const { hideAmounts } = (await request.json().catch(() => ({}))) as { hideAmounts?: unknown };
   if (typeof hideAmounts !== "boolean")
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   setHideAmounts(hideAmounts);
   return GET();
-}
+});

@@ -1,15 +1,16 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { createManualRecurring, ManualRecurringError } from "@/server/insights/manual-recurring";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
-export async function GET(request: Request) {
+export const GET = handle("recurring/manual", async (request: Request) => {
   return NextResponse.json({
     items: createManualRecurring(getDb(), getWorkspaceIdFromRequest(request)).list(),
   });
-}
+});
 
-export async function POST(request: Request) {
+export const POST = handle("recurring/manual", async (request: Request) => {
   const m = createManualRecurring(getDb(), getWorkspaceIdFromRequest(request));
   const body = (await request.json().catch(() => null)) ?? {};
   try {
@@ -19,4 +20,4 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: e.message }, { status: 400 });
     throw e;
   }
-}
+});

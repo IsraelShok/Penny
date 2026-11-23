@@ -1,5 +1,7 @@
 import "server-only";
 
+import { fetchExternal } from "@/server/lib/fetch-external";
+import { utcDay } from "@/server/lib/date-utils";
 import type { DailyRates } from "@/lib/fx-markup";
 import { isDemoMode } from "@/server/demo/mode";
 
@@ -7,12 +9,10 @@ import { isDemoMode } from "@/server/demo/mode";
 const cache = new Map<string, { day: string; closes: DailyRates[string] }>();
 
 async function fetchDaily(currency: string) {
-  const res = await fetch(
+  const res = await fetchExternal(
     `https://query1.finance.yahoo.com/v8/finance/chart/${currency}ILS=X?range=1y&interval=1d`,
-    {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      signal: AbortSignal.timeout(5000),
-    },
+    { headers: { "User-Agent": "Mozilla/5.0" } },
+    5000,
   );
   if (!res.ok) throw new Error(`Yahoo ${res.status}`);
   const r = (await res.json())?.chart?.result?.[0];
@@ -22,7 +22,7 @@ async function fetchDaily(currency: string) {
   // Bars are stamped at the market's local open, so shift by its offset before taking the calendar day.
   return stamps
     .map((ts, i) => ({
-      date: new Date((ts + offset) * 1000).toISOString().slice(0, 10),
+      date: utcDay(new Date((ts + offset) * 1000)),
       close: closes[i] ?? 0,
     }))
     .filter((c) => c.close > 0);

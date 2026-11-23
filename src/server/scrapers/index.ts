@@ -1,4 +1,5 @@
 import "server-only";
+import { logError } from "@/server/lib/log";
 import { pennyEnv } from "@/lib/legacy-names";
 
 import { CompanyTypes, createScraper } from "israeli-bank-scrapers";
@@ -172,7 +173,7 @@ async function runScrape(
     const errorType = result.errorType ?? "GENERIC";
     const friendly = FRIENDLY_ERRORS[errorType];
     const detail = result.errorMessage ? sanitizeError(new Error(result.errorMessage)) : errorType;
-    console.error(`[scraper] failed (${errorType}):`, detail);
+    logError("scraper", new Error(`failed (${errorType}): ${detail}`), { provider });
     return {
       success: false,
       accounts: [],
@@ -222,7 +223,7 @@ export async function scrapeBank(
       await new Promise((r) => setTimeout(r, backoffMs));
     } catch (error) {
       lastError = error;
-      console.error(`[scraper] unexpected error on attempt ${attempt}:`, sanitizeError(error));
+      logError("scraper", new Error(sanitizeError(error)), { provider, attempt });
       const { retryable } = classifyError(error);
       if (!retryable || attempt === MAX_ATTEMPTS) break;
       const backoffMs = 2000 * attempt;

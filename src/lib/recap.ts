@@ -1,3 +1,4 @@
+import { utcDay } from "./dates";
 /**
  * Monthly and yearly recap: pure, rule-based summaries of spending. A month key is the household
  * month (the range in `periods`), or the calendar month when no ranges are given.
@@ -76,12 +77,8 @@ const daysIn = (month: string) => {
 /** Every YYYY-MM-DD in [from, to]. */
 function days(from: string, to: string) {
   const out: string[] = [];
-  for (
-    let d = new Date(`${from}T00:00:00Z`);
-    d.toISOString().slice(0, 10) <= to;
-    d.setUTCDate(d.getUTCDate() + 1)
-  )
-    out.push(d.toISOString().slice(0, 10));
+  for (let d = new Date(`${from}T00:00:00Z`); utcDay(d) <= to; d.setUTCDate(d.getUTCDate() + 1))
+    out.push(utcDay(d));
   return out;
 }
 

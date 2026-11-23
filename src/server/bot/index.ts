@@ -186,7 +186,9 @@ async function sendBillReminders(): Promise<void> {
   try {
     const raw: unknown = JSON.parse(getGlobalSetting(BILLS_SENT) ?? "[]");
     if (Array.isArray(raw)) sent = raw.filter((k): k is string => typeof k === "string");
-  } catch {}
+  } catch {
+    // Unreadable stored value: start from the default.
+  }
   const { send, keep } = pendingToSend(billReminders(ws, israelToday()), sent);
   // Remember first: a failed send is not retried every 15 minutes into a flood.
   setGlobalSetting(BILLS_SENT, JSON.stringify(keep));

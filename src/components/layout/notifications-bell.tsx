@@ -33,7 +33,9 @@ const parse = (raw: string): string[] => {
 function saveRead(keys: string[]) {
   try {
     localStorage.setItem(KEY, JSON.stringify(keys));
-  } catch {}
+  } catch {
+    // Storage is blocked or full: only a remembered preference is lost.
+  }
   listeners.forEach((l) => l());
 }
 

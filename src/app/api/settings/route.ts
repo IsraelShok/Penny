@@ -1,17 +1,18 @@
+import { handle, domainMessage } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getAppSettings, updateAppSettings } from "@/server/db/queries/settings";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { profileFromRequest } from "@/server/db/queries/profiles";
 import { LOCALE_COOKIE } from "@/i18n/routing";
 
-export async function GET(request: Request) {
+export const GET = handle("settings", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   return NextResponse.json(
     getAppSettings(workspaceId, profileFromRequest(request, workspaceId)?.name),
   );
-}
+});
 
-export async function PUT(request: Request) {
+export const PUT = handle("settings", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object" || Array.isArray(body)) {
@@ -33,7 +34,8 @@ export async function PUT(request: Request) {
     }
     return res;
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to update settings";
+    const message = domainMessage(err);
+    if (message == null) throw err;
     return NextResponse.json({ error: message }, { status: 400 });
   }
-}
+});

@@ -39,7 +39,9 @@ const PROFILE_CHOSEN_KEY = "penny.profileChosen";
 export function markProfileChosen() {
   try {
     sessionStorage.setItem(PROFILE_CHOSEN_KEY, "1");
-  } catch {}
+  } catch {
+    // Storage is blocked or full: only a remembered preference is lost.
+  }
 }
 
 export function profileChosen() {

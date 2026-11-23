@@ -112,13 +112,16 @@ export function RulesView() {
       action: {
         label: t("undo"),
         onClick: () =>
-          createRule({
+          void createRule({
             field: rule.field,
             op: rule.op,
             value: rule.value,
             categoryId: rule.categoryId,
             kind: rule.kind,
-          }).then(refresh),
+          })
+            .then(refresh)
+            // The rule stays deleted: say so instead of leaving the undo looking done.
+            .catch((e: unknown) => toast.error(e instanceof Error ? e.message : String(e))),
       },
     });
   }

@@ -1,3 +1,5 @@
+import { logError } from "@/server/lib/log";
+import { handle } from "@/server/lib/api-error";
 import { ensureOllamaRunning, pullOllamaModel } from "@/server/ai/ollama-manager";
 import { getGlobalSetting } from "@/server/db/queries/settings";
 import { demoBlockedResponse } from "@/server/demo/guard";
@@ -6,7 +8,7 @@ function sseEvent(event: string, data: Record<string, unknown>): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
-export async function POST(request: Request) {
+export const POST = handle("ai/ollama/pull", async (request: Request) => {
   const blocked = demoBlockedResponse();
   if (blocked) return blocked;
 
@@ -66,7 +68,7 @@ export async function POST(request: Request) {
           }
         }
       } catch (err) {
-        console.error("[ollama-pull] error:", err);
+        logError("ai/ollama/pull", err);
         send("error", {
           message: err instanceof Error ? err.message : "Failed to pull model",
         });
@@ -83,4 +85,4 @@ export async function POST(request: Request) {
       Connection: "keep-alive",
     },
   });
-}
+});

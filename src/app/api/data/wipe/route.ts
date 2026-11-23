@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
@@ -22,7 +23,7 @@ const WIPED_DIRS = ["backups", "policies", "receipts", "import", "logs"];
  * every copy and document in the data folder, and logs. Back to first run. Backup files the user
  * saved elsewhere are theirs to delete.
  */
-export async function POST(request: Request) {
+export const POST = handle("data/wipe", async (request: Request) => {
   const body = (await request.json().catch(() => null)) as {
     confirm?: unknown;
     secret?: unknown;
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
   // Stop background work that holds the bot token or would write to the database mid-wipe.
   const bot = globalThis.__pennyBot;
   globalThis.__pennyBot = undefined;
+  // A bot that fails to stop cleanly is dropped anyway: the wipe must go on.
   await bot?.stop().catch(() => undefined);
   globalThis._db?.close();
   globalThis._db = undefined;
@@ -76,4 +78,4 @@ export async function POST(request: Request) {
   const { reschedule } = await import("@/server/sync/scheduler");
   reschedule();
   return withSession(NextResponse.json({ ok: true }), request, null);
-}
+});

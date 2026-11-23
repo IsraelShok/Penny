@@ -1,3 +1,5 @@
+import { handle } from "@/server/lib/api-error";
+import { israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db/index";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
@@ -57,7 +59,7 @@ function ofx(workspaceId: number): NextResponse {
     a.txns.push({ id: r.id, date: r.date, amount: r.amount, name: r.name, memo: r.memo });
     accounts.set(key, a);
   }
-  const stamp = new Date().toISOString().slice(0, 10);
+  const stamp = israelToday();
   return new NextResponse(toOfx([...accounts.values()], stamp), {
     headers: {
       "Content-Type": "application/x-ofx; charset=utf-8",
@@ -68,7 +70,7 @@ function ofx(workspaceId: number): NextResponse {
 }
 
 /** All transactions of the workspace as a CSV download, or ?format=ofx for other money apps. */
-export async function GET(request: Request) {
+export const GET = handle("data/export", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   if (new URL(request.url).searchParams.get("format") === "ofx") return ofx(workspaceId);
   const rows = getDb()
@@ -89,7 +91,7 @@ export async function GET(request: Request) {
     HEADERS,
     ...rows.map((row) => HEADERS.map((h) => row[h] as string | number | null)),
   ]);
-  const stamp = new Date().toISOString().slice(0, 10);
+  const stamp = israelToday();
 
   return new NextResponse(`\uFEFF${csv}`, {
     headers: {
@@ -99,4 +101,4 @@ export async function GET(request: Request) {
       "Cache-Control": "no-store",
     },
   });
-}
+});

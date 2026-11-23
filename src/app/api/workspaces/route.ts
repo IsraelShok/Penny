@@ -3,19 +3,19 @@ import { createWorkspace, listWorkspaces } from "@/server/db/queries/workspaces"
 import { accessEnabled, currentUser, membership } from "@/server/lib/user-access";
 import { parseAvatar } from "@/lib/profile-avatar";
 
-import { errorResponse } from "@/server/lib/api-error";
+import { errorResponse, handle, readJson } from "@/server/lib/api-error";
 
-export async function GET(request: Request) {
+export const GET = handle("workspaces", async (request: Request) => {
   const user = currentUser(request);
   return NextResponse.json(
     listWorkspaces().filter((ws) => !accessEnabled() || (!!user && !!membership(user, ws.id))),
   );
-}
+});
 
-export async function POST(request: Request) {
+export const POST = handle("workspaces", async (request: Request) => {
   let body: unknown;
   try {
-    body = await request.json();
+    body = await readJson(request);
   } catch {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
@@ -38,4 +38,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return errorResponse("workspaces", err);
   }
-}
+});

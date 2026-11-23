@@ -1,5 +1,6 @@
 "use client";
 
+import { addDays, israelToday } from "@/lib/dates";
 import { useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
@@ -269,7 +270,7 @@ export function AheadHero({
   const ts = useTranslations("sections");
   const locale = useLocale();
   const [now] = useState(() => Date.now());
-  const until = new Date(now + 30 * 864e5).toISOString().slice(0, 10);
+  const until = addDays(israelToday(new Date(now)), 30);
   const soon = (forecast ?? []).filter((f) => f.date <= until);
   return (
     <PageHero

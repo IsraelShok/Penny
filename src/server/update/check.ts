@@ -1,5 +1,7 @@
 import "server-only";
 
+import { fetchExternal } from "@/server/lib/fetch-external";
+
 export interface UpdateInfo {
   /** Version this build runs, e.g. "0.2.0". */
   current: string;
@@ -47,7 +49,7 @@ export async function checkForUpdate(opts: {
   )
     return null;
   try {
-    const res = await (opts.fetchFn ?? fetch)(
+    const res = await (opts.fetchFn ?? fetchExternal)(
       `https://api.github.com/repos/${owner}/${name}/releases/latest`,
       {
         headers: { Accept: "application/vnd.github+json" },

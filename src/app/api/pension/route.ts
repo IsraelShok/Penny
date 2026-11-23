@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import {
@@ -15,17 +16,17 @@ export const dynamic = "force-dynamic";
 
 const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
 
-export async function GET(request: Request) {
+export const GET = handle("pension", async (request: Request) => {
   return NextResponse.json({
     connections: listPensionConnections(getWorkspaceIdFromRequest(request)),
   });
-}
+});
 
 /**
  * Body: { fundId, id, phone? } connects (and starts the first sync);
  * { sync: connectionId } re-syncs; { otp: connectionId, code } hands over the SMS code.
  */
-export async function POST(request: Request) {
+export const POST = handle("pension", async (request: Request) => {
   // Sign-in and sync are off in the demo; the connections there are already seeded.
   const blocked = demoBlockedResponse();
   if (blocked) return blocked;
@@ -62,11 +63,11 @@ export async function POST(request: Request) {
   });
   startPensionSync(ws, connectionId);
   return NextResponse.json({ id: connectionId });
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = handle("pension", async (request: Request) => {
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!Number.isInteger(id) || id <= 0) return bad("invalid connection id");
   deletePensionConnection(getWorkspaceIdFromRequest(request), id);
   return NextResponse.json({ success: true });
-}
+});

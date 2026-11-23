@@ -418,7 +418,10 @@ export function deleteCategory(workspaceId: number, categoryId: number): DeleteC
        WHERE workspace_id = ? AND category_id = ?`,
     ).run(workspaceId, categoryId);
 
-    db.prepare("DELETE FROM budgets WHERE category_id = ?").run(categoryId);
+    db.prepare("DELETE FROM budgets WHERE workspace_id = ? AND category_id = ?").run(
+      workspaceId,
+      categoryId,
+    );
     db.prepare("DELETE FROM merchant_categories WHERE workspace_id = ? AND category_id = ?").run(
       workspaceId,
       categoryId,

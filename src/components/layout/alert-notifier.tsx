@@ -25,7 +25,9 @@ export function AlertNotifier() {
     let seen: string[] = [];
     try {
       seen = JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]");
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
     const fresh = data.suggestions.filter((s) => !seen.includes(s.key));
     if (fresh.length === 0) return;
     // One notification, not a burst: the count and where to look.
@@ -38,7 +40,9 @@ export function AlertNotifier() {
         SEEN_KEY,
         JSON.stringify([...seen, ...fresh.map((s) => s.key)].slice(-300)),
       );
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
   }, [data, t]);
 
   return null;

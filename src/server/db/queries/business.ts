@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getDb } from "../index";
-import { roundCents } from "@/lib/money";
+import { roundCents, roundSums } from "@/lib/money";
 
 /** The business share of counted transactions: charged_amount - personal_amount, by month and category. */
 export interface BusinessMonth {
@@ -61,37 +61,51 @@ const INCOME_SHARE =
 /** The business side of the ledger for a period, so business spending has a report behind the field. */
 export function getBusinessReport(workspaceId: number, from: string, to: string): BusinessReport {
   const db = getDb();
-  const totals = db
-    .prepare(
-      `SELECT ${EXPENSE_SHARE} AS expenses, ${INCOME_SHARE} AS income, COUNT(DISTINCT t.id) AS businessTransactions ${BASE}`,
-    )
-    .get(workspaceId, from, to) as {
-    expenses: number;
-    income: number;
-    businessTransactions: number;
-  };
+  const totals = roundSums(
+    db
+      .prepare(
+        `SELECT ${EXPENSE_SHARE} AS expenses, ${INCOME_SHARE} AS income, COUNT(DISTINCT t.id) AS businessTransactions ${BASE}`,
+      )
+      .get(workspaceId, from, to) as {
+      expenses: number;
+      income: number;
+      businessTransactions: number;
+    },
+    "expenses",
+    "income",
+  );
 
-  const months = db
-    .prepare(
-      `SELECT substr(t.date, 1, 7) AS month, ${EXPENSE_SHARE} AS expenses, ${INCOME_SHARE} AS income ${BASE}
+  const months = roundSums(
+    db
+      .prepare(
+        `SELECT substr(t.date, 1, 7) AS month, ${EXPENSE_SHARE} AS expenses, ${INCOME_SHARE} AS income ${BASE}
        GROUP BY month ORDER BY month ASC`,
-    )
-    .all(workspaceId, from, to) as { month: string; expenses: number; income: number }[];
+      )
+      .all(workspaceId, from, to) as { month: string; expenses: number; income: number }[],
+    "expenses",
+    "income",
+  );
 
-  const categories = db
-    .prepare(
-      `SELECT COALESCE(t.category_id, 0) AS categoryId, COALESCE(c.name, '') AS name, c.color AS color,
+  const categories = roundSums(
+    db
+      .prepare(
+        `SELECT COALESCE(t.category_id, 0) AS categoryId, COALESCE(c.name, '') AS name, c.color AS color,
               ${EXPENSE_SHARE} AS expenses, COUNT(DISTINCT t.id) AS count ${BASE}
        GROUP BY t.category_id ORDER BY expenses DESC`,
-    )
-    .all(workspaceId, from, to) as BusinessCategory[];
+      )
+      .all(workspaceId, from, to) as BusinessCategory[],
+    "expenses",
+  );
 
-  const merchants = db
-    .prepare(
-      `SELECT t.description AS merchant, ${EXPENSE_SHARE} AS expenses, COUNT(DISTINCT t.id) AS count ${BASE}
+  const merchants = roundSums(
+    db
+      .prepare(
+        `SELECT t.description AS merchant, ${EXPENSE_SHARE} AS expenses, COUNT(DISTINCT t.id) AS count ${BASE}
        AND t.kind = 'expense' GROUP BY t.description ORDER BY expenses DESC LIMIT 10`,
-    )
-    .all(workspaceId, from, to) as BusinessMerchant[];
+      )
+      .all(workspaceId, from, to) as BusinessMerchant[],
+    "expenses",
+  );
 
   const rows = db
     .prepare(

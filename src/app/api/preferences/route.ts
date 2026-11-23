@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { currentUser } from "@/server/lib/user-access";
 import { getDb } from "@/server/db";
@@ -16,7 +17,7 @@ const valid = (key: unknown): key is string =>
   /^(studio|a11y|home-desktop|home-mobile|goal-focus|activation|sidebar-accounts|home-board|trackers|transaction-views|transactions-upcoming|card-limits|ventures|transaction-templates|transaction-defaults|import-profiles)$/.test(
     key,
   );
-export async function GET(request: Request) {
+export const GET = handle("preferences", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request),
     key = new URL(request.url).searchParams.get("key"),
     profile = who(request, ws, key);
@@ -29,8 +30,8 @@ export async function GET(request: Request) {
   return NextResponse.json(
     row ? { value: JSON.parse(row.value), revision: row.revision } : { value: null, revision: 0 },
   );
-}
-export async function PUT(request: Request) {
+});
+export const PUT = handle("preferences", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request),
     body = await request.json().catch(() => null),
     profile = who(request, ws, body?.key);
@@ -59,4 +60,4 @@ export async function PUT(request: Request) {
     ).run(ws, profile, body.key, JSON.stringify(body.value ?? null), revision);
     return NextResponse.json({ revision });
   })();
-}
+});

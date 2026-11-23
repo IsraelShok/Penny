@@ -446,8 +446,8 @@ function LookSection({ category }: { category: Category }) {
     mutationFn: (fields: { name?: string; color?: string }) =>
       updateCategoryLook(category.id, fields),
     onSuccess: () => {
-      ["categories", "summary", "budgets", "overview"].forEach((k) =>
-        queryClient.invalidateQueries({ queryKey: [k] }),
+      ["categories", "summary", "budgets", "overview"].forEach(
+        (k) => void queryClient.invalidateQueries({ queryKey: [k] }),
       );
       toast.success(td("lookSaved"));
     },

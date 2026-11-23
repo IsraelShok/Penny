@@ -1,4 +1,6 @@
 import "server-only";
+import { fetchExternal } from "@/server/lib/fetch-external";
+import { israelNoon } from "@/server/lib/date-utils";
 import { markFailed, recentlyFailed } from "@/server/lib/fetch-backoff";
 
 import { getDb } from "../db/index";
@@ -17,7 +19,7 @@ interface ChartMeta {
 }
 
 /** Parse a Yahoo chart response into a Quote. Exported for tests. */
-export function parseChart(symbol: string, json: unknown, now = new Date()): Quote | null {
+export function parseChart(symbol: string, json: unknown, now = israelNoon()): Quote | null {
   const result = (
     json as {
       chart?: {
@@ -67,11 +69,11 @@ export function parseChart(symbol: string, json: unknown, now = new Date()): Quo
 }
 
 async function fetchQuote(symbol: string): Promise<Quote | null> {
-  const res = await fetch(`${YAHOO}${encodeURIComponent(symbol)}?range=1y&interval=1d`, {
-    headers: { "User-Agent": "Mozilla/5.0" },
-    signal: AbortSignal.timeout(8000),
-    cache: "no-store",
-  });
+  const res = await fetchExternal(
+    `${YAHOO}${encodeURIComponent(symbol)}?range=1y&interval=1d`,
+    { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" },
+    8000,
+  );
   if (!res.ok) return null;
   return parseChart(symbol, await res.json());
 }

@@ -9,16 +9,16 @@ import {
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import type { CategoryKind } from "@/lib/types";
 
-import { errorResponse } from "@/server/lib/api-error";
+import { errorResponse, handle, readJson } from "@/server/lib/api-error";
 
-export async function GET(request: Request) {
+export const GET = handle("categories", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const { searchParams } = new URL(request.url);
   const raw = searchParams.get("kind");
   const kind: CategoryKind | undefined = raw === "expense" || raw === "income" ? raw : undefined;
   const leavesOnly = searchParams.get("leavesOnly") === "1";
   return NextResponse.json(getAllCategories(workspaceId, kind, { leavesOnly }));
-}
+});
 
 interface CreateBody {
   name?: unknown;
@@ -30,12 +30,12 @@ interface CreateBody {
   parentId?: unknown;
 }
 
-export async function POST(request: Request) {
+export const POST = handle("categories", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
 
   let body: CreateBody;
   try {
-    body = ((await request.json()) ?? {}) as CreateBody;
+    body = ((await readJson(request)) ?? {}) as CreateBody;
   } catch {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
@@ -95,4 +95,4 @@ export async function POST(request: Request) {
     }
     return errorResponse("categories", err);
   }
-}
+});

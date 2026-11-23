@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { ownerScopeFromParam } from "@/server/lib/account-owners";
 
@@ -18,7 +19,7 @@ function intParam(raw: string | null): number | undefined {
   return Number.isFinite(n) ? Math.trunc(n) : undefined;
 }
 
-export async function GET(request: Request) {
+export const GET = handle("transactions", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const { searchParams } = new URL(request.url);
 
@@ -55,4 +56,4 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json(result);
-}
+});

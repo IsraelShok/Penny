@@ -1,5 +1,7 @@
 import "server-only";
 
+import { fetchExternal } from "@/server/lib/fetch-external";
+import { logError } from "@/server/lib/log";
 import { spawn, type ChildProcess } from "child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -26,7 +28,7 @@ declare global {
 async function isReachable(url: string, timeoutMs = 1500): Promise<boolean> {
   if (!normalizeOllamaUrl(url)) return false;
   try {
-    const res = await fetch(`${url}/api/tags`, {
+    const res = await fetchExternal(`${url}/api/tags`, {
       signal: AbortSignal.timeout(timeoutMs),
     });
     return res.ok;
@@ -61,7 +63,7 @@ export async function listOllamaModels(rawUrl: string): Promise<string[]> {
   const url = normalizeOllamaUrl(rawUrl);
   if (!url) return [];
   try {
-    const res = await fetch(`${url}/api/tags`, {
+    const res = await fetchExternal(`${url}/api/tags`, {
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return [];
@@ -83,6 +85,7 @@ export async function* pullOllamaModel(
 ): AsyncGenerator<OllamaPullProgress, void, unknown> {
   const url = normalizeOllamaUrl(rawUrl);
   if (!url) throw new Error(OLLAMA_URL_ERROR);
+  // No deadline: a model download legitimately runs for many minutes, and the caller streams its progress.
   const res = await fetch(`${url}/api/pull`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -155,7 +158,7 @@ export async function ensureOllamaRunning(rawUrl: string): Promise<OllamaCheckRe
       if (text) console.log(`[ollama serve] ${text}`);
     });
     proc.on("error", (err) => {
-      console.error("[ollama serve] process error:", err);
+      logError("ollama/serve", err);
     });
 
     globalThis._ollamaProcess = proc;

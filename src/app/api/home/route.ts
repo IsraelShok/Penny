@@ -1,3 +1,5 @@
+import { logError } from "@/server/lib/log";
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getPeriodTotal, getTopMerchants } from "@/server/db/queries/transactions";
 import {
@@ -42,22 +44,20 @@ function safe<T>(section: HomeSection, errors: HomeSectionError[], fn: () => T):
   try {
     return fn();
   } catch (err) {
-    errors.push({
-      section,
-      message: err instanceof Error ? err.message : String(err),
-    });
+    logError(`home/${section}`, err);
+    errors.push({ section, message: "Unable to load this section" });
     return null;
   }
 }
 
 /** ?owner= scopes the dashboard's spend and cash figures to one household member. */
-export async function GET(request: Request) {
+export const GET = handle("home", async (request: Request) => {
   const scope = ownerScopeFromParam(
     getWorkspaceIdFromRequest(request),
     new URL(request.url).searchParams.get("owner"),
   );
   return runWithOwner(scope, () => home(request));
-}
+});
 
 async function home(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);

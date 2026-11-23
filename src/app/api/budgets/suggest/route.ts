@@ -1,14 +1,15 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getAllBudgets } from "@/server/db/queries/budgets";
 import { getAllCategories } from "@/server/db/queries/categories";
 import { getCategorySpendInRange } from "@/server/db/queries/transactions";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
-import { toLocalISODate } from "@/server/lib/date-utils";
+import { toLocalISODate, israelNoon } from "@/server/lib/date-utils";
 import { suggestBudgets } from "@/lib/budget-suggest";
 
-export async function GET(request: Request) {
+export const GET = handle("budgets/suggest", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const now = new Date();
+  const now = israelNoon();
   // Last 3 complete months; a month with no expenses at all (before the first sync) is left out of the average.
   const months = [1, 2, 3]
     .map((i) =>
@@ -37,4 +38,4 @@ export async function GET(request: Request) {
         })),
     ),
   );
-}
+});

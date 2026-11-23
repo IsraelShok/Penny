@@ -1,13 +1,14 @@
+import { handle, readJson } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { deliverOtp } from "@/server/sync/otp-bridge";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
-export async function POST(request: Request) {
+export const POST = handle("sync/otp", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
 
   let body: { syncRunId?: number; code?: string };
   try {
-    body = (await request.json()) as typeof body;
+    body = (await readJson(request)) as typeof body;
   } catch {
     return NextResponse.json({ success: false, message: "Invalid JSON body." }, { status: 400 });
   }
@@ -34,4 +35,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ success: true });
-}
+});

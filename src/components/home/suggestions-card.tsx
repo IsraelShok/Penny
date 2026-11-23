@@ -122,8 +122,8 @@ export function SuggestionsCard({
       await dismissSuggestion(s.key);
     },
     onSuccess: (_, s) => {
-      ["suggestions", "plan", "overview"].forEach((k) =>
-        queryClient.invalidateQueries({ queryKey: [k] }),
+      ["suggestions", "plan", "overview"].forEach(
+        (k) => void queryClient.invalidateQueries({ queryKey: [k] }),
       );
       if (!INFO.includes(s.type)) toast.success(t("added"));
     },

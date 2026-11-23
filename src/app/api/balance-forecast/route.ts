@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { buildAccountsForecast, saveCardBankMapping } from "@/server/insights/accounts-forecast";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
  * `accounts` is the same projection per bank account with a low/high band, and `cardBanks`
  * says which bank pays each card's statement.
  */
-export async function GET(request: Request) {
+export const GET = handle("balance-forecast", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const today = israelToday();
   const accounts = buildAccountsForecast(ws, today);
@@ -30,10 +31,10 @@ export async function GET(request: Request) {
     },
     accounts,
   });
-}
+});
 
 /** Body: { card, bank } — pins a card's statement to a bank account; bank null clears the choice. */
-export async function POST(request: Request) {
+export const POST = handle("balance-forecast", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = (await request.json().catch(() => null)) as {
     card?: unknown;
@@ -46,4 +47,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "unknown card or bank" }, { status: 400 });
   }
   return NextResponse.json({ success: true });
-}
+});

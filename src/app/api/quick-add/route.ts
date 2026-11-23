@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { verifyDeviceToken } from "@/server/lib/device-tokens";
@@ -17,7 +18,7 @@ const hits = new Map<number, number[]>();
  * Quick-add from a phone automation. The proxy lets this one path skip the browser session and
  * same-origin checks, so the device token checked here is the whole authentication.
  */
-export async function POST(request: Request) {
+export const POST = handle("quick-add", async (request: Request) => {
   if (isKeyLocked()) return NextResponse.json({ error: "locked" }, { status: 423 });
   const device = verifyDeviceToken(getDb(), request.headers.get("authorization"));
   if (!device) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -39,4 +40,4 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     throw error;
   }
-}
+});

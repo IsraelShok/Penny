@@ -61,13 +61,17 @@ export function OverviewView() {
       const saved = localStorage.getItem("overview-period") as PeriodKind | null;
       // eslint-disable-next-line react-hooks/set-state-in-effect -- read once after hydration
       if (saved && KINDS.includes(saved)) setKindState(saved);
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
   }, []);
   const setKind = (k: PeriodKind) => {
     setKindState(k);
     try {
       localStorage.setItem("overview-period", k);
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
   };
   const [offset, setOffset] = useState(0);
   const integrations = useQuery({ queryKey: ["integrations"], queryFn: listIntegrations });

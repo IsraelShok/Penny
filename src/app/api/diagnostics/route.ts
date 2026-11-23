@@ -1,3 +1,6 @@
+import { readErrorLog } from "@/server/lib/log";
+import { handle } from "@/server/lib/api-error";
+import { israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import fs from "node:fs";
 import os from "node:os";
@@ -18,7 +21,7 @@ export const dynamic = "force-dynamic";
  * how syncs went: counts and states, never amounts, descriptions, account numbers, names or secrets. Sync errors
  * pass through the same redaction as the logs.
  */
-export async function GET() {
+export const GET = handle("diagnostics", async () => {
   const db = getDb();
   const one = <T>(sql: string, ...p: unknown[]) => db.prepare(sql).get(...p) as T;
   const all = <T>(sql: string, ...p: unknown[]) => db.prepare(sql).all(...p) as T[];
@@ -99,12 +102,14 @@ export async function GET() {
       error: r.error ? redactKnownSecrets(redact(r.error), secrets) : null,
     })),
   };
-  const stamp = new Date().toISOString().slice(0, 10);
-  return new NextResponse(JSON.stringify(report, null, 2), {
+  // When and where things failed, never what the message said: this file is made to be shared.
+  const recentErrors = readErrorLog(50).map(({ at, scope, code }) => ({ at, scope, code }));
+  const stamp = israelToday();
+  return new NextResponse(JSON.stringify({ ...report, recentErrors }, null, 2), {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "Content-Disposition": `attachment; filename="penny-diagnostics-${stamp}.json"`,
       "Cache-Control": "no-store",
     },
   });
-}
+});

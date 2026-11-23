@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { getAssetsPayload } from "@/server/markets/portfolio";
@@ -14,7 +15,7 @@ const OVERDRAFT = `(description LIKE '%ריבית חובה%' OR description LIKE
 const LOAN_IN = `(description LIKE '%הלוואה%' OR description LIKE '%loan%')`;
 const LATE = `(description LIKE '%פיגור%' OR description LIKE '%החזרת חיוב%' OR description LIKE '%חזרת שיק%' OR description LIKE '%חזרת הוראת%' OR description LIKE '%late fee%')`;
 
-export async function GET(request: Request) {
+export const GET = handle("cashflow-health", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const today = israelToday();
   const db = getDb();
@@ -68,4 +69,4 @@ export async function GET(request: Request) {
     avgIncome: avg("income"),
     avgExpenses: avg("expenses"),
   });
-}
+});

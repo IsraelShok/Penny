@@ -1,3 +1,4 @@
+import { handle, readJson, domainMessage } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import {
   getAutoBackupConfig,
@@ -8,25 +9,28 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 
 export const dynamic = "force-dynamic";
-const fail = (e: unknown) =>
-  NextResponse.json({ error: e instanceof Error ? e.message : "invalid" }, { status: 400 });
+/** A validation key ("notAbsolute") or a malformed body answers 400; disk and database trouble (it carries a code) goes to handle(). */
+const fail = (e: unknown) => {
+  if (e instanceof Error && "code" in e) throw e;
+  return NextResponse.json({ error: domainMessage(e) ?? "invalid" }, { status: 400 });
+};
 
 /** Settings and last result; never the passphrase. */
-export async function GET() {
+export const GET = handle("backup/auto", async () => {
   return NextResponse.json(getAutoBackupConfig());
-}
+});
 
 /** { enabled?, frequency?, dir?, passphrase? } */
-export async function PATCH(request: Request) {
+export const PATCH = handle("backup/auto", async (request: Request) => {
   try {
-    return NextResponse.json(updateAutoBackupConfig(await request.json()));
+    return NextResponse.json(updateAutoBackupConfig(await readJson(request)));
   } catch (e) {
     return fail(e);
   }
-}
+});
 
 /** { action: "run" } backs up now; { action: "open" } opens the folder. */
-export async function POST(request: Request) {
+export const POST = handle("backup/auto", async (request: Request) => {
   const body = (await request.json().catch(() => ({}))) as { action?: unknown };
   if (body.action === "run") return NextResponse.json(runAutoBackup());
   if (body.action === "open") {
@@ -44,4 +48,4 @@ export async function POST(request: Request) {
     return NextResponse.json(getAutoBackupConfig());
   }
   return fail(new Error("unknown action"));
-}
+});

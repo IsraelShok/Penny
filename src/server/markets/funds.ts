@@ -1,4 +1,5 @@
 import "server-only";
+import { fetchExternal } from "@/server/lib/fetch-external";
 import { markFailed, recentlyFailed } from "@/server/lib/fetch-backoff";
 
 import { getDb } from "../db/index";
@@ -15,10 +16,11 @@ const TTL_MS = 24 * 60 * 60 * 1000;
 type Row = Record<string, string | number | null>;
 
 async function get(params: Record<string, string>): Promise<Row[]> {
-  const res = await fetch(`${API}?${new URLSearchParams(params)}`, {
-    signal: AbortSignal.timeout(20_000),
-    cache: "no-store",
-  });
+  const res = await fetchExternal(
+    `${API}?${new URLSearchParams(params)}`,
+    { cache: "no-store" },
+    20_000,
+  );
   if (!res.ok) throw new Error(`data.gov.il ${res.status}`);
   const json = (await res.json()) as { success: boolean; result: { records: Row[] } };
   if (!json.success) throw new Error("data.gov.il request failed");

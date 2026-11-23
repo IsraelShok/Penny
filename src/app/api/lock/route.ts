@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from "@simplewebauthn/server";
 import { isLanEnabled, setLanEnabled } from "@/server/lib/lan-access";
@@ -24,13 +25,13 @@ import { withSession } from "./session-cookie";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export const GET = handle("lock", async () => {
   return NextResponse.json({
     enabled: isLockEnabled(),
     idleMinutes: idleMinutes(),
     passkeys: listPasskeys().map(({ id, rpID, createdAt }) => ({ id, rpID, createdAt })),
   });
-}
+});
 
 type Body = {
   action?: string;
@@ -50,7 +51,7 @@ const NEEDS_CURRENT = ["change", "disable", "recovery", "passkey-options"];
  * enable | change | disable | lock | recovery | passkey-options | passkey-add | passkey-remove.
  * Change, disable, a new recovery code and passkey options need the current passphrase (or recovery code).
  */
-export async function POST(request: Request) {
+export const POST = handle("lock", async (request: Request) => {
   const body = (await request.json().catch(() => ({}))) as Body;
   const idle = IDLE_CHOICES.find((m) => m === body.idleMinutes) ?? idleMinutes();
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
@@ -114,4 +115,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "weak" }, { status: 400 });
   await changeLock(current, next, idle);
   return NextResponse.json({ ok: true });
-}
+});

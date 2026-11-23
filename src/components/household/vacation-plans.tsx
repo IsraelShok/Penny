@@ -1,4 +1,5 @@
 "use client";
+import { israelToday } from "@/lib/dates";
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -22,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import type { Goal } from "@/lib/types";
 
 type Draft = { id?: number; name: string; savedAmount: number; trip: Trip };
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => israelToday();
 const emptyDraft = (): Draft => ({
   name: "",
   savedAmount: 0,

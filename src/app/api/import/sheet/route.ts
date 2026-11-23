@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { createManualTransaction } from "@/server/db/queries/manual-transactions";
@@ -24,7 +25,7 @@ import {
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });
 
 /** What the sheet's pickers need: accounts, leaf categories and household members. */
-export async function GET(request: Request) {
+export const GET = handle("import/sheet", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const db = getDb();
   const accounts = db
@@ -57,7 +58,7 @@ export async function GET(request: Request) {
     )
     .all(workspaceId) as { tag: string }[];
   return NextResponse.json({ accounts, categories, members, tags: tags.map((t) => t.tag) });
-}
+});
 
 type RowStatus = "added" | "duplicate" | "error";
 
@@ -145,7 +146,7 @@ function readRow(
  * cash account becomes a manual row (editable forever); a real bank/card account becomes a file
  * batch, so the next sync adopts it instead of doubling it. dryRun only checks duplicates.
  */
-export async function POST(request: Request) {
+export const POST = handle("import/sheet", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = ((await request.json().catch(() => null)) ?? {}) as {
     rows?: unknown;
@@ -282,7 +283,7 @@ export async function POST(request: Request) {
     batchId,
     rows: statuses.sort((a, b) => a.index - b.index),
   });
-}
+});
 
 function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
   const out = new Map<string, T[]>();
@@ -296,9 +297,9 @@ function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
 }
 
 /** Undo one sheet save: ?import=. Removes manual rows and file batches together. */
-export async function DELETE(request: Request) {
+export const DELETE = handle("import/sheet", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const importId = Number(new URL(request.url).searchParams.get("import"));
   if (!Number.isInteger(importId) || importId <= 0) return bad("invalid import");
   return NextResponse.json({ removed: deleteSheetImport(workspaceId, importId) });
-}
+});

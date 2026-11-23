@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getBudgetMoves, setBudgetMoves } from "@/server/db/queries/budgets";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
@@ -8,15 +9,15 @@ export const dynamic = "force-dynamic";
 
 const MONTH = /^\d{4}-\d{2}$/;
 
-export async function GET(request: Request) {
+export const GET = handle("budgets/moves", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const month = new URL(request.url).searchParams.get("month") ?? "";
   if (!MONTH.test(month)) return NextResponse.json({ error: "month is required" }, { status: 400 });
   return NextResponse.json(getBudgetMoves(ws)[month] ?? []);
-}
+});
 
 /** Adds one move for that month only. */
-export async function POST(request: Request) {
+export const POST = handle("budgets/moves", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = (await request.json().catch(() => null)) as {
     month?: string;
@@ -31,10 +32,10 @@ export async function POST(request: Request) {
   all[body.month!] = [...(all[body.month!] ?? []), move];
   setBudgetMoves(ws, all);
   return NextResponse.json(all[body.month!]);
-}
+});
 
 /** Undo: removes move `index` of that month (default: the latest). */
-export async function DELETE(request: Request) {
+export const DELETE = handle("budgets/moves", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const params = new URL(request.url).searchParams;
   const month = params.get("month") ?? "";
@@ -50,4 +51,4 @@ export async function DELETE(request: Request) {
   else delete all[month];
   setBudgetMoves(ws, all);
   return NextResponse.json(list);
-}
+});

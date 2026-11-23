@@ -1,3 +1,5 @@
+import { handle } from "@/server/lib/api-error";
+import { israelNoon } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import {
   GOAL_COLORS,
@@ -57,7 +59,7 @@ const amount = (v: unknown) => {
   return v !== "" && v != null && Number.isFinite(n) && n >= 0 && n < 1e10 ? n : null;
 };
 
-export async function GET(request: Request) {
+export const GET = handle("plan", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const payload: PlanPayload = {
     plan: planFor(request, ws),
@@ -65,10 +67,10 @@ export async function GET(request: Request) {
     policies: listPolicies(ws),
   };
   return NextResponse.json(payload);
-}
+});
 
 /** Body: { plan } — replaces the plan settings. */
-export async function PUT(request: Request) {
+export const PUT = handle("plan", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = await request.json().catch(() => null);
   if (!body?.plan) return bad("plan is required");
@@ -88,10 +90,10 @@ export async function PUT(request: Request) {
     .run(ws, own.key, JSON.stringify(viewOf(plan)));
   savePlan(ws, { ...plan, ...viewOf(stored) });
   return NextResponse.json(plan);
-}
+});
 
 /** Body: { kind: "goal" | "policy" | "netWorth", item } — creates, or updates when item.id is set. */
-export async function POST(request: Request) {
+export const POST = handle("plan", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = await request.json().catch(() => null);
   const item = (body?.item ?? {}) as Record<string, unknown>;
@@ -125,7 +127,7 @@ export async function POST(request: Request) {
     const targetDate = trip
       ? trip.start.slice(0, 7)
       : (given ??
-        (targetAmount ? goalReachMonth(targetAmount, savedAmount, monthly, new Date()) : null));
+        (targetAmount ? goalReachMonth(targetAmount, savedAmount, monthly, israelNoon()) : null));
     if (!name || !targetAmount || !targetDate)
       return bad("goal needs a name, an amount, and a month (YYYY-MM) or a monthly amount");
     const extra =
@@ -170,10 +172,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   }
   return bad("unknown kind");
-}
+});
 
 /** ?kind=goal|policy&id=… or ?kind=netWorth&date=YYYY-MM-DD */
-export async function DELETE(request: Request) {
+export const DELETE = handle("plan", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const q = new URL(request.url).searchParams;
   const kind = q.get("kind");
@@ -188,4 +190,4 @@ export async function DELETE(request: Request) {
   return ok
     ? NextResponse.json({ success: true })
     : NextResponse.json({ error: "not found" }, { status: 404 });
-}
+});

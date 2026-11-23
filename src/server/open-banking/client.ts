@@ -1,5 +1,5 @@
 import "server-only";
-import { israelToday } from "@/server/lib/date-utils";
+import { israelToday, utcDay } from "@/server/lib/date-utils";
 
 import { redact } from "@/server/lib/redact";
 import type { ScrapedAccount, ScrapedTransaction, ScrapeResult } from "@/server/scrapers/types";
@@ -264,7 +264,7 @@ export async function connectOpenBanking(
     }
 
     const today = israelToday();
-    const dateFrom = startDate.toISOString().slice(0, 10);
+    const dateFrom = utcDay(startDate);
     const scraped: ScrapedAccount[] = [];
 
     for (const account of accounts) {

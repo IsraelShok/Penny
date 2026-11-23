@@ -1,5 +1,6 @@
 "use client";
 
+import { israelToday } from "@/lib/dates";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -47,7 +48,7 @@ function CounterpartCard({ c }: { c: SettleCounterpart }) {
   const locale = useLocale();
   const qc = useQueryClient();
   const money = (n: number) => shekels(Math.round(Math.abs(n)), locale);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = israelToday();
   const [date, setDate] = useState(today);
   const [amount, setAmount] = useState("");
   const [share, setShare] = useState(String(c.rule.myShare));

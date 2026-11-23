@@ -2,7 +2,7 @@ import "server-only";
 
 import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
-import { addDays, daysBetween } from "../lib/date-utils";
+import { addDays, daysBetween, israelToday } from "../lib/date-utils";
 import { amountTolerance, merchantScore } from "./pairing";
 
 export interface DupRow {
@@ -186,10 +186,10 @@ export function createReconcile(db: Database.Database, ws: number) {
                   charged_amount AS amount, substr(date,1,10) AS date, status, provider,
                   sync_run_id AS syncRunId, description
            FROM transactions
-           WHERE workspace_id=? AND is_excluded=0 AND date >= date('now','-180 days')
+           WHERE workspace_id=? AND is_excluded=0 AND date >= ?
            ORDER BY date`,
         )
-        .all(ws) as DupRow[];
+        .all(ws, addDays(israelToday(), -180)) as DupRow[];
       return findDuplicatePairs(rows, dismissedSet());
     },
     stale(days: number, today: string) {
