@@ -1,5 +1,6 @@
 import "server-only";
 
+import { roundSums } from "@/lib/money";
 import { getDb } from "../index";
 import type { ExpenseShare } from "@/lib/expense-shares";
 
@@ -38,11 +39,14 @@ export function addShare(
     .get(workspaceId, transactionId) as
     { amount: number; description: string; date: string } | undefined;
   if (!tx) return "notFound";
-  const { open } = db
-    .prepare(
-      "SELECT COALESCE(SUM(amount), 0) as open FROM expense_shares WHERE workspace_id = ? AND transaction_id = ?",
-    )
-    .get(workspaceId, transactionId) as { open: number };
+  const { open } = roundSums(
+    db
+      .prepare(
+        "SELECT COALESCE(SUM(amount), 0) as open FROM expense_shares WHERE workspace_id = ? AND transaction_id = ?",
+      )
+      .get(workspaceId, transactionId) as { open: number },
+    "open",
+  );
   if (open + amount > -tx.amount + 0.005) return "tooMuch";
   const id = Number(
     db
