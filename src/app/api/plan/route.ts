@@ -1,3 +1,4 @@
+import { israelNoon } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import {
   GOAL_COLORS,
@@ -125,7 +126,7 @@ export async function POST(request: Request) {
     const targetDate = trip
       ? trip.start.slice(0, 7)
       : (given ??
-        (targetAmount ? goalReachMonth(targetAmount, savedAmount, monthly, new Date()) : null));
+        (targetAmount ? goalReachMonth(targetAmount, savedAmount, monthly, israelNoon()) : null));
     if (!name || !targetAmount || !targetDate)
       return bad("goal needs a name, an amount, and a month (YYYY-MM) or a monthly amount");
     const extra =

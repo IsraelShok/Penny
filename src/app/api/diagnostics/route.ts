@@ -1,3 +1,4 @@
+import { israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import fs from "node:fs";
 import os from "node:os";
@@ -99,7 +100,7 @@ export async function GET() {
       error: r.error ? redactKnownSecrets(redact(r.error), secrets) : null,
     })),
   };
-  const stamp = new Date().toISOString().slice(0, 10);
+  const stamp = israelToday();
   return new NextResponse(JSON.stringify(report, null, 2), {
     headers: {
       "Content-Type": "application/json; charset=utf-8",

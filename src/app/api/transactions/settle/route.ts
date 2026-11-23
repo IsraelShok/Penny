@@ -1,3 +1,4 @@
+import { israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import {
   addSettleEntry,
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
   const { me, counterparts, accountOwners, rules } = context(workspaceId);
   if (!me) return NextResponse.json({ me: null, counterparts: [] });
   const entries = listSettleEntries(workspaceId);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = israelToday();
   const rows = counterparts.length ? getSettleRows(workspaceId, "0000") : [];
   return NextResponse.json({
     me: me.id,

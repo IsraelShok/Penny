@@ -6,7 +6,7 @@ import {
 } from "@/server/db/queries/transactions";
 import { getAllCategories } from "@/server/db/queries/categories";
 import { getAllBudgets, getAutoBudgetAverage } from "@/server/db/queries/budgets";
-import { toLocalISODate } from "@/server/lib/date-utils";
+import { toLocalISODate, israelNoon } from "@/server/lib/date-utils";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import type { BudgetSource } from "@/lib/types";
 
@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   const { searchParams } = new URL(request.url);
-  const now = new Date();
+  const now = israelNoon();
   const defaultFrom = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
   const defaultTo = toLocalISODate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
   const from = searchParams.get("from") ?? defaultFrom;

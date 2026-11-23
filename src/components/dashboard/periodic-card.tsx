@@ -1,5 +1,6 @@
 "use client";
 
+import { israelToday } from "@/lib/dates";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -24,8 +25,8 @@ type Draft = {
   autoKey?: string | null;
 };
 
-const thisMonth = () => new Date().toISOString().slice(0, 7);
-const today = () => new Date().toISOString().slice(0, 10);
+const thisMonth = () => israelToday().slice(0, 7);
+const today = () => israelToday();
 
 /** Sinking funds: bills that come every few months, turned into a small monthly amount. */
 export function PeriodicCard() {

@@ -1,3 +1,4 @@
+import { addDays, israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import {
   deleteCashExpense,
@@ -8,13 +9,12 @@ import { getAppSettings } from "@/server/db/queries/settings";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { isValidOwner, walletBalance, WALLET_DAYS } from "@/lib/tags";
 
-const today = () =>
-  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date());
+const today = () => israelToday();
 
 /** Cash wallet over the last WALLET_DAYS days. */
 export async function GET(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const from = new Date(Date.now() - WALLET_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const from = addDays(today(), -WALLET_DAYS);
   return NextResponse.json({
     days: WALLET_DAYS,
     ...walletBalance(getWalletRows(workspaceId, from)),

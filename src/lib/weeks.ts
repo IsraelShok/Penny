@@ -1,7 +1,8 @@
+import { utcDay } from "./dates";
 // Calendar math on "YYYY-MM-DD" in UTC, so DST and the viewer's time zone never shift a day.
 const DAY = 864e5;
 const toUtc = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10));
-const fromUtc = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+const fromUtc = (ms: number) => utcDay(new Date(ms));
 
 /** Today's calendar date on this device, as "YYYY-MM-DD". */
 export const localToday = (d = new Date()) =>

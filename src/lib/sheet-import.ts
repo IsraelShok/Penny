@@ -1,3 +1,4 @@
+import { utcDay } from "@/lib/dates";
 import { parseAmount, parseCsv, toCsv } from "@/lib/csv";
 import { markDuplicates, parseHtmlTable, parseImportDate, type DateOrder } from "@/lib/file-import";
 import { roundCents } from "@/lib/money";
@@ -148,7 +149,7 @@ const RELATIVE_DAYS: Record<string, number> = {
 };
 
 const dayOf = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
-const isoOf = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+const isoOf = (ms: number) => utcDay(new Date(ms));
 
 /**
  * A typed or pasted date: the file importer's formats plus today/yesterday, dd/mm without a year
@@ -178,7 +179,7 @@ export function parseSheetDate(
 function sheetIso(y: number, m: number, d: number): string | null {
   const dt = new Date(Date.UTC(y, m - 1, d));
   return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
-    ? dt.toISOString().slice(0, 10)
+    ? utcDay(dt)
     : null;
 }
 

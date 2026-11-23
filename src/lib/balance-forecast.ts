@@ -1,7 +1,7 @@
+import { utcDay } from "./dates";
 // Client-safe date math on YYYY-MM-DD strings, in UTC so the host timezone never shifts a day.
 const pad = (n: number) => String(n).padStart(2, "0");
-const ymd = (y: number, m0: number, d: number) =>
-  new Date(Date.UTC(y, m0, d)).toISOString().slice(0, 10);
+const ymd = (y: number, m0: number, d: number) => utcDay(new Date(Date.UTC(y, m0, d)));
 const parts = (date: string) => date.split("-").map(Number) as [number, number, number];
 
 export const addDays = (date: string, days: number) => {

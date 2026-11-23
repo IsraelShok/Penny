@@ -1,4 +1,5 @@
 import "server-only";
+import { israelNoon } from "@/server/lib/date-utils";
 import { markFailed, recentlyFailed } from "@/server/lib/fetch-backoff";
 
 import { getDb } from "../db/index";
@@ -17,7 +18,7 @@ interface ChartMeta {
 }
 
 /** Parse a Yahoo chart response into a Quote. Exported for tests. */
-export function parseChart(symbol: string, json: unknown, now = new Date()): Quote | null {
+export function parseChart(symbol: string, json: unknown, now = israelNoon()): Quote | null {
   const result = (
     json as {
       chart?: {

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { utcDay } from "@/server/lib/date-utils";
 import type { DailyRates } from "@/lib/fx-markup";
 import { isDemoMode } from "@/server/demo/mode";
 
@@ -22,7 +23,7 @@ async function fetchDaily(currency: string) {
   // Bars are stamped at the market's local open, so shift by its offset before taking the calendar day.
   return stamps
     .map((ts, i) => ({
-      date: new Date((ts + offset) * 1000).toISOString().slice(0, 10),
+      date: utcDay(new Date((ts + offset) * 1000)),
       close: closes[i] ?? 0,
     }))
     .filter((c) => c.close > 0);

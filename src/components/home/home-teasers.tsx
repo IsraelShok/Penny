@@ -1,5 +1,6 @@
 "use client";
 
+import { israelToday } from "@/lib/dates";
 import { Forward } from "@/components/ui/dir-chevron";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -12,8 +13,8 @@ import { homeTeasers, type HomeTeaser } from "@/lib/home-layout";
 import { shouldShowWelcome } from "@/lib/household";
 import { usePlan } from "@/hooks/use-plan";
 
-const monthStart = () => new Date().toISOString().slice(0, 8) + "01";
-const today = () => new Date().toISOString().slice(0, 10);
+const monthStart = () => israelToday().slice(0, 8) + "01";
+const today = () => israelToday();
 const ils = (n: number) =>
   new Intl.NumberFormat("he-IL", {
     style: "currency",

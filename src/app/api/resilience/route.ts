@@ -3,7 +3,7 @@ import { getDb } from "@/server/db";
 import { getMonthlyAverages } from "@/server/db/queries/fi";
 import { getAssetsPayload } from "@/server/markets/portfolio";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
-import { israelToday } from "@/server/lib/date-utils";
+import { israelToday, addDays } from "@/server/lib/date-utils";
 import { GET as getCashAhead } from "../cash-ahead/route";
 import { resilience } from "@/lib/resilience";
 import { ageOfMoney } from "@/lib/age-of-money";
@@ -12,8 +12,7 @@ import type { CashAhead } from "@/lib/cash-ahead";
 export const dynamic = "force-dynamic";
 
 const BASE = `workspace_id = ? AND status = 'completed' AND is_excluded = 0 AND date >= ?`;
-const daysAgo = (today: string, n: number) =>
-  new Date(Date.parse(today) - n * 86_400_000).toISOString().slice(0, 10);
+const daysAgo = (today: string, n: number) => addDays(today, -n);
 
 export async function GET(request: Request) {
   const ws = getWorkspaceIdFromRequest(request);

@@ -36,7 +36,7 @@ import { connectOpenBanking } from "@/server/open-banking/client";
 import { scrapeOneZeroFirstTime, scrapeOneZeroWithToken } from "@/server/scrapers/one-zero";
 import { createAIProvider } from "@/server/ai/factory";
 import { ensureOllamaRunning } from "@/server/ai/ollama-manager";
-import { toLocalISODate } from "@/server/lib/date-utils";
+import { toLocalISODate, israelNoon } from "@/server/lib/date-utils";
 import { listAllWorkspaceIds } from "@/server/lib/workspace-context";
 import { SyncBusyError, tryAcquireSync } from "@/server/sync/lock";
 import { getWorkspace } from "@/server/db/queries/workspaces";
@@ -351,7 +351,7 @@ export async function syncWorkspace(
   }
 
   const settings = getAppSettings(workspaceId);
-  const startDate = new Date();
+  const startDate = israelNoon();
   startDate.setMonth(startDate.getMonth() - settings.monthsToSync);
 
   send("plan", {

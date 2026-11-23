@@ -1,3 +1,4 @@
+import { israelNoon } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import {
   budgetToday,
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
   }
 
   const startDay = getPlan(workspaceId).monthStartDay;
-  const today = budgetToday(new Date(), startDay);
+  const today = budgetToday(israelNoon(), startDay);
   const cal = periodRange(kind, today, offset);
   // The current period is part-done: compare it with the same stretch of the others.
   const prev = shiftRange(

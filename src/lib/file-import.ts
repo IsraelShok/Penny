@@ -1,3 +1,4 @@
+import { utcDay } from "@/lib/dates";
 import { decodeStatementText, parseAmount, parseCsv, sniffFileKind } from "@/lib/csv";
 import { roundCents } from "@/lib/money";
 import { readXlsx } from "@/lib/xlsx";
@@ -112,7 +113,7 @@ export function guessColumns(header: string[]): ImportMap {
 const iso = (y: number, m: number, d: number) => {
   const dt = new Date(Date.UTC(y, m - 1, d));
   return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
-    ? dt.toISOString().slice(0, 10)
+    ? utcDay(dt)
     : null;
 };
 
@@ -148,7 +149,7 @@ export function parseImportDate(s: string | undefined, order: DateOrder = "dmy")
   if (/^\d{5}(\.\d+)?$/.test(t)) {
     const n = Math.floor(Number(t));
     if (n < 20000 || n > 80000) return null;
-    return new Date(Date.UTC(1899, 11, 30) + n * 86_400_000).toISOString().slice(0, 10);
+    return utcDay(new Date(Date.UTC(1899, 11, 30) + n * 86_400_000));
   }
   let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t);
   if (m) return iso(+m[1], +m[2], +m[3]);

@@ -1,4 +1,5 @@
 import "server-only";
+import { israelNoon } from "./date-utils";
 
 export type BudgetStatus = "plenty-left" | "on-track" | "heads-up" | "over";
 
@@ -40,7 +41,7 @@ export function nextPayday(today: Date, paydayDay: number): Date {
   return candidate;
 }
 
-export function daysUntil(date: Date, from: Date = new Date()): number {
+export function daysUntil(date: Date, from: Date = israelNoon()): number {
   const a = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const b = new Date(from.getFullYear(), from.getMonth(), from.getDate());
   return Math.round((a.getTime() - b.getTime()) / (1000 * 60 * 60 * 24));

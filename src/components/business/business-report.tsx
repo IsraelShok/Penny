@@ -1,5 +1,6 @@
 "use client";
 
+import { israelToday, monthKey } from "@/lib/dates";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -8,13 +9,8 @@ import { getBusinessReport } from "@/lib/api";
 import { shekels } from "@/lib/money";
 import { translateCategoryName } from "@/lib/i18n-data";
 
-const today = () => new Date().toISOString().slice(0, 10);
-const yearAgoStart = () => {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1))
-    .toISOString()
-    .slice(0, 10);
-};
+const today = () => israelToday();
+const yearAgoStart = () => `${monthKey(israelToday(), -11)}-01`;
 
 /**
  * The business side of the ledger: what part of spending and income belongs to work, per month,

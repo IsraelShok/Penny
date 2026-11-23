@@ -1,5 +1,6 @@
 import "server-only";
 
+import { israelNoon } from "./date-utils";
 import fs from "fs";
 import os from "os";
 import path from "path";
@@ -27,7 +28,7 @@ export interface LegacyExportConfig {
 export const defaultLegacyDir = () => path.join(os.homedir(), "Documents", "family-document");
 
 /** legacy-YYYY-MM-DD.html for the given local date. */
-export function legacyFileName(d = new Date()): string {
+export function legacyFileName(d = israelNoon()): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `legacy-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.html`;
 }
@@ -43,7 +44,7 @@ export function validateDir(dir: string): string {
 export function writeLegacyFile(
   dir: string,
   html: string,
-  now = new Date(),
+  now = israelNoon(),
   keep = LEGACY_KEEP,
 ): string {
   const root = validateDir(dir);

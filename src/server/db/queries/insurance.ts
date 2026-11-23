@@ -1,5 +1,6 @@
 import "server-only";
 
+import { addDays, israelNoon, toLocalISODate } from "../../lib/date-utils";
 import fs from "node:fs";
 import path from "node:path";
 import { getDb } from "../index";
@@ -82,9 +83,8 @@ function documentOf(row: Row): InsuranceDocument {
 
 /** Premium-looking debits of the last year: by category, or by a policy's own match text. */
 function charges(workspaceId: number, today: Date): InsuranceCharge[] {
-  const from = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 365)
-    .toISOString()
-    .slice(0, 10);
+  const to = toLocalISODate(today);
+  const from = addDays(to, -365);
   const rows = getDb()
     .prepare(
       `SELECT t.id, t.description, substr(t.date, 1, 10) AS date, t.account_number AS account, -t.charged_amount AS amount
@@ -105,11 +105,11 @@ function charges(workspaceId: number, today: Date): InsuranceCharge[] {
          )
        ORDER BY t.date`,
     )
-    .all(workspaceId, from, today.toISOString().slice(0, 10)) as InsuranceCharge[];
+    .all(workspaceId, from, to) as InsuranceCharge[];
   return rows;
 }
 
-export function listInsurance(workspaceId: number, today = new Date()): InsurancePayload {
+export function listInsurance(workspaceId: number, today = israelNoon()): InsurancePayload {
   const db = getDb();
   const policies = (
     db

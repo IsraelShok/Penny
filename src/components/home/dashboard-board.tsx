@@ -1,5 +1,6 @@
 "use client";
 
+import { israelToday, monthDate, utcDay } from "@/lib/dates";
 import Link from "next/link";
 import { MerchantMark } from "@/components/transactions/merchant-mark";
 import { Fragment, useMemo, useState } from "react";
@@ -583,16 +584,15 @@ function RecurringPayments() {
   const money = useMoney();
   const locale = useLocale();
   const q = useQuery({ queryKey: ["insights"], queryFn: getInsights });
-  const today = new Date().toISOString().slice(0, 10);
+  const today = israelToday();
   const items = useMemo(
     () =>
       (q.data?.series ?? [])
         .filter((s) => s.status === "suggested")
         .map((s) => {
           const next = new Date(s.lastDate);
-          while (next.toISOString().slice(0, 10) < today)
-            next.setDate(next.getDate() + CADENCE_DAYS[s.cadence]);
-          return { ...s, next: next.toISOString().slice(0, 10) };
+          while (utcDay(next) < today) next.setDate(next.getDate() + CADENCE_DAYS[s.cadence]);
+          return { ...s, next: utcDay(next) };
         })
         .sort((a, b) => a.next.localeCompare(b.next)),
     [q.data, today],
@@ -649,11 +649,9 @@ function WhoSpent() {
   const tTags = useTranslations("tags");
   const money = useMoney();
   const { household } = useHousehold();
-  const now = new Date();
-  const from = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1)).toISOString().slice(0, 10);
-  const to = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0))
-    .toISOString()
-    .slice(0, 10);
+  const month = israelToday().slice(0, 7);
+  const from = `${month}-01`;
+  const to = monthDate(Number(month.slice(0, 4)), Number(month.slice(5)), 31);
   const q = useQuery({ queryKey: ["owners", from, to], queryFn: () => getOwners(from, to) });
   if (q.isError) return <CardError label={t("whoSpent")} />;
   if (!q.data) return <CardSkeleton label={t("whoSpent")} height={200} />;

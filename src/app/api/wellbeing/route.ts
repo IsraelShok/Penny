@@ -1,3 +1,4 @@
+import { israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import { parseWellbeingHistory, wellbeingScore } from "@/lib/wellbeing";
 import { getWorkspaceSetting, setWorkspaceSetting } from "@/server/db/queries/settings";
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
   const score = Array.isArray(body?.answers) ? wellbeingScore(body.answers) : null;
   if (score == null)
     return NextResponse.json({ error: "five answers 0–4 are required" }, { status: 400 });
-  const date = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date());
+  const date = israelToday();
   const history = parseWellbeingHistory([
     ...read(ws).filter((e) => e.date !== date),
     { date, score },

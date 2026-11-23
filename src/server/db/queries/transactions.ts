@@ -1,6 +1,7 @@
 import "server-only";
+import { roundSums, roundCents } from "@/lib/money";
 import { isGeneric, listGenericPatterns } from "../../lib/generic-descriptions";
-import { israelDay } from "@/server/lib/date-utils";
+import { israelDay, addMonths, israelToday } from "@/server/lib/date-utils";
 
 import { ownerClause } from "@/server/lib/owner-scope";
 import { getDb } from "../index";
@@ -164,7 +165,7 @@ export function insertTransactions(
         const twin = fileTwinStmt.get(
           workspaceId,
           txn.accountNumber,
-          txn.chargedAmount,
+          roundCents(txn.chargedAmount),
           params.date,
           params.date,
         ) as { id: number } | undefined;
@@ -372,14 +373,17 @@ export function getUncategorizedSpend(
   to: string,
 ): { spent: number; count: number } {
   const o = ownerClause();
-  const row = getDb()
-    .prepare(
-      `SELECT COALESCE(SUM(-charged_amount), 0) as spent, COUNT(*) as count
+  const row = roundSums(
+    getDb()
+      .prepare(
+        `SELECT COALESCE(SUM(-charged_amount), 0) as spent, COUNT(*) as count
        FROM transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed'
          AND is_excluded = 0 AND kind = 'expense' AND category_id IS NULL${o.sql}`,
-    )
-    .get(workspaceId, from, to, ...o.params) as { spent: number; count: number };
+      )
+      .get(workspaceId, from, to, ...o.params) as { spent: number; count: number },
+    "spent",
+  );
   return { spent: row.spent, count: row.count };
 }
 
@@ -472,20 +476,23 @@ export function batchUpdateCategories(
 
 export function getMonthlySummary(workspaceId: number, months: number): MonthlySummary[] {
   const o = ownerClause();
-  return getDb()
-    .prepare(
-      `SELECT strftime('%Y-%m', date) as month,
+  return roundSums(
+    getDb()
+      .prepare(
+        `SELECT strftime('%Y-%m', date) as month,
               SUM(-personal_amount) as amount
        FROM transactions
        WHERE workspace_id = ?
-         AND date >= date('now', '-' || ? || ' months')
+         AND date >= ?
          AND status = 'completed'
          AND kind = 'expense'
          AND is_excluded = 0${o.sql}
        GROUP BY month
        ORDER BY month ASC`,
-    )
-    .all(workspaceId, months, ...o.params) as MonthlySummary[];
+      )
+      .all(workspaceId, addMonths(israelToday(), -months), ...o.params) as MonthlySummary[],
+    "amount",
+  );
 }
 
 export function getTopMerchants(
@@ -495,9 +502,10 @@ export function getTopMerchants(
   limit = 10,
 ): MerchantSummary[] {
   const o = ownerClause();
-  return getDb()
-    .prepare(
-      `SELECT description as name,
+  return roundSums(
+    getDb()
+      .prepare(
+        `SELECT description as name,
               SUM(-personal_amount) as amount,
               COUNT(*) as count
        FROM transactions
@@ -506,8 +514,10 @@ export function getTopMerchants(
        GROUP BY description
        ORDER BY amount DESC
        LIMIT ?`,
-    )
-    .all(workspaceId, from, to, ...o.params, limit) as MerchantSummary[];
+      )
+      .all(workspaceId, from, to, ...o.params, limit) as MerchantSummary[],
+    "amount",
+  );
 }
 
 export function getCategoryBreakdown(
@@ -516,9 +526,10 @@ export function getCategoryBreakdown(
   to: string,
 ): CategoryBreakdown[] {
   const o = ownerClause("t");
-  return getDb()
-    .prepare(
-      `SELECT
+  return roundSums(
+    getDb()
+      .prepare(
+        `SELECT
          COALESCE(t.category_id, 0) as categoryId,
          COALESCE(c.name, 'Uncategorized') as name,
          COALESCE(c.color, '#B5B3AC') as color,
@@ -530,8 +541,10 @@ export function getCategoryBreakdown(
          AND t.is_excluded = 0${o.sql}
        GROUP BY t.category_id
        ORDER BY amount DESC`,
-    )
-    .all(workspaceId, from, to, ...o.params) as CategoryBreakdown[];
+      )
+      .all(workspaceId, from, to, ...o.params) as CategoryBreakdown[],
+    "amount",
+  );
 }
 
 export interface CategorySpend {
@@ -546,17 +559,20 @@ export function getCategorySpendInRange(
   to: string,
 ): CategorySpend[] {
   const o = ownerClause();
-  return getDb()
-    .prepare(
-      `SELECT category_id as categoryId,
+  return roundSums(
+    getDb()
+      .prepare(
+        `SELECT category_id as categoryId,
               SUM(-personal_amount) as amount,
               COUNT(DISTINCT id) as count
        FROM category_transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense' AND category_id IS NOT NULL
          AND is_excluded = 0${o.sql}
        GROUP BY category_id`,
-    )
-    .all(workspaceId, from, to, ...o.params) as CategorySpend[];
+      )
+      .all(workspaceId, from, to, ...o.params) as CategorySpend[],
+    "amount",
+  );
 }
 
 export interface CategoryTopMerchant {
@@ -571,9 +587,10 @@ export function getTopMerchantPerCategory(
   to: string,
 ): CategoryTopMerchant[] {
   const o = ownerClause();
-  return getDb()
-    .prepare(
-      `SELECT category_id as categoryId, description as merchant, amount
+  return roundSums(
+    getDb()
+      .prepare(
+        `SELECT category_id as categoryId, description as merchant, amount
        FROM (
          SELECT category_id, description, SUM(-personal_amount) as amount,
                 ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY SUM(-personal_amount) DESC) as rn
@@ -583,8 +600,10 @@ export function getTopMerchantPerCategory(
          GROUP BY category_id, description
        )
        WHERE rn = 1`,
-    )
-    .all(workspaceId, from, to, ...o.params) as CategoryTopMerchant[];
+      )
+      .all(workspaceId, from, to, ...o.params) as CategoryTopMerchant[],
+    "amount",
+  );
 }
 
 export interface DailySpendPoint {
@@ -598,9 +617,10 @@ export function getCategorySpendByDay(
   from: string,
   to: string,
 ): DailySpendPoint[] {
-  return getDb()
-    .prepare(
-      `WITH RECURSIVE days(d) AS (
+  return roundSums(
+    getDb()
+      .prepare(
+        `WITH RECURSIVE days(d) AS (
          SELECT date(?)
          UNION ALL
          SELECT date(d, '+1 day') FROM days WHERE d < date(?)
@@ -617,8 +637,10 @@ export function getCategorySpendByDay(
          AND t.is_excluded = 0
        GROUP BY days.d
        ORDER BY days.d ASC`,
-    )
-    .all(from, to, workspaceId, categoryId) as DailySpendPoint[];
+      )
+      .all(from, to, workspaceId, categoryId) as DailySpendPoint[],
+    "amount",
+  );
 }
 
 export interface TopMerchantForCategory {
@@ -634,9 +656,10 @@ export function getTopMerchantsForCategory(
   to: string,
   limit = 8,
 ): TopMerchantForCategory[] {
-  return getDb()
-    .prepare(
-      `SELECT description as merchant,
+  return roundSums(
+    getDb()
+      .prepare(
+        `SELECT description as merchant,
               SUM(-personal_amount) as amount,
               COUNT(DISTINCT id) as count
        FROM category_transactions
@@ -648,20 +671,25 @@ export function getTopMerchantsForCategory(
        GROUP BY description
        ORDER BY amount DESC
        LIMIT ?`,
-    )
-    .all(workspaceId, categoryId, from, to, limit) as TopMerchantForCategory[];
+      )
+      .all(workspaceId, categoryId, from, to, limit) as TopMerchantForCategory[],
+    "amount",
+  );
 }
 
 export function getPeriodTotal(workspaceId: number, from: string, to: string): number {
   const o = ownerClause();
-  const row = getDb()
-    .prepare(
-      `SELECT COALESCE(SUM(-personal_amount), 0) as total
+  const row = roundSums(
+    getDb()
+      .prepare(
+        `SELECT COALESCE(SUM(-personal_amount), 0) as total
        FROM transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense'
          AND is_excluded = 0${o.sql}`,
-    )
-    .get(workspaceId, from, to, ...o.params) as { total: number };
+      )
+      .get(workspaceId, from, to, ...o.params) as { total: number },
+    "total",
+  );
   return row.total;
 }
 
@@ -868,21 +896,27 @@ export function getTransactionsSummary(
 
   // Group by kind, not by sign: a refund is a positive amount with kind='expense' and must reduce
   // spending instead of counting as income.
-  const incomeAgg = db
-    .prepare(
-      `SELECT COALESCE(SUM(charged_amount), 0) as total, COUNT(*) as count
+  const incomeAgg = roundSums(
+    db
+      .prepare(
+        `SELECT COALESCE(SUM(charged_amount), 0) as total, COUNT(*) as count
        FROM transactions
        WHERE ${baseWhere} AND kind = 'income'`,
-    )
-    .get(...baseValues) as { total: number; count: number };
+      )
+      .get(...baseValues) as { total: number; count: number },
+    "total",
+  );
 
-  const expenseAgg = db
-    .prepare(
-      `SELECT COALESCE(SUM(-charged_amount), 0) as total, COUNT(*) as count
+  const expenseAgg = roundSums(
+    db
+      .prepare(
+        `SELECT COALESCE(SUM(-charged_amount), 0) as total, COUNT(*) as count
        FROM transactions
        WHERE ${baseWhere} AND kind = 'expense'`,
-    )
-    .get(...baseValues) as { total: number; count: number };
+      )
+      .get(...baseValues) as { total: number; count: number },
+    "total",
+  );
 
   const pickLargest = (sign: "income" | "expense"): TransactionWithCategory | null => {
     const kind = sign === "income" ? "income" : "expense";
@@ -907,9 +941,10 @@ export function getTransactionsSummary(
     return row ? mapTransactionRow(row) : null;
   };
 
-  const topMerchantsRows = db
-    .prepare(
-      `SELECT description,
+  const topMerchantsRows = roundSums(
+    db
+      .prepare(
+        `SELECT description,
               SUM(-charged_amount) as total,
               COUNT(*) as count
        FROM transactions
@@ -917,8 +952,10 @@ export function getTransactionsSummary(
        GROUP BY description
        ORDER BY total DESC
        LIMIT 5`,
-    )
-    .all(...baseValues) as { description: string; total: number; count: number }[];
+      )
+      .all(...baseValues) as { description: string; total: number; count: number }[],
+    "total",
+  );
 
   const pendingReview = db
     .prepare(
