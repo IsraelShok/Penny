@@ -44,6 +44,8 @@ import { BANK_PROVIDERS, type BankProvider, type SyncKind } from "@/lib/types";
 import { cancelOtpRequest, registerOtpRequest } from "@/server/sync/otp-bridge";
 import { markSyncEnd, markSyncHeartbeat, markSyncStart } from "@/server/sync/activity";
 import type { ScrapeResult } from "@/server/scrapers/types";
+import { SYNC_ERRORS } from "@/lib/sync-errors";
+import { withDeadline } from "@/lib/sync-schedule";
 
 export type SyncEventSender = (event: string, data: Record<string, unknown>) => void;
 
@@ -56,7 +58,16 @@ export interface ProviderResult {
   updated: number;
   errorMessage?: string;
   syncRunId?: number;
+  /** Failed for a reason that usually clears on its own (network, a slow site); the scheduler retries these. */
+  retryable?: boolean;
 }
+
+/**
+ * The longest one connection may take. The scrapers time out single pages, not a whole run, and one
+ * that hangs would hold the sync lock and every connection queued behind it.
+ * shortcut: the hung scrape is abandoned, not cancelled; pass an AbortSignal down if browsers pile up.
+ */
+const PROVIDER_DEADLINE_MS = 10 * 60_000;
 
 export interface WorkspaceSummary {
   workspaceId: number;
@@ -95,6 +106,8 @@ interface RunScrapeArgs {
   startDate: Date;
   syncRunId: number;
   manualTwoFactor: boolean;
+  /** Someone is at the screen to type a code or finish a login in the browser. False for scheduled runs. */
+  interactive: boolean;
   send: SyncEventSender;
 }
 
@@ -108,8 +121,15 @@ async function runScrapeForProvider(args: RunScrapeArgs): Promise<ScrapeResult> 
     startDate,
     syncRunId,
     manualTwoFactor,
+    interactive,
     send,
   } = args;
+
+  // Waiting minutes for a code nobody will type holds up every connection behind this one.
+  const needsCode = supportsProgrammaticTwoFactor(provider) && !credentials.otpLongTermToken;
+  if (!interactive && (needsCode || manualTwoFactor)) {
+    return { success: false, accounts: [], errorMessage: SYNC_ERRORS.needsYou };
+  }
 
   if (supportsProgrammaticTwoFactor(provider)) {
     const existingToken = credentials.otpLongTermToken;
@@ -195,6 +215,7 @@ async function syncOneCredential(
   credentials: Record<string, string>,
   startDate: Date,
   send: SyncEventSender,
+  interactive: boolean,
 ): Promise<ProviderResult> {
   const provider = meta.provider as BankProvider;
   const syncRunId = createSyncRun(workspaceId, provider, meta.id, toLocalISODate(startDate));
@@ -205,17 +226,27 @@ async function syncOneCredential(
 
     let result: ScrapeResult;
     try {
-      result = await runScrapeForProvider({
-        workspaceId,
-        workspaceName,
-        credentialId: meta.id,
-        provider,
-        credentials,
-        startDate,
-        syncRunId,
-        manualTwoFactor,
-        send,
-      });
+      result = await withDeadline(
+        runScrapeForProvider({
+          workspaceId,
+          workspaceName,
+          credentialId: meta.id,
+          provider,
+          credentials,
+          startDate,
+          syncRunId,
+          manualTwoFactor,
+          interactive,
+          send,
+        }),
+        PROVIDER_DEADLINE_MS,
+        () => ({
+          success: false,
+          accounts: [],
+          errorMessage: SYNC_ERRORS.timeout,
+          retryable: true,
+        }),
+      );
     } finally {
       cancelOtpRequest(syncRunId, "Scrape completed");
     }
@@ -231,6 +262,7 @@ async function syncOneCredential(
         updated: 0,
         errorMessage: result.errorMessage ?? "Scraping failed",
         syncRunId,
+        retryable: result.retryable,
       };
     }
 
@@ -290,6 +322,7 @@ export async function syncWorkspace(
   workspaceId: number,
   filterCredentialId: number | undefined,
   send: SyncEventSender,
+  interactive = true,
 ): Promise<WorkspaceSummary> {
   const workspace = getWorkspace(workspaceId);
   const workspaceName = workspace?.name ?? `Workspace ${workspaceId}`;
@@ -385,6 +418,7 @@ export async function syncWorkspace(
         credentials,
         startDate,
         send,
+        interactive,
       );
       results.push(result);
       send("provider-done", {
@@ -595,7 +629,12 @@ export async function runAllWorkspaces(
     const workspaceIds = listAllWorkspaceIds();
     const summaries: WorkspaceSummary[] = [];
     for (const workspaceId of workspaceIds) {
-      const summary = await syncWorkspace(workspaceId, filterCredentialId, send);
+      const summary = await syncWorkspace(
+        workspaceId,
+        filterCredentialId,
+        send,
+        kind !== "scheduled",
+      );
       summaries.push(summary);
     }
     // Telegram feedback must never fail or slow the sync itself.
