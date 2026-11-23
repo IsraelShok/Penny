@@ -6,6 +6,7 @@ const fs = require("node:fs");
 const net = require("node:net");
 const path = require("node:path");
 const { downloadUpdate } = require("./update.cjs");
+const { isAppUrl, isSafeExternal } = require("./navigation.cjs");
 
 // The data folder is named after the product.
 app.setName("Penny");
@@ -151,20 +152,11 @@ async function start() {
     webPreferences: { contextIsolation: true, sandbox: true },
   });
   // Links to other sites open in the user's browser, never inside the app.
-  // Compare origins, not prefixes (http://127.0.0.1:port@evil.com starts with the app URL),
-  // and hand only web and mail links to the OS: file:, ms-msdt: and the like can launch programs.
-  const parse = (target) => {
-    try {
-      return new URL(target);
-    } catch {
-      return null;
-    }
-  };
+  // The rules live in navigation.cjs.
   const appOrigin = new URL(url).origin;
-  const isApp = (target) => parse(target)?.origin === appOrigin;
+  const isApp = (target) => isAppUrl(target, appOrigin);
   const openOutside = (target) => {
-    const u = parse(target);
-    if (u && ["https:", "http:", "mailto:"].includes(u.protocol)) shell.openExternal(u.href);
+    if (isSafeExternal(target)) shell.openExternal(new URL(target).href);
   };
   win.webContents.setWindowOpenHandler(({ url: target }) => {
     if (!isApp(target)) openOutside(target);

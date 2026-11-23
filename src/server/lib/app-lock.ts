@@ -3,7 +3,14 @@ import "server-only";
 import crypto from "crypto";
 import fs from "fs";
 import { promisify } from "util";
-import { getKey, keyPath, legacyKeyPath, lockFilePath, setKeyInMemory } from "./encryption";
+import {
+  getKey,
+  keyPath,
+  legacyKeyPath,
+  lockFilePath,
+  setKeyInMemory,
+  writeOwnerOnly,
+} from "./encryption";
 
 /**
  * Optional app lock. One file, <data>/.app-lock.json, holds the scrypt hash of the passphrase and the
@@ -340,7 +347,7 @@ export async function disableLock(current: string): Promise<void> {
   if (!lock) return;
   const key = await unwrapAny(lock, current);
   // Shredding the lock file drops the passkey and recovery wraps with it.
-  fs.writeFileSync(keyPath(), key.toString("hex"), { mode: 0o600 });
+  writeOwnerOnly(keyPath(), key.toString("hex"));
   setKeyInMemory(key);
   shred(lockFilePath());
   sessions().clear();

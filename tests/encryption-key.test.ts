@@ -28,6 +28,24 @@ describe("encryption key location", () => {
     expect(decrypt(sealed)).toBe("secret");
   });
 
+  it.skipIf(process.platform !== "win32")(
+    "on Windows, leaves the key file readable by the current user alone",
+    async () => {
+      const { execFileSync } = await import("child_process");
+      const { encrypt, keyPath } = await freshEncryption();
+      encrypt("secret");
+      const icacls = path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "icacls.exe");
+      // One line per ACL entry, each starting with the file path or indentation, then "NAME:(rights)".
+      const entries = execFileSync(icacls, [keyPath()], { encoding: "utf8" })
+        .replace(keyPath(), "")
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => /:\(/.test(l));
+      expect(entries).toHaveLength(1);
+      expect(entries[0].toLowerCase()).toContain(`\\${os.userInfo().username.toLowerCase()}:(f)`);
+    },
+  );
+
   it("adopts a key left in ./data by an older version, so saved credentials still decrypt", async () => {
     const legacyKey = "ab".repeat(32);
     fs.mkdirSync(path.join(cwd, "data"));
