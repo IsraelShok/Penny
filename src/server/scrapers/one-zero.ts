@@ -55,11 +55,14 @@ function buildScraper(startDate: Date) {
   });
 }
 
-function mapAccounts(
+/** Exported for the test. */
+export function mapAccounts(
   scrapeResult: Awaited<ReturnType<ReturnType<typeof buildScraper>["scrape"]>>,
 ): ScrapeResult["accounts"] {
   return (scrapeResult.accounts ?? []).map((account) => ({
     accountNumber: account.accountNumber,
+    // One Zero is a bank: without this its money is missing from balances and net worth.
+    balance: account.balance,
     transactions: account.txns.map((txn): ScrapedTransaction => ({
       type: txn.type === "installments" ? "installments" : "normal",
       identifier: txn.identifier ?? undefined,
