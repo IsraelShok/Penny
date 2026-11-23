@@ -1,7 +1,9 @@
 import "server-only";
 
+import { execFileSync } from "child_process";
 import crypto from "crypto";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { dataDir } from "./data-dir";
 
@@ -18,9 +20,34 @@ export function legacyKeyPath(): string {
   return path.join(process.cwd(), "data", ".encryption-key");
 }
 
+/**
+ * Writes a secret file only its owner can read: mode 0600, and on Windows (where mode bits mean
+ * nothing and the file would inherit the folder's ACL) an ACL holding the current user alone.
+ */
+export function writeOwnerOnly(file: string, content: string): void {
+  fs.writeFileSync(file, content, { mode: 0o600 });
+  if (process.platform !== "win32") {
+    // The mode above applies only when the file is created.
+    fs.chmodSync(file, 0o600);
+    return;
+  }
+  try {
+    execFileSync(
+      path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "icacls.exe"),
+      [file, "/inheritance:r", "/grant:r", `${os.userInfo().username}:F`],
+      { stdio: "ignore", windowsHide: true },
+    );
+  } catch (err) {
+    console.warn(
+      `[security] could not restrict ${file} to the current user:`,
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
 export function assertKeyFileMode(stat: fs.Stats, file: string): void {
   // POSIX-only. Windows NTFS ACLs don't map to mode bits meaningfully,
-  // so skip there and rely on the default user profile permissions.
+  // so skip there: writeOwnerOnly sets a current-user-only ACL when the file is written.
   if (process.platform === "win32") return;
 
   const mode = stat.mode & 0o777;
@@ -55,7 +82,7 @@ function getOrCreateKey(): Buffer {
   const legacy = legacyKeyPath();
   if (!fs.existsSync(file) && legacy !== file && fs.existsSync(legacy)) {
     assertKeyFileMode(fs.statSync(legacy), legacy);
-    fs.writeFileSync(file, fs.readFileSync(legacy, "utf-8").trim(), { mode: 0o600 });
+    writeOwnerOnly(file, fs.readFileSync(legacy, "utf-8").trim());
   }
 
   if (fs.existsSync(file)) {
@@ -64,7 +91,7 @@ function getOrCreateKey(): Buffer {
   }
 
   const key = crypto.randomBytes(32);
-  fs.writeFileSync(file, key.toString("hex"), { mode: 0o600 });
+  writeOwnerOnly(file, key.toString("hex"));
   return key;
 }
 
