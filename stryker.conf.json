@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "vitest",
+  "mutate": ["src/lib/money.ts", "src/server/lib/dedup.ts", "src/lib/sync-schedule.ts"],
+  "coverageAnalysis": "perTest",
+  "reporters": ["clear-text", "progress", "html", "json"],
+  "htmlReporter": { "fileName": "coverage/mutation/index.html" },
+  "jsonReporter": { "fileName": "coverage/mutation/mutation.json" },
+  "tempDirName": "coverage/.stryker-tmp",
+  "ignorePatterns": [
+    "/.next",
+    "/.next-demo",
+    "/.claude",
+    "/data",
+    "/demo-data",
+    "/dist-desktop",
+    "/website",
+    "/docs",
+    "/e2e",
+    "/public"
+  ]
+}
