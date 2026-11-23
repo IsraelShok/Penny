@@ -8,7 +8,7 @@ const path = require("node:path");
 // SHA256SUMS.txt is signed in CI with a private key kept only in GitHub secrets (Ed25519). A checksum from the same
 // release only catches a broken download; the signature means a release published without that key is never installed.
 const UPDATE_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MCowBQYDK2VwAyEADEOci8VykQONMt5Z+YioT64kbU8xy3MxB1ISFfUiS3U=
+MCowBQYDK2VwAyEAxlqDh/xduGeEfPRwYB/L+jp/Kn8Y+yFz5FK6XoBcesU=
 -----END PUBLIC KEY-----`;
 
 /** True when `listing` carries a valid signature (base64) by the release key. */
