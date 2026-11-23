@@ -8,10 +8,12 @@ import path from "node:path";
 import readline from "node:readline/promises";
 import Database from "better-sqlite3";
 
-const MAGIC = Buffer.from("PENNYBK1");
+// Same file format as the app writes (src/server/lib/portable-backup.ts): magic, one byte log2(N), salt, iv, tag, body.
+const MAGIC = Buffer.from("PENNYBK2");
+const LOG_N = 17;
 const SALT_BYTES = 16;
 const IV_BYTES = 12;
-const SCRYPT = { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+const SCRYPT = { N: 1 << LOG_N, r: 8, p: 1, maxmem: 256 * (1 << LOG_N) * 8 };
 const MIN_PASSPHRASE = 8;
 
 const dataDir = process.env.PENNY_DATA_DIR
@@ -69,7 +71,7 @@ try {
     cipher.update(Buffer.from(JSON.stringify(payload), "utf8")),
     cipher.final(),
   ]);
-  const file = Buffer.concat([MAGIC, salt, iv, cipher.getAuthTag(), body]);
+  const file = Buffer.concat([MAGIC, Buffer.from([LOG_N]), salt, iv, cipher.getAuthTag(), body]);
 
   const outDir = path.join(dataDir, "backups");
   fs.mkdirSync(outDir, { recursive: true });

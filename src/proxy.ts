@@ -9,6 +9,7 @@ import {
 import { isAllowedHost } from "@/lib/host-guard";
 import { isLockEnabled, SESSION_COOKIE, touchSession } from "@/server/lib/app-lock";
 import { isLanEnabled } from "@/server/lib/lan-access";
+import { isMcpToken, MCP_TOKEN_HEADER } from "@/server/lib/mcp-token";
 import { DEMO_BLOCKED_MESSAGE, isHostedDemo } from "@/server/demo/mode";
 
 /**
@@ -158,11 +159,40 @@ const LOCK_OPEN = new Set(["/lock", "/api/lock/unlock", "/api/health"]);
 const isStatic = (p: string) =>
   !p.startsWith("/api/") && (p.startsWith("/_next/") || /\.[a-z0-9]+$/i.test(p));
 
+/**
+ * The reads scripts/mcp.mjs makes, and all its token opens: GET on exactly these paths. None of them
+ * needs the data key, so they answer while the key is still wrapped. A route that decrypts saved
+ * logins, or changes anything on GET, must never be added here.
+ */
+export const MCP_READ_PATHS: ReadonlySet<string> = new Set([
+  "/api/overview",
+  "/api/transactions",
+  "/api/summary",
+  "/api/assets",
+  "/api/planned",
+  "/api/balance-forecast",
+  "/api/cash-ahead",
+  "/api/cashflow-health",
+  "/api/insights",
+  "/api/pension",
+  "/api/pension/report",
+  "/api/insurance",
+  "/api/activity",
+]);
+
 /** With the app lock on, everything else needs a live session cookie. */
 function lockGate(request: NextRequest): NextResponse | null {
   const path = request.nextUrl.pathname;
   if (LOCK_OPEN.has(path) || isStatic(path) || !isLockEnabled()) return null;
   if (touchSession(request.cookies.get(SESSION_COOKIE)?.value)) return null;
+  // The local MCP server has no session. Its token stands in for one on these reads only, and no
+  // cookie is issued; the host check above and the user sign-in below still apply.
+  if (
+    request.method === "GET" &&
+    MCP_READ_PATHS.has(path) &&
+    isMcpToken(request.headers.get(MCP_TOKEN_HEADER))
+  )
+    return null;
   if (path.startsWith("/api/")) return NextResponse.json({ error: "locked" }, { status: 401 });
   const url = new URL("/lock", request.url);
   // Keep the query too (month, filters), so unlocking returns to the same view.

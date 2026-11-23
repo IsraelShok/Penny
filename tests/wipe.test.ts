@@ -31,6 +31,7 @@ describe("full wipe", () => {
       "penny.db.2026.before-profiles.bak",
       "profiles-migration-report.json",
       "lan-access.json",
+      "mcp-token",
     ];
     for (const f of leftovers) {
       fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });

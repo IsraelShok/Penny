@@ -42,7 +42,7 @@ describe("automatic backup", () => {
     expect(c.status).toBe("ok");
     const file = fs.readdirSync(dir).find((f) => f.endsWith(".pennybak"))!;
     const bytes = fs.readFileSync(path.join(dir, file));
-    expect(bytes.subarray(0, 8).toString()).toBe("PENNYBK1");
+    expect(bytes.subarray(0, 8).toString()).toBe("PENNYBK2");
     const { readBackup } = await import("@/server/lib/portable-backup");
     expect(() => readBackup(bytes, "wrong passphrase!!")).toThrow();
     expect(readBackup(bytes, "correct horse battery").format).toBe(1);

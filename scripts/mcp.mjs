@@ -7,14 +7,54 @@
  * listens on a port. Set PENNY_BASE_URL when the app runs somewhere other than
  * the default 127.0.0.1:41234, and PENNY_WORKSPACE_ID to read a specific
  * household workspace.
+ *
+ * With the app lock on, the app keeps a token in its data folder that opens
+ * these reads (and only these). PENNY_DATA_DIR, or PENNY_INSTALL=desktop, says
+ * where that folder is when it is not the repository's own data folder.
  */
-import { pathToFileURL } from "node:url";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const DEFAULT_BASE_URL = "http://127.0.0.1:41234";
 const SERVER_NAME = "penny";
-const SERVER_VERSION = "0.2.0";
+const SERVER_VERSION = "0.3.0";
 const DEFAULT_PROTOCOL_VERSION = "2025-06-18";
 const KNOWN_PROTOCOL_VERSIONS = new Set(["2024-11-05", "2025-03-26", "2025-06-18"]);
+
+const TOKEN_HEADER = "x-penny-mcp-token";
+
+/**
+ * The app's data folder, as src/server/lib/data-dir.ts resolves it: PENNY_DATA_DIR, else ./data of
+ * the checkout (taken from this file, since an MCP client starts it from any folder). The desktop
+ * app keeps its data in the per-user app folder instead (desktop/main.cjs).
+ * @param {Record<string, string | undefined>} [env]
+ */
+export function dataDir(env = process.env) {
+  if (env.PENNY_DATA_DIR) return path.resolve(env.PENNY_DATA_DIR);
+  if (env.PENNY_INSTALL === "desktop") {
+    const appData =
+      process.platform === "win32"
+        ? (env.APPDATA ?? path.join(os.homedir(), "AppData", "Roaming"))
+        : process.platform === "darwin"
+          ? path.join(os.homedir(), "Library", "Application Support")
+          : (env.XDG_CONFIG_HOME ?? path.join(os.homedir(), ".config"));
+    return path.join(appData, "Penny", "data");
+  }
+  return path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "data");
+}
+
+/** The token the app wrote, or "" when there is none (lock never used, or another data folder). */
+function readToken(file) {
+  if (!file) return "";
+  try {
+    const token = fs.readFileSync(file, "utf8").trim();
+    return /^[0-9a-f]{64}$/.test(token) ? token : "";
+  } catch {
+    return "";
+  }
+}
 
 /** An error the model should read as an explanation, not as a crash. */
 export class PennyError extends Error {}
@@ -153,6 +193,156 @@ export function formatUpcoming(payload) {
   return lines.join("\n");
 }
 
+export function formatBalanceForecast(payload) {
+  const f = payload?.forecast;
+  if (!f) return "No bank account has synced a balance yet, so there is no forecast.";
+  const points = f.points ?? [];
+  const lines = [`Lowest expected bank balance: ${ils(f.low?.balance)} on ${f.low?.date ?? "?"}`];
+  lines.push(
+    f.firstNegative
+      ? `The balance is expected to go below zero on ${f.firstNegative}.`
+      : "The balance is not expected to go below zero in this window.",
+  );
+  if (f.nextPayday) lines.push(`Next income after the low point: ${f.nextPayday}`);
+  if (points.length > 0) {
+    lines.push("", "Expected balance, weekly:");
+    for (let i = 0; i < points.length; i += 7)
+      lines.push(`- ${points[i].date}: ${ils(points[i].balance)}`);
+  }
+  return lines.join("\n");
+}
+
+export function formatCashAhead(payload) {
+  if (payload?.safeToSpend == null)
+    return "No bank account has synced a balance yet, so there is nothing to work out.";
+  const lines = [
+    `Free to spend until ${payload.until} (${payload.daysLeft} days): ${ils(payload.safeToSpend)}`,
+    `In the bank: ${ils(payload.bank)} · card bills due before then: ${ils(payload.billsDue)}`,
+  ];
+  if (Number(payload.bankDebitsDue) > 0)
+    lines.push(`Bank debits due before then: ${ils(payload.bankDebitsDue)}`);
+  if (Number(payload.reservedCash) > 0) lines.push(`Set aside: ${ils(payload.reservedCash)}`);
+  lines.push(`Income expected then (not counted above): ${ils(payload.salaryExpected)}`);
+  return lines.join("\n");
+}
+
+const CASHFLOW_SIGNS = {
+  overdraft: "overdraft interest in two or more of the last three months",
+  installments: "a large share of card spending is in installments",
+  loans: "a new loan was taken in the last six months",
+  lateFees: "late or returned-payment fees in the last six months",
+  noBuffer: "almost no liquid cash to fall back on",
+  deficit: "months where spending was higher than income",
+};
+
+export function formatCashflowHealth(payload) {
+  if (!payload?.hasData) return "There are not enough transactions yet to judge the cash flow.";
+  const lines = [
+    `Cash flow: ${payload.level}`,
+    `Average month: income ${ils(payload.avgIncome)} · spending ${ils(payload.avgExpenses)}`,
+    `Liquid cash: ${ils(payload.facts?.liquid)}`,
+  ];
+  const signs = payload.signs ?? [];
+  if (signs.length === 0) lines.push("", "No warning signs.");
+  else {
+    lines.push("", "Warning signs:");
+    for (const s of signs) lines.push(`- ${CASHFLOW_SIGNS[s] ?? s}`);
+  }
+  return lines.join("\n");
+}
+
+export function formatInsights(payload) {
+  const lines = [];
+  const series = [...(payload?.series ?? [])].sort(
+    (a, b) => Number(b.expectedAmount) - Number(a.expectedAmount),
+  );
+  if (series.length > 0) {
+    lines.push("Recurring charges:");
+    for (const s of series.slice(0, 20)) {
+      const change = s.priceChange
+        ? ` · price changed from ${ils(s.priceChange.from)} to ${ils(s.priceChange.to)} on ${s.priceChange.date}`
+        : "";
+      lines.push(
+        `- ${s.merchant}: ${ils(s.expectedAmount)} ${s.cadence}, last charged ${s.lastDate}${change}`,
+      );
+    }
+    if (series.length > 20) lines.push(`- and ${series.length - 20} more`);
+  }
+  const bills = payload?.forecast ?? [];
+  if (bills.length > 0) {
+    lines.push("", "Expected card bills:");
+    for (const b of bills)
+      lines.push(`- ${b.date}${b.account ? ` (card ${b.account})` : ""}: ${ils(b.total)}`);
+  }
+  const anomalies = payload?.anomalies ?? [];
+  if (anomalies.length > 0) {
+    lines.push("", "Unusual this month:");
+    for (const a of anomalies) lines.push(`- ${a.detail}`);
+  }
+  return lines.length > 0
+    ? lines.join("\n").trim()
+    : "No recurring charges, card bills or unusual spending were found yet.";
+}
+
+export function formatPension(connections, reports) {
+  const lines = [];
+  const list = reports?.reports ?? [];
+  if (list.length > 0) {
+    lines.push("Pension reports, newest first:");
+    for (const r of list)
+      lines.push(
+        `- ${r.asOf}: total savings ${ils(r.totalSavings)} across ${r.products} products${r.member ? ` (${r.member})` : ""}`,
+      );
+  }
+  const conns = connections?.connections ?? [];
+  if (conns.length > 0) {
+    lines.push("", "Connected funds:");
+    for (const c of conns) {
+      const error = c.lastError ? ` · last error: ${c.lastError}` : "";
+      lines.push(`- ${c.fundId}: last synced ${c.lastSyncAt ?? "never"} (${c.state})${error}`);
+    }
+  }
+  return lines.length > 0
+    ? lines.join("\n").trim()
+    : "No pension report was imported and no fund is connected. Pension balances entered by hand are part of net worth.";
+}
+
+export function formatInsurance(payload) {
+  const totals = payload?.totals ?? {};
+  const policies = (payload?.policies ?? []).filter((p) => !p.archived);
+  if (policies.length === 0) return "No insurance policy is recorded.";
+  const lines = [
+    `${policies.length} policies · ${ils(totals.monthly)} a month · paid in the last 12 months: ${ils(totals.paidLast12)}`,
+    "",
+  ];
+  for (const p of policies) {
+    const renews = p.renewalMonth ? ` · renews ${p.renewalMonth}` : "";
+    const soon = p.renewalSoon ? " (soon)" : "";
+    lines.push(
+      `- ${p.name} (${p.kind}${p.provider ? `, ${p.provider}` : ""}): ${ils(p.monthlyPremium)} a month${renews}${soon}`,
+    );
+  }
+  const unlinked = payload?.unlinked ?? [];
+  if (unlinked.length > 0)
+    lines.push("", `${unlinked.length} insurance-looking charges match no recorded policy.`);
+  return lines.join("\n");
+}
+
+export function formatSyncStatus(payload) {
+  const sync = payload?.sync ?? {};
+  const scheduler = payload?.scheduler ?? {};
+  return [
+    sync.active
+      ? `A ${sync.kind ? `${sync.kind} ` : ""}sync is running since ${sync.since}${sync.stale ? " and looks stuck" : ""}.`
+      : "No sync is running right now.",
+    scheduler.armed
+      ? `Next automatic sync: ${scheduler.nextRunAt}`
+      : "Automatic sync is not scheduled.",
+  ].join("\n");
+}
+
+const NO_ARGS = { type: "object", properties: {}, additionalProperties: false };
+
 export const TOOLS = [
   {
     name: "penny_overview",
@@ -218,6 +408,47 @@ export const TOOLS = [
     description: "Planned purchases and their next payments, including anything overdue.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
+  {
+    name: "penny_balance_forecast",
+    description:
+      "The expected bank balance over the next 90 days: the lowest point, whether it goes below zero, and the balance week by week.",
+    inputSchema: NO_ARGS,
+  },
+  {
+    name: "penny_cash_ahead",
+    description:
+      "How much is free to spend until the next payday: the bank balance minus the card bills that are due first.",
+    inputSchema: NO_ARGS,
+  },
+  {
+    name: "penny_cashflow_health",
+    description:
+      "Whether the household's cash flow is healthy, and the warning signs found: overdraft, installments, new loans, late fees, no buffer, deficit months.",
+    inputSchema: NO_ARGS,
+  },
+  {
+    name: "penny_insights",
+    description:
+      "Recurring charges and subscriptions with any price change, the expected card bills, and unusual spending this month.",
+    inputSchema: NO_ARGS,
+  },
+  {
+    name: "penny_pension",
+    description:
+      "Imported pension reports with total savings, and the pension funds that are connected with their last sync.",
+    inputSchema: NO_ARGS,
+  },
+  {
+    name: "penny_insurance",
+    description:
+      "Insurance policies with their monthly cost and renewal month, and charges that look like insurance but match no policy.",
+    inputSchema: NO_ARGS,
+  },
+  {
+    name: "penny_sync_status",
+    description: "Whether a bank sync is running now, and when the next automatic sync is due.",
+    inputSchema: NO_ARGS,
+  },
 ];
 
 export async function callApi(path, deps = {}) {
@@ -228,15 +459,23 @@ export async function callApi(path, deps = {}) {
     headers["x-workspace-id"] = String(deps.workspaceId);
 
   let response;
-  try {
-    response = await fetchImpl(`${baseUrl}${path}`, { headers });
-  } catch {
-    throw new PennyError(
-      `Penny is not answering at ${baseUrl}. Start the app (the Penny service, or npm start), or point PENNY_BASE_URL at the address it does answer on.`,
-    );
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const token = readToken(deps.tokenFile);
+    if (token) headers[TOKEN_HEADER] = token;
+    try {
+      response = await fetchImpl(`${baseUrl}${path}`, { headers });
+    } catch {
+      throw new PennyError(
+        `Penny is not answering at ${baseUrl}. Start the app (the Penny service, or npm start), or point PENNY_BASE_URL at the address it does answer on.`,
+      );
+    }
+    // A locked app writes the token file on the first refused call, so one more try can pass.
+    if (response.status !== 401 || readToken(deps.tokenFile) === token) break;
   }
   if (response.status === 401) {
-    throw new PennyError("Penny is locked. Unlock the app, then ask again.");
+    throw new PennyError(
+      "Penny is locked and refused the request. Check that PENNY_DATA_DIR (or PENNY_INSTALL=desktop) points this server at the app's data folder, or unlock the app; when the app has separate user accounts, MCP access is not available.",
+    );
   }
   if (!response.ok) {
     throw new PennyError(
@@ -276,6 +515,16 @@ export const TOOL_HANDLERS = {
   penny_budgets: async (_args, deps) => formatBudgets(await callApi("/api/summary", deps)),
   penny_net_worth: async (_args, deps) => formatNetWorth(await callApi("/api/assets", deps)),
   penny_upcoming: async (_args, deps) => formatUpcoming(await callApi("/api/planned", deps)),
+  penny_balance_forecast: async (_args, deps) =>
+    formatBalanceForecast(await callApi("/api/balance-forecast", deps)),
+  penny_cash_ahead: async (_args, deps) => formatCashAhead(await callApi("/api/cash-ahead", deps)),
+  penny_cashflow_health: async (_args, deps) =>
+    formatCashflowHealth(await callApi("/api/cashflow-health", deps)),
+  penny_insights: async (_args, deps) => formatInsights(await callApi("/api/insights", deps)),
+  penny_pension: async (_args, deps) =>
+    formatPension(await callApi("/api/pension", deps), await callApi("/api/pension/report", deps)),
+  penny_insurance: async (_args, deps) => formatInsurance(await callApi("/api/insurance", deps)),
+  penny_sync_status: async (_args, deps) => formatSyncStatus(await callApi("/api/activity", deps)),
 };
 
 const errorResponse = (id, code, message) => ({
@@ -307,7 +556,7 @@ export async function handleMessage(message, deps = {}) {
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
         instructions:
-          "Read-only access to a local Penny household budget. Ask about spending, budgets, transactions, net worth and planned purchases. Nothing here can change the data.",
+          "Read-only access to a local Penny household budget. Ask about spending, budgets, transactions, net worth, planned purchases, the balance ahead, subscriptions, insurance, pension and sync status. Nothing here can change the data.",
       },
     };
   }
@@ -345,6 +594,7 @@ export function run(options = {}) {
     baseUrl: options.baseUrl ?? process.env.PENNY_BASE_URL ?? DEFAULT_BASE_URL,
     workspaceId: options.workspaceId ?? process.env.PENNY_WORKSPACE_ID ?? null,
     fetchImpl: options.fetchImpl,
+    tokenFile: options.tokenFile ?? path.join(dataDir(), "mcp-token"),
   };
 
   let buffer = "";
