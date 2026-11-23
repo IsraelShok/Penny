@@ -29,7 +29,7 @@ describe("encryption key location", () => {
   });
 
   it.skipIf(process.platform !== "win32")(
-    "on Windows, leaves the key file readable by the current user alone",
+    "on Windows, the key file is closed to other users of the computer",
     async () => {
       const { execFileSync } = await import("child_process");
       const { encrypt, keyPath } = await freshEncryption();
@@ -41,8 +41,15 @@ describe("encryption key location", () => {
         .split(/\r?\n/)
         .map((l) => l.trim())
         .filter((l) => /:\(/.test(l));
-      expect(entries).toHaveLength(1);
-      expect(entries[0].toLowerCase()).toContain(`\\${os.userInfo().username.toLowerCase()}:(f)`);
+      // SYSTEM and Administrators may be listed (a CI runner adds them); the broad groups must not be.
+      const lower = entries.map((e) => e.toLowerCase());
+      const me = `\\${os.userInfo().username.toLowerCase()}:(f)`;
+      expect(lower.some((e) => e.includes(me))).toBe(true);
+      expect(lower.filter((e) => /everyone|authenticated users|builtin\\users/.test(e))).toEqual(
+        [],
+      );
+      // Nothing inherited from the folder.
+      expect(lower.some((e) => e.includes("(i)"))).toBe(false);
     },
   );
 

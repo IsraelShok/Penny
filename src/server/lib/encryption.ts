@@ -34,7 +34,19 @@ export function writeOwnerOnly(file: string, content: string): void {
   try {
     execFileSync(
       path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "icacls.exe"),
-      [file, "/inheritance:r", "/grant:r", `${os.userInfo().username}:F`],
+      // Drop what the folder passed down, grant the owner, and remove the broad groups by SID (their
+      // names are localised): Everyone, Authenticated Users, Users. SYSTEM and Administrators may stay;
+      // they can read any file on the machine regardless.
+      [
+        file,
+        "/inheritance:r",
+        "/grant:r",
+        `${os.userInfo().username}:F`,
+        "/remove:g",
+        "*S-1-1-0",
+        "*S-1-5-11",
+        "*S-1-5-32-545",
+      ],
       { stdio: "ignore", windowsHide: true },
     );
   } catch (err) {
