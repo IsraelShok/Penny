@@ -17,7 +17,7 @@ import { APP_LOCKED_MESSAGE, isKeyLocked } from "../lib/encryption";
 
 const HELP_INTRO = "לחצו ☰ תפריט למטה בכל רגע.";
 import { listAllWorkspaceIds } from "../lib/workspace-context";
-import { israelToday } from "../lib/date-utils";
+import { israelDay, israelToday } from "../lib/date-utils";
 import { getActivitySnapshot } from "../sync/activity";
 import { createUpdateNotifier, HOW_TO_UPDATE } from "../update/check";
 import { currentInstall, latestUpdate, updatesEnabled } from "../update/latest";
@@ -236,7 +236,7 @@ export async function sendSpendFeedback(since: string): Promise<void> {
     );
 }
 
-/** After a scheduled sync: tells the user when a bank connection starts failing or recovers. */
+/** After a scheduled sync: tells the user when a bank connection starts failing, stays down, or recovers. */
 export async function sendSyncAlerts(
   results: {
     label: string;
@@ -260,18 +260,43 @@ export async function sendSyncAlerts(
   const prevStmt = getDb().prepare(
     "SELECT status FROM sync_runs WHERE credential_id = ? AND id < ? AND status != 'running' ORDER BY id DESC LIMIT 1",
   );
+  // The failing streak: every failed run since the last successful one. Counted in days below, because
+  // the scheduler retries a transient failure several times a day.
+  const lastOkStmt = getDb().prepare(
+    "SELECT id, completed_at AS at FROM sync_runs WHERE credential_id = ? AND status = 'completed' ORDER BY id DESC LIMIT 1",
+  );
+  const failedStmt = getDb().prepare(
+    "SELECT id, started_at AS at FROM sync_runs WHERE credential_id = ? AND status = 'failed' AND id > ?",
+  );
+  // SQLite stores UTC as "YYYY-MM-DD HH:MM:SS".
+  const day = (at: string) => israelDay(`${at.replace(" ", "T")}Z`);
+  const today = israelToday();
   const errors = he.default.syncErrors as Record<string, string>;
   const text = syncAlert(
-    results.map((r) => ({
-      label: r.label || r.provider,
-      ok: r.ok,
-      wasFailing:
-        (
-          prevStmt.get(r.credentialId, r.syncRunId ?? Number.MAX_SAFE_INTEGER) as
-            { status: string } | undefined
-        )?.status === "failed",
-      reason: r.errorMessage ? errors[parseSyncError(r.errorMessage).key ?? "unknown"] : undefined,
-    })),
+    results.map((r) => {
+      const lastOk = lastOkStmt.get(r.credentialId) as
+        { id: number; at: string | null } | undefined;
+      const earlier = r.ok
+        ? []
+        : (failedStmt.all(r.credentialId, lastOk?.id ?? 0) as { id: number; at: string }[])
+            .filter((f) => f.id !== r.syncRunId)
+            .map((f) => day(f.at));
+      return {
+        label: r.label || r.provider,
+        ok: r.ok,
+        wasFailing:
+          (
+            prevStmt.get(r.credentialId, r.syncRunId ?? Number.MAX_SAFE_INTEGER) as
+              { status: string } | undefined
+          )?.status === "failed",
+        reason: r.errorMessage
+          ? errors[parseSyncError(r.errorMessage).key ?? "unknown"]
+          : undefined,
+        failedDays: new Set([...earlier, today]).size,
+        failedEarlierToday: earlier.includes(today),
+        lastOk: lastOk?.at ? day(lastOk.at) : null,
+      };
+    }),
   );
   if (text) await bot.api.sendMessage(chatId, text);
 }
