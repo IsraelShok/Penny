@@ -221,7 +221,8 @@ export function unlockWithPasskey(id: string, prfOutput: Buffer, counter: number
 function writeLock(lock: LockFile): void {
   // Write then rename, so a crash never leaves a half-written file and an unreadable key.
   const tmp = `${lockFilePath()}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(lock), { mode: 0o600 });
+  // It holds the wrapped key, so on Windows it gets the same owner-only ACL as the key file.
+  writeOwnerOnly(tmp, JSON.stringify(lock));
   fs.renameSync(tmp, lockFilePath());
 }
 

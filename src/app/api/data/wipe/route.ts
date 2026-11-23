@@ -53,7 +53,12 @@ export async function POST(request: Request) {
   // Left by older migrations next to the database: full copies and a report naming accounts.
   if (fs.existsSync(dir)) {
     for (const f of fs.readdirSync(dir))
-      if (f.endsWith(".bak") || f === "profiles-migration-report.json" || f === LAN_FLAG)
+      if (
+        f.endsWith(".bak") ||
+        f === "profiles-migration-report.json" ||
+        f === LAN_FLAG ||
+        f === "mcp-token"
+      )
         fs.rmSync(path.join(dir, f), { force: true });
   }
   // The desktop shell keeps the server output one folder up and holds it open, so it is emptied, not removed.
