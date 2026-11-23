@@ -33,13 +33,14 @@ export default defineConfig({
         // Measured 100 on some runs and 95/87 on most: one branch depends on test timing.
         "src/server/db/backup.ts": { statements: 95, branches: 87, functions: 100, lines: 100 },
         "src/server/lib/portable-backup.ts": {
-          statements: 89,
-          branches: 75,
+          statements: 90,
+          branches: 78,
           functions: 83,
           lines: 92,
         },
-        "src/server/lib/encryption.ts": { statements: 84, branches: 78, functions: 91, lines: 85 },
-        "src/proxy.ts": { statements: 96, branches: 91, functions: 100, lines: 97 },
+        // Linux numbers (CI): the Windows-only ACL branch is not reached there.
+        "src/server/lib/encryption.ts": { statements: 79, branches: 62, functions: 92, lines: 81 },
+        "src/proxy.ts": { statements: 96, branches: 93, functions: 100, lines: 97 },
       },
     },
   },
