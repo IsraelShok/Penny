@@ -36,6 +36,23 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // An empty catch hides the failure it caught: log it, surface it, or say in a comment why it is safe to drop.
+  { files: ["src/**"], rules: { "no-empty": ["error", { allowEmptyCatch: false }] } },
+  // Promises nobody awaits lose their errors. These rules need type information.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    languageOptions: { parserOptions: { projectService: true } },
+    rules: {
+      // `void promise` marks a deliberate fire-and-forget.
+      "@typescript-eslint/no-floating-promises": ["error", { ignoreVoid: true }],
+      // React event handlers may be async; everywhere else a promise where void is expected is a bug.
+      "@typescript-eslint/no-misused-promises": [
+        "error",
+        { checksVoidReturn: { attributes: false } },
+      ],
+      "@typescript-eslint/only-throw-error": "error",
+    },
+  },
   // Electron entry points are CommonJS by design.
   { files: ["**/*.cjs"], rules: { "@typescript-eslint/no-require-imports": "off" } },
 ]);

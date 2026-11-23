@@ -21,8 +21,8 @@ function AssignedCell({ c, money }: { c: CategoryWithData; money: (n: number) =>
   const save = useMutation({
     mutationFn: (amount: number) => updateBudget(c.categoryId, amount),
     onSuccess: () =>
-      ["summary", "budgets", "budget-period", "home"].forEach((k) =>
-        qc.invalidateQueries({ queryKey: [k] }),
+      ["summary", "budgets", "budget-period", "home"].forEach(
+        (k) => void qc.invalidateQueries({ queryKey: [k] }),
       ),
     onError: () => toast.error(t("saveFailed")),
   });

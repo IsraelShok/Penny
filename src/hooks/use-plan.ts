@@ -24,7 +24,7 @@ export function usePlan() {
       if (ctx?.before) queryClient.setQueryData(["plan"], ctx.before);
     },
     onSuccess: () => {
-      ["plan", "overview"].forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
+      ["plan", "overview"].forEach((k) => void queryClient.invalidateQueries({ queryKey: [k] }));
     },
   });
   return {

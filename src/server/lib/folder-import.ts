@@ -157,7 +157,9 @@ export function getFolderImportConfig(): FolderImportConfig {
   let s: Partial<FolderImportConfig> = {};
   try {
     s = JSON.parse(getGlobalSetting(KEY) ?? "{}");
-  } catch {}
+  } catch {
+    // Unreadable stored value: start from the default.
+  }
   const defaultDir = defaultImportDir();
   return {
     enabled: s.enabled !== false, // on by default: dropping a statement in the folder should just work
@@ -227,7 +229,9 @@ export async function scanImportFolder(now = false): Promise<FolderImportConfig>
     let prev: Seen = {};
     try {
       prev = JSON.parse(getGlobalSetting(SEEN) ?? "{}");
-    } catch {}
+    } catch {
+      // Unreadable stored value: start from the default.
+    }
     const workspaceId = firstWorkspace();
     // One subfolder per known account, so a downloaded statement lands on the right account.
     for (const a of getAccountNumbers(workspaceId))
@@ -279,7 +283,9 @@ export async function scanImportFolder(now = false): Promise<FolderImportConfig>
           const msg = e instanceof Error ? e.message.slice(0, 200) : "failed";
           try {
             moveInto(folder, name, "failed", `${at}\n${msg}\n`);
-          } catch {} // file vanished or locked: retried next scan
+          } catch {
+            // File vanished or locked: retried on the next scan.
+          }
           c.history.unshift({ at, file: label, added: 0, duplicates: 0, error: msg });
         }
         delete picked.seen[name];

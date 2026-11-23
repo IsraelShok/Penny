@@ -19,7 +19,9 @@ export function MoreSection({ children }: { children: ReactNode }) {
     try {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- read once after hydration
       setOpen(localStorage.getItem(KEY) === "1");
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
   }, []);
 
   if (plan.simpleMode) {
@@ -42,7 +44,9 @@ export function MoreSection({ children }: { children: ReactNode }) {
           setOpen(!open);
           try {
             localStorage.setItem(KEY, open ? "0" : "1");
-          } catch {}
+          } catch {
+            // Storage is blocked or full: only a remembered preference is lost.
+          }
         }}
         className="mx-auto mb-4 flex items-center gap-1.5 rounded-full px-4 py-2 text-footnote font-medium text-muted-foreground transition-[background-color,color] duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
       >

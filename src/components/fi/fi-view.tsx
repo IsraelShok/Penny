@@ -67,7 +67,9 @@ function useTab(): [Tab, (t: Tab) => void] {
       const raw = localStorage.getItem(TAB_KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- read once after hydration
       if (raw && (TABS as readonly string[]).includes(raw)) setStored(raw as Tab);
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
   }, []);
   const tab = fromUrl && (TABS as readonly string[]).includes(fromUrl) ? (fromUrl as Tab) : stored;
   return [
@@ -76,7 +78,9 @@ function useTab(): [Tab, (t: Tab) => void] {
       setStored(next);
       try {
         localStorage.setItem(TAB_KEY, next);
-      } catch {}
+      } catch {
+        // Storage is blocked or full: only a remembered preference is lost.
+      }
       router.replace(`${pathname}?tab=${next}`, { scroll: false });
     },
   ];
@@ -92,7 +96,9 @@ function useStored<T>(key: string, initial: T): [T, (v: T) => void] {
       const raw = localStorage.getItem(key);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- read once after hydration
       if (raw) setValue({ ...initial, ...JSON.parse(raw) });
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   return [
@@ -101,7 +107,9 @@ function useStored<T>(key: string, initial: T): [T, (v: T) => void] {
       setValue(v);
       try {
         localStorage.setItem(key, JSON.stringify(v));
-      } catch {}
+      } catch {
+        // Storage is blocked or full: only a remembered preference is lost.
+      }
     },
   ];
 }

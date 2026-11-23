@@ -152,7 +152,7 @@ export function NextStep({
     event &&
     saveHousehold(
       { events: [...household.events, { id: newId(), type: event, date: today }] },
-      { onSuccess: () => queryClient.invalidateQueries({ queryKey: ["suggestions"] }) },
+      { onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["suggestions"] }) },
     );
   const L = locale === "he" ? "he" : "en";
   const amount = shekels(Math.round(step?.amount ?? 0), locale);
