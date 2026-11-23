@@ -1,9 +1,10 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { ensureOllamaRunning, listOllamaModels } from "@/server/ai/ollama-manager";
 import { getGlobalSetting } from "@/server/db/queries/settings";
 import { demoBlockedResponse } from "@/server/demo/guard";
 
-export async function GET(request: Request) {
+export const GET = handle("ai/ollama/models", async (request: Request) => {
   const blocked = demoBlockedResponse();
   if (blocked) return blocked;
 
@@ -18,4 +19,4 @@ export async function GET(request: Request) {
 
   const models = await listOllamaModels(url);
   return NextResponse.json({ models });
-}
+});

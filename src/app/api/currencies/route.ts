@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { addDays, israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import { getCurrencyUsage } from "@/server/db/queries/transactions";
@@ -7,7 +8,7 @@ import { dailyRates } from "@/server/insights/fx-rates";
 export const dynamic = "force-dynamic";
 
 /** Currencies in use with today's shekel rate and its 30-day change (null when no rate is available, e.g. offline or demo). */
-export async function GET(request: Request) {
+export const GET = handle("currencies", async (request: Request) => {
   const usage = getCurrencyUsage(getWorkspaceIdFromRequest(request));
   const today = israelToday();
   const rates = await dailyRates(
@@ -27,4 +28,4 @@ export async function GET(request: Request) {
     };
   });
   return NextResponse.json({ base: "ILS", currencies });
-}
+});

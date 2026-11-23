@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { getMonthlyAverages } from "@/server/db/queries/fi";
@@ -14,7 +15,7 @@ export const dynamic = "force-dynamic";
 const BASE = `workspace_id = ? AND status = 'completed' AND is_excluded = 0 AND date >= ?`;
 const daysAgo = (today: string, n: number) => addDays(today, -n);
 
-export async function GET(request: Request) {
+export const GET = handle("resilience", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const today = israelToday();
   const db = getDb();
@@ -66,4 +67,4 @@ export async function GET(request: Request) {
     }),
     ageOfMoney: ageOfMoney(flows),
   });
-}
+});

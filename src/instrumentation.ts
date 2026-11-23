@@ -1,15 +1,15 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  const { checkKeyFileAtStartup } = await import("@/server/lib/encryption");
-  checkKeyFileAtStartup();
-  const { initScheduler } = await import("@/server/sync/scheduler");
-  initScheduler();
-  const { initLegacyExportSchedule } = await import("@/server/lib/legacy-export");
-  initLegacyExportSchedule();
-  const { initFolderImportSchedule } = await import("@/server/lib/folder-import");
-  initFolderImportSchedule();
-  const { initAutoBackupSchedule } = await import("@/server/lib/auto-backup");
-  initAutoBackupSchedule();
-  const { startBot } = await import("@/server/bot");
-  startBot();
+  const { installProcessHandlers, runEach } = await import("@/server/lib/startup");
+  installProcessHandlers();
+  await runEach({
+    keyFile: async () => (await import("@/server/lib/encryption")).checkKeyFileAtStartup(),
+    scheduler: async () => (await import("@/server/sync/scheduler")).initScheduler(),
+    legacyExport: async () =>
+      (await import("@/server/lib/legacy-export")).initLegacyExportSchedule(),
+    folderImport: async () =>
+      (await import("@/server/lib/folder-import")).initFolderImportSchedule(),
+    autoBackup: async () => (await import("@/server/lib/auto-backup")).initAutoBackupSchedule(),
+    bot: async () => (await import("@/server/bot")).startBot(),
+  });
 }

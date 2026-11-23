@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import {
   getUncategorizedIdsByKind,
@@ -16,7 +17,7 @@ import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
  * Preview mode: run AI categorization with proposal-enabled prompt, split by
  * expense vs income so each transaction is offered categories of its own kind.
  */
-export async function POST(request: Request) {
+export const POST = handle("categorize/preview", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const settings = getAppSettings(workspaceId);
 
@@ -150,4 +151,4 @@ export async function POST(request: Request) {
     existingCategoryUsage: Object.fromEntries(existingUsage),
     errors,
   });
-}
+});

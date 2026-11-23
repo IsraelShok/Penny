@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { israelNoon } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import {
@@ -22,7 +23,7 @@ import type { OverviewPayload } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = handle("overview", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const params = new URL(request.url).searchParams;
   const kind = (params.get("period") ?? "quarter") as PeriodKind;
@@ -62,4 +63,4 @@ export async function GET(request: Request) {
     categories: getCategoryRows(workspaceId, r, prev, ly, startDay),
   };
   return NextResponse.json(payload);
-}
+});

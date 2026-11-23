@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
@@ -5,15 +6,15 @@ import type { DoneSaving } from "@/lib/money-on-table";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = handle("savings-done", async (request: Request) => {
   const done = getDb()
     .prepare("SELECT key, yearly FROM savings_done WHERE workspace_id = ? ORDER BY done_at")
     .all(getWorkspaceIdFromRequest(request)) as DoneSaving[];
   return NextResponse.json({ done });
-}
+});
 
 /** Body: { key, yearly, done: boolean }. Marks a "money on the table" item done (keeping its yearly saving) or undoes it. */
-export async function POST(request: Request) {
+export const POST = handle("savings-done", async (request: Request) => {
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const key = typeof body?.key === "string" ? body.key.slice(0, 300) : "";
   const yearly = Number(body?.yearly ?? 0);
@@ -31,4 +32,4 @@ export async function POST(request: Request) {
       "INSERT INTO savings_done (workspace_id, key, yearly) VALUES (?, ?, ?) ON CONFLICT(workspace_id, key) DO UPDATE SET yearly = excluded.yearly",
     ).run(ws, key, yearly);
   return NextResponse.json({ success: true });
-}
+});

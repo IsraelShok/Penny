@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getChildRows } from "@/server/db/queries/transactions";
 import { getAppSettings, getWorkspaceSetting } from "@/server/db/queries/settings";
@@ -6,7 +7,7 @@ import { effectiveOwner, type AccountOwners } from "@/lib/tags";
 import { childSummary } from "@/lib/kids";
 
 /** One child's summary for ?member&month=YYYY-MM, plus that month's transactions. */
-export async function GET(request: Request) {
+export const GET = handle("transactions/kids", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const q = new URL(request.url).searchParams;
   const member = q.get("member");
@@ -39,4 +40,4 @@ export async function GET(request: Request) {
         category,
       })),
   });
-}
+});

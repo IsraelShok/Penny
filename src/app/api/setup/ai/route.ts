@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getSetting, setSetting } from "@/server/db/queries/settings";
 import { encrypt } from "@/server/lib/encryption";
@@ -6,7 +7,7 @@ import { CLI_AGENTS } from "@/server/ai/cli-agent";
 import type { AppSettings } from "@/lib/types";
 import { demoBlockedResponse } from "@/server/demo/guard";
 
-export async function POST(request: Request) {
+export const POST = handle("setup/ai", async (request: Request) => {
   // No AI provider in the demo: the first call would otherwise reach a model host.
   const blocked = demoBlockedResponse();
   if (blocked) return blocked;
@@ -39,9 +40,9 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ success: true });
-}
+});
 
 /** Whether a Claude API key is stored (never the key itself). */
-export async function GET() {
+export const GET = handle("setup/ai", async () => {
   return NextResponse.json({ hasClaudeKey: !!getSetting("ai_api_key_encrypted") });
-}
+});

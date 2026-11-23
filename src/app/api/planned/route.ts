@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getAllCategories } from "@/server/db/queries/categories";
 import { accountExists, plannedPayload, upsertPlanned } from "@/server/db/queries/planned";
@@ -11,15 +12,15 @@ export const dynamic = "force-dynamic";
 
 const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
 
-export async function GET(request: Request) {
+export const GET = handle("planned", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   return NextResponse.json(
     plannedPayload(workspaceId, israelToday(), Number(process.env.CARD_BILLING_DAY) || 10),
   );
-}
+});
 
 /** Body: { item } — creates a planned expense, or updates it when item.id is set. */
-export async function POST(request: Request) {
+export const POST = handle("planned", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = await request.json().catch(() => null);
   const parsed = parsePlannedInput((body as { item?: unknown } | null)?.item);
@@ -41,4 +42,4 @@ export async function POST(request: Request) {
   const id = upsertPlanned(workspaceId, parsed);
   if (id == null) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ success: true, id });
-}
+});

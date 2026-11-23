@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { listAccountBalances } from "@/server/db/queries/assets";
@@ -8,7 +9,7 @@ import { overdraftCost, type OverdraftTxn } from "@/lib/overdraft";
 export const dynamic = "force-dynamic";
 
 /** Overdraft interest paid in the last 12 months, and today's bank balance. */
-export async function GET(request: Request) {
+export const GET = handle("overdraft", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const today = israelToday();
   const since = `${Number(today.slice(0, 4)) - 1}${today.slice(4)}`;
@@ -23,4 +24,4 @@ export async function GET(request: Request) {
     ...overdraftCost(txns, today),
     balance: balances.length ? balances.reduce((s, b) => s + b.balance, 0) : null,
   });
-}
+});

@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import {
   deletePeriodic,
@@ -20,14 +21,14 @@ const amount = (v: unknown) => {
   return v !== "" && v != null && Number.isFinite(n) && n >= 0 && n < 1e10 ? n : null;
 };
 
-export async function GET(request: Request) {
+export const GET = handle("periodic", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const payload: PeriodicPayload = {
     items: listPeriodic(ws),
     suggestions: periodicSuggestions(ws, israelToday()),
   };
   return NextResponse.json(payload);
-}
+});
 
 function parseItem(item: Record<string, unknown>) {
   const name = text(item.name, 60);
@@ -59,7 +60,7 @@ function parseItem(item: Record<string, unknown>) {
 const INVALID = "needs a name, an amount, every 1-24 months and a due month (YYYY-MM)";
 
 /** Body: { item } creates; { dismiss: autoKey } hides a suggestion for good. */
-export async function POST(request: Request) {
+export const POST = handle("periodic", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = await request.json().catch(() => null);
   const dismiss = text(body?.dismiss, 120);
@@ -71,10 +72,10 @@ export async function POST(request: Request) {
   if (!item) return bad(INVALID);
   upsertPeriodic(ws, item);
   return NextResponse.json({ success: true });
-}
+});
 
 /** Body: { item } with item.id. */
-export async function PUT(request: Request) {
+export const PUT = handle("periodic", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = await request.json().catch(() => null);
   const raw = (body?.item ?? {}) as Record<string, unknown>;
@@ -85,14 +86,14 @@ export async function PUT(request: Request) {
   return upsertPeriodic(ws, { ...item, id })
     ? NextResponse.json({ success: true })
     : NextResponse.json({ error: "not found" }, { status: 404 });
-}
+});
 
 /** ?id=… */
-export async function DELETE(request: Request) {
+export const DELETE = handle("periodic", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!Number.isInteger(id) || id < 1) return bad("invalid id");
   return deletePeriodic(ws, id)
     ? NextResponse.json({ success: true })
     : NextResponse.json({ error: "not found" }, { status: 404 });
-}
+});

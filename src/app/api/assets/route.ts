@@ -1,3 +1,4 @@
+import { handle, readJson } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { parseAssetInput } from "@/lib/asset-input";
 import { createAssets } from "@/server/db/queries/assets";
@@ -9,16 +10,16 @@ export const dynamic = "force-dynamic";
 
 const MAX_IMPORT = 500;
 
-export async function GET(request: Request) {
+export const GET = handle("assets", async (request: Request) => {
   return NextResponse.json(await getAssetsPayload(getWorkspaceIdFromRequest(request)));
-}
+});
 
 /** Body: { assets: [...] } — one asset from the form, or many from a CSV import. All or nothing. */
-export async function POST(request: Request) {
+export const POST = handle("assets", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   let body: unknown;
   try {
-    body = await request.json();
+    body = await readJson(request);
   } catch {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
@@ -36,4 +37,4 @@ export async function POST(request: Request) {
     parsed.push(p);
   }
   return NextResponse.json({ created: createAssets(workspaceId, parsed) });
-}
+});

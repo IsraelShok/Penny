@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db/index";
@@ -69,7 +70,7 @@ function ofx(workspaceId: number): NextResponse {
 }
 
 /** All transactions of the workspace as a CSV download, or ?format=ofx for other money apps. */
-export async function GET(request: Request) {
+export const GET = handle("data/export", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   if (new URL(request.url).searchParams.get("format") === "ofx") return ofx(workspaceId);
   const rows = getDb()
@@ -100,4 +101,4 @@ export async function GET(request: Request) {
       "Cache-Control": "no-store",
     },
   });
-}
+});

@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
@@ -28,24 +29,24 @@ function run(fn: () => unknown) {
 }
 
 /** Adds a manual expense or income. */
-export async function POST(request: Request) {
+export const POST = handle("transactions/manual", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = await request.json().catch(() => null);
   return run(() => ({ id: createManualTransaction(getDb(), ws, body, memberIds(ws)) }));
-}
+});
 
 /** Edits ?id=: all fields of a manual row; display fields only for a bank row. */
-export async function PATCH(request: Request) {
+export const PATCH = handle("transactions/manual", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = await request.json().catch(() => null);
   return run(() => {
     updateTransactionFields(getDb(), ws, idParam(request), body, memberIds(ws));
     return { success: true };
   });
-}
+});
 
 /** Deletes manual ?id=; returns the row so the client can offer undo (re-POST it). */
-export async function DELETE(request: Request) {
+export const DELETE = handle("transactions/manual", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   return run(() => ({ deleted: deleteManualTransaction(getDb(), ws, idParam(request)) }));
-}
+});

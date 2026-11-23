@@ -1,5 +1,6 @@
 import "server-only";
 
+import { logError } from "@/server/lib/log";
 import { israelNoon } from "./date-utils";
 import fs from "fs";
 import os from "os";
@@ -23,6 +24,8 @@ export interface LegacyExportConfig {
   lastFile: string | null;
   status: "ok" | "locked" | "error" | null;
   error: string | null;
+  /** When the last failed run happened; cleared by the next good one. */
+  errorAt: string | null;
 }
 
 export const defaultLegacyDir = () => path.join(os.homedir(), "Documents", "family-document");
@@ -70,7 +73,9 @@ export function getLegacyExportConfig(): LegacyExportConfig {
   let saved: Partial<LegacyExportConfig> = {};
   try {
     saved = JSON.parse(getGlobalSetting(KEY) ?? "{}");
-  } catch {}
+  } catch {
+    // Unreadable stored value: start from the default.
+  }
   const defaultDir = defaultLegacyDir();
   return {
     enabled: saved.enabled === true,
@@ -81,6 +86,7 @@ export function getLegacyExportConfig(): LegacyExportConfig {
     lastFile: saved.lastFile ?? null,
     status: saved.status ?? null,
     error: saved.error ?? null,
+    errorAt: saved.errorAt ?? null,
   };
 }
 
@@ -111,9 +117,10 @@ export function storeLegacySnapshot(html: string) {
 /** Writes the latest snapshot now. Locked app → records "locked" instead of failing. */
 export function runLegacyExport(): LegacyExportConfig {
   const c = getLegacyExportConfig();
-  if (isKeyLocked()) return save({ ...c, status: "locked", error: null });
+  if (isKeyLocked()) return save({ ...c, status: "locked", error: null, errorAt: null });
   const html = getGlobalSetting(SNAPSHOT);
-  if (!html) return save({ ...c, status: "error", error: "noSnapshot" });
+  if (!html)
+    return save({ ...c, status: "error", error: "noSnapshot", errorAt: new Date().toISOString() });
   try {
     const file = writeLegacyFile(c.dir, html);
     return save({
@@ -122,12 +129,15 @@ export function runLegacyExport(): LegacyExportConfig {
       lastFile: file,
       status: "ok",
       error: null,
+      errorAt: null,
     });
   } catch (e) {
+    logError("legacy-export", e);
     return save({
       ...c,
       status: "error",
       error: e instanceof Error ? e.message.slice(0, 200) : "failed",
+      errorAt: new Date().toISOString(),
     });
   }
 }
@@ -156,7 +166,7 @@ export function initLegacyExportSchedule() {
       if (c.lastAt && Date.now() - Date.parse(c.lastAt) < PERIOD[c.frequency]) return;
       runLegacyExport();
     } catch (e) {
-      console.error("[legacy-export] tick failed:", e instanceof Error ? e.message : e);
+      logError("legacy-export/tick", e);
     }
   };
   globalThis.__legacyExportTimer = setInterval(tick, 3_600_000);

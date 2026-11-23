@@ -1,10 +1,11 @@
+import { handle, readJson, domainMessage } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db/index";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { EMPTY_NOTES, parseLegacyNotes } from "@/lib/legacy";
 
 /** The family document's free-text notes for this workspace. */
-export async function GET(request: Request) {
+export const GET = handle("legacy", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const row = getDb()
     .prepare("SELECT data FROM legacy_notes WHERE workspace_id = ?")
@@ -14,18 +15,17 @@ export async function GET(request: Request) {
   } catch {
     return NextResponse.json(EMPTY_NOTES);
   }
-}
+});
 
-export async function PUT(request: Request) {
+export const PUT = handle("legacy", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   let notes;
   try {
-    notes = parseLegacyNotes(await request.json());
+    notes = parseLegacyNotes(await readJson(request));
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "invalid" },
-      { status: 400 },
-    );
+    const error = domainMessage(e);
+    if (error == null) throw e;
+    return NextResponse.json({ error }, { status: 400 });
   }
   getDb()
     .prepare(
@@ -34,4 +34,4 @@ export async function PUT(request: Request) {
     )
     .run(workspaceId, JSON.stringify(notes));
   return NextResponse.json(notes);
-}
+});

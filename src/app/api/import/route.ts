@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { deleteFileImport, listFileImports } from "@/server/db/queries/transactions";
 import { saveStatementImport } from "@/server/lib/folder-import";
@@ -11,7 +12,7 @@ const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
  * Imports parsed statement rows: { account, rows: [{date, description, amount}], dryRun? }.
  * Rows already stored for that account are skipped. dryRun only counts.
  */
-export async function POST(request: Request) {
+export const POST = handle("import", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = ((await request.json().catch(() => null)) ?? {}) as {
     account?: unknown;
@@ -55,17 +56,17 @@ export async function POST(request: Request) {
       typeof body.fileName === "string" ? body.fileName.slice(0, 120) || null : null,
     ),
   );
-}
+});
 
 /** Import history: past statement imports with their account and row count. */
-export async function GET(request: Request) {
+export const GET = handle("import", async (request: Request) => {
   return NextResponse.json({ imports: listFileImports(getWorkspaceIdFromRequest(request)) });
-}
+});
 
 /** Undo one import: ?batch=. */
-export async function DELETE(request: Request) {
+export const DELETE = handle("import", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const batch = Number(new URL(request.url).searchParams.get("batch"));
   if (!Number.isInteger(batch) || batch <= 0) return bad("invalid batch");
   return NextResponse.json({ removed: deleteFileImport(workspaceId, batch) });
-}
+});

@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
@@ -17,7 +18,7 @@ function window(y: number, m: number, day: number, back: number): [string, strin
 }
 
 /** ?compare=month (default) or year: this month so far against the same days of last month, or of this month last year. */
-export async function GET(request: Request) {
+export const GET = handle("spend-change", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const compare = new URL(request.url).searchParams.get("compare") === "year" ? "year" : "month";
   const today = israelToday();
@@ -50,4 +51,4 @@ export async function GET(request: Request) {
     hasHistory: result.before > 0,
     drivers: result.drivers.map((d) => ({ ...d, merchant: display(d.merchant) })),
   });
-}
+});

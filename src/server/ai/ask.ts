@@ -1,5 +1,6 @@
 import "server-only";
 
+import { fetchExternal } from "@/server/lib/fetch-external";
 import Anthropic from "@anthropic-ai/sdk";
 import { getSetting } from "../db/queries/settings";
 import { decrypt, isKeyLocked } from "../lib/encryption";
@@ -28,19 +29,22 @@ export async function completeAI(
   if (provider === "ollama") {
     const base = normalizeOllamaUrl(getSetting("ai_ollama_url") ?? "http://localhost:11434");
     if (!base) return null;
-    const res = await fetch(`${base}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: getSetting("ai_ollama_model") ?? "llama3.1",
-        stream: false,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-      }),
-      signal: AbortSignal.timeout(120_000),
-    });
+    const res = await fetchExternal(
+      `${base}/api/chat`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: getSetting("ai_ollama_model") ?? "llama3.1",
+          stream: false,
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user },
+          ],
+        }),
+      },
+      120_000,
+    );
     if (!res.ok) throw new Error(`Ollama request failed: ${res.status}`);
     const data = (await res.json()) as { message?: { content?: string } };
     return data.message?.content?.trim() || null;

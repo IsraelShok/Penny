@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getCategoryBreakdown } from "@/server/db/queries/transactions";
 import { getAllCategories } from "@/server/db/queries/categories";
@@ -7,7 +8,7 @@ import { buildPivot, lastMonths, type PivotParent } from "@/lib/pivot";
 export const dynamic = "force-dynamic";
 
 /** Spending by category for the last ?months= months (3 to 24, default 6), grouped under each category's group. */
-export function GET(request: Request) {
+export const GET = handle("pivot", (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const asked = Number(new URL(request.url).searchParams.get("months") ?? 6);
   const n = Number.isInteger(asked) ? Math.min(24, Math.max(3, asked)) : 6;
@@ -29,4 +30,4 @@ export function GET(request: Request) {
     if (p) parentOf.set(c.id, { id: p.id, name: p.name, color: p.color });
   }
   return NextResponse.json({ months, rows: buildPivot(months, perMonth, parentOf) });
-}
+});

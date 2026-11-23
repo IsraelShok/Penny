@@ -8,9 +8,9 @@ async function profileId({ params }: Ctx) {
   return Number.isInteger(id) && id > 0 && getProfile(id) ? id : null;
 }
 
-import { errorResponse } from "@/server/lib/api-error";
+import { errorResponse, handle } from "@/server/lib/api-error";
 
-export async function PATCH(request: Request, ctx: Ctx) {
+export const PATCH = handle("profiles/[id]", async (request: Request, ctx: Ctx) => {
   const id = await profileId(ctx);
   if (!id) return NextResponse.json({ error: "not found" }, { status: 404 });
   const body = (await request.json().catch(() => null)) as { name?: unknown } | null;
@@ -23,9 +23,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
   } catch (err) {
     return errorResponse("profiles", err);
   }
-}
+});
 
-export async function DELETE(_request: Request, ctx: Ctx) {
+export const DELETE = handle("profiles/[id]", async (_request: Request, ctx: Ctx) => {
   const id = await profileId(ctx);
   if (!id) return NextResponse.json({ error: "not found" }, { status: 404 });
   try {
@@ -34,4 +34,4 @@ export async function DELETE(_request: Request, ctx: Ctx) {
   } catch (err) {
     return errorResponse("profiles", err);
   }
-}
+});

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { logError } from "@/server/lib/log";
 import type Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -81,7 +82,7 @@ export function runMigrations(db: Database.Database): void {
   if (check !== "ok") {
     const message = `[db] integrity check failed: ${String(check)}. Backups live in the data/backups folder.`;
     if (pending.length > 0) throw new Error(message);
-    console.error(message);
+    logError("db/integrity", new Error(message));
   }
 
   // Migrations rewrite data. A copy first means a failed or destructive migration is recoverable.

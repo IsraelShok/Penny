@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { addDays, israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import {
@@ -12,17 +13,17 @@ import { isValidOwner, walletBalance, WALLET_DAYS } from "@/lib/tags";
 const today = () => israelToday();
 
 /** Cash wallet over the last WALLET_DAYS days. */
-export async function GET(request: Request) {
+export const GET = handle("transactions/cash", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const from = addDays(today(), -WALLET_DAYS);
   return NextResponse.json({
     days: WALLET_DAYS,
     ...walletBalance(getWalletRows(workspaceId, from)),
   });
-}
+});
 
 /** Logs cash spending: { amount > 0, description?, owner? }. */
-export async function POST(request: Request) {
+export const POST = handle("transactions/cash", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = ((await request.json().catch(() => null)) ?? {}) as {
     amount?: unknown;
@@ -55,13 +56,13 @@ export async function POST(request: Request) {
     owner,
   );
   return NextResponse.json({ id });
-}
+});
 
 /** Undo for a logged cash expense: ?id=. Only removes rows created here (provider 'cash'). */
-export async function DELETE(request: Request) {
+export const DELETE = handle("transactions/cash", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const id = Number(new URL(request.url).searchParams.get("id"));
   return deleteCashExpense(workspaceId, id)
     ? NextResponse.json({ success: true })
     : NextResponse.json({ error: "not found" }, { status: 404 });
-}
+});

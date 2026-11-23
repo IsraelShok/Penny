@@ -1,5 +1,6 @@
 import "server-only";
 
+import { logError } from "@/server/lib/log";
 import fs from "fs";
 import os from "os";
 import path from "path";
@@ -31,6 +32,8 @@ export interface AutoBackupConfig {
   lastFile: string | null;
   status: "ok" | "locked" | "error" | null;
   error: string | null;
+  /** When the last failed run happened; cleared by the next good one. */
+  errorAt: string | null;
 }
 
 export const defaultBackupDir = () => path.join(os.homedir(), "Documents", "Penny backups");
@@ -54,7 +57,9 @@ export function getAutoBackupConfig(): AutoBackupConfig {
   let saved: Partial<AutoBackupConfig> = {};
   try {
     saved = JSON.parse(getGlobalSetting(KEY) ?? "{}");
-  } catch {}
+  } catch {
+    // Unreadable stored value: start from the default.
+  }
   const defaultDir = defaultBackupDir();
   return {
     enabled: saved.enabled === true,
@@ -66,6 +71,7 @@ export function getAutoBackupConfig(): AutoBackupConfig {
     lastFile: saved.lastFile ?? null,
     status: saved.status ?? null,
     error: saved.error ?? null,
+    errorAt: saved.errorAt ?? null,
   };
 }
 
@@ -78,6 +84,7 @@ function save(c: AutoBackupConfig) {
     lastFile: c.lastFile,
     status: c.status,
     error: c.error,
+    errorAt: c.errorAt,
   };
   setGlobalSetting(KEY, JSON.stringify(rest));
   return getAutoBackupConfig();
@@ -127,7 +134,7 @@ export function updateAutoBackupConfig(patch: {
 /** Writes one encrypted backup now and keeps the newest few. Locked app → records "locked" instead of failing. */
 export function runAutoBackup(): AutoBackupConfig {
   const c = getAutoBackupConfig();
-  if (isKeyLocked()) return save({ ...c, status: "locked", error: null });
+  if (isKeyLocked()) return save({ ...c, status: "locked", error: null, errorAt: null });
   try {
     const secret = passphrase();
     if (!secret) throw new Error("noPassphrase");
@@ -146,12 +153,15 @@ export function runAutoBackup(): AutoBackupConfig {
       lastFile: file,
       status: "ok",
       error: null,
+      errorAt: null,
     });
   } catch (e) {
+    logError("auto-backup", e);
     return save({
       ...c,
       status: "error",
       error: e instanceof Error ? e.message.slice(0, 200) : "failed",
+      errorAt: new Date().toISOString(),
     });
   }
 }
@@ -168,7 +178,7 @@ export function initAutoBackupSchedule() {
       const c = getAutoBackupConfig();
       if (c.enabled && backupDue(c.status === "ok" ? c.lastAt : null, c.frequency)) runAutoBackup();
     } catch (e) {
-      console.error("[auto-backup] tick failed:", e instanceof Error ? e.message : e);
+      logError("auto-backup/tick", e);
     }
   };
   globalThis.__autoBackupTimer = setInterval(tick, 3_600_000);

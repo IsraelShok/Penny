@@ -1,11 +1,13 @@
+import { logError } from "@/server/lib/log";
+import { handle, domainMessage } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { createBackup, listBackups, MIN_PASSPHRASE } from "@/server/lib/portable-backup";
 import { lockReauth } from "@/server/lib/lock-reauth";
 
 /** The encrypted backups already on disk. */
-export async function GET() {
+export const GET = handle("backup", async () => {
   return NextResponse.json({ backups: listBackups() });
-}
+});
 
 /**
  * Creates one passphrase-encrypted backup file: { passphrase, secret? }. The response is the file itself,
@@ -13,7 +15,7 @@ export async function GET() {
  * saved login under a passphrase the caller picks, so with the app lock on the lock passphrase (secret)
  * is asked again: a borrowed session must not be enough to take it.
  */
-export async function POST(request: Request) {
+export const POST = handle("backup", async (request: Request) => {
   const body = ((await request.json().catch(() => null)) ?? {}) as {
     passphrase?: unknown;
     secret?: unknown;
@@ -34,7 +36,8 @@ export async function POST(request: Request) {
       },
     });
   } catch (e) {
-    const code = e instanceof Error ? e.message : "backupFailed";
+    const code = domainMessage(e) ?? "backupFailed";
+    if (code === "backupFailed") logError("backup", e);
     return NextResponse.json({ error: code }, { status: 500 });
   }
-}
+});

@@ -1,3 +1,4 @@
+import { logError } from "@/server/lib/log";
 import { applyAutomaticGoalRules } from "@/server/db/queries/financial-control";
 import { saveAccountBalances } from "../db/queries/assets";
 import { APP_LOCKED_MESSAGE, isKeyLocked } from "../lib/encryption";
@@ -384,7 +385,7 @@ export async function syncWorkspace(
       credentials = locked ? null : getBankCredentials(workspaceId, meta.id);
     } catch (err) {
       // An unreadable credential fails this connection only; the next ones still sync.
-      console.error("[sync] credentials unreadable:", redactError(err));
+      logError("sync/credentials", err);
     }
     if (!credentials) {
       send("provider-done", {
@@ -469,7 +470,7 @@ export async function syncWorkspace(
   try {
     aiProvider = createAIProvider();
   } catch (err) {
-    console.error("[sync] AI provider unavailable:", redactError(err));
+    logError("sync/ai-provider", err);
   }
   // Without AI, warn only when memory and the dictionary left something uncategorized.
   if (
@@ -489,7 +490,7 @@ export async function syncWorkspace(
       const ollamaResult = await ensureOllamaRunning(settings.ollamaUrl);
       if (!ollamaResult.ok) {
         aiWarning = ollamaResult.error ?? "Ollama is not reachable";
-        console.error("[sync]", aiWarning);
+        logError("sync/ollama", new Error(aiWarning));
       }
     }
 
@@ -589,7 +590,7 @@ export async function syncWorkspace(
             batchSetNeedsReview(workspaceId, reviewFlags);
             categorized += updates.length;
           } catch (err) {
-            console.error(`[sync] AI categorization batch failed (${kind}):`, redactError(err));
+            logError("sync/categorize", err, { kind });
             if (!aiWarning) {
               aiWarning = friendlyAIError(err, settings.ollamaModel);
             }
@@ -644,9 +645,7 @@ export async function runAllWorkspaces(
         // A manual sync shows its errors on screen; a scheduled one has nobody watching.
         if (kind === "scheduled") await m.sendSyncAlerts(summaries.flatMap((w) => w.providers));
       })
-      .catch((err) =>
-        console.error("[bot] spend feedback", err instanceof Error ? err.message : err),
-      );
+      .catch((err) => logError("bot/spend-feedback", err));
     return summaries;
   } finally {
     markSyncEnd();

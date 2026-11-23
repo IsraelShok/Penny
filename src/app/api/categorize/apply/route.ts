@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { batchUpdateCategories } from "@/server/db/queries/transactions";
 import { ensureCategory, getCategoryByName, getParentIds } from "@/server/db/queries/categories";
@@ -28,7 +29,7 @@ interface ApplyBody {
   rejectionFallbacks?: Record<string, string>;
 }
 
-export async function POST(request: Request) {
+export const POST = handle("categorize/apply", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = (await request.json().catch(() => null)) as ApplyBody | null;
   if (!body || !Array.isArray(body.assignments)) {
@@ -101,4 +102,4 @@ export async function POST(request: Request) {
     createdCategoriesCount: createdCount,
     skippedCount,
   });
-}
+});

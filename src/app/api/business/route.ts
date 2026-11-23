@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { israelToday, monthKey } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import { getBusinessReport } from "@/server/db/queries/business";
@@ -12,7 +13,7 @@ function defaultRange(today = israelToday()): { from: string; to: string } {
 }
 
 /** The business share of the ledger, as JSON or as a CSV for an accountant. */
-export async function GET(request: Request) {
+export const GET = handle("business", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const q = new URL(request.url).searchParams;
   const fallback = defaultRange();
@@ -44,4 +45,4 @@ export async function GET(request: Request) {
       "Cache-Control": "no-store",
     },
   });
-}
+});

@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import fs from "node:fs";
@@ -60,7 +61,7 @@ function checkDatabase(): DatabaseCheck {
   return check;
 }
 
-export function GET() {
+export const GET = handle("health", () => {
   const database = checkDatabase();
   // Always 200: the setup script and the service wrapper read `ok` and expect a body even
   // when the database is the thing that is broken.
@@ -71,4 +72,4 @@ export function GET() {
     version: pkg.version,
     hasDb: database.state !== "empty", // kept for older callers
   });
-}
+});

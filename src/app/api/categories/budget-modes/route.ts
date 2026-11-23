@@ -1,12 +1,13 @@
+import { handle, readJson } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { setBudgetModesBulk } from "@/server/db/queries/categories";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
-export async function PUT(request: Request) {
+export const PUT = handle("categories/budget-modes", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   let body: unknown;
   try {
-    body = await request.json();
+    body = await readJson(request);
   } catch {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
@@ -24,4 +25,4 @@ export async function PUT(request: Request) {
 
   setBudgetModesBulk(workspaceId, ids as number[]);
   return NextResponse.json({ success: true });
-}
+});

@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import {
   linkPlanned,
@@ -17,7 +18,7 @@ const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
  * "match" runs the automatic matching, "link" takes a candidate the user picked,
  * "reject" hides one candidate, "unlink" undoes a match.
  */
-export async function POST(request: Request) {
+export const POST = handle("planned/act", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = (await request.json().catch(() => null)) as {
     action?: unknown;
@@ -45,4 +46,4 @@ export async function POST(request: Request) {
   return done
     ? NextResponse.json({ success: true })
     : NextResponse.json({ error: "not found" }, { status: 404 });
-}
+});

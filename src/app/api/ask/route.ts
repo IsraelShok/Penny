@@ -1,3 +1,5 @@
+import { logError } from "@/server/lib/log";
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/server/db";
@@ -23,7 +25,7 @@ const day = (y: number, m: number, d: number) =>
 const HE_CATS = he.categoriesSeeded as Record<string, string>;
 const EN_CATS = en.categoriesSeeded as Record<string, string>;
 
-export async function POST(request: Request) {
+export const POST = handle("ask", async (request: Request) => {
   const body = (await request.json().catch(() => null)) as { question?: unknown } | null;
   const question = typeof body?.question === "string" ? body.question.trim().slice(0, 300) : "";
   if (!question) return NextResponse.json({ error: "question required" }, { status: 400 });
@@ -271,7 +273,7 @@ export async function POST(request: Request) {
         rows: [],
       } satisfies AskAnswer);
   } catch (e) {
-    console.error("[ask] AI failed", e);
+    logError("ask", e);
     return NextResponse.json({
       source: "none",
       sentence: t("aiFailed"),
@@ -287,4 +289,4 @@ export async function POST(request: Request) {
     rows: [],
     examples,
   } satisfies AskAnswer);
-}
+});

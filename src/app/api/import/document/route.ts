@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { extractText, getDocumentProxy } from "unpdf";
 import { aiSupportsImages, completeAI } from "@/server/ai/ask";
@@ -21,7 +22,7 @@ const fail = (error: string, status: number) => NextResponse.json({ error }, { s
  * machine; only that text (or the image, for a vision-capable provider) goes to the user's own AI
  * provider. Rows come back for the sheet import's preview; nothing is saved here.
  */
-export async function POST(request: Request) {
+export const POST = handle("import/document", async (request: Request) => {
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof Blob) || file.size === 0) return fail("empty", 400);
@@ -62,4 +63,4 @@ export async function POST(request: Request) {
   }
   if (reply == null) return fail("noProvider", 503);
   return NextResponse.json({ rows: parseExtractedRows(reply) });
-}
+});

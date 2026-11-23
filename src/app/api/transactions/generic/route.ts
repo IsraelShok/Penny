@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import {
   addGenericPattern,
@@ -6,12 +7,12 @@ import {
 } from "@/server/lib/generic-descriptions";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
-export async function GET(request: Request) {
+export const GET = handle("transactions/generic", async (request: Request) => {
   return NextResponse.json({ patterns: listGenericPatterns(getWorkspaceIdFromRequest(request)) });
-}
+});
 
 /** { pattern } adds a generic description; { pattern, remove: true } removes it. */
-export async function POST(request: Request) {
+export const POST = handle("transactions/generic", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = (await request.json().catch(() => null)) as {
     pattern?: unknown;
@@ -27,4 +28,4 @@ export async function POST(request: Request) {
   return pattern
     ? NextResponse.json({ pattern })
     : NextResponse.json({ error: "Invalid pattern" }, { status: 400 });
-}
+});

@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import {
   getMonthlySummary,
@@ -35,13 +36,13 @@ function parseISODate(s: string): Date {
 }
 
 /** ?owner= scopes the spend figures to one household member; budgets stay the household's. */
-export async function GET(request: Request) {
+export const GET = handle("summary", async (request: Request) => {
   const scope = ownerScopeFromParam(
     getWorkspaceIdFromRequest(request),
     new URL(request.url).searchParams.get("owner"),
   );
   return runWithOwner(scope, () => summary(request));
-}
+});
 
 async function summary(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);

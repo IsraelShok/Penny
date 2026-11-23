@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { createManualRecurring, ManualRecurringError } from "@/server/insights/manual-recurring";
@@ -18,12 +19,12 @@ async function run(request: Request, ctx: Ctx, fn: (m: Manual, id: number) => un
 }
 
 /** Charges that could be attached to this series. */
-export function GET(request: Request, ctx: Ctx) {
+export const GET = handle("recurring/manual/[id]", (request: Request, ctx: Ctx) => {
   return run(request, ctx, (m, id) => ({ candidates: m.candidates(id) }));
-}
+});
 
 /** Field overrides, or { attach: txnId } / { detach: txnId } / { restore: true }. */
-export function PATCH(request: Request, ctx: Ctx) {
+export const PATCH = handle("recurring/manual/[id]", (request: Request, ctx: Ctx) => {
   return run(request, ctx, async (m, id) => {
     const body = ((await request.json().catch(() => null)) ?? {}) as Record<string, unknown>;
     if (body.attach !== undefined) return m.setAttached(id, body.attach, true);
@@ -31,9 +32,9 @@ export function PATCH(request: Request, ctx: Ctx) {
     if (body.restore === true) return m.setDeleted(id, false);
     return m.update(id, body);
   });
-}
+});
 
 /** Soft delete; PATCH { restore: true } brings it back. */
-export function DELETE(request: Request, ctx: Ctx) {
+export const DELETE = handle("recurring/manual/[id]", (request: Request, ctx: Ctx) => {
   return run(request, ctx, (m, id) => m.setDeleted(id, true));
-}
+});

@@ -1,3 +1,4 @@
+import { handle, readJson } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import {
   getBankCredentials,
@@ -10,12 +11,12 @@ import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { demoBlockedResponse } from "@/server/demo/guard";
 import { tryAcquireSync } from "@/server/sync/lock";
 
-export async function POST(request: Request) {
+export const POST = handle("setup/bank/test", async (request: Request) => {
   const blocked = demoBlockedResponse();
   if (blocked) return blocked;
 
   const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = (await request.json()) as {
+  const body = (await readJson(request)) as {
     provider: string;
     credentialId?: number;
     credentials?: Record<string, string>;
@@ -70,4 +71,4 @@ export async function POST(request: Request) {
     message: "Connection successful",
     accountsFound: result.accounts.length,
   });
-}
+});

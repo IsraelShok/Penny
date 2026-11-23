@@ -1,4 +1,5 @@
 import "server-only";
+import { fetchExternal } from "@/server/lib/fetch-external";
 import { markFailed, recentlyFailed } from "@/server/lib/fetch-backoff";
 
 import { getDb } from "../db/index";
@@ -21,7 +22,7 @@ export async function loadDwellingIndex(): Promise<IndexPoint[]> {
   if (recentlyFailed("cbs-dwelling")) return cached ? JSON.parse(cached.payload) : [];
   try {
     const url = `https://api.cbs.gov.il/index/data/price?id=${SERIES}&format=json&download=false&startPeriod=01-1994&endPeriod=12-2100&PageSize=1000`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(20_000), cache: "no-store" });
+    const res = await fetchExternal(url, { cache: "no-store" }, 20_000);
     if (!res.ok) throw new Error(`CBS ${res.status}`);
     const json = (await res.json()) as {
       month: { date: { year: number; month: number; currBase: { value: number } }[] }[];

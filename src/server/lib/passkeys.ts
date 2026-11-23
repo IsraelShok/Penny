@@ -87,7 +87,7 @@ export async function verifyRegistration(
     expectedOrigin: rp.origin,
     expectedRPID: rp.rpID,
     requireUserVerification: true,
-  }).catch(() => null);
+  }).catch(() => null); // a response that fails verification is a refused passkey, not a server error
   if (!reg?.verified) return null;
   const cred = reg.registrationInfo.credential;
   const stored = {

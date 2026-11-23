@@ -1,5 +1,7 @@
+import { logError } from "@/server/lib/log";
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
-import { redact, redactError } from "@/server/lib/redact";
+import { redact } from "@/server/lib/redact";
 import { runAllWorkspaces, syncWorkspace, type WorkspaceSummary } from "@/server/sync/orchestrator";
 import { getWorkspaceIdFromRequest, hasWorkspaceHeader } from "@/server/lib/workspace-context";
 import { cancelOtpRequest } from "@/server/sync/otp-bridge";
@@ -11,7 +13,7 @@ function sseEvent(event: string, data: Record<string, unknown>): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
-export async function POST(request: Request) {
+export const POST = handle("sync", async (request: Request) => {
   // The demo's credentials are placeholders, so a real scrape would only produce a login error.
   if (isDemoMode()) {
     return new Response(sseEvent("error", { message: DEMO_BLOCKED_MESSAGE }), {
@@ -102,7 +104,7 @@ export async function POST(request: Request) {
           });
         }
       } catch (error) {
-        console.error("[sync] unexpected error in sync route:", redactError(error));
+        logError("sync", error);
         const message =
           error instanceof Error ? redact(error.message) : "An unexpected error occurred";
         send("error", { message });
@@ -122,4 +124,4 @@ export async function POST(request: Request) {
       Connection: "keep-alive",
     },
   });
-}
+});
