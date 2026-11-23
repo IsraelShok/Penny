@@ -44,10 +44,25 @@ local network or the internet, unless you turn on phone access (see
 "Phone access on the home network" below). The library only contacts:
 
 - Your bank's domains (e.g., `digital.isracard.co.il`) — via Puppeteer
-- `api.anthropic.com` — only if Claude is your AI provider
-- `localhost:11434` — only if Ollama is your AI provider
-- `www.google.com` — favicon API for bank logos (only the domain
-  name leaves your machine, no credentials)
+- `api.anthropic.com` — only if Claude is your AI provider: redacted
+  transaction descriptions and amounts for categorising, aggregated totals
+  and merchant names for "ask"
+- `localhost:11434` (or the Ollama URL you set) — only if Ollama is your AI
+  provider; the same data, on your machine
+- `query1.finance.yahoo.com` — prices and exchange rates; receives the
+  ticker symbols of your holdings and the currencies you hold, no amounts
+- `data.gov.il` — the public pension and provident fund table, only if an
+  asset is linked to a fund; nothing about you is sent
+- `api.cbs.gov.il` — the public dwelling price index, only if a home has a
+  purchase price; nothing about you is sent
+- `api.telegram.org` — only if you connect the Telegram bot: your bot token
+  and the messages the bot sends you (snapshots, merchant names, dates, and
+  amounts unless you hide them)
+- `api.github.com` — update check; receives the request only, no data. The
+  Windows desktop app also downloads the installer from GitHub. Off in
+  Settings -> Privacy & security
+- An open banking API — only if you add one, at the address you enter;
+  receives the token you gave it
 
 Run with `mitmproxy` or Charles to verify this yourself.
 

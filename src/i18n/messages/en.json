@@ -3904,7 +3904,8 @@
     "linked": "Connected to {name}",
     "linkedHint": "The bot has two buttons: short snapshot and full snapshot. You can also send /short or /full.",
     "disconnect": "Disconnect bot",
-    "hideAmounts": "Hide amounts in Telegram"
+    "hideAmounts": "Hide amounts in Telegram",
+    "hideAmountsHint": "Hides amounts only. Messages that ask you to pick a category still show the merchant name and the date."
   },
   "categoryDescriptions": {
     "Groceries": "",

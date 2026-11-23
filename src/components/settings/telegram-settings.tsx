@@ -71,7 +71,7 @@ export function TelegramSettings() {
           description={t("linkedHint")}
         >
           <SettingList>
-            <SettingRow label={t("hideAmounts")} htmlFor="tg-hide">
+            <SettingRow label={t("hideAmounts")} hint={t("hideAmountsHint")} htmlFor="tg-hide">
               <Switch
                 id="tg-hide"
                 checked={s.hideAmounts}

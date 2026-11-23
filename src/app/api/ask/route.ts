@@ -6,8 +6,8 @@ import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { israelToday } from "@/server/lib/date-utils";
 import { loadInsights } from "@/server/insights/data";
 import { isActive } from "@/server/insights/recurring";
-import { normalizeMerchant } from "@/server/rules/normalize";
 import { askAI } from "@/server/ai/ask";
+import { topMerchantsForAI } from "@/server/ai/prompts";
 import { GET as cashAheadGET } from "../cash-ahead/route";
 import { parseQuestion, periodLabel, type AskAnswer, type AskCategory } from "@/lib/ask";
 import { budgetMonthRange } from "@/lib/finance-period";
@@ -248,19 +248,13 @@ export async function POST(request: Request) {
       `SELECT substr(t.date, 1, 7) as month, ROUND(SUM(t.charged_amount)) as total FROM transactions t WHERE ${BASE} AND t.kind = 'income' GROUP BY month`,
     )
     .all(...agg);
-  const merchantTotals = new Map<string, number>();
-  for (const r of db
-    .prepare(
-      `SELECT t.description, t.charged_amount as amount FROM transactions t WHERE ${BASE} AND t.kind = 'expense'`,
-    )
-    .all(...agg) as { description: string; amount: number }[]) {
-    const m = normalizeMerchant(r.description);
-    merchantTotals.set(m, (merchantTotals.get(m) ?? 0) - r.amount);
-  }
-  const topMerchants = [...merchantTotals]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 20)
-    .map(([merchant, total]) => ({ merchant, total: Math.round(total) }));
+  const topMerchants = topMerchantsForAI(
+    db
+      .prepare(
+        `SELECT t.description, t.charged_amount as amount FROM transactions t WHERE ${BASE} AND t.kind = 'expense'`,
+      )
+      .all(...agg) as { description: string; amount: number }[],
+  );
   try {
     const text = await askAI(question, {
       today: todayIso,
