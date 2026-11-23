@@ -39,6 +39,24 @@ file alone cannot decrypt them.
   enough. With the lock off, any program running on the machine can ask
   for one: **on a computer other people use, turn the app lock on.**
 
+- The MCP server (`npm run mcp`, see [docs/mcp.md](docs/mcp.md)) has no browser
+  session, so with the app lock on it presents a random 32-byte token that
+  the app keeps in `data/mcp-token` (owner-only, like the key file). The
+  token grants exactly this: `GET` on the fixed list of read-only routes in
+  `MCP_READ_PATHS` (`src/proxy.ts`) — overview, transactions, budgets,
+  assets, planned purchases, forecasts, insights, pension, insurance and
+  sync state. It does not open any page, write, setting, backup, export or
+  saved login, it never starts a session, and the Host and cross-site checks
+  still apply. Those routes read only what is plaintext in the database, so
+  anyone who can read the data folder to get the token could already read
+  the database file. Deleting the file revokes it.
+- On Windows the key file and the MCP token are restricted to the current
+  user with `icacls` when they are written (the folder's inherited ACL is
+  removed). If that fails the app logs one warning and carries on.
+- Backup files derive their key with `scrypt` N=2^17 and record the cost
+  in the file (format `PENNYBK2`); older `PENNYBK1` files (N=2^15) still
+  restore.
+
 The right defense for both is **full-disk encryption on your laptop**
 (FileVault on macOS, BitLocker on Windows, LUKS on Linux). Turn it on.
 
