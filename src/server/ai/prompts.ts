@@ -6,6 +6,7 @@ import type {
   TransactionForCategorization,
 } from "./types";
 import { redact } from "../lib/redact";
+import { normalizeMerchant } from "../rules/normalize";
 
 function renderCategoryLine(c: CategoryForCategorization, indent = ""): string {
   return c.description && c.description.trim().length > 0
@@ -46,10 +47,13 @@ function renderCategories(categories: CategoryForCategorization[]): string {
 const HIERARCHY_RULE =
   "Category lists may show group headers (e.g., 'Food:') with leaves indented beneath them. Group headers are NOT valid categoryName values - always pick a leaf (the indented name).";
 
-function renderCorrections(corrections: PastCorrection[]): string {
+function renderCorrections(corrections: PastCorrection[], local: boolean): string {
   if (corrections.length === 0) return "";
   const lines = corrections
-    .map((c) => `- "${c.description}" → wrong: ${c.wrongCategory}, correct: ${c.correctCategory}`)
+    .map(
+      (c) =>
+        `- "${forModel(c.description, local)}" → wrong: ${c.wrongCategory}, correct: ${c.correctCategory}`,
+    )
     .join("\n");
   return `
 Past corrections (the AI miscategorized these before — apply the lesson to similar merchants):
@@ -72,6 +76,30 @@ export function hideTransferNames(description: string): string {
   return m ? `${m[0]} [name hidden]` : description;
 }
 
+/** A description as a model may see it: account, ID and card digits never; transfer names only on this machine. */
+const forModel = (description: string, local: boolean) =>
+  local ? redact(description) : hideTransferNames(redact(description));
+
+/**
+ * The biggest merchants with their totals, for the free-form "ask" prompt. Names are redacted and
+ * transfers are left out: their "merchant" is a person.
+ */
+export function topMerchantsForAI(
+  rows: { description: string; amount: number }[],
+  limit = 20,
+): { merchant: string; total: number }[] {
+  const totals = new Map<string, number>();
+  for (const r of rows) {
+    if (TRANSFER.test(r.description)) continue;
+    const m = redact(normalizeMerchant(r.description));
+    totals.set(m, (totals.get(m) ?? 0) - r.amount);
+  }
+  return [...totals]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([merchant, total]) => ({ merchant, total: Math.round(total) }));
+}
+
 export function buildCategorizationPrompt(
   transactions: TransactionForCategorization[],
   categories: CategoryForCategorization[],
@@ -81,13 +109,13 @@ export function buildCategorizationPrompt(
   local = false,
 ): string {
   const categoriesBlock = renderCategories(categories);
-  const correctionsBlock = renderCorrections(pastCorrections);
+  const correctionsBlock = renderCorrections(pastCorrections, local);
 
   const transactionLines = transactions
     .map(
       (t, i) =>
         // Account, ID and card digits never help categorize and must not reach a cloud model.
-        `${i}: "${local ? redact(t.description) : hideTransferNames(redact(t.description))}" | ${t.currency} ${Math.abs(t.amount).toFixed(2)}${t.memo ? ` | memo: "${redact(t.memo)}"` : ""}`,
+        `${i}: "${forModel(t.description, local)}" |${t.currency} ${Math.abs(t.amount).toFixed(2)}${t.memo ? ` | memo: "${redact(t.memo)}"` : ""}`,
     )
     .join("\n");
 

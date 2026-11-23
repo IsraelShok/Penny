@@ -79,3 +79,30 @@ it("cloud prompts keep a transfer's kind but not the person's name; local prompt
   expect(buildCategorizationPrompt(tx, cats)).not.toContain("דנה");
   expect(buildCategorizationPrompt(tx, cats, false, [], true)).toContain("דנה");
 });
+
+it("past corrections reach the prompt redacted like transactions", async () => {
+  const { buildCategorizationPrompt } = await import("@/server/ai/prompts");
+  const corrections = [
+    { description: "הוראת קבע 123456789", wrongCategory: "Other", correctCategory: "Bills" },
+    { description: "העברה לדנה כהן", wrongCategory: "Other", correctCategory: "Gifts" },
+  ];
+  const cloud = buildCategorizationPrompt([], [{ name: "Bills" }] as never, false, corrections);
+  expect(cloud).toContain("הוראת קבע [number]");
+  expect(cloud).not.toContain("123456789");
+  expect(cloud).not.toContain("דנה");
+});
+
+it("the ask prompt's merchant list is redacted and has no transfers", async () => {
+  const { topMerchantsForAI } = await import("@/server/ai/prompts");
+  const top = topMerchantsForAI([
+    { description: "שופרסל דיל", amount: -300 },
+    { description: "שופרסל דיל", amount: -200 },
+    { description: "העברה לדנה כהן", amount: -5000 },
+    { description: "bit - Dana Cohen", amount: -900 },
+    { description: "חשבון 987654321 חיוב", amount: -100 },
+  ]);
+  expect(top).toEqual([
+    { merchant: "שופרסל דיל", total: 500 },
+    { merchant: "חשבון [number] חיוב", total: 100 },
+  ]);
+});
