@@ -8,6 +8,7 @@ import { connectOpenBanking } from "@/server/open-banking/client";
 import type { BankProvider } from "@/lib/types";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { demoBlockedResponse } from "@/server/demo/guard";
+import { tryAcquireSync } from "@/server/sync/lock";
 
 export async function POST(request: Request) {
   const blocked = demoBlockedResponse();
@@ -37,12 +38,25 @@ export async function POST(request: Request) {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const result =
-    body.provider === "openBanking"
-      ? await connectOpenBanking(credentials, sevenDaysAgo)
-      : await scrapeBank(workspaceId, body.provider as BankProvider, credentials, sevenDaysAgo, {
-          manualTwoFactor,
-        });
+  // A test is a real login. Two logins to one bank at the same moment can get the account flagged.
+  const release = tryAcquireSync("manual");
+  if (!release) {
+    return NextResponse.json(
+      { success: false, message: "A sync is running. Try the test again when it finishes." },
+      { status: 409 },
+    );
+  }
+  let result;
+  try {
+    result =
+      body.provider === "openBanking"
+        ? await connectOpenBanking(credentials, sevenDaysAgo)
+        : await scrapeBank(workspaceId, body.provider as BankProvider, credentials, sevenDaysAgo, {
+            manualTwoFactor,
+          });
+  } finally {
+    release();
+  }
 
   if (!result.success) {
     return NextResponse.json({

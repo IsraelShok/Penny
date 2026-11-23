@@ -381,6 +381,7 @@
     "changePassword": "The bank requires a new password. Sign in on the bank website and change it first.",
     "accountBlocked": "The bank has blocked the account. Sign in on the bank website to check how to unblock it.",
     "timeout": "The bank didn't respond in time. Its site may be slow or down. Try again in a few minutes.",
+    "needsYou": "This account needs you to finish signing in (a code, or a step in the browser), so the automatic sync skipped it. Press Sync to do it now.",
     "twoFactor": "This account is asking for 2FA. For most banks, turn on 'This account requires 2FA' in the bank settings so the browser is shown and you can complete it. For One Zero, make sure the phone number is set.",
     "unexpected": "Sync did not finish. Turn on \"Show browser during sync\" in Settings and sync again to see what is stopping it.",
     "unexpectedHeadless": "Sync did not finish. The bank may have changed its sign-in page. Try again later. If this continues, update the app."

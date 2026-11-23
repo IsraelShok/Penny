@@ -231,11 +231,13 @@ export async function scrapeBank(
     }
   }
 
-  const { friendly } = classifyError(lastError);
+  const { friendly, retryable } = classifyError(lastError);
   const detail = sanitizeError(lastError);
   return {
     success: false,
     accounts: [],
     errorMessage: friendly ? `${friendly} (${detail})` : detail,
+    // Still transient after the attempts above: the scheduler tries this connection again later today.
+    retryable,
   };
 }
