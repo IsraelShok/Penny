@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://sergey-bar.github.io/Penny/</loc></url>
-  <url><loc>https://sergey-bar.github.io/Penny/en/</loc></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://sergey-bar.github.io/Penny/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="he" href="https://sergey-bar.github.io/Penny/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sergey-bar.github.io/Penny/en/"/>
+  </url>
+  <url>
+    <loc>https://sergey-bar.github.io/Penny/en/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="he" href="https://sergey-bar.github.io/Penny/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sergey-bar.github.io/Penny/en/"/>
+  </url>
   <url><loc>https://sergey-bar.github.io/Penny/demo/</loc></url>
   <url><loc>https://sergey-bar.github.io/Penny/en/demo/</loc></url>
 </urlset>
