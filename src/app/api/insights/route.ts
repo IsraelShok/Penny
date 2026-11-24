@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { loadInsights } from "@/server/insights/data";
 import { forecastCards } from "@/server/insights/forecast";
@@ -7,7 +8,7 @@ import { israelToday } from "@/server/lib/date-utils";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = handle("insights", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const today = israelToday();
   const i = loadInsights(workspaceId, today, Number(process.env.CARD_BILLING_DAY) || 10);
@@ -23,4 +24,4 @@ export async function GET(request: Request) {
     anomalies: i.anomalies,
     installments: openInstallments(i.installments, today),
   });
-}
+});

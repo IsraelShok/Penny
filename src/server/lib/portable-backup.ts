@@ -6,9 +6,9 @@ import os from "node:os";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { closeDb, getDb } from "@/server/db";
-import { backupBeforeMigration, backupDir } from "@/server/db/backup";
+import { backupBeforeMigration, backupDir, snapshotTo } from "@/server/db/backup";
 import { dataDir, dbPath } from "@/server/lib/data-dir";
-import { getKey, keyPath, setKeyInMemory } from "@/server/lib/encryption";
+import { getKey, keyPath, setKeyInMemory, writeOwnerOnly } from "@/server/lib/encryption";
 import { isLockEnabled } from "@/server/lib/app-lock";
 import { requireRelink } from "@/server/bot/config";
 import { resetFolderImportDir } from "@/server/lib/folder-import";
@@ -16,12 +16,20 @@ import { resetFolderImportDir } from "@/server/lib/folder-import";
 /**
  * One portable, passphrase-encrypted file holding the database and the key that decrypts the
  * credentials in it. Losing the key would leave the credentials unreadable, so both travel together.
+ *
+ * File layout, v2: "PENNYBK2", one byte log2(scrypt N), salt, iv, tag, body. v1 ("PENNYBK1") has no
+ * cost byte and always used N=2^15; it is still read, never written.
  */
-const MAGIC = Buffer.from("PENNYBK1");
+const MAGIC = Buffer.from("PENNYBK2");
+const MAGIC_V1 = Buffer.from("PENNYBK1");
+const LOG_N = 17;
+const LOG_N_V1 = 15;
+// A crafted cost byte must not make the server allocate gigabytes (scrypt needs about 128 * N * r bytes).
+const LOG_N_MIN = 15;
+const LOG_N_MAX = 20;
 const SALT_BYTES = 16;
 const IV_BYTES = 12;
 const TAG_BYTES = 16;
-const SCRYPT = { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
 const SQLITE_HEADER = Buffer.from("SQLite format 3\u0000");
 export const MIN_PASSPHRASE = 8;
 
@@ -73,28 +81,38 @@ export interface BackupCounts {
   to: string | null;
 }
 
-const derive = (passphrase: string, salt: Buffer) =>
-  crypto.scryptSync(passphrase, salt, 32, SCRYPT);
+const derive = (passphrase: string, salt: Buffer, logN: number) =>
+  crypto.scryptSync(passphrase, salt, 32, {
+    N: 2 ** logN,
+    r: 8,
+    p: 1,
+    // Twice what scrypt needs: 256 MiB for N=2^17.
+    maxmem: 256 * 2 ** logN * 8,
+  });
 
 export function encryptBackup(plain: Buffer, passphrase: string): Buffer {
   const salt = crypto.randomBytes(SALT_BYTES);
   const iv = crypto.randomBytes(IV_BYTES);
-  const cipher = crypto.createCipheriv("aes-256-gcm", derive(passphrase, salt), iv);
+  const cipher = crypto.createCipheriv("aes-256-gcm", derive(passphrase, salt, LOG_N), iv);
   const body = Buffer.concat([cipher.update(plain), cipher.final()]);
-  return Buffer.concat([MAGIC, salt, iv, cipher.getAuthTag(), body]);
+  return Buffer.concat([MAGIC, Buffer.from([LOG_N]), salt, iv, cipher.getAuthTag(), body]);
 }
 
 /** Throws "badFile" for anything that is not a Penny backup, "badPassphrase" when the tag fails. */
 export function decryptBackup(file: Buffer, passphrase: string): Buffer {
-  const header = MAGIC.length + SALT_BYTES + IV_BYTES + TAG_BYTES;
-  if (file.length <= header || !file.subarray(0, MAGIC.length).equals(MAGIC))
-    throw new Error("badFile");
-  const salt = file.subarray(MAGIC.length, MAGIC.length + SALT_BYTES);
-  const iv = file.subarray(MAGIC.length + SALT_BYTES, MAGIC.length + SALT_BYTES + IV_BYTES);
-  const tag = file.subarray(MAGIC.length + SALT_BYTES + IV_BYTES, header);
+  const magic = file.subarray(0, MAGIC.length);
+  const v2 = magic.equals(MAGIC);
+  if (!v2 && !magic.equals(MAGIC_V1)) throw new Error("badFile");
+  const start = MAGIC.length + (v2 ? 1 : 0);
+  const header = start + SALT_BYTES + IV_BYTES + TAG_BYTES;
+  const logN = v2 ? file[MAGIC.length] : LOG_N_V1;
+  if (file.length <= header || logN < LOG_N_MIN || logN > LOG_N_MAX) throw new Error("badFile");
+  const salt = file.subarray(start, start + SALT_BYTES);
+  const iv = file.subarray(start + SALT_BYTES, start + SALT_BYTES + IV_BYTES);
+  const tag = file.subarray(start + SALT_BYTES + IV_BYTES, header);
   const body = file.subarray(header);
   try {
-    const decipher = crypto.createDecipheriv("aes-256-gcm", derive(passphrase, salt), iv, {
+    const decipher = crypto.createDecipheriv("aes-256-gcm", derive(passphrase, salt, logN), iv, {
       authTagLength: 16,
     });
     decipher.setAuthTag(tag);
@@ -152,7 +170,19 @@ export function backupFileName(now = new Date()): string {
   return `penny-backup-${stamp}.pennybak`;
 }
 
-/** Checkpoints WAL, then encrypts the database file and the key into one buffer. */
+/** A consistent copy of the live database as bytes (VACUUM INTO a temp file, read, delete). */
+function snapshotDatabase(db: Database.Database): Buffer {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "penny-backup-"));
+  const file = path.join(dir, "snapshot.db");
+  try {
+    snapshotTo(db, file);
+    return fs.readFileSync(file);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** Snapshots the database, then encrypts it and the key into one buffer. */
 export function createBackup(passphrase: string): {
   bytes: Buffer;
   fileName: string;
@@ -160,14 +190,11 @@ export function createBackup(passphrase: string): {
 } {
   if (passphrase.length < MIN_PASSPHRASE) throw new Error("weakPassphrase");
   const db = getDb();
-  db.pragma("wal_checkpoint(TRUNCATE)");
-  const file = dbPath();
-  if (!fs.existsSync(file)) throw new Error("noDatabase");
   const payload: BackupPayload = {
     format: 1,
     createdAt: new Date().toISOString(),
     appVersion: process.env.npm_package_version ?? "1.0.0",
-    database: fs.readFileSync(file).toString("base64"),
+    database: snapshotDatabase(db).toString("base64"),
     // The raw 32-byte key, also when the app lock keeps it only in memory: without it saved logins are unreadable.
     encryptionKey: currentKey()?.toString("base64") ?? null,
     files: collectDataFiles(dataDir()),
@@ -212,7 +239,9 @@ function opensAsPennyDatabase(bytes: Buffer): boolean {
         name: string;
       }[];
       return (
-        tables.some((t) => t.name === "transactions") && tables.some((t) => t.name === "workspaces")
+        tables.some((t) => t.name === "transactions") &&
+        tables.some((t) => t.name === "workspaces") &&
+        probe.pragma("quick_check", { simple: true }) === "ok"
       );
     } finally {
       probe.close();
@@ -249,7 +278,8 @@ export interface RestoreResult {
 
 /**
  * Replaces the live database with a backup, once the passphrase is checked. The current database is
- * copied to data/backups first, so a wrong file is one more restore away from being undone.
+ * copied to data/backups first. If the restored file does not open, migrate and pass an integrity
+ * check, that copy is put back and "corruptRestore" is thrown: a bad backup never costs the data in use.
  */
 export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
   const payload = readBackup(file, passphrase);
@@ -264,16 +294,46 @@ export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
 
   const db = getDb();
   const preRestoreBackup = backupBeforeMigration(db, "restore");
+  const oldKey = currentKey();
+  const replaceKey = key && !isLockEnabled() && !key.equals(oldKey ?? Buffer.alloc(0)) ? key : null;
+  // The replaced key goes beside the copy of the replaced database: that copy is unreadable without it.
+  if (replaceKey && oldKey && preRestoreBackup)
+    writeOwnerOnly(`${preRestoreBackup}.key`, oldKey.toString("hex"));
   const target = dbPath();
-  closeDb();
-  for (const suffix of ["-wal", "-shm"]) fs.rmSync(`${target}${suffix}`, { force: true });
-  fs.writeFileSync(target, database);
-  // Credentials in the backup were encrypted with this key, so the restored database needs it, stored the way
-  // getOrCreateKey reads it (hex text) and loaded into memory now.
-  if (key && !isLockEnabled()) {
-    fs.writeFileSync(keyPath(), key.toString("hex"), { mode: 0o600 });
-    fs.chmodSync(keyPath(), 0o600);
-    setKeyInMemory(key);
+  // Written beside the target first, so a full disk fails here, before the live file is touched.
+  const staged = `${target}.restore-tmp`;
+  let swapped = false;
+  let fresh: Database.Database;
+  try {
+    fs.writeFileSync(staged, database);
+    closeDb();
+    for (const suffix of ["-wal", "-shm"]) fs.rmSync(`${target}${suffix}`, { force: true });
+    // One rename: the live file is either the old database or the restored one, never missing.
+    fs.renameSync(staged, target);
+    swapped = true;
+    // Opening runs the migrations, so a backup from a newer version or one that fails to migrate is caught here.
+    fresh = getDb();
+    if (fresh.pragma("quick_check", { simple: true }) !== "ok") throw new Error("quick_check");
+    // Credentials in the backup were encrypted with this key, so the restored database needs it, stored the way
+    // getOrCreateKey reads it (hex text) and loaded into memory now.
+    if (replaceKey) {
+      writeOwnerOnly(keyPath(), replaceKey.toString("hex"));
+      setKeyInMemory(replaceKey);
+    }
+  } catch (e) {
+    if (!swapped) throw e;
+    console.error("[restore] restored database rejected, putting the previous one back:", e);
+    closeDb();
+    for (const suffix of ["", "-wal", "-shm"]) fs.rmSync(`${target}${suffix}`, { force: true });
+    if (preRestoreBackup) fs.copyFileSync(preRestoreBackup, target);
+    if (replaceKey) {
+      if (oldKey) writeOwnerOnly(keyPath(), oldKey.toString("hex"));
+      else fs.rmSync(keyPath(), { force: true });
+      setKeyInMemory(oldKey ?? undefined);
+    }
+    throw new Error("corruptRestore");
+  } finally {
+    fs.rmSync(staged, { force: true });
   }
   // Documents and receipts come back beside the rows that point to them. Files already here stay.
   for (const [rel, data] of Object.entries(payload.files ?? {})) {
@@ -282,9 +342,6 @@ export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, Buffer.from(data, "base64"));
   }
-  const fresh = getDb();
-  const check = fresh.pragma("quick_check") as { quick_check: string }[];
-  if (!check.every((row) => row.quick_check === "ok")) throw new Error("corruptRestore");
   requireRelink();
   resetFolderImportDir();
   return { counts: countsOf(fresh), preRestoreBackup, createdAt: payload.createdAt };

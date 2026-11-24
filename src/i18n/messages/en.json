@@ -962,6 +962,7 @@
       "backupRestored": "Restore finished: {count} transactions",
       "backupListTitle": "Recent backups",
       "backupNone": "No backups yet.",
+      "backupCorrupt": "This backup is damaged and was not restored. Your current data is unchanged.",
       "backupLockOn": "The app lock is on. Turn it off in Privacy settings, restore the backup, then turn the lock on again.",
       "exportOfx": "Export OFX (for other money apps)",
       "diagTitle": "Support file",
@@ -974,6 +975,7 @@
       "autoPassSave": "Save",
       "autoPassSaved": "Backup passphrase saved.",
       "autoPassHint": "At least 8 characters. Keep it somewhere safe: without it the backup can't be restored.",
+      "autoLockSecret": "App lock passphrase (needed to change the passphrase or folder)",
       "autoEnable": "Automatic backup",
       "autoFrequency": "How often",
       "autoDaily": "Every day",
@@ -3904,7 +3906,8 @@
     "linked": "Connected to {name}",
     "linkedHint": "The bot has two buttons: short snapshot and full snapshot. You can also send /short or /full.",
     "disconnect": "Disconnect bot",
-    "hideAmounts": "Hide amounts in Telegram"
+    "hideAmounts": "Hide amounts in Telegram",
+    "hideAmountsHint": "Hides amounts only. Messages that ask you to pick a category still show the merchant name and the date."
   },
   "categoryDescriptions": {
     "Groceries": "",

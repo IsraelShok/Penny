@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 import {
@@ -22,7 +23,7 @@ const refuse = (check: Extract<CheckResult, { ok: false }>) =>
   );
 
 /** `{secret}` (passphrase or recovery code), `{passkey: "options"}`, or `{passkey: <assertion>, prfOutput}`. */
-export async function POST(request: Request) {
+export const POST = handle("lock/unlock", async (request: Request) => {
   const body = (await request.json().catch(() => ({}))) as {
     secret?: unknown;
     passkey?: "options" | AuthenticationResponseJSON;
@@ -56,4 +57,4 @@ export async function POST(request: Request) {
   const { startBot } = await import("@/server/bot");
   startBot();
   return withSession(NextResponse.json({ ok: true }), request, token);
-}
+});

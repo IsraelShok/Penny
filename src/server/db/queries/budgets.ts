@@ -1,7 +1,8 @@
 import "server-only";
 
+import { roundSums } from "@/lib/money";
 import { getDb } from "../index";
-import { toLocalISODate } from "../../lib/date-utils";
+import { toLocalISODate, israelNoon } from "../../lib/date-utils";
 import { getWorkspaceSetting, setWorkspaceSetting } from "./settings";
 import { parseMoves, type BudgetMoves } from "@/lib/budget-moves";
 
@@ -81,7 +82,7 @@ interface AutoSpend {
  * one-third of it.
  */
 export function getAutoBudgetAverage(workspaceId: number, monthsBack: number = 3): AutoSpend[] {
-  const now = new Date();
+  const now = israelNoon();
   const periods: { from: string; to: string }[] = [];
   for (let i = 1; i <= monthsBack; i++) {
     const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -97,14 +98,17 @@ export function getAutoBudgetAverage(workspaceId: number, monthsBack: number = 3
   const monthsSeen = new Map<number, number>();
 
   for (const { from, to } of periods) {
-    const rows = db
-      .prepare(
-        `SELECT category_id as categoryId, SUM(spend) as amount
+    const rows = roundSums(
+      db
+        .prepare(
+          `SELECT category_id as categoryId, SUM(spend) as amount
          FROM v_spend_rows
          WHERE workspace_id = ? AND date >= ? AND date <= ? AND category_id IS NOT NULL
          GROUP BY category_id`,
-      )
-      .all(workspaceId, from, to) as AutoSpend[];
+        )
+        .all(workspaceId, from, to) as AutoSpend[],
+      "amount",
+    );
 
     for (const r of rows) {
       if (r.amount <= 0) continue;
@@ -135,15 +139,18 @@ export function setBudgetMoves(workspaceId: number, moves: BudgetMoves): void {
 }
 
 /** Income of each of the last `months` complete months (0 for months with none), and this month so far. */
-export function getMonthlyIncomes(workspaceId: number, months = 12, now = new Date()) {
+export function getMonthlyIncomes(workspaceId: number, months = 12, now = israelNoon()) {
   const from = toLocalISODate(new Date(now.getFullYear(), now.getMonth() - months, 1));
-  const rows = getDb()
-    .prepare(
-      `SELECT substr(date, 1, 7) as month, SUM(cash_amount) as income FROM v_cash_rows
+  const rows = roundSums(
+    getDb()
+      .prepare(
+        `SELECT substr(date, 1, 7) as month, SUM(cash_amount) as income FROM v_cash_rows
        WHERE workspace_id = ? AND flow_type = 'income' AND date >= ?
        GROUP BY month`,
-    )
-    .all(workspaceId, from) as { month: string; income: number }[];
+      )
+      .all(workspaceId, from) as { month: string; income: number }[],
+    "income",
+  );
   const byMonth = new Map(rows.map((r) => [r.month, r.income]));
   const key = (d: Date) => toLocalISODate(d).slice(0, 7);
   const past: number[] = [];

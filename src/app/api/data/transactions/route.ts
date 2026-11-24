@@ -1,10 +1,11 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db/index";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 const CONFIRM_DELETE_ALL = "delete-all-transactions";
 
-export async function DELETE(request: Request) {
+export const DELETE = handle("data/transactions", async (request: Request) => {
   // Destructive and unrecoverable: refuse unless the caller explicitly confirms (the settings dialog does).
   const confirm = ((await request.json().catch(() => null)) as { confirm?: unknown } | null)
     ?.confirm;
@@ -41,4 +42,4 @@ export async function DELETE(request: Request) {
     success: true,
     deleted: result,
   });
-}
+});

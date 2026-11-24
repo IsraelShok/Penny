@@ -3,7 +3,14 @@ import "server-only";
 import crypto from "crypto";
 import fs from "fs";
 import { promisify } from "util";
-import { getKey, keyPath, legacyKeyPath, lockFilePath, setKeyInMemory } from "./encryption";
+import {
+  getKey,
+  keyPath,
+  legacyKeyPath,
+  lockFilePath,
+  setKeyInMemory,
+  writeOwnerOnly,
+} from "./encryption";
 
 /**
  * Optional app lock. One file, <data>/.app-lock.json, holds the scrypt hash of the passphrase and the
@@ -214,7 +221,8 @@ export function unlockWithPasskey(id: string, prfOutput: Buffer, counter: number
 function writeLock(lock: LockFile): void {
   // Write then rename, so a crash never leaves a half-written file and an unreadable key.
   const tmp = `${lockFilePath()}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(lock), { mode: 0o600 });
+  // It holds the wrapped key, so on Windows it gets the same owner-only ACL as the key file.
+  writeOwnerOnly(tmp, JSON.stringify(lock));
   fs.renameSync(tmp, lockFilePath());
 }
 
@@ -301,8 +309,18 @@ export async function enableLock(secret: string, idle: number): Promise<string> 
   const key = getKey();
   writeLock(await build(secret, key, idle));
   shred(keyPath());
-  if (legacyKeyPath() !== keyPath()) shred(legacyKeyPath());
+  shredLegacyKey(key);
   return regenerateRecovery();
+}
+
+/**
+ * Shreds the key at the old ./data location only when it is this install's key. That path hangs off the
+ * working directory, so with PENNY_DATA_DIR elsewhere it can be another install's (a developer's own) key.
+ */
+export function shredLegacyKey(key: Buffer | null | undefined): void {
+  const legacy = legacyKeyPath();
+  if (!key || legacy === keyPath() || !fs.existsSync(legacy)) return;
+  if (fs.readFileSync(legacy, "utf8").trim().toLowerCase() === key.toString("hex")) shred(legacy);
 }
 
 /** The passphrase, or else the recovery code, opens the key. */
@@ -340,7 +358,7 @@ export async function disableLock(current: string): Promise<void> {
   if (!lock) return;
   const key = await unwrapAny(lock, current);
   // Shredding the lock file drops the passkey and recovery wraps with it.
-  fs.writeFileSync(keyPath(), key.toString("hex"), { mode: 0o600 });
+  writeOwnerOnly(keyPath(), key.toString("hex"));
   setKeyInMemory(key);
   shred(lockFilePath());
   sessions().clear();

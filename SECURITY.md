@@ -33,6 +33,29 @@ file alone cannot decrypt them.
   `scrypt` N=2^17 (about a quarter second per guess per CPU core), which
   puts a brute force in the days-to-weeks range on a desktop, not hours.
   A long passphrase is much stronger than the shortest accepted PIN.
+- A backup file holds the database and the key to the saved logins, under
+  a passphrase the caller picks. With the app lock on, creating or
+  restoring one asks for the lock PIN again, so a borrowed session is not
+  enough. With the lock off, any program running on the machine can ask
+  for one: **on a computer other people use, turn the app lock on.**
+
+- The MCP server (`npm run mcp`, see [docs/mcp.md](docs/mcp.md)) has no browser
+  session, so with the app lock on it presents a random 32-byte token that
+  the app keeps in `data/mcp-token` (owner-only, like the key file). The
+  token grants exactly this: `GET` on the fixed list of read-only routes in
+  `MCP_READ_PATHS` (`src/proxy.ts`) — overview, transactions, budgets,
+  assets, planned purchases, forecasts, insights, pension, insurance and
+  sync state. It does not open any page, write, setting, backup, export or
+  saved login, it never starts a session, and the Host and cross-site checks
+  still apply. Those routes read only what is plaintext in the database, so
+  anyone who can read the data folder to get the token could already read
+  the database file. Deleting the file revokes it.
+- On Windows the key file and the MCP token are restricted to the current
+  user with `icacls` when they are written (the folder's inherited ACL is
+  removed). If that fails the app logs one warning and carries on.
+- Backup files derive their key with `scrypt` N=2^17 and record the cost
+  in the file (format `PENNYBK2`); older `PENNYBK1` files (N=2^15) still
+  restore.
 
 The right defense for both is **full-disk encryption on your laptop**
 (FileVault on macOS, BitLocker on Windows, LUKS on Linux). Turn it on.
@@ -44,10 +67,25 @@ local network or the internet, unless you turn on phone access (see
 "Phone access on the home network" below). The library only contacts:
 
 - Your bank's domains (e.g., `digital.isracard.co.il`) — via Puppeteer
-- `api.anthropic.com` — only if Claude is your AI provider
-- `localhost:11434` — only if Ollama is your AI provider
-- `www.google.com` — favicon API for bank logos (only the domain
-  name leaves your machine, no credentials)
+- `api.anthropic.com` — only if Claude is your AI provider: redacted
+  transaction descriptions and amounts for categorising, aggregated totals
+  and merchant names for "ask"
+- `localhost:11434` (or the Ollama URL you set) — only if Ollama is your AI
+  provider; the same data, on your machine
+- `query1.finance.yahoo.com` — prices and exchange rates; receives the
+  ticker symbols of your holdings and the currencies you hold, no amounts
+- `data.gov.il` — the public pension and provident fund table, only if an
+  asset is linked to a fund; nothing about you is sent
+- `api.cbs.gov.il` — the public dwelling price index, only if a home has a
+  purchase price; nothing about you is sent
+- `api.telegram.org` — only if you connect the Telegram bot: your bot token
+  and the messages the bot sends you (snapshots, merchant names, dates, and
+  amounts unless you hide them)
+- `api.github.com` — update check; receives the request only, no data. The
+  Windows desktop app also downloads the installer from GitHub. Off in
+  Settings -> Privacy & security
+- An open banking API — only if you add one, at the address you enter;
+  receives the token you gave it
 
 Run with `mitmproxy` or Charles to verify this yourself.
 

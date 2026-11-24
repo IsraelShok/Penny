@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getMonthlyIncomes } from "@/server/db/queries/budgets";
 import { getAppSettings } from "@/server/db/queries/settings";
@@ -7,10 +8,10 @@ import { smoothIncome } from "@/lib/smoothing";
 export const dynamic = "force-dynamic";
 
 /** Steady monthly amount for irregular income; null when income is steady. */
-export async function GET(request: Request) {
+export const GET = handle("budgets/smoothing", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const { past, current } = getMonthlyIncomes(ws);
   return NextResponse.json({
     smoothing: smoothIncome(past, current, getAppSettings(ws).household.incomeShape),
   });
-}
+});

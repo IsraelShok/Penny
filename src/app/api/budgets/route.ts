@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getAllBudgets } from "@/server/db/queries/budgets";
 import { setBudgetForPeriod } from "@/server/db/queries/budget-periods";
@@ -6,12 +7,12 @@ import { budgetMonthRange } from "@/lib/finance-period";
 import { israelToday } from "@/server/lib/date-utils";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
-export async function GET(request: Request) {
+export const GET = handle("budgets", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   return NextResponse.json(getAllBudgets(workspaceId));
-}
+});
 
-export async function PUT(request: Request) {
+export const PUT = handle("budgets", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = ((await request.json().catch(() => null)) ?? {}) as {
     categoryId: number;
@@ -42,4 +43,4 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
   return NextResponse.json({ success: true });
-}
+});

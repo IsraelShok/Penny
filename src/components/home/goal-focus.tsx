@@ -1,4 +1,5 @@
 "use client";
+import { israelToday } from "@/lib/dates";
 import { useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -192,7 +193,7 @@ export function GoalFocus() {
               setDraft({
                 name: "",
                 savedAmount: 0,
-                targetDate: new Date().toISOString().slice(0, 7),
+                targetDate: israelToday().slice(0, 7),
               })
             }
           >

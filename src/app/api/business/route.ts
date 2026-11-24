@@ -1,3 +1,5 @@
+import { handle } from "@/server/lib/api-error";
+import { israelToday, monthKey } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import { getBusinessReport } from "@/server/db/queries/business";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
@@ -6,14 +8,12 @@ import { toCsv } from "@/lib/csv";
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Default period: the last twelve months, ending today. */
-function defaultRange(today = new Date()): { from: string; to: string } {
-  const to = today.toISOString().slice(0, 10);
-  const start = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 11, 1));
-  return { from: start.toISOString().slice(0, 10), to };
+function defaultRange(today = israelToday()): { from: string; to: string } {
+  return { from: `${monthKey(today, -11)}-01`, to: today };
 }
 
 /** The business share of the ledger, as JSON or as a CSV for an accountant. */
-export async function GET(request: Request) {
+export const GET = handle("business", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const q = new URL(request.url).searchParams;
   const fallback = defaultRange();
@@ -45,4 +45,4 @@ export async function GET(request: Request) {
       "Cache-Control": "no-store",
     },
   });
-}
+});

@@ -1,3 +1,4 @@
+import type { ErrorCode } from "./error-codes";
 import type { Series } from "@/server/insights/recurring";
 import type { BillForecast } from "@/server/insights/forecast";
 import type { Anomaly } from "@/server/insights/anomalies";
@@ -53,6 +54,12 @@ const ERRORS = {
     syncBusy: "סנכרון כבר רץ עכשיו. נסו שוב בעוד רגע.",
     locked: "האפליקציה נעולה. הזינו את הקוד כדי להמשיך.",
     signInRequired: "צריך לבחור משתמש מחדש. רעננו את הדף.",
+    badJson: "הבקשה לא נשלחה כמו שצריך. רעננו את הדף ונסו שוב.",
+    dbBusy: "הנתונים נשמרים כרגע. חכו רגע ונסו שוב.",
+    diskFull: "אין מספיק מקום פנוי בדיסק, ולכן השינוי לא נשמר. פנו מקום ונסו שוב.",
+    dbCorrupt: "קובץ הנתונים פגום. שחזרו מגיבוי דרך ההגדרות.",
+    dbUnavailable:
+      "אי אפשר לפתוח את קובץ הנתונים או לכתוב אליו. בדקו שיש הרשאת כתיבה לתיקיית הנתונים והפעילו מחדש את האפליקציה.",
     streamLost: "החיבור נקטע לפני שהפעולה הסתיימה. בדקו ש־Penny פועלת ונסו שוב.",
 
     ownerRequired: "רק הבעלים של Penny יכול לבצע את הפעולה הזאת.",
@@ -80,6 +87,12 @@ const ERRORS = {
     syncBusy: "A sync is already running. Try again in a moment.",
     locked: "The app is locked. Enter your code to continue.",
     signInRequired: "Please choose a user again. Refresh the page.",
+    badJson: "The request didn't go through properly. Refresh the page and try again.",
+    dbBusy: "Your data is being saved right now. Wait a moment and try again.",
+    diskFull: "The disk is full, so the change wasn't saved. Free up some space and try again.",
+    dbCorrupt: "The data file is damaged. Restore from a backup in Settings.",
+    dbUnavailable:
+      "The data file can't be opened or written. Check that the data folder is writable, then restart the app.",
     streamLost:
       "The connection dropped before it finished. Check that Penny is running and try again.",
 
@@ -113,10 +126,16 @@ export class ApiError extends Error {
 }
 
 /** A server `code` the app words itself; anything else falls back to the status text. */
-const CODE_MESSAGES: Record<string, keyof typeof ERRORS.he> = {
+const CODE_MESSAGES: Record<string, keyof typeof ERRORS.he> &
+  Record<ErrorCode, keyof typeof ERRORS.he> = {
   locked: "locked",
   "sign-in-required": "signInRequired",
   "sync-running": "syncBusy",
+  bad_json: "badJson",
+  db_busy: "dbBusy",
+  disk_full: "diskFull",
+  db_corrupt: "dbCorrupt",
+  db_unavailable: "dbUnavailable",
   "owner-required": "ownerRequired",
   "workspace-access-denied": "workspaceDenied",
   "duplicate-name": "duplicateName",
@@ -142,7 +161,9 @@ export function friendlyError(status: number | "network", body = "", lang = uiLa
     const j = JSON.parse(detail) as { error?: unknown; message?: unknown; code?: unknown };
     detail = String(j.error ?? j.message ?? "");
     serverCode = typeof j.code === "string" ? j.code : "";
-  } catch {}
+  } catch {
+    // Not JSON: the body is treated as plain text below.
+  }
   const m = ERRORS[lang];
   // A machine code is an id, not copy: never show it as it is.
   const key = CODE_MESSAGES[(serverCode || detail).toLowerCase()];
@@ -1999,6 +2020,8 @@ export function updateAutoBackup(patch: {
   frequency?: "daily" | "weekly";
   dir?: string;
   passphrase?: string;
+  /** The lock passphrase, asked again with the lock on when passphrase or dir changes. */
+  secret?: string;
 }) {
   return fetchJSON<AutoBackupConfig>("/api/backup/auto", jsonBody("PATCH", patch));
 }

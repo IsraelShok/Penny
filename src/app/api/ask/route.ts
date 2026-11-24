@@ -1,3 +1,5 @@
+import { logError } from "@/server/lib/log";
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/server/db";
@@ -6,8 +8,8 @@ import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { israelToday } from "@/server/lib/date-utils";
 import { loadInsights } from "@/server/insights/data";
 import { isActive } from "@/server/insights/recurring";
-import { normalizeMerchant } from "@/server/rules/normalize";
 import { askAI } from "@/server/ai/ask";
+import { topMerchantsForAI } from "@/server/ai/prompts";
 import { GET as cashAheadGET } from "../cash-ahead/route";
 import { parseQuestion, periodLabel, type AskAnswer, type AskCategory } from "@/lib/ask";
 import { budgetMonthRange } from "@/lib/finance-period";
@@ -23,7 +25,7 @@ const day = (y: number, m: number, d: number) =>
 const HE_CATS = he.categoriesSeeded as Record<string, string>;
 const EN_CATS = en.categoriesSeeded as Record<string, string>;
 
-export async function POST(request: Request) {
+export const POST = handle("ask", async (request: Request) => {
   const body = (await request.json().catch(() => null)) as { question?: unknown } | null;
   const question = typeof body?.question === "string" ? body.question.trim().slice(0, 300) : "";
   if (!question) return NextResponse.json({ error: "question required" }, { status: 400 });
@@ -248,19 +250,13 @@ export async function POST(request: Request) {
       `SELECT substr(t.date, 1, 7) as month, ROUND(SUM(t.charged_amount)) as total FROM transactions t WHERE ${BASE} AND t.kind = 'income' GROUP BY month`,
     )
     .all(...agg);
-  const merchantTotals = new Map<string, number>();
-  for (const r of db
-    .prepare(
-      `SELECT t.description, t.charged_amount as amount FROM transactions t WHERE ${BASE} AND t.kind = 'expense'`,
-    )
-    .all(...agg) as { description: string; amount: number }[]) {
-    const m = normalizeMerchant(r.description);
-    merchantTotals.set(m, (merchantTotals.get(m) ?? 0) - r.amount);
-  }
-  const topMerchants = [...merchantTotals]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 20)
-    .map(([merchant, total]) => ({ merchant, total: Math.round(total) }));
+  const topMerchants = topMerchantsForAI(
+    db
+      .prepare(
+        `SELECT t.description, t.charged_amount as amount FROM transactions t WHERE ${BASE} AND t.kind = 'expense'`,
+      )
+      .all(...agg) as { description: string; amount: number }[],
+  );
   try {
     const text = await askAI(question, {
       today: todayIso,
@@ -277,7 +273,7 @@ export async function POST(request: Request) {
         rows: [],
       } satisfies AskAnswer);
   } catch (e) {
-    console.error("[ask] AI failed", e);
+    logError("ask", e);
     return NextResponse.json({
       source: "none",
       sentence: t("aiFailed"),
@@ -293,4 +289,4 @@ export async function POST(request: Request) {
     rows: [],
     examples,
   } satisfies AskAnswer);
-}
+});

@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -28,5 +28,24 @@ describe("support file", () => {
     expect(report.recentSyncs[0].status).toBe("failed");
     for (const leak of ["SECRET MERCHANT", "12345.67", "hunter2", "123456789", "12-345-678901"])
       expect(text).not.toContain(leak);
+  });
+
+  it("lists recent errors by time, scope and code only", async () => {
+    const { logError, errorLogPath } = await import("@/server/lib/log");
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    logError(
+      "sync/categorize",
+      Object.assign(new Error("SECRET MERCHANT failed"), { code: "SQLITE_BUSY" }),
+      undefined,
+      errorLogPath(),
+    );
+    quiet.mockRestore();
+    const { GET } = await import("@/app/api/diagnostics/route");
+    const text = await (await GET()).text();
+    const { recentErrors } = JSON.parse(text);
+    expect(recentErrors).toHaveLength(1);
+    expect(Object.keys(recentErrors[0]).sort()).toEqual(["at", "code", "scope"]);
+    expect(recentErrors[0]).toMatchObject({ scope: "sync/categorize", code: "SQLITE_BUSY" });
+    expect(text).not.toContain("SECRET MERCHANT");
   });
 });

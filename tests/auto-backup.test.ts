@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -42,10 +42,29 @@ describe("automatic backup", () => {
     expect(c.status).toBe("ok");
     const file = fs.readdirSync(dir).find((f) => f.endsWith(".pennybak"))!;
     const bytes = fs.readFileSync(path.join(dir, file));
-    expect(bytes.subarray(0, 8).toString()).toBe("PENNYBK1");
+    expect(bytes.subarray(0, 8).toString()).toBe("PENNYBK2");
     const { readBackup } = await import("@/server/lib/portable-backup");
     expect(() => readBackup(bytes, "wrong passphrase!!")).toThrow();
     expect(readBackup(bytes, "correct horse battery").format).toBe(1);
     expect(JSON.stringify(lib.getAutoBackupConfig())).not.toContain("correct horse");
+  });
+
+  it("a failed run leaves a readable error and its time; the next good run clears it", () => {
+    const good = lib.getAutoBackupConfig().dir;
+    // A folder that cannot be created: its parent is a file.
+    const blocker = path.join(root, "blocker");
+    fs.writeFileSync(blocker, "");
+    lib.updateAutoBackupConfig({ dir: path.join(blocker, "backups") });
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    const failed = lib.runAutoBackup();
+    expect(quiet).toHaveBeenCalled(); // logged, not swallowed
+    quiet.mockRestore();
+    expect(failed.status).toBe("error");
+    expect(failed.error).toBeTruthy();
+    expect(Number.isNaN(Date.parse(failed.errorAt!))).toBe(false);
+    expect(lib.getAutoBackupConfig()).toMatchObject({ status: "error", errorAt: failed.errorAt });
+
+    lib.updateAutoBackupConfig({ dir: good });
+    expect(lib.runAutoBackup()).toMatchObject({ status: "ok", error: null, errorAt: null });
   });
 });

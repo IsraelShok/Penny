@@ -1,3 +1,4 @@
+import { logError } from "@/server/lib/log";
 import { applyAutomaticGoalRules } from "@/server/db/queries/financial-control";
 import { saveAccountBalances } from "../db/queries/assets";
 import { APP_LOCKED_MESSAGE, isKeyLocked } from "../lib/encryption";
@@ -36,7 +37,7 @@ import { connectOpenBanking } from "@/server/open-banking/client";
 import { scrapeOneZeroFirstTime, scrapeOneZeroWithToken } from "@/server/scrapers/one-zero";
 import { createAIProvider } from "@/server/ai/factory";
 import { ensureOllamaRunning } from "@/server/ai/ollama-manager";
-import { toLocalISODate } from "@/server/lib/date-utils";
+import { toLocalISODate, israelNoon } from "@/server/lib/date-utils";
 import { listAllWorkspaceIds } from "@/server/lib/workspace-context";
 import { SyncBusyError, tryAcquireSync } from "@/server/sync/lock";
 import { getWorkspace } from "@/server/db/queries/workspaces";
@@ -44,6 +45,8 @@ import { BANK_PROVIDERS, type BankProvider, type SyncKind } from "@/lib/types";
 import { cancelOtpRequest, registerOtpRequest } from "@/server/sync/otp-bridge";
 import { markSyncEnd, markSyncHeartbeat, markSyncStart } from "@/server/sync/activity";
 import type { ScrapeResult } from "@/server/scrapers/types";
+import { SYNC_ERRORS } from "@/lib/sync-errors";
+import { withDeadline } from "@/lib/sync-schedule";
 
 export type SyncEventSender = (event: string, data: Record<string, unknown>) => void;
 
@@ -56,7 +59,22 @@ export interface ProviderResult {
   updated: number;
   errorMessage?: string;
   syncRunId?: number;
+  /** Failed for a reason that usually clears on its own (network, a slow site); the scheduler retries these. */
+  retryable?: boolean;
 }
+
+/**
+ * The longest one connection may take. The scrapers time out single pages, not a whole run, and one
+ * that hangs would hold the sync lock and every connection queued behind it.
+ * shortcut: the hung scrape is abandoned, not cancelled; pass an AbortSignal down if browsers pile up.
+ */
+const PROVIDER_DEADLINE_MS = 10 * 60_000;
+
+declare global {
+  var __pennyScrapesInFlight: Set<number> | undefined;
+}
+/** Credential ids whose scrape has not settled yet, including ones abandoned at the deadline. */
+const inFlight = (globalThis.__pennyScrapesInFlight ??= new Set<number>());
 
 export interface WorkspaceSummary {
   workspaceId: number;
@@ -197,6 +215,19 @@ async function syncOneCredential(
   send: SyncEventSender,
 ): Promise<ProviderResult> {
   const provider = meta.provider as BankProvider;
+  // A scrape abandoned at the deadline may still hold a login; a second one to the same bank can lock the account.
+  if (inFlight.has(meta.id)) {
+    return {
+      provider,
+      credentialId: meta.id,
+      label: meta.label,
+      ok: false,
+      added: 0,
+      updated: 0,
+      errorMessage: SYNC_ERRORS.timeout,
+      retryable: true,
+    };
+  }
   const syncRunId = createSyncRun(workspaceId, provider, meta.id, toLocalISODate(startDate));
   // Anything that throws after the run exists still closes it as failed, so it never stays "running" and
   // the next run can tell this connection was already failing.
@@ -205,7 +236,8 @@ async function syncOneCredential(
 
     let result: ScrapeResult;
     try {
-      result = await runScrapeForProvider({
+      inFlight.add(meta.id);
+      const scrape = runScrapeForProvider({
         workspaceId,
         workspaceName,
         credentialId: meta.id,
@@ -215,7 +247,13 @@ async function syncOneCredential(
         syncRunId,
         manualTwoFactor,
         send,
-      });
+      }).finally(() => inFlight.delete(meta.id));
+      result = await withDeadline(scrape, PROVIDER_DEADLINE_MS, () => ({
+        success: false,
+        accounts: [],
+        errorMessage: SYNC_ERRORS.timeout,
+        retryable: true,
+      }));
     } finally {
       cancelOtpRequest(syncRunId, "Scrape completed");
     }
@@ -231,6 +269,7 @@ async function syncOneCredential(
         updated: 0,
         errorMessage: result.errorMessage ?? "Scraping failed",
         syncRunId,
+        retryable: result.retryable,
       };
     }
 
@@ -290,6 +329,7 @@ export async function syncWorkspace(
   workspaceId: number,
   filterCredentialId: number | undefined,
   send: SyncEventSender,
+  interactive = true,
 ): Promise<WorkspaceSummary> {
   const workspace = getWorkspace(workspaceId);
   const workspaceName = workspace?.name ?? `Workspace ${workspaceId}`;
@@ -318,7 +358,7 @@ export async function syncWorkspace(
   }
 
   const settings = getAppSettings(workspaceId);
-  const startDate = new Date();
+  const startDate = israelNoon();
   startDate.setMonth(startDate.getMonth() - settings.monthsToSync);
 
   send("plan", {
@@ -351,8 +391,17 @@ export async function syncWorkspace(
       credentials = locked ? null : getBankCredentials(workspaceId, meta.id);
     } catch (err) {
       // An unreadable credential fails this connection only; the next ones still sync.
-      console.error("[sync] credentials unreadable:", redactError(err));
+      logError("sync/credentials", err);
     }
+    // Nobody is at the screen during a scheduled run to type a code or finish a login in the browser.
+    // Left out entirely: no failed run, no alert, for a bank the person always syncs by hand.
+    if (
+      credentials &&
+      !interactive &&
+      ((supportsProgrammaticTwoFactor(provider) && !credentials.otpLongTermToken) ||
+        getRequiresManualTwoFactor(workspaceId, meta.id))
+    )
+      continue;
     if (!credentials) {
       send("provider-done", {
         workspaceId,
@@ -435,7 +484,7 @@ export async function syncWorkspace(
   try {
     aiProvider = createAIProvider();
   } catch (err) {
-    console.error("[sync] AI provider unavailable:", redactError(err));
+    logError("sync/ai-provider", err);
   }
   // Without AI, warn only when memory and the dictionary left something uncategorized.
   if (
@@ -455,7 +504,7 @@ export async function syncWorkspace(
       const ollamaResult = await ensureOllamaRunning(settings.ollamaUrl);
       if (!ollamaResult.ok) {
         aiWarning = ollamaResult.error ?? "Ollama is not reachable";
-        console.error("[sync]", aiWarning);
+        logError("sync/ollama", new Error(aiWarning));
       }
     }
 
@@ -555,7 +604,7 @@ export async function syncWorkspace(
             batchSetNeedsReview(workspaceId, reviewFlags);
             categorized += updates.length;
           } catch (err) {
-            console.error(`[sync] AI categorization batch failed (${kind}):`, redactError(err));
+            logError("sync/categorize", err, { kind });
             if (!aiWarning) {
               aiWarning = friendlyAIError(err, settings.ollamaModel);
             }
@@ -595,7 +644,12 @@ export async function runAllWorkspaces(
     const workspaceIds = listAllWorkspaceIds();
     const summaries: WorkspaceSummary[] = [];
     for (const workspaceId of workspaceIds) {
-      const summary = await syncWorkspace(workspaceId, filterCredentialId, send);
+      const summary = await syncWorkspace(
+        workspaceId,
+        filterCredentialId,
+        send,
+        kind !== "scheduled",
+      );
       summaries.push(summary);
     }
     // Telegram feedback must never fail or slow the sync itself.
@@ -605,9 +659,7 @@ export async function runAllWorkspaces(
         // A manual sync shows its errors on screen; a scheduled one has nobody watching.
         if (kind === "scheduled") await m.sendSyncAlerts(summaries.flatMap((w) => w.providers));
       })
-      .catch((err) =>
-        console.error("[bot] spend feedback", err instanceof Error ? err.message : err),
-      );
+      .catch((err) => logError("bot/spend-feedback", err));
     return summaries;
   } finally {
     markSyncEnd();

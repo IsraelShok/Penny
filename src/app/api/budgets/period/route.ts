@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getPlan } from "@/server/db/queries/plan";
 import {
@@ -12,7 +13,7 @@ import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 export const dynamic = "force-dynamic";
 
 /** The household month, its effective budgets and the last months. */
-export async function GET(request: Request) {
+export const GET = handle("budgets/period", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const params = new URL(request.url).searchParams;
   const startDay = getPlan(workspaceId).monthStartDay;
@@ -29,10 +30,10 @@ export async function GET(request: Request) {
     lines,
     history: budgetHistory(workspaceId, startDay, today, months),
   });
-}
+});
 
 /** Body: { categoryId, rollover } — how a category's leftover follows into the next month. */
-export async function PATCH(request: Request) {
+export const PATCH = handle("budgets/period", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = (await request.json().catch(() => null)) as {
     categoryId?: unknown;
@@ -45,4 +46,4 @@ export async function PATCH(request: Request) {
   return setRolloverRule(workspaceId, categoryId, body.rollover)
     ? NextResponse.json({ success: true })
     : NextResponse.json({ error: "not found" }, { status: 404 });
-}
+});

@@ -1,5 +1,6 @@
 "use client";
 
+import { israelToday } from "@/lib/dates";
 import Link from "next/link";
 import { GoalsHero } from "@/components/ui/page-hero";
 import { Plus } from "lucide-react";
@@ -32,7 +33,7 @@ export function JourneyView() {
   const assets = useQuery({ queryKey: ["assets"], queryFn: getAssets });
   const plan = useQuery({ queryKey: ["plan"], queryFn: getPlan });
   const fi = useQuery({ queryKey: ["fi"], queryFn: getFi });
-  const last = lastCompleteMonth(new Date().toISOString().slice(0, 10));
+  const last = lastCompleteMonth(israelToday());
   const recaps = useQueries({
     queries: Array.from({ length: MONTHS }, (_, i) => shiftMonth(last, -i)).map((month) => ({
       queryKey: ["recap", month],

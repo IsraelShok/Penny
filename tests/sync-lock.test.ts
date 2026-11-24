@@ -28,7 +28,7 @@ describe("sync lock", () => {
   });
 
   it("takes over a lock older than the stale window", () => {
-    globalThis.__pennySyncLock = { kind: "manual", since: Date.now() - 46 * 60_000 };
+    globalThis.__pennySyncLock = { kind: "manual", since: Date.now() - 3 * 60 * 60_000 - 60_000 };
     expect(isSyncRunning()).toBe(false);
     expect(tryAcquireSync("manual")).not.toBeNull();
   });

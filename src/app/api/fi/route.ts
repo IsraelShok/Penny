@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getMonthlyAverages, getPersonalInflation } from "@/server/db/queries/fi";
 import { getAssetsPayload } from "@/server/markets/portfolio";
@@ -9,7 +10,7 @@ const TAXABLE: AssetType[] = ["stock", "fund", "bond", "crypto", "metal", "other
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = handle("fi", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const assets = await getAssetsPayload(workspaceId);
   const payload: FiPayload = {
@@ -27,4 +28,4 @@ export async function GET(request: Request) {
     inflation: getPersonalInflation(workspaceId),
   };
   return NextResponse.json(payload);
-}
+});

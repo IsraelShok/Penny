@@ -1,5 +1,6 @@
 "use client";
 
+import { israelToday } from "@/lib/dates";
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -290,7 +291,7 @@ function LifeEventsCard() {
   const locale = useLocale();
   const { household, save, saving } = useHousehold();
   const [type, setType] = useState<LifeEventType>("birth");
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => israelToday());
 
   const events = [...household.events].sort((a, b) => b.date.localeCompare(a.date));
   const fmt = new Intl.DateTimeFormat(locale === "he" ? "he-IL" : "en-IL", {

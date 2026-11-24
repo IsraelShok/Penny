@@ -1,5 +1,6 @@
 import "server-only";
 
+import { roundSums } from "@/lib/money";
 import { getDb } from "../index";
 import { getWorkspaceSetting, setWorkspaceSetting } from "./settings";
 import { defaultHomeStyle, HOME_STYLES, parsePlan, type FinancialPlan } from "@/lib/plan";
@@ -36,12 +37,15 @@ export function savePlan(workspaceId: number, plan: FinancialPlan) {
 }
 
 export function listGoals(workspaceId: number): Goal[] {
-  const rows = getDb()
-    .prepare(
-      `SELECT id, name, kind, details, target_amount as targetAmount, target_date as targetDate, saved_amount as openingSavedAmount, saved_amount + COALESCE((SELECT SUM(l.contribution) FROM goal_links l JOIN transactions t ON t.id=l.transaction_id WHERE l.goal_id=goals.id AND t.is_excluded=0 AND t.kind='transfer' AND t.status='completed'),0) as savedAmount
+  const rows = roundSums(
+    getDb()
+      .prepare(
+        `SELECT id, name, kind, details, target_amount as targetAmount, target_date as targetDate, saved_amount as openingSavedAmount, saved_amount + COALESCE((SELECT SUM(l.contribution) FROM goal_links l JOIN transactions t ON t.id=l.transaction_id WHERE l.goal_id=goals.id AND t.is_excluded=0 AND t.kind='transfer' AND t.status='completed'),0) as savedAmount
        FROM goals WHERE workspace_id = ? ORDER BY target_date`,
-    )
-    .all(workspaceId) as (Goal & { details: string | null })[];
+      )
+      .all(workspaceId) as (Goal & { details: string | null })[],
+    "savedAmount",
+  );
   return rows.map(({ details, ...g }) => {
     if (g.kind !== "vacation") {
       let extra = {};
@@ -64,13 +68,16 @@ export function listGoals(workspaceId: number): Goal[] {
 
 /** Spending between two dates in the Travel category and its subcategories (refunds reduce it). */
 export function tripActual(workspaceId: number, start: string, end: string): number {
-  const row = getDb()
-    .prepare(
-      `SELECT COALESCE(-SUM(t.personal_amount), 0) AS total FROM transactions t JOIN categories c ON c.id = t.category_id
+  const row = roundSums(
+    getDb()
+      .prepare(
+        `SELECT COALESCE(-SUM(t.personal_amount), 0) AS total FROM transactions t JOIN categories c ON c.id = t.category_id
      WHERE t.workspace_id = ? AND t.is_excluded = 0 AND t.kind = 'expense' AND substr(t.date, 1, 10) BETWEEN ? AND ?
        AND (c.name = 'Travel' OR c.parent_id IN (SELECT id FROM categories WHERE workspace_id = ? AND name = 'Travel'))`,
-    )
-    .get(workspaceId, start, end, workspaceId) as { total: number };
+      )
+      .get(workspaceId, start, end, workspaceId) as { total: number },
+    "total",
+  );
   return Math.max(0, row.total);
 }
 

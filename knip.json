@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "scripts/**/*.{mjs,cjs,js,ts}",
+    "desktop/**/*.{cjs,mjs,js}",
+    "tests/**/*.ts",
+    "e2e/**/*.ts"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "scripts/**/*.{mjs,cjs,js,ts}",
+    "desktop/**/*.{cjs,mjs,js}",
+    "tests/**/*.ts",
+    "e2e/**/*.ts"
+  ],
+  "ignoreDependencies": [
+    "tailwindcss",
+    "tw-animate-css",
+    "shadcn",
+    "electron-builder",
+    "@electron/rebuild"
+  ]
+}

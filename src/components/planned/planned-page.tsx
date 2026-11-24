@@ -1,5 +1,6 @@
 "use client";
 
+import { israelToday } from "@/lib/dates";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -65,7 +66,7 @@ interface Draft {
   notes: string;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => israelToday();
 
 const EMPTY = (): Draft => ({
   description: "",

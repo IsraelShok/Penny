@@ -32,6 +32,33 @@ describe("portable backup", () => {
     );
   });
 
+  it("still opens a v1 file, written with the old scrypt cost and no cost byte", async () => {
+    const crypto = await import("node:crypto");
+    const salt = crypto.randomBytes(16);
+    const iv = crypto.randomBytes(12);
+    const key = crypto.scryptSync(PASSPHRASE, salt, 32, {
+      N: 1 << 15,
+      r: 8,
+      p: 1,
+      maxmem: 64 << 20,
+    });
+    const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+    const body = Buffer.concat([cipher.update("old backup"), cipher.final()]);
+    const v1 = Buffer.concat([Buffer.from("PENNYBK1"), salt, iv, cipher.getAuthTag(), body]);
+    expect(backup.decryptBackup(v1, PASSPHRASE).toString("utf8")).toBe("old backup");
+  });
+
+  it("writes v2 with the scrypt cost in the header, and refuses a cost outside the sane range", () => {
+    const file = backup.encryptBackup(Buffer.from("x"), PASSPHRASE);
+    expect(file.subarray(0, 8).toString()).toBe("PENNYBK2");
+    expect(file[8]).toBe(17);
+    for (const cost of [0, 14, 21, 255]) {
+      const crafted = Buffer.from(file);
+      crafted[8] = cost;
+      expect(() => backup.decryptBackup(crafted, PASSPHRASE)).toThrow("badFile");
+    }
+  });
+
   it("requires a real passphrase", () => {
     expect(() => backup.createBackup("short")).toThrow("weakPassphrase");
   });
@@ -40,7 +67,7 @@ describe("portable backup", () => {
     setGlobalSetting("portable-test", "before");
     const { bytes, fileName } = backup.createBackup(PASSPHRASE);
     expect(fileName.endsWith(".pennybak")).toBe(true);
-    expect(bytes.subarray(0, 8).toString()).toBe("PENNYBK1");
+    expect(bytes.subarray(0, 8).toString()).toBe("PENNYBK2");
 
     setGlobalSetting("portable-test", "after");
     const result = backup.applyBackup(bytes, PASSPHRASE);

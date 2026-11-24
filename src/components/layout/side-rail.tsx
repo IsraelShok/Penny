@@ -24,7 +24,9 @@ export function setSideRail(open: boolean) {
   toggled = true;
   try {
     localStorage.setItem(KEY, open ? "open" : "closed");
-  } catch {}
+  } catch {
+    // Storage is blocked or full: only a remembered preference is lost.
+  }
   listeners.forEach((l) => l());
 }
 export function useSideRail() {

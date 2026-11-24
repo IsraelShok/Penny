@@ -28,6 +28,31 @@ describe("encryption key location", () => {
     expect(decrypt(sealed)).toBe("secret");
   });
 
+  it.skipIf(process.platform !== "win32")(
+    "on Windows, the key file is closed to other users of the computer",
+    async () => {
+      const { execFileSync } = await import("child_process");
+      const { encrypt, keyPath } = await freshEncryption();
+      encrypt("secret");
+      const icacls = path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "icacls.exe");
+      // One line per ACL entry, each starting with the file path or indentation, then "NAME:(rights)".
+      const entries = execFileSync(icacls, [keyPath()], { encoding: "utf8" })
+        .replace(keyPath(), "")
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => /:\(/.test(l));
+      // SYSTEM and Administrators may be listed (a CI runner adds them); the broad groups must not be.
+      const lower = entries.map((e) => e.toLowerCase());
+      const me = `\\${os.userInfo().username.toLowerCase()}:(f)`;
+      expect(lower.some((e) => e.includes(me))).toBe(true);
+      expect(lower.filter((e) => /everyone|authenticated users|builtin\\users/.test(e))).toEqual(
+        [],
+      );
+      // Nothing inherited from the folder.
+      expect(lower.some((e) => e.includes("(i)"))).toBe(false);
+    },
+  );
+
   it("adopts a key left in ./data by an older version, so saved credentials still decrypt", async () => {
     const legacyKey = "ab".repeat(32);
     fs.mkdirSync(path.join(cwd, "data"));

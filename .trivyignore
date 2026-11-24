@@ -1,0 +1,12 @@
+# Findings Trivy may report without failing CI. Each one is triaged in SECURITY.md,
+# "Dependency hygiene" > "Known audit findings": the package is reachable only from
+# @puppeteer/browsers (browser download, proxy config), a path Penny never runs.
+# Remove an entry as soon as the dependency tree no longer contains the package version.
+
+# basic-ftp 5.3.1 (israeli-bank-scrapers > puppeteer > @puppeteer/browsers) - SECURITY.md, Known audit findings
+CVE-2026-102990
+
+# extract-zip 2.0.1 (israeli-bank-scrapers > puppeteer > @puppeteer/browsers) - SECURITY.md, Known audit findings
+CVE-2026-19693
+# extract-zip 2.0.1, same path - SECURITY.md, Known audit findings
+CVE-2026-56876

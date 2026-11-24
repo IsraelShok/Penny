@@ -1,5 +1,6 @@
 import "server-only";
 
+import { addDays, israelToday } from "@/server/lib/date-utils";
 import type Database from "better-sqlite3";
 import type { Cadence, Series } from "./recurring";
 
@@ -156,12 +157,12 @@ export function createManualRecurring(db: Database.Database, ws: number) {
       return db
         .prepare(
           `SELECT id, substr(date,1,10) AS date, charged_amount AS amount, description FROM transactions
-           WHERE workspace_id=? AND is_excluded=0 AND charged_amount < 0 AND date >= date('now','-400 days')
+           WHERE workspace_id=? AND is_excluded=0 AND charged_amount < 0 AND date >= ?
              AND (?='' OR account_number=?)
              AND id NOT IN (SELECT transaction_id FROM manual_recurring_txns WHERE series_id=?)
            ORDER BY instr(lower(description), lower(?)) = 0, date DESC LIMIT 30`,
         )
-        .all(ws, account, account, sid, name) as AttachedTxn[];
+        .all(ws, addDays(israelToday(), -400), account, account, sid, name) as AttachedTxn[];
     },
     create(input: Input) {
       const v = clean(input, false);

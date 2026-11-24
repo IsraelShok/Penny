@@ -1,5 +1,6 @@
 "use client";
 
+import { addDays, israelToday } from "@/lib/dates";
 import Link from "next/link";
 import { useState } from "react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,10 +15,8 @@ import { translateCategoryName } from "@/lib/i18n-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const today = () =>
-  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date());
-const plusDays = (d: string, n: number) =>
-  new Date(Date.parse(`${d}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+const today = () => israelToday();
+const plusDays = addDays;
 
 /** Trackers: chosen categories over a date range against a limit, saved per profile. */
 export function TrackersView() {

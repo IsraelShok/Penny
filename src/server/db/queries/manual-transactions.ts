@@ -1,4 +1,5 @@
 import "server-only";
+import { utcDay } from "@/server/lib/date-utils";
 import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 import { roundCents } from "@/lib/money";
@@ -56,7 +57,7 @@ function check(db: Database.Database, ws: number, body: ManualInput, memberIds: 
   if (body.date !== undefined) {
     const d = body.date;
     const parsed = typeof d === "string" && ISO.test(d) ? new Date(d + "T12:00:00Z") : null;
-    if (!parsed || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== d)
+    if (!parsed || Number.isNaN(parsed.getTime()) || utcDay(parsed) !== d)
       throw new EditError("date must be YYYY-MM-DD");
     const year = parsed.getUTCFullYear();
     if (year < 1990 || parsed.getTime() > Date.now() + 366 * 86_400_000)

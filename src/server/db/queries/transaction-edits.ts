@@ -33,6 +33,7 @@ export class EditError extends Error {
     public status = 400,
   ) {
     super(message);
+    this.name = "EditError"; // errorResponse recognises it by name
   }
 }
 

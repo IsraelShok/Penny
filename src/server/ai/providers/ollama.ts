@@ -7,6 +7,7 @@ import type {
   PastCorrection,
   TransactionForCategorization,
 } from "../types";
+import { fetchExternal } from "@/server/lib/fetch-external";
 import { buildCategorizationPrompt, SYSTEM_PROMPT } from "../prompts";
 import { normalizeOllamaUrl, OLLAMA_URL_ERROR } from "@/lib/url-guard";
 
@@ -41,19 +42,25 @@ export class OllamaProvider implements AIProvider {
 
     const baseUrl = normalizeOllamaUrl(this.baseUrl);
     if (!baseUrl) throw new Error(OLLAMA_URL_ERROR);
-    const response = await fetch(`${baseUrl}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: this.model,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: prompt },
-        ],
-        stream: false,
-        format: "json",
-      }),
-    });
+    // A local model can take a while on a batch.
+    const OLLAMA_TIMEOUT_MS = 10 * 60_000;
+    const response = await fetchExternal(
+      `${baseUrl}/api/chat`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: this.model,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: prompt },
+          ],
+          stream: false,
+          format: "json",
+        }),
+      },
+      OLLAMA_TIMEOUT_MS,
+    );
 
     if (!response.ok) {
       throw new Error(`Ollama request failed: ${response.status}`);

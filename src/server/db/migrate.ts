@@ -1,5 +1,6 @@
 import "server-only";
 
+import { logError } from "@/server/lib/log";
 import type Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -41,8 +42,9 @@ export function runMigrations(db: Database.Database): void {
     migrationDir = path.join(process.cwd(), "src/server/db/migrations");
   }
 
+  // Without the files a fresh install would silently get an empty schema.
   if (!fs.existsSync(migrationDir)) {
-    return;
+    throw new Error(`[db] migrations folder not found: ${migrationDir}`);
   }
 
   const files = fs
@@ -65,18 +67,27 @@ export function runMigrations(db: Database.Database): void {
       ? backupBeforeProfiles(db)
       : null;
 
+  // A database written by a newer version has columns and rows this code does not know how to keep consistent.
+  const unknown = [...applied].filter((name) => !files.includes(name));
+  if (unknown.length > 0) {
+    throw new Error(
+      `[db] this database was written by a newer version (unknown migration ${unknown[0]}). Update the app.`,
+    );
+  }
+
   const pending = files.filter((file) => !applied.has(file));
+  // A corrupt file is never migrated: rewriting it could destroy what is still readable. With nothing
+  // pending the app still opens, so the data can be exported or a backup restored from Settings.
+  const check = db.pragma("quick_check", { simple: true });
+  if (check !== "ok") {
+    const message = `[db] integrity check failed: ${String(check)}. Backups live in the data/backups folder.`;
+    if (pending.length > 0) throw new Error(message);
+    logError("db/integrity", new Error(message));
+  }
+
   // Migrations rewrite data. A copy first means a failed or destructive migration is recoverable.
   // The profile migration already wrote its own copy, so only one backup per run.
   if (pending.length > 0 && !backup) backupBeforeMigration(db, "migration");
-
-  // Surface a corrupt file before migrations touch it instead of after.
-  const check = db.pragma("quick_check", { simple: true });
-  if (check !== "ok") {
-    console.error(
-      `[db] integrity check failed: ${String(check)}. Backups live in the data/backups folder.`,
-    );
-  }
 
   for (const file of pending) {
     const sql = fs.readFileSync(path.join(migrationDir, file), "utf-8");

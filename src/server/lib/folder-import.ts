@@ -128,6 +128,20 @@ export function accountForFolder(name: string): string {
   return (/\(([^()]+)\)\s*$/.exec(name)?.[1] ?? name).trim().slice(0, 40);
 }
 
+/**
+ * Workspace for a top-level subfolder: its name (any case) or "workspace-<id>".
+ * null: asks for a workspace that does not exist. undefined: not a workspace folder, so an account folder.
+ */
+export function workspaceForFolder(
+  name: string,
+  workspaces: { id: number; name: string }[],
+): number | null | undefined {
+  const byId = /^workspace-(\d+)$/i.exec(name.trim());
+  if (byId) return workspaces.find((w) => w.id === Number(byId[1]))?.id ?? null;
+  const lower = name.trim().toLowerCase();
+  return workspaces.find((w) => w.name.trim().toLowerCase() === lower)?.id;
+}
+
 const SKIP_DIRS = new Set(["imported", "failed"]);
 
 // ---- settings + scan ----
@@ -157,7 +171,9 @@ export function getFolderImportConfig(): FolderImportConfig {
   let s: Partial<FolderImportConfig> = {};
   try {
     s = JSON.parse(getGlobalSetting(KEY) ?? "{}");
-  } catch {}
+  } catch {
+    // Unreadable stored value: start from the default.
+  }
   const defaultDir = defaultImportDir();
   return {
     enabled: s.enabled !== false, // on by default: dropping a statement in the folder should just work
@@ -207,8 +223,11 @@ export function updateFolderImportConfig(patch: {
   return saved;
 }
 
-const firstWorkspace = () =>
-  (getDb().prepare("SELECT id FROM workspaces ORDER BY id LIMIT 1").get() as { id: number }).id;
+const allWorkspaces = () =>
+  getDb().prepare("SELECT id, name FROM workspaces ORDER BY id").all() as {
+    id: number;
+    name: string;
+  }[];
 
 let running = false;
 
@@ -227,24 +246,44 @@ export async function scanImportFolder(now = false): Promise<FolderImportConfig>
     let prev: Seen = {};
     try {
       prev = JSON.parse(getGlobalSetting(SEEN) ?? "{}");
-    } catch {}
-    const workspaceId = firstWorkspace();
+    } catch {
+      // Unreadable stored value: start from the default.
+    }
+    const workspaces = allWorkspaces();
+    const workspaceId = workspaces[0].id;
     // One subfolder per known account, so a downloaded statement lands on the right account.
     for (const a of getAccountNumbers(workspaceId))
       fs.mkdirSync(path.join(dir, folderNameFor(a)), { recursive: true });
-    const folders: { folder: string; account: string; prefix: string }[] = [
-      { folder: dir, account: c.account, prefix: "" },
-    ];
-    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (e.isDirectory() && !SKIP_DIRS.has(e.name) && !e.name.startsWith("."))
-        folders.push({
-          folder: path.join(dir, e.name),
-          account: accountForFolder(e.name),
-          prefix: `${e.name}/`,
-        });
-    }
+    const folders: { folder: string; account: string; prefix: string; ws: number }[] = [];
+    // A workspace folder is laid out like the import folder itself: loose files, plus a subfolder per account.
+    const addTree = (base: string, ws: number, prefix: string) => {
+      folders.push({ folder: base, account: c.account, prefix, ws });
+      for (const e of fs.readdirSync(base, { withFileTypes: true })) {
+        if (!e.isDirectory() || SKIP_DIRS.has(e.name) || e.name.startsWith(".")) continue;
+        const target = prefix ? undefined : workspaceForFolder(e.name, workspaces);
+        const label = `${prefix}${e.name}/`;
+        if (target === undefined)
+          folders.push({
+            folder: path.join(base, e.name),
+            account: accountForFolder(e.name),
+            prefix: label,
+            ws,
+          });
+        else if (target !== null) addTree(path.join(base, e.name), target, label);
+        // Left untouched; said once, not on every scan.
+        else if (!c.history.some((h) => h.file === label && h.error === "unknownWorkspace"))
+          c.history.unshift({
+            at: new Date().toISOString(),
+            file: label,
+            added: 0,
+            duplicates: 0,
+            error: "unknownWorkspace",
+          });
+      }
+    };
+    addTree(dir, workspaceId, "");
     const seen: Seen = {};
-    for (const { folder, account, prefix } of folders) {
+    for (const { folder, account, prefix, ws } of folders) {
       const mine = Object.fromEntries(
         Object.entries(prev)
           .filter(([k]) => k.startsWith(prefix) && !k.slice(prefix.length).includes("/"))
@@ -262,7 +301,7 @@ export async function scanImportFolder(now = false): Promise<FolderImportConfig>
           );
           if (rows.length === 0) throw new Error("noRows");
           if (rows.length > MAX_IMPORT_ROWS) throw new Error("tooMany");
-          const r = saveStatementImport(workspaceId, account, rows, false, source, name);
+          const r = saveStatementImport(ws, account, rows, false, source, name);
           moveInto(folder, name, "imported");
           c.history.unshift({
             at,
@@ -279,7 +318,9 @@ export async function scanImportFolder(now = false): Promise<FolderImportConfig>
           const msg = e instanceof Error ? e.message.slice(0, 200) : "failed";
           try {
             moveInto(folder, name, "failed", `${at}\n${msg}\n`);
-          } catch {} // file vanished or locked: retried next scan
+          } catch {
+            // File vanished or locked: retried on the next scan.
+          }
           c.history.unshift({ at, file: label, added: 0, duplicates: 0, error: msg });
         }
         delete picked.seen[name];

@@ -15,7 +15,7 @@ import { cashReserve } from "@/server/db/queries/financial-control";
 import { getPlan } from "@/server/db/queries/plan";
 import { plannedPaymentsForForecast } from "@/server/db/queries/planned";
 import { getWorkspaceSetting, setWorkspaceSetting } from "@/server/db/queries/settings";
-import { israelToday } from "@/server/lib/date-utils";
+import { israelToday, monthKey } from "@/server/lib/date-utils";
 import { isBankProvider } from "@/server/lib/transfers";
 import { isCardProvider } from "@/server/lib/card-providers";
 import { loadInsights } from "./data";
@@ -174,8 +174,7 @@ function incomeByAccount(
   today: string,
   banks: BankAccount[],
 ): Map<string, number> {
-  const [y, m] = today.split("-").map(Number);
-  const from = new Date(Date.UTC(y, m - 1 - 3, 1)).toISOString().slice(0, 10);
+  const from = `${monthKey(today, -3)}-01`;
   const to = `${today.slice(0, 7)}-01`;
   const rows = getDb()
     .prepare(

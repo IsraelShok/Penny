@@ -1,8 +1,9 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getTransactionsSummary } from "@/server/db/queries/transactions";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
-export async function GET(request: Request) {
+export const GET = handle("transactions/summary", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const { searchParams } = new URL(request.url);
   const from = searchParams.get("from");
@@ -26,4 +27,4 @@ export async function GET(request: Request) {
       credentialIds: credentialIds.length > 0 ? credentialIds : undefined,
     }),
   );
-}
+});

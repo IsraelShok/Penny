@@ -1,5 +1,6 @@
 import "server-only";
 
+import { roundSums } from "@/lib/money";
 import { ApiError } from "@/server/lib/api-error";
 import { getDb } from "../index";
 import { getWorkspaceSetting } from "./settings";
@@ -48,11 +49,14 @@ export function controlPayload(ws: number, month = israelToday().slice(0, 7)): C
   const day = month === today.slice(0, 7) ? Number(today.slice(8)) : 31;
   const end = (m: string) => monthDay(Number(m.slice(0, 4)), Number(m.slice(5)) - 1, day);
   const aggregate = (m: string) =>
-    db
-      .prepare(
-        "SELECT COALESCE(t.category_id,0) AS categoryId,COALESCE(c.name,'Uncategorized') AS name,SUM(-t.personal_amount) AS amount FROM category_transactions t LEFT JOIN categories c ON c.id=t.category_id WHERE t.workspace_id=? AND t.kind='expense' AND t.status='completed' AND t.is_excluded=0 AND substr(t.date,1,10) BETWEEN ? AND ? GROUP BY t.category_id",
-      )
-      .all(ws, m + "-01", end(m)) as { categoryId: number; name: string; amount: number }[];
+    roundSums(
+      db
+        .prepare(
+          "SELECT COALESCE(t.category_id,0) AS categoryId,COALESCE(c.name,'Uncategorized') AS name,SUM(-t.personal_amount) AS amount FROM category_transactions t LEFT JOIN categories c ON c.id=t.category_id WHERE t.workspace_id=? AND t.kind='expense' AND t.status='completed' AND t.is_excluded=0 AND substr(t.date,1,10) BETWEEN ? AND ? GROUP BY t.category_id",
+        )
+        .all(ws, m + "-01", end(m)) as { categoryId: number; name: string; amount: number }[],
+      "amount",
+    );
   const current = aggregate(month),
     previous = aggregate(previousMonth),
     ids = new Set([...current, ...previous].map((c) => c.categoryId));

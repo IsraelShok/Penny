@@ -1,9 +1,10 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { hasBankCredentials } from "@/server/db/queries/bank-credentials";
 import { getGlobalSetting } from "@/server/db/queries/settings";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
-export async function GET(request: Request) {
+export const GET = handle("setup/status", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const hasBank = hasBankCredentials(workspaceId);
   const aiProvider = getGlobalSetting("ai_provider");
@@ -14,4 +15,4 @@ export async function GET(request: Request) {
     hasBankCredentials: hasBank,
     hasAIProvider: hasAI,
   });
-}
+});

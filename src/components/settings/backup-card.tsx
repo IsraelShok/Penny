@@ -9,6 +9,7 @@ import { SettingCard } from "@/components/settings/section-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getLockStatus } from "@/components/settings/app-lock-card";
 
 interface BackupFile {
   name: string;
@@ -24,11 +25,15 @@ const MIN_PASSPHRASE = 8;
  */
 export function BackupCard() {
   const t = useTranslations("settings.data");
+  const tLock = useTranslations("settings.privacy");
   const locale = useLocale();
   const queryClient = useQueryClient();
   const [passphrase, setPassphrase] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  // With the app lock on, the server asks for the lock passphrase again before it hands out or replaces everything.
+  const [secret, setSecret] = useState("");
+  const locked = useQuery({ queryKey: ["lock"], queryFn: getLockStatus }).data?.enabled ?? false;
 
   const backups = useQuery({
     queryKey: ["backups"],
@@ -48,6 +53,11 @@ export function BackupCard() {
         return t("backupFileMissing");
       case "lockOn":
         return t("backupLockOn");
+      case "corruptRestore":
+        return t("backupCorrupt");
+      case "wrong":
+      case "wait":
+        return tLock(`lockError_${code}`);
       default:
         return t("backupFailed");
     }
@@ -58,7 +68,7 @@ export function BackupCard() {
       const res = await fetch("/api/backup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passphrase }),
+        body: JSON.stringify({ passphrase, secret }),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
@@ -77,6 +87,7 @@ export function BackupCard() {
     },
     onSuccess: () => {
       setPassphrase("");
+      setSecret("");
       toast.success(t("backupDone"));
       void queryClient.invalidateQueries({ queryKey: ["backups"] });
     },
@@ -89,6 +100,7 @@ export function BackupCard() {
       const form = new FormData();
       form.set("file", file);
       form.set("passphrase", passphrase);
+      form.set("secret", secret);
       const res = await fetch("/api/backup/restore", { method: "POST", body: form });
       const body = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -99,6 +111,7 @@ export function BackupCard() {
     },
     onSuccess: (body) => {
       setPassphrase("");
+      setSecret("");
       setFile(null);
       setConfirmed(false);
       toast.success(t("backupRestored", { count: body.counts?.transactions ?? 0 }));
@@ -107,7 +120,7 @@ export function BackupCard() {
     onError: (e) => toast.error(errorText(e instanceof Error ? e.message : "restoreFailed")),
   });
 
-  const canDownload = passphrase.length >= MIN_PASSPHRASE;
+  const canDownload = passphrase.length >= MIN_PASSPHRASE && (!locked || secret.length > 0);
   const canRestore = canDownload && !!file && confirmed;
 
   return (
@@ -127,6 +140,20 @@ export function BackupCard() {
             {t("backupPassphraseHint", { min: MIN_PASSPHRASE })}
           </p>
         </div>
+
+        {locked && (
+          <div className="space-y-1.5">
+            <Label htmlFor="backup-lock-secret">{tLock("lockCurrent")}</Label>
+            <Input
+              id="backup-lock-secret"
+              type="password"
+              autoComplete="current-password"
+              value={secret}
+              onChange={(e) => setSecret(e.target.value)}
+              dir="ltr"
+            />
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2">
           <Button

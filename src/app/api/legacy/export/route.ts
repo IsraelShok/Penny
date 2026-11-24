@@ -1,3 +1,4 @@
+import { handle, readJson, domainMessage } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import {
   getLegacyExportConfig,
@@ -8,27 +9,30 @@ import {
 } from "@/server/lib/legacy-export";
 
 const HTML_MAX = 2_000_000;
-const fail = (e: unknown) =>
-  NextResponse.json({ error: e instanceof Error ? e.message : "invalid" }, { status: 400 });
+/** A validation key ("notAbsolute") or a malformed body answers 400; disk and database trouble (it carries a code) goes to handle(). */
+const fail = (e: unknown) => {
+  if (e instanceof Error && "code" in e) throw e;
+  return NextResponse.json({ error: domainMessage(e) ?? "invalid" }, { status: 400 });
+};
 
 /** Auto-export settings and last result. */
-export async function GET() {
+export const GET = handle("legacy/export", async () => {
   return NextResponse.json(getLegacyExportConfig());
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = handle("legacy/export", async (request: Request) => {
   try {
     // The page re-sends its document after a change here, which triggers the export.
-    return NextResponse.json(updateLegacyExportConfig(await request.json()));
+    return NextResponse.json(updateLegacyExportConfig(await readJson(request)));
   } catch (e) {
     return fail(e);
   }
-}
+});
 
 /** { html }: the page's rendered document changed — store it and export now if enabled. { action: "open" }: open the folder. */
-export async function POST(request: Request) {
+export const POST = handle("legacy/export", async (request: Request) => {
   try {
-    const body = (await request.json()) as { html?: unknown; action?: unknown };
+    const body = (await readJson(request)) as { html?: unknown; action?: unknown };
     if (body.action === "open") {
       openLegacyFolder();
       return NextResponse.json(getLegacyExportConfig());
@@ -41,4 +45,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return fail(e);
   }
-}
+});

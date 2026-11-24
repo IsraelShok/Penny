@@ -60,7 +60,9 @@ export function BottomBar() {
     try {
       if (sessionStorage.getItem(NUDGED_KEY)) return;
       sessionStorage.setItem(NUDGED_KEY, "1");
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
     const bad =
       health.find((h) => h.status === "error") ??
       health.find((h) => h.status === "never") ??

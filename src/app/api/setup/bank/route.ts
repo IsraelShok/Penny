@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import {
   defaultLabelForProvider,
@@ -9,7 +10,7 @@ import { BANK_PROVIDERS } from "@/lib/types";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { demoBlockedResponse } from "@/server/demo/guard";
 
-export async function POST(request: Request) {
+export const POST = handle("setup/bank", async (request: Request) => {
   // The demo never stores a real bank login: its connections are seeded placeholders.
   const blocked = demoBlockedResponse();
   if (blocked) return blocked;
@@ -90,4 +91,4 @@ export async function POST(request: Request) {
     }
     throw err;
   }
-}
+});

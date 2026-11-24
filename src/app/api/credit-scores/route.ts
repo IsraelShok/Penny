@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
@@ -5,7 +6,7 @@ import type { CreditScore } from "@/lib/credit-score";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = handle("credit-scores", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const scores = getDb()
     .prepare(
@@ -13,10 +14,10 @@ export async function GET(request: Request) {
     )
     .all(ws) as CreditScore[];
   return NextResponse.json({ scores });
-}
+});
 
 /** Body: { date: YYYY-MM-DD, score: 0-1000, bureau?, note? }. */
-export async function POST(request: Request) {
+export const POST = handle("credit-scores", async (request: Request) => {
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const date =
     typeof body?.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : null;
@@ -42,4 +43,4 @@ export async function POST(request: Request) {
     score,
     note: text(body?.note, 200),
   });
-}
+});

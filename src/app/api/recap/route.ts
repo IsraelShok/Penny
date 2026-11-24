@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { getAllBudgets } from "@/server/db/queries/budgets";
@@ -19,7 +20,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 
 // Month keys are household months: `month` picks the period starting in that calendar month, and
 // the dates it covers follow the plan's monthStartDay.
-export async function GET(request: Request) {
+export const GET = handle("recap", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const params = new URL(request.url).searchParams;
   const month = params.get("month");
@@ -90,4 +91,4 @@ export async function GET(request: Request) {
       ? { mode: "year", recap: yearRecap(Number(yearParam), input) }
       : { mode: "month", recap: monthRecap(target, input) },
   );
-}
+});

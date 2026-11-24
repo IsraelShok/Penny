@@ -39,6 +39,30 @@ export function failSyncRun(id: number, errorMessage: string): void {
     .run(errorMessage, id);
 }
 
+/**
+ * Closes runs that a crash or shutdown left as "running". Call only at startup, when no sync of
+ * this process can be in flight. Returns how many were closed.
+ */
+export function failInterruptedSyncRuns(): number {
+  return getDb()
+    .prepare(
+      `UPDATE sync_runs
+       SET status = 'failed', completed_at = datetime('now'),
+           error_message = 'The app stopped during this sync. It will run again at the next sync.'
+       WHERE status = 'running'`,
+    )
+    .run().changes;
+}
+
+/** When the newest sync of any kind started (stored as UTC "YYYY-MM-DD HH:MM:SS"), or null. */
+export function latestSyncStartMs(): number | null {
+  const row = getDb().prepare("SELECT MAX(started_at) AS at FROM sync_runs").get() as {
+    at: string | null;
+  };
+  const ms = row.at ? Date.parse(`${row.at.replace(" ", "T")}Z`) : NaN;
+  return Number.isFinite(ms) ? ms : null;
+}
+
 interface ProviderStats {
   provider: string;
   lastSyncAt: string | null;

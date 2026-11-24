@@ -1,3 +1,5 @@
+import { handle } from "@/server/lib/api-error";
+import { israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import {
   addSettleEntry,
@@ -43,12 +45,12 @@ function context(workspaceId: number) {
 }
 
 /** Ledger per counterpart since each one's last settle-up. */
-export async function GET(request: Request) {
+export const GET = handle("transactions/settle", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const { me, counterparts, accountOwners, rules } = context(workspaceId);
   if (!me) return NextResponse.json({ me: null, counterparts: [] });
   const entries = listSettleEntries(workspaceId);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = israelToday();
   const rows = counterparts.length ? getSettleRows(workspaceId, "0000") : [];
   return NextResponse.json({
     me: me.id,
@@ -65,10 +67,10 @@ export async function GET(request: Request) {
       };
     }),
   });
-}
+});
 
 /** Sets one counterpart's split rule: { counterpart, rule }. */
-export async function PUT(request: Request) {
+export const PUT = handle("transactions/settle", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = (await request.json().catch(() => ({}))) as {
     counterpart?: unknown;
@@ -84,10 +86,10 @@ export async function PUT(request: Request) {
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
   }
-}
+});
 
 /** Records a settle-up: { counterpart, date, amount }. */
-export async function POST(request: Request) {
+export const POST = handle("transactions/settle", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const body = (await request.json().catch(() => ({}))) as {
     counterpart?: unknown;
@@ -108,13 +110,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid amount" }, { status: 400 });
   const id = addSettleEntry(workspaceId, body.counterpart as string, body.date, body.amount);
   return NextResponse.json({ id });
-}
+});
 
 /** Undo a settle-up: ?id= */
-export async function DELETE(request: Request) {
+export const DELETE = handle("transactions/settle", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!Number.isInteger(id) || !deleteSettleEntry(workspaceId, id))
     return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ ok: true });
-}
+});

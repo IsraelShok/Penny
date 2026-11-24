@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { isLockEnabled } from "@/server/lib/app-lock";
 import { isLanEnabled, lanAddresses, setLanEnabled } from "@/server/lib/lan-access";
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 const listening = () => process.env.PENNY_LISTEN_HOST ?? null;
 const restartable = () => process.env.PENNY_RESTARTABLE === "1";
 
-export async function GET(request: Request) {
+export const GET = handle("lan", async (request: Request) => {
   const enabled = isLanEnabled();
   const host = listening();
   const port = new URL(request.url).port || process.env.PORT || "";
@@ -21,9 +22,9 @@ export async function GET(request: Request) {
     urls: lanAddresses().map((ip) => `http://${ip}:${port}`),
     platform: process.platform,
   });
-}
+});
 
-export async function POST(request: Request) {
+export const POST = handle("lan", async (request: Request) => {
   const body = ((await request.json().catch(() => ({}))) ?? {}) as {
     enabled?: unknown;
     action?: unknown;
@@ -39,4 +40,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "lock_required" }, { status: 409 });
   setLanEnabled(body.enabled);
   return NextResponse.json({ ok: true });
-}
+});

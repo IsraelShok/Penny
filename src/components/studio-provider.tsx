@@ -101,7 +101,9 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           setPreferences(prefs);
           try {
             writeLocal(profileId, prefs);
-          } catch {}
+          } catch {
+            // Storage is blocked or full: only a remembered preference is lost.
+          }
         }
       })
       .catch(() => {});

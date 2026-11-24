@@ -1,8 +1,9 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 import { editTransactions, EditError } from "@/server/db/queries/transaction-edits";
-export async function POST(request: Request) {
+export const POST = handle("transactions/edit", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object" || Array.isArray(body))
@@ -14,4 +15,4 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     throw error;
   }
-}
+});

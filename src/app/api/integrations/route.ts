@@ -1,9 +1,10 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { listBankCredentials } from "@/server/db/queries/bank-credentials";
 import { getCredentialStats } from "@/server/db/queries/sync-runs";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
-export async function GET(request: Request) {
+export const GET = handle("integrations", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const creds = listBankCredentials(workspaceId);
   const items = creds.map((c) => {
@@ -21,4 +22,4 @@ export async function GET(request: Request) {
     };
   });
   return NextResponse.json(items);
-}
+});

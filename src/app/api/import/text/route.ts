@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { israelToday } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import { completeAI } from "@/server/ai/ask";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
  * Import from any text: the pasted text goes to the user's own AI provider, and the rows come back for
  * the sheet import's preview. Nothing is saved here; the user checks the rows and imports them there.
  */
-export async function POST(request: Request) {
+export const POST = handle("import/text", async (request: Request) => {
   const body = (await request.json().catch(() => null)) as { text?: unknown } | null;
   const text = typeof body?.text === "string" ? body.text.trim() : "";
   if (!text) return NextResponse.json({ error: "empty" }, { status: 400 });
@@ -24,4 +25,4 @@ export async function POST(request: Request) {
   }
   if (reply == null) return NextResponse.json({ error: "noProvider" }, { status: 503 });
   return NextResponse.json({ rows: parseExtractedRows(reply) });
-}
+});

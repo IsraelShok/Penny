@@ -276,4 +276,29 @@ describe("fake bank, a week of syncs", () => {
       flow_type: "transfer_internal",
     });
   });
+  it("a scheduled sync skips a login that needs a person, and marks transient failures for a retry", async () => {
+    const { runAllWorkspaces } = await import("@/server/sync/orchestrator");
+    const { listBankCredentials, setRequiresManualTwoFactor } =
+      await import("@/server/db/queries/bank-credentials");
+    const { SYNC_ERRORS } = await import("@/lib/sync-errors");
+    const leumi = listBankCredentials(ws).find((c) => c.provider === "leumi")!;
+    setRequiresManualTwoFactor(ws, leumi.id, true);
+    const leumiData = bank.leumi;
+    bank.leumi = null; // the fake throws if the scheduled run tries to log in
+    bank.max = { success: false, accounts: [], errorMessage: SYNC_ERRORS.network, retryable: true };
+    try {
+      const [scheduled] = await runAllWorkspaces(undefined, undefined, "scheduled");
+      const byProvider = Object.fromEntries(scheduled.providers.map((p) => [p.provider, p]));
+      expect(byProvider.leumi).toBeUndefined(); // left out, not marked failed
+      expect(byProvider.max.retryable).toBe(true);
+
+      // With someone at the screen the same connection does log in.
+      bank.leumi = leumiData;
+      const [manual] = await runAllWorkspaces(leumi.id, undefined, "manual");
+      expect(manual.providers[0].ok).toBe(true);
+    } finally {
+      setRequiresManualTwoFactor(ws, leumi.id, false);
+      bank.leumi = leumiData;
+    }
+  });
 });

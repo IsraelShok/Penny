@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
-import { ApiError, errorResponse } from "@/server/lib/api-error";
+import { ApiError, errorResponse, handle } from "@/server/lib/api-error";
 import {
   accessEnabled,
   currentUser,
@@ -20,7 +20,7 @@ function session(response: NextResponse, request: Request, token: string | null)
   });
   return response;
 }
-export async function GET(request: Request) {
+export const GET = handle("access", async (request: Request) => {
   const enabled = accessEnabled(),
     user = currentUser(request),
     db = getDb();
@@ -49,8 +49,8 @@ export async function GET(request: Request) {
           .all()
       : [],
   });
-}
-export async function POST(request: Request) {
+});
+export const POST = handle("access", async (request: Request) => {
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   const db = getDb(),
@@ -115,4 +115,4 @@ export async function POST(request: Request) {
   } catch (error) {
     return errorResponse("access", error);
   }
-}
+});

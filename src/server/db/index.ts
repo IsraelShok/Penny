@@ -19,8 +19,14 @@ function createDatabase(): Database.Database {
   db.pragma("foreign_keys = ON");
   db.pragma("busy_timeout = 5000");
 
-  runMigrations(db);
-  ensureDemoData(db);
+  try {
+    runMigrations(db);
+    ensureDemoData(db);
+  } catch (e) {
+    // An open handle would keep the file locked on Windows, so a restore could not put a good copy back.
+    db.close();
+    throw e;
+  }
 
   return db;
 }

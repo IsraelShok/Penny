@@ -1,5 +1,6 @@
 "use client";
 
+import { israelToday, addDays } from "@/lib/dates";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -65,8 +66,8 @@ const LEGACY_CSS = `
 }
 `;
 
-const today = () => new Date().toISOString().slice(0, 10);
-const yearAgo = () => new Date(Date.now() - 365 * 86_400_000).toISOString().slice(0, 10);
+const today = () => israelToday();
+const yearAgo = () => addDays(israelToday(), -365);
 
 export function LegacyDocument() {
   const t = useTranslations("legacy");

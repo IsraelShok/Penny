@@ -38,7 +38,9 @@ export function UpdateBanner() {
     setDismissed(data.latest);
     try {
       localStorage.setItem(KEY, data.latest);
-    } catch {}
+    } catch {
+      // Storage is blocked or full: only a remembered preference is lost.
+    }
   };
 
   return (

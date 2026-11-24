@@ -1,9 +1,10 @@
 import "server-only";
+import { roundSums, roundCents } from "@/lib/money";
 import { DRIFT_TOLERANCE } from "@/lib/balance-drift";
 
 import { ownerClause } from "@/server/lib/owner-scope";
 import { getDb } from "../index";
-import { toLocalISODate } from "../../lib/date-utils";
+import { toLocalISODate, israelNoon } from "../../lib/date-utils";
 import { cashBetween } from "../../finance/facts";
 import type {
   HomeBankHealthItem,
@@ -28,7 +29,7 @@ export function getHistoricalTrend(
   monthsBack: number,
 ): HomeHistoricalTrendPoint[] {
   const db = getDb();
-  const now = new Date();
+  const now = israelNoon();
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
   const months: { key: string; label: string; from: string; to: string }[] = [];
@@ -56,7 +57,7 @@ export function getHistoricalTrend(
     return {
       month: m.key,
       label: m.label,
-      total: row.total,
+      total: roundCents(row.total),
       isCurrent: m.key === currentMonthKey,
     };
   });
@@ -232,15 +233,18 @@ export function getCategorySnapshot(
   }
 
   const os = ownerClause("", { viaTransaction: true });
-  const spendRows = db
-    .prepare(
-      `SELECT category_id as categoryId, SUM(spend) as amount
+  const spendRows = roundSums(
+    db
+      .prepare(
+        `SELECT category_id as categoryId, SUM(spend) as amount
        FROM v_spend_rows
        WHERE workspace_id = ? AND date >= ? AND date <= ?
          AND category_id IS NOT NULL${os.sql}
        GROUP BY category_id`,
-    )
-    .all(workspaceId, from, to, ...os.params) as Array<{ categoryId: number; amount: number }>;
+      )
+      .all(workspaceId, from, to, ...os.params) as Array<{ categoryId: number; amount: number }>,
+    "amount",
+  );
 
   const budgetRows = db
     .prepare(
@@ -326,29 +330,35 @@ export function getCategoryScroll(
   );
   const ot = ownerClause("t", { viaTransaction: true });
   const where = `t.workspace_id = ? AND t.date >= ? AND t.date <= ?${ot.sql}`;
-  const trendRows = db
-    .prepare(
-      `SELECT COALESCE(c.parent_id, c.id) as key, substr(t.date, 1, 7) as month, SUM(t.spend) as amount
+  const trendRows = roundSums(
+    db
+      .prepare(
+        `SELECT COALESCE(c.parent_id, c.id) as key, substr(t.date, 1, 7) as month, SUM(t.spend) as amount
        FROM v_spend_rows t JOIN categories c ON c.id = t.category_id
        WHERE ${where} GROUP BY key, month`,
-    )
-    .all(workspaceId, trendFrom, to, ...ot.params) as Array<{
-    key: number;
-    month: string;
-    amount: number;
-  }>;
-  const merchantRows = db
-    .prepare(
-      `SELECT /* merchant name comes from the transaction, the spend view has none */ COALESCE(c.parent_id, c.id) as key, source.description as merchant, SUM(t.spend) as amount
+      )
+      .all(workspaceId, trendFrom, to, ...ot.params) as Array<{
+      key: number;
+      month: string;
+      amount: number;
+    }>,
+    "amount",
+  );
+  const merchantRows = roundSums(
+    db
+      .prepare(
+        `SELECT /* merchant name comes from the transaction, the spend view has none */ COALESCE(c.parent_id, c.id) as key, source.description as merchant, SUM(t.spend) as amount
        FROM v_spend_rows t JOIN categories c ON c.id = t.category_id
        JOIN transactions source ON source.id = t.transaction_id AND source.workspace_id = t.workspace_id
        WHERE ${where} GROUP BY key, merchant ORDER BY amount DESC`,
-    )
-    .all(workspaceId, from, to, ...ot.params) as Array<{
-    key: number;
-    merchant: string;
-    amount: number;
-  }>;
+      )
+      .all(workspaceId, from, to, ...ot.params) as Array<{
+      key: number;
+      merchant: string;
+      amount: number;
+    }>,
+    "amount",
+  );
 
   return snapshot.map((c) => {
     const byMonth = new Map(

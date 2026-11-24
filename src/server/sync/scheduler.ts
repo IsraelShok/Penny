@@ -1,14 +1,16 @@
 import "server-only";
 
-import { runAllWorkspaces } from "@/server/sync/orchestrator";
-import { SyncBusyError } from "@/server/sync/lock";
-import { getGlobalSetting } from "@/server/db/queries/settings";
+import { runAllWorkspaces, type WorkspaceSummary } from "@/server/sync/orchestrator";
+import { SyncBusyError, tryAcquireSync } from "@/server/sync/lock";
+import { getGlobalSetting, setGlobalSetting } from "@/server/db/queries/settings";
+import { failInterruptedSyncRuns, latestSyncStartMs } from "@/server/db/queries/sync-runs";
 import { redactError } from "@/server/lib/redact";
 import { isKeyLocked } from "@/server/lib/encryption";
+import { isDemoMode } from "@/server/demo/mode";
+import { dueRun, msUntilNextSlot, type ScheduleState } from "@/lib/sync-schedule";
 
 interface SchedulerState {
-  timeoutId: ReturnType<typeof setTimeout> | null;
-  nextRunAt: number | null;
+  intervalId: ReturnType<typeof setInterval> | null;
   running: boolean;
   initialized: boolean;
   exitHandlerRegistered: boolean;
@@ -21,8 +23,7 @@ declare global {
 function getState(): SchedulerState {
   if (!globalThis.__pennyScheduler) {
     globalThis.__pennyScheduler = {
-      timeoutId: null,
-      nextRunAt: null,
+      intervalId: null,
       running: false,
       initialized: false,
       exitHandlerRegistered: false,
@@ -31,51 +32,16 @@ function getState(): SchedulerState {
   return globalThis.__pennyScheduler;
 }
 
-const TZ = "Asia/Jerusalem";
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+/**
+ * The clock is checked every minute instead of arming one timer for tomorrow: a long timer does not
+ * fire on time after the computer sleeps, and never fires for a slot missed while it was off.
+ */
+const TICK_MS = 60_000;
 
-function intlParts(d: Date) {
-  const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: TZ,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  });
-  const parts = Object.fromEntries(
-    fmt
-      .formatToParts(d)
-      .filter((p) => p.type !== "literal")
-      .map((p) => [p.type, p.value]),
-  );
-  return {
-    year: Number(parts.year),
-    month: Number(parts.month),
-    day: Number(parts.day),
-    // Some Intl impls report hour 24 at midnight; normalise.
-    hour: Number(parts.hour) === 24 ? 0 : Number(parts.hour),
-    minute: Number(parts.minute),
-    second: Number(parts.second),
-  };
-}
-
-function computeNextDelay(targetHHMM: string): number {
-  const [tHour, tMin] = targetHHMM.split(":").map(Number);
-  const now = new Date();
-  const jlm = intlParts(now);
-
-  let candidateMs = Date.UTC(jlm.year, jlm.month - 1, jlm.day, tHour, tMin, 0);
-  const nowMs = Date.UTC(jlm.year, jlm.month - 1, jlm.day, jlm.hour, jlm.minute, jlm.second);
-
-  if (candidateMs <= nowMs) {
-    candidateMs += 24 * 3600 * 1000;
-  }
-
-  return candidateMs - nowMs;
-}
+const LAST_ATTEMPT = "auto_sync_last_attempt";
+const RETRY_IDS = "auto_sync_retry_ids";
+const RETRIES = "auto_sync_retries";
 
 function readSettings(): { enabled: boolean; time: string } {
   // On unless the user turned it off: a daily sync at 06:00 keeps the data fresh without a button.
@@ -85,87 +51,128 @@ function readSettings(): { enabled: boolean; time: string } {
   return { enabled, time: safeTime };
 }
 
-function cancel(): void {
-  const state = getState();
-  if (state.timeoutId) {
-    clearTimeout(state.timeoutId);
-    state.timeoutId = null;
-    state.nextRunAt = null;
-    console.log("[scheduler] cancelled");
+function retryIds(): number[] {
+  try {
+    const ids: unknown = JSON.parse(getGlobalSetting(RETRY_IDS) ?? "[]");
+    return Array.isArray(ids) ? ids.filter((id): id is number => Number.isInteger(id)) : [];
+  } catch {
+    // An unreadable list means nothing to retry; the next daily run covers every connection anyway.
+    return [];
   }
 }
 
-function armNext(): void {
-  const state = getState();
-  const { enabled, time } = readSettings();
-  if (!enabled) {
-    state.nextRunAt = null;
-    return;
-  }
+function readSchedule(): ScheduleState {
+  const last = Number(getGlobalSetting(LAST_ATTEMPT));
+  return {
+    lastAttemptMs: Number.isFinite(last) && last > 0 ? last : null,
+    retryPending: retryIds().length > 0,
+    retries: Number(getGlobalSetting(RETRIES)) || 0,
+  };
+}
 
-  const delayMs = computeNextDelay(time);
-  state.timeoutId = setTimeout(fire, delayMs);
-  state.nextRunAt = Date.now() + delayMs;
-  console.log(
-    `[scheduler] armed for ${new Date(state.nextRunAt).toISOString()} (in ${Math.round(
-      delayMs / 1000,
-    )}s)`,
+/** Connections that failed for a reason worth trying again today (network, a slow site), not a wrong password. */
+export function retryableFailures(summaries: WorkspaceSummary[]): number[] {
+  return summaries.flatMap((w) =>
+    w.providers.filter((p) => !p.ok && p.retryable).map((p) => p.credentialId),
   );
 }
 
-async function fire(): Promise<void> {
+async function tick(): Promise<void> {
   const state = getState();
-  state.timeoutId = null;
-
-  if (state.running) {
-    console.warn("[scheduler] skip fire — previous run still in progress");
-    armNext();
-    return;
-  }
-
+  if (state.running) return;
+  // The demo household's bank logins are made up: a sync there can only fail and paint every connection as broken.
+  if (isDemoMode()) return;
+  const { enabled, time } = readSettings();
+  if (!enabled) return;
   // After a restart with the app lock on, bank passwords stay wrapped until someone unlocks once.
-  if (isKeyLocked()) {
-    console.warn("[scheduler] skip fire — app is locked, will retry next slot");
-    armNext();
-    return;
-  }
+  // Nothing is recorded, so the run happens on the first tick after the unlock.
+  if (isKeyLocked()) return;
+  // First tick after an upgrade from the timer-based scheduler: count the last sync as the last
+  // attempt, so the next run is at the usual time and not a surprise login a minute after start.
+  if (getGlobalSetting(LAST_ATTEMPT) == null)
+    setGlobalSetting(LAST_ATTEMPT, String(latestSyncStartMs() ?? Date.now()));
+  const due = dueRun(time, readSchedule());
+  if (!due) return;
 
   state.running = true;
-  console.log("[scheduler] running");
+  const startedAt = Date.now();
+  const ids = due === "retry" ? retryIds() : [];
+  console.log(`[scheduler] running (${due})`);
   try {
-    await runAllWorkspaces(undefined, undefined, "scheduled");
+    const summaries: WorkspaceSummary[] = [];
+    if (due === "full")
+      summaries.push(...(await runAllWorkspaces(undefined, undefined, "scheduled")));
+    // A retry logs in only to the connections that failed, not to the ones that already synced today.
+    else {
+      // One lock for the whole pass, so a manual sync cannot slip in between and the pass counts once.
+      const release = tryAcquireSync("scheduled");
+      if (!release) throw new SyncBusyError();
+      try {
+        for (const id of ids)
+          summaries.push(
+            ...(await runAllWorkspaces(id, undefined, "scheduled", { lockHeld: true })),
+          );
+      } finally {
+        release();
+      }
+    }
+    setGlobalSetting(LAST_ATTEMPT, String(startedAt));
+    setGlobalSetting(RETRY_IDS, JSON.stringify(retryableFailures(summaries)));
+    setGlobalSetting(RETRIES, due === "full" ? "0" : String(readSchedule().retries + 1));
     console.log("[scheduler] done");
   } catch (err) {
+    // A manual sync is running: nothing is recorded, so the next tick tries again.
     if (err instanceof SyncBusyError)
-      console.warn("[scheduler] skip fire — a sync is already running");
-    else console.error("[scheduler] run failed:", redactError(err));
+      console.warn("[scheduler] waiting: a sync is already running");
+    else {
+      console.error("[scheduler] run failed:", redactError(err));
+      // Recorded as an attempt, or a failure that repeats would retry every minute.
+      setGlobalSetting(LAST_ATTEMPT, String(startedAt));
+      setGlobalSetting(RETRY_IDS, "[]");
+    }
   } finally {
     state.running = false;
-    armNext();
   }
 }
 
+function start(): void {
+  const state = getState();
+  if (state.intervalId) return;
+  state.intervalId = setInterval(() => void tick(), TICK_MS);
+  // The check must not keep a finished process (a script, a test) alive.
+  state.intervalId.unref();
+}
+
+function cancel(): void {
+  const state = getState();
+  if (state.intervalId) clearInterval(state.intervalId);
+  state.intervalId = null;
+}
+
+/** Settings are read on every tick, so a changed time or switch needs no re-arming; kept for its callers. */
 export function reschedule(): void {
-  cancel();
-  armNext();
+  start();
 }
 
 export function initScheduler(): void {
   const state = getState();
-  if (state.initialized) {
-    cancel();
-    armNext();
-    return;
+  if (!state.initialized) {
+    state.initialized = true;
+    // Nothing can be mid-sync when the process has just started: a run still marked as running was cut off by a crash or a shutdown.
+    try {
+      const interrupted = failInterruptedSyncRuns();
+      if (interrupted) console.warn(`[scheduler] closed ${interrupted} interrupted sync run(s)`);
+    } catch (err) {
+      console.error("[scheduler] could not close interrupted runs:", redactError(err));
+    }
+    registerExitHandlers();
   }
-  state.initialized = true;
-  armNext();
-  registerExitHandlers();
+  start();
 }
 
 export function getNextRunAt(): string | null {
-  const state = getState();
-  if (state.nextRunAt == null) return null;
-  return new Date(state.nextRunAt).toISOString();
+  const { enabled, time } = readSettings();
+  return enabled ? new Date(Date.now() + msUntilNextSlot(time)).toISOString() : null;
 }
 
 function registerExitHandlers(): void {
@@ -183,3 +190,6 @@ function registerExitHandlers(): void {
     process.exit(0);
   });
 }
+
+/** For tests: one pass of the clock check. */
+export const runSchedulerTick = tick;

@@ -1,3 +1,4 @@
+import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db";
 import {
@@ -23,7 +24,7 @@ import { dictionaryCategory } from "@/lib/merchant-dictionary";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = handle("suggestions", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const db = getDb();
   const today = israelToday();
@@ -163,10 +164,10 @@ export async function GET(request: Request) {
     (h) => !dismissed.has(h.key),
   );
   return NextResponse.json({ suggestions, dismissed: [...dismissed], stageHints, donations });
-}
+});
 
 /** Body: { key } — hides a suggestion for good. */
-export async function POST(request: Request) {
+export const POST = handle("suggestions", async (request: Request) => {
   const ws = getWorkspaceIdFromRequest(request);
   const body = await request.json().catch(() => null);
   const key = typeof body?.key === "string" ? body.key.slice(0, 300) : "";
@@ -175,4 +176,4 @@ export async function POST(request: Request) {
     .prepare("INSERT OR IGNORE INTO dismissed_suggestions (workspace_id, key) VALUES (?, ?)")
     .run(ws, key);
   return NextResponse.json({ success: true });
-}
+});

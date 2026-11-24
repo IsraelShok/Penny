@@ -8,10 +8,12 @@ import path from "node:path";
 import readline from "node:readline/promises";
 import Database from "better-sqlite3";
 
-const MAGIC = Buffer.from("PENNYBK1");
+// Same file format as the app writes (src/server/lib/portable-backup.ts): magic, one byte log2(N), salt, iv, tag, body.
+const MAGIC = Buffer.from("PENNYBK2");
+const LOG_N = 17;
 const SALT_BYTES = 16;
 const IV_BYTES = 12;
-const SCRYPT = { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+const SCRYPT = { N: 1 << LOG_N, r: 8, p: 1, maxmem: 256 * (1 << LOG_N) * 8 };
 const MIN_PASSPHRASE = 8;
 
 const dataDir = process.env.PENNY_DATA_DIR
@@ -23,6 +25,29 @@ const keyFile = path.join(dataDir, ".encryption-key");
 if (!fs.existsSync(dbFile)) {
   console.error(`No database at ${dbFile}. Set PENNY_DATA_DIR if it lives elsewhere.`);
   process.exit(1);
+}
+// With the app lock on, the key exists only wrapped by the lock passphrase; a backup without it can't read saved logins.
+if (fs.existsSync(path.join(dataDir, ".app-lock.json"))) {
+  console.error(
+    "The app lock is on, so the encryption key is not on disk. Make the backup in the app: Settings -> Backup.",
+  );
+  process.exit(1);
+}
+
+// Insurance documents and receipts, as in collectDataFiles (src/server/lib/portable-backup.ts).
+function collectDataFiles(root) {
+  const out = {};
+  const walk = (rel) => {
+    const abs = path.join(root, rel);
+    if (!fs.existsSync(abs)) return;
+    for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
+      const child = `${rel}/${e.name}`;
+      if (e.isDirectory()) walk(child);
+      else if (e.isFile()) out[child] = fs.readFileSync(path.join(root, child)).toString("base64");
+    }
+  };
+  for (const dir of ["policies", "receipts"]) walk(dir);
+  return out;
 }
 
 async function askPassphrase() {
@@ -46,20 +71,21 @@ const passphrase = await askPassphrase();
 
 // VACUUM INTO writes a consistent snapshot without touching the live database.
 const snapshot = path.join(os.tmpdir(), `penny-backup-${process.pid}-${Date.now()}.db`);
-const db = new Database(dbFile);
 try {
-  db.exec(`VACUUM INTO '${snapshot.replace(/'/g, "''")}'`);
-} finally {
-  db.close();
-}
+  const db = new Database(dbFile);
+  try {
+    db.exec(`VACUUM INTO '${snapshot.replace(/'/g, "''")}'`);
+  } finally {
+    db.close();
+  }
 
-try {
   const payload = {
     format: 1,
     createdAt: new Date().toISOString(),
     appVersion: "cli",
     database: fs.readFileSync(snapshot).toString("base64"),
     encryptionKey: fs.existsSync(keyFile) ? fs.readFileSync(keyFile).toString("base64") : null,
+    files: collectDataFiles(dataDir),
   };
   const salt = crypto.randomBytes(SALT_BYTES);
   const iv = crypto.randomBytes(IV_BYTES);
@@ -69,7 +95,7 @@ try {
     cipher.update(Buffer.from(JSON.stringify(payload), "utf8")),
     cipher.final(),
   ]);
-  const file = Buffer.concat([MAGIC, salt, iv, cipher.getAuthTag(), body]);
+  const file = Buffer.concat([MAGIC, Buffer.from([LOG_N]), salt, iv, cipher.getAuthTag(), body]);
 
   const outDir = path.join(dataDir, "backups");
   fs.mkdirSync(outDir, { recursive: true });

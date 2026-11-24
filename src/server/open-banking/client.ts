@@ -1,5 +1,5 @@
 import "server-only";
-import { israelToday } from "@/server/lib/date-utils";
+import { israelToday, utcDay } from "@/server/lib/date-utils";
 
 import { redact } from "@/server/lib/redact";
 import type { ScrapedAccount, ScrapedTransaction, ScrapeResult } from "@/server/scrapers/types";
@@ -51,11 +51,27 @@ interface BgTransaction {
   bankTransactionCode?: string;
 }
 
+type BgLinks = { next?: string | { href?: string } };
+
 interface BgTransactionsResponse {
   transactions?: {
     booked?: BgTransaction[];
     pending?: BgTransaction[];
+    _links?: BgLinks;
   };
+  _links?: BgLinks;
+}
+
+/** A looping `next` link must not hang the sync. */
+const MAX_PAGES = 50;
+
+class OpenBankingError extends Error {
+  constructor(
+    message: string,
+    readonly retryable = false,
+  ) {
+    super(message);
+  }
 }
 
 function baseUrlOf(credentials: OpenBankingCredentials): string {
@@ -85,8 +101,9 @@ function tokenOf(credentials: OpenBankingCredentials): string {
 
 function messageFor(status: number, body: string): string {
   const detail = redact(body.slice(0, 300)).trim();
-  if (status === 401 || status === 403) {
-    return `Open banking rejected the access token (HTTP ${status}).${detail ? ` ${detail}` : ""}`;
+  // A consent lasts 90 days at most and the person can revoke it at the bank; either way only they can renew it.
+  if (status === 401 || status === 403 || /CONSENT_(EXPIRED|INVALID)/.test(body)) {
+    return `The open banking consent has expired or was revoked (HTTP ${status}). Renew the consent with your bank, then paste the new access token here.`;
   }
   if (status === 404) {
     return `Open banking endpoint not found (HTTP 404) — check the base URL.${detail ? ` ${detail}` : ""}`;
@@ -97,8 +114,7 @@ function messageFor(status: number, body: string): string {
   return `Open banking request failed (HTTP ${status}).${detail ? ` ${detail}` : ""}`;
 }
 
-async function getJson<T>(credentials: OpenBankingCredentials, path: string): Promise<T> {
-  const url = `${baseUrlOf(credentials)}${path}`;
+async function getJson<T>(credentials: OpenBankingCredentials, url: string): Promise<T> {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${tokenOf(credentials)}`,
     Accept: "application/json",
@@ -120,7 +136,12 @@ async function getJson<T>(credentials: OpenBankingCredentials, path: string): Pr
   }
 
   const text = await response.text();
-  if (!response.ok) throw new Error(messageFor(response.status, text));
+  if (!response.ok) {
+    throw new OpenBankingError(
+      messageFor(response.status, text),
+      response.status === 429 || response.status >= 500,
+    );
+  }
   if (!text.trim()) return {} as T;
   try {
     return JSON.parse(text) as T;
@@ -144,11 +165,25 @@ function txnsOf(payload: BgTransactionsResponse): { txn: BgTransaction; pending:
   ];
 }
 
+/** Address of the next page, or null on the last one. The link sits beside the list or at the top level. */
+export function nextPageUrl(payload: BgTransactionsResponse, current: string): string | null {
+  const next = payload.transactions?._links?.next ?? payload._links?.next;
+  const href = typeof next === "string" ? next : next?.href;
+  if (!href) return null;
+  const url = new URL(href, current);
+  // The bearer token follows this link, so it may only lead back to the same server.
+  if (url.origin !== new URL(current).origin)
+    throw new Error("Open banking returned a next-page link to a different server.");
+  return url.href;
+}
+
 function balanceOf(account: BgAccount): number | undefined {
   const balances = account.balances ?? [];
-  // Prefer the closing/interim booked balance, then anything the bank sent.
+  // Prefer the closing/interim booked balance (Berlin Group names or ISO codes), then anything the bank sent.
   const preferred =
-    balances.find((b) => /CLBD|ITBD|OPBD/i.test(b.balanceType ?? "")) ?? balances[0];
+    balances.find((b) =>
+      /CLBD|ITBD|OPBD|(closing|interim|opening)Booked/i.test(b.balanceType ?? ""),
+    ) ?? balances[0];
   const amount = Number(preferred?.balanceAmount?.amount);
   return Number.isFinite(amount) ? amount : undefined;
 }
@@ -216,7 +251,8 @@ export async function connectOpenBanking(
   };
 
   try {
-    const accountsPayload = await getJson<unknown>(creds, "/v1/accounts?withBalance=true");
+    const base = baseUrlOf(creds);
+    const accountsPayload = await getJson<unknown>(creds, `${base}/v1/accounts?withBalance=true`);
     const accounts = accountsOf(accountsPayload);
     if (accounts.length === 0) {
       return {
@@ -228,19 +264,28 @@ export async function connectOpenBanking(
     }
 
     const today = israelToday();
-    const dateFrom = startDate.toISOString().slice(0, 10);
+    const dateFrom = utcDay(startDate);
     const scraped: ScrapedAccount[] = [];
 
     for (const account of accounts) {
       const accountId = account.resourceId ?? account.id ?? account.iban ?? account.bbAN;
       if (!accountId) continue;
-      const payload = await getJson<BgTransactionsResponse>(
-        creds,
-        `/v1/accounts/${encodeURIComponent(accountId)}/transactions?dateFrom=${dateFrom}&dateTo=${today}&bookingStatus=both`,
-      );
-      const transactions = txnsOf(payload).map(({ txn, pending }) =>
-        toScrapedTransaction(txn, pending, today),
-      );
+      const transactions: ScrapedTransaction[] = [];
+      let url: string | null =
+        `${base}/v1/accounts/${encodeURIComponent(accountId)}/transactions?dateFrom=${dateFrom}&dateTo=${today}&bookingStatus=both`;
+      const seen = new Set<string>();
+      while (url) {
+        // A loop or a history longer than this would be saved as if it were complete.
+        if (seen.has(url) || seen.size >= MAX_PAGES)
+          throw new Error(
+            "Open banking kept returning more pages than expected; nothing was saved.",
+          );
+        seen.add(url);
+        const payload: BgTransactionsResponse = await getJson<BgTransactionsResponse>(creds, url);
+        for (const { txn, pending } of txnsOf(payload))
+          transactions.push(toScrapedTransaction(txn, pending, today));
+        url = nextPageUrl(payload, url);
+      }
       scraped.push({
         accountNumber: account.iban ?? account.bbAN ?? accountId,
         balance: balanceOf(account),
@@ -254,6 +299,11 @@ export async function connectOpenBanking(
   } catch (err) {
     const message = redact(err instanceof Error ? err.message : String(err));
     console.error("[open-banking] failed:", message);
-    return { success: false, accounts: [], errorMessage: message };
+    return {
+      success: false,
+      accounts: [],
+      errorMessage: message,
+      retryable: err instanceof OpenBankingError && err.retryable,
+    };
   }
 }

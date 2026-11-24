@@ -1,7 +1,8 @@
 import "server-only";
 
+import { roundSums } from "@/lib/money";
 import { getDb } from "../index";
-import { toLocalISODate } from "../../lib/date-utils";
+import { toLocalISODate, israelNoon } from "../../lib/date-utils";
 import type { FiPayload } from "@/lib/types";
 
 const BASE = `t.workspace_id = ? AND t.date >= ? AND t.date <= ?
@@ -14,16 +15,20 @@ function window(today: Date, endBack: number, count: number) {
   return { from: toLocalISODate(from), to: toLocalISODate(to) };
 }
 
-export function getMonthlyAverages(workspaceId: number, today = new Date()) {
+export function getMonthlyAverages(workspaceId: number, today = israelNoon()) {
   const w = window(today, 0, 12);
-  const rows = getDb()
-    .prepare(
-      `SELECT substr(t.date, 1, 7) as month,
+  const rows = roundSums(
+    getDb()
+      .prepare(
+        `SELECT substr(t.date, 1, 7) as month,
          COALESCE(SUM(CASE WHEN t.kind = 'income' THEN t.personal_amount END), 0) as income,
          COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN -t.personal_amount END), 0) as expenses
        FROM transactions t WHERE ${BASE} GROUP BY month`,
-    )
-    .all(workspaceId, w.from, w.to) as { income: number; expenses: number }[];
+      )
+      .all(workspaceId, w.from, w.to) as { income: number; expenses: number }[],
+    "income",
+    "expenses",
+  );
   const n = rows.length;
   return {
     monthsOfData: n,
@@ -35,19 +40,20 @@ export function getMonthlyAverages(workspaceId: number, today = new Date()) {
 /** Personal inflation: how each top-level category's spend changed year on year, weighted by this year's share. */
 export function getPersonalInflation(
   workspaceId: number,
-  today = new Date(),
+  today = israelNoon(),
 ): FiPayload["inflation"] {
   const db = getDb();
   const sum = (from: string, to: string) =>
     new Map(
-      (
+      roundSums(
         db
           .prepare(
             `SELECT COALESCE(c.parent_id, c.id) as key, SUM(-t.personal_amount) as amount
            FROM category_transactions t JOIN categories c ON c.id = t.category_id
            WHERE ${BASE} AND t.kind = 'expense' GROUP BY key`,
           )
-          .all(workspaceId, from, to) as { key: number; amount: number }[]
+          .all(workspaceId, from, to) as { key: number; amount: number }[],
+        "amount",
       ).map((r) => [r.key, r.amount]),
     );
   const cur = window(today, 0, 12);

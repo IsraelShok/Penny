@@ -1,3 +1,5 @@
+import { handle } from "@/server/lib/api-error";
+import { israelNoon } from "@/server/lib/date-utils";
 import { NextResponse } from "next/server";
 import {
   budgetToday,
@@ -21,7 +23,7 @@ import type { OverviewPayload } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = handle("overview", async (request: Request) => {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const params = new URL(request.url).searchParams;
   const kind = (params.get("period") ?? "quarter") as PeriodKind;
@@ -31,7 +33,7 @@ export async function GET(request: Request) {
   }
 
   const startDay = getPlan(workspaceId).monthStartDay;
-  const today = budgetToday(new Date(), startDay);
+  const today = budgetToday(israelNoon(), startDay);
   const cal = periodRange(kind, today, offset);
   // The current period is part-done: compare it with the same stretch of the others.
   const prev = shiftRange(
@@ -61,4 +63,4 @@ export async function GET(request: Request) {
     categories: getCategoryRows(workspaceId, r, prev, ly, startDay),
   };
   return NextResponse.json(payload);
-}
+});

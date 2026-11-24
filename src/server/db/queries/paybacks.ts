@@ -1,5 +1,6 @@
 import "server-only";
 
+import { roundSums } from "@/lib/money";
 import { getDb } from "../index";
 import { coversExpense, paybackPair, type PaybackError, type PaybackKind } from "@/lib/payback";
 
@@ -55,13 +56,16 @@ const toTxn = (r: Self): PaybackTxn => ({
 
 /** What earlier credits already covered of this expense. */
 function coveredFor(workspaceId: number, expenseId: number): number {
-  const row = getDb()
-    .prepare(
-      `SELECT COALESCE(SUM(ABS(c.charged_amount)), 0) AS covered
+  const row = roundSums(
+    getDb()
+      .prepare(
+        `SELECT COALESCE(SUM(ABS(c.charged_amount)), 0) AS covered
        FROM transaction_links l JOIN transactions c ON c.id = l.credit_id
        WHERE l.workspace_id = ? AND l.expense_id = ?`,
-    )
-    .get(workspaceId, expenseId) as { covered: number };
+      )
+      .get(workspaceId, expenseId) as { covered: number },
+    "covered",
+  );
   return row.covered;
 }
 

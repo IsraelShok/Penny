@@ -146,4 +146,14 @@ describe("markDuplicates", () => {
     ]);
     expect(out.map((x) => x.duplicate)).toEqual([true, false]);
   });
+
+  it("a stored row absorbs one file row, so a same-amount charge a day later is kept", () => {
+    const rows = [
+      { date: "2024-02-01", description: "חניון", amount: -100 },
+      { date: "2024-02-02", description: "חניון", amount: -100 },
+    ];
+    const stored = [{ date: "2024-02-01", amount: -100 }];
+    expect(markDuplicates(rows, stored).filter((x) => !x.duplicate)).toHaveLength(1);
+    expect(markDuplicates([...rows].reverse(), stored).filter((x) => !x.duplicate)).toHaveLength(1);
+  });
 });
