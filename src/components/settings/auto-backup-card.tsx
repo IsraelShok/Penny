@@ -11,7 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Segmented } from "@/components/ui/segmented";
 import { SettingCard, SettingList, SettingRow } from "@/components/settings/section-shell";
+import { getLockStatus } from "@/components/settings/app-lock-card";
 import {
+  ApiError,
   autoBackupAction,
   getAutoBackup,
   updateAutoBackup,
@@ -21,11 +23,17 @@ import {
 /** Encrypted backups on a schedule into a folder that a cloud drive syncs, so a dead disk doesn't take the data. */
 export function AutoBackupCard() {
   const t = useTranslations("settings.data");
+  const tLock = useTranslations("settings.privacy");
   const locale = useLocale();
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["auto-backup"], queryFn: getAutoBackup });
   const set = (c: AutoBackupConfig) => qc.setQueryData(["auto-backup"], c);
+  // With the app lock on, a new passphrase or folder needs the lock passphrase again: the backup holds the key.
+  const locked = useQuery({ queryKey: ["lock"], queryFn: getLockStatus }).data?.enabled ?? false;
+  const [secret, setSecret] = useState("");
   const errorText = (e: unknown) => {
+    if (e instanceof ApiError && (e.status === 401 || e.status === 429))
+      return tLock(e.status === 401 ? "lockError_wrong" : "lockError_wait");
     const m = e instanceof Error ? e.message : "";
     return t(
       /weak/i.test(m)
@@ -68,6 +76,21 @@ export function AutoBackupCard() {
   return (
     <SettingCard title={t("autoTitle")} description={t("autoDescription")}>
       <SettingList>
+        {locked && (
+          <div className="space-y-1.5 py-3">
+            <Label htmlFor="auto-backup-lock-secret" className="font-medium">
+              {t("autoLockSecret")}
+            </Label>
+            <Input
+              id="auto-backup-lock-secret"
+              type="password"
+              autoComplete="current-password"
+              value={secret}
+              onChange={(e) => setSecret(e.target.value)}
+              dir="ltr"
+            />
+          </div>
+        )}
         <div className="space-y-1.5 py-3">
           <Label htmlFor="auto-backup-pass" className="font-medium">
             {c.hasPassphrase ? t("autoPassChange") : t("autoPass")}
@@ -84,10 +107,10 @@ export function AutoBackupCard() {
             />
             <Button
               variant="outline"
-              disabled={pass.length < 8 || update.isPending}
+              disabled={pass.length < 8 || (locked && !secret) || update.isPending}
               onClick={() =>
                 update.mutate(
-                  { passphrase: pass },
+                  { passphrase: pass, secret },
                   {
                     onSuccess: () => {
                       setPass("");
@@ -132,7 +155,7 @@ export function AutoBackupCard() {
             dir="ltr"
             value={dir ?? c.dir}
             onChange={(e) => setDir(e.target.value)}
-            onBlur={() => dir !== null && dir.trim() !== c.dir && update.mutate({ dir })}
+            onBlur={() => dir !== null && dir.trim() !== c.dir && update.mutate({ dir, secret })}
             aria-describedby="auto-backup-dir-hint"
           />
           <p id="auto-backup-dir-hint" className="text-footnote text-muted-foreground">

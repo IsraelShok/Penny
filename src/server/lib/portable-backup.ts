@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { closeDb, getDb } from "@/server/db";
-import { backupBeforeMigration, backupDir } from "@/server/db/backup";
+import { backupBeforeMigration, backupDir, snapshotTo } from "@/server/db/backup";
 import { dataDir, dbPath } from "@/server/lib/data-dir";
 import { getKey, keyPath, setKeyInMemory, writeOwnerOnly } from "@/server/lib/encryption";
 import { isLockEnabled } from "@/server/lib/app-lock";
@@ -175,7 +175,7 @@ function snapshotDatabase(db: Database.Database): Buffer {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "penny-backup-"));
   const file = path.join(dir, "snapshot.db");
   try {
-    db.prepare("VACUUM INTO ?").run(file);
+    snapshotTo(db, file);
     return fs.readFileSync(file);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -294,33 +294,46 @@ export function applyBackup(file: Buffer, passphrase: string): RestoreResult {
 
   const db = getDb();
   const preRestoreBackup = backupBeforeMigration(db, "restore");
+  const oldKey = currentKey();
+  const replaceKey = key && !isLockEnabled() && !key.equals(oldKey ?? Buffer.alloc(0)) ? key : null;
+  // The replaced key goes beside the copy of the replaced database: that copy is unreadable without it.
+  if (replaceKey && oldKey && preRestoreBackup)
+    writeOwnerOnly(`${preRestoreBackup}.key`, oldKey.toString("hex"));
   const target = dbPath();
   // Written beside the target first, so a full disk fails here, before the live file is touched.
   const staged = `${target}.restore-tmp`;
-  fs.writeFileSync(staged, database);
-  const swapIn = (source: string | null) => {
-    closeDb();
-    for (const suffix of ["", "-wal", "-shm"]) fs.rmSync(`${target}${suffix}`, { force: true });
-    if (source) fs.copyFileSync(source, target);
-  };
+  let swapped = false;
   let fresh: Database.Database;
   try {
-    swapIn(staged);
+    fs.writeFileSync(staged, database);
+    closeDb();
+    for (const suffix of ["-wal", "-shm"]) fs.rmSync(`${target}${suffix}`, { force: true });
+    // One rename: the live file is either the old database or the restored one, never missing.
+    fs.renameSync(staged, target);
+    swapped = true;
     // Opening runs the migrations, so a backup from a newer version or one that fails to migrate is caught here.
     fresh = getDb();
     if (fresh.pragma("quick_check", { simple: true }) !== "ok") throw new Error("quick_check");
+    // Credentials in the backup were encrypted with this key, so the restored database needs it, stored the way
+    // getOrCreateKey reads it (hex text) and loaded into memory now.
+    if (replaceKey) {
+      writeOwnerOnly(keyPath(), replaceKey.toString("hex"));
+      setKeyInMemory(replaceKey);
+    }
   } catch (e) {
+    if (!swapped) throw e;
     console.error("[restore] restored database rejected, putting the previous one back:", e);
-    swapIn(preRestoreBackup);
+    closeDb();
+    for (const suffix of ["", "-wal", "-shm"]) fs.rmSync(`${target}${suffix}`, { force: true });
+    if (preRestoreBackup) fs.copyFileSync(preRestoreBackup, target);
+    if (replaceKey) {
+      if (oldKey) writeOwnerOnly(keyPath(), oldKey.toString("hex"));
+      else fs.rmSync(keyPath(), { force: true });
+      setKeyInMemory(oldKey ?? undefined);
+    }
     throw new Error("corruptRestore");
   } finally {
     fs.rmSync(staged, { force: true });
-  }
-  // Credentials in the backup were encrypted with this key, so the restored database needs it, stored the way
-  // getOrCreateKey reads it (hex text) and loaded into memory now.
-  if (key && !isLockEnabled()) {
-    writeOwnerOnly(keyPath(), key.toString("hex"));
-    setKeyInMemory(key);
   }
   // Documents and receipts come back beside the rows that point to them. Files already here stay.
   for (const [rel, data] of Object.entries(payload.files ?? {})) {

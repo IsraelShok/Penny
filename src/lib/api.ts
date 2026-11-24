@@ -2020,6 +2020,8 @@ export function updateAutoBackup(patch: {
   frequency?: "daily" | "weekly";
   dir?: string;
   passphrase?: string;
+  /** The lock passphrase, asked again with the lock on when passphrase or dir changes. */
+  secret?: string;
 }) {
   return fetchJSON<AutoBackupConfig>("/api/backup/auto", jsonBody("PATCH", patch));
 }

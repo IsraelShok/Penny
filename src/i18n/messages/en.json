@@ -975,6 +975,7 @@
       "autoPassSave": "Save",
       "autoPassSaved": "Backup passphrase saved.",
       "autoPassHint": "At least 8 characters. Keep it somewhere safe: without it the backup can't be restored.",
+      "autoLockSecret": "App lock passphrase (needed to change the passphrase or folder)",
       "autoEnable": "Automatic backup",
       "autoFrequency": "How often",
       "autoDaily": "Every day",

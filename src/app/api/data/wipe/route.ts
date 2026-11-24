@@ -2,9 +2,9 @@ import { handle } from "@/server/lib/api-error";
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
-import { endAllSessions, shred } from "@/server/lib/app-lock";
+import { endAllSessions, shred, shredLegacyKey } from "@/server/lib/app-lock";
 import { lockReauth } from "@/server/lib/lock-reauth";
-import { keyPath, legacyKeyPath, lockFilePath, setKeyInMemory } from "@/server/lib/encryption";
+import { keyPath, lockFilePath, setKeyInMemory } from "@/server/lib/encryption";
 import { dataDir } from "@/server/lib/data-dir";
 import { LAN_FLAG } from "@/server/lib/lan-access";
 import { withSession } from "../../lock/session-cookie";
@@ -45,8 +45,17 @@ export const POST = handle("data/wipe", async (request: Request) => {
 
   const dir = dataDir();
   const dbFiles = ["penny.db", "penny.db-wal", "penny.db-shm"];
-  const files = [...dbFiles, ".app-lock.json.tmp"].map((f) => path.join(dir, f));
-  for (const f of [...files, keyPath(), legacyKeyPath(), lockFilePath()]) shred(f);
+  const files = [...dbFiles, "penny.db.restore-tmp", ".app-lock.json.tmp"].map((f) =>
+    path.join(dir, f),
+  );
+  // Read before the key file goes, without creating one: it decides whether the legacy copy is ours.
+  const key =
+    globalThis.__pennyDataKey ??
+    (fs.existsSync(keyPath())
+      ? Buffer.from(fs.readFileSync(keyPath(), "utf8").trim(), "hex")
+      : undefined);
+  for (const f of [...files, keyPath(), lockFilePath()]) shred(f);
+  shredLegacyKey(key);
   if (fs.existsSync(dir)) {
     for (const f of fs.readdirSync(dir))
       if (f.endsWith(".log")) fs.rmSync(path.join(dir, f), { force: true });
