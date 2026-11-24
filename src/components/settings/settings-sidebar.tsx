@@ -25,6 +25,7 @@ import {
   Store,
   Coins,
   Languages,
+  ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -128,6 +129,12 @@ export const SETTINGS_GROUPS: NavGroup[] = [
         labelKey: "bank",
         Icon: Landmark,
         match: (p) => p.startsWith("/settings/bank"),
+      },
+      {
+        href: "/settings/sync-logs",
+        labelKey: "syncLogs",
+        Icon: ScrollText,
+        match: (p) => p.startsWith("/settings/sync-logs"),
       },
       {
         href: "/settings/ai",
