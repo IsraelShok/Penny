@@ -86,7 +86,6 @@ function fail(id: number, message: string) {
 }
 
 async function run(workspaceId: number, row: Row) {
-  const { scrapePension } = await import("israeli-pension-scrapers");
   const db = getDb();
   const credentials = JSON.parse(
     decrypt({ encrypted: row.credentials_encrypted, iv: row.iv, authTag: row.auth_tag }),
@@ -111,19 +110,23 @@ async function run(workspaceId: number, row: Row) {
       ).run(e.encrypted, e.iv, e.authTag, row.id);
     },
   };
-  const outcome = await scrapePension({
+  const scrapeArgs = {
     fundId: row.fund_id,
     credentials,
     connectionId: String(row.id),
     session,
-    onProgress: (message) => status.set(row.id, { state: "running", message }),
+    onProgress: (message: string) => status.set(row.id, { state: "running", message }),
     onOtpNeeded: () => {
       status.set(row.id, { state: "otp" });
       return registerOtpRequest(otpKey(row.id), workspaceId, row.fund_id)
         .wait()
         .finally(() => status.set(row.id, { state: "running" }));
     },
-  });
+  };
+  const outcome =
+    row.fund_id === "altshuler"
+      ? await (await import("./custom-scrapers")).scrapeCustomPension(scrapeArgs)
+      : await (await import("israeli-pension-scrapers")).scrapePension(scrapeArgs);
   if (!outcome.success)
     return fail(row.id, outcome.errorMessage ?? outcome.errorType ?? "Sync failed");
 
