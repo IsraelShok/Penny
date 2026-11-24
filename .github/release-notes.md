@@ -1,15 +1,16 @@
-## What's new in 0.2.0
+## What's new in 0.5.0
 
-- **Money on the table.** One yearly figure for every saving the checks found (fees, overdraft interest, foreign-currency markup, idle cash, fund fees above the market, overlapping insurance, a possible tax refund), each with its next step. Mark it done and it counts as saved.
-- **A full dashboard.** Tiles you can show or hide: balance trend, cash flow, spending structure, recurring payments, credit utilization, progress to financial independence and who spent what.
-- **Every account in one place.** An accounts tree, a page for every account, loan cards, holdings with their buys and sells, and private deals.
-- **Split expenses, envelope budgeting and credit score tracking.** Who owes you what, how much of the month's income every budget claims, and your credit score over time.
-- **Smart without AI.** New transactions get a category from a built-in dictionary of Israeli merchants and from what you taught it, "why spending changed" explains each month, and donations show their tax credit.
-- **Correct to the shekel.** Charges on the 1st land in their month, Max card bills are no longer counted twice, installment plans and card forecasts are right, and a balance check flags missing transactions.
-- **Telegram that keeps you posted.** A summary three mornings a week, and a message when a bank stops syncing and when it's back.
-- **Windows updates itself.** New releases download in the background, are checked against `SHA256SUMS.txt`, and install when you restart.
-- **Try it in the browser.** A clickable demo on the website walks through every screen with a sample household.
-- **Safer.** Turning the app lock off also closes phone access, and a restored backup keeps your saved bank logins readable.
+- **Three new investment houses.** Altshuler Shaham, Phoenix savings and pension, and Excellence Trade sync on their own, with every product as its own asset. Thanks to @IsraelShok.
+- **Sync you can leave alone.** Missed runs catch up, short outages retry at 15 minutes, 1 hour and 4 hours, a stuck bank gives up after 10 minutes, and a connection that needs you no longer fails every day.
+- **Backups that cannot lose data.** Restore swaps the database in one step and rolls back on failure, works over a damaged database, and keeps the key that opens your saved logins. Backups use a stronger key derivation.
+- **More private.** IBANs, phone numbers, long numbers and standing-order names are hidden from cloud AI, and the encryption key file is closed to other users of a Windows computer.
+- **Open banking.** Long histories page through to the end or fail clearly, an expired consent tells you to renew it, and errors show in Hebrew.
+- **MCP.** Read-only access keeps working with the app lock on, with seven more tools.
+- **Telegram.** A reminder when a bank connection stays down.
+- **Docker.** To update, run the install command again. Launch scripts moved to `scripts/docker/`.
+- **Security fixes** from CodeQL: a release tag can no longer steer the installer path, and HTML statement imports decode safely.
+
+> **Desktop installs of 0.4.0 or older:** updates are now signed with a new key, so download this version once by hand. Updates install automatically again after that.
 
 The full list is in [CHANGELOG.md](https://github.com/Sergey-Bar/Penny/blob/main/CHANGELOG.md).
 

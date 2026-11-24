@@ -2,12 +2,29 @@
 
 All notable changes to Penny. Versions follow [Semantic Versioning](https://semver.org/); dates are Israel time.
 
-## [Unreleased]
+## [0.5.0] - 2026-11-24
+
+### Added
+
+- Altshuler Shaham, Phoenix savings and pension, and Excellence Trade sync (thanks @IsraelShok).
+- MCP read-only access with the app lock on, plus seven more tools.
+- Telegram reminder when a bank connection stays down.
 
 ### Changed
 
 - **New update-signing key.** Desktop installs of 0.4.0 or older cannot verify updates signed with it, so they
   need one manual download of this version. Later updates install automatically again.
+- **Docker:** update by running the install command again; launch scripts moved to `scripts/docker/`.
+- **README** is short; details live on the website and in `docs/`.
+
+### Fixed
+
+- Sync catches up missed runs, retries short outages, gives up on a stuck bank after 10 minutes and never stays "running".
+- Restore is atomic, works over a damaged database and keeps the encryption key; backups use stronger key derivation.
+- Cloud AI no longer sees IBANs, phone numbers, long numbers or standing-order names.
+- Open banking pages through long histories, explains expired consent, and shows errors in Hebrew.
+- Duplicate detection can no longer merge two rows because of a "|" in a description.
+- CodeQL findings: release-tag check in the desktop updater, safe HTML statement decoding.
 
 ## [0.4.0] - 2026-11-22
 
