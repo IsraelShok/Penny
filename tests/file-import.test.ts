@@ -119,6 +119,10 @@ describe("parseHtmlTable", () => {
       ["01/02/2024", "חשמל ישראל", "", "1,200.00"],
     ]);
   });
+  it("decodes entities once and drops broken tags", () => {
+    const html = "<table><tr><td>A &amp;lt;b&amp;gt; &#8362;5 <<b>script> <b</td></tr></table>";
+    expect(parseHtmlTable(html)).toEqual([["A &lt;b&gt; ₪5 script"]]);
+  });
 });
 
 describe("markDuplicates", () => {

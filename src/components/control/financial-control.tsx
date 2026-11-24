@@ -768,7 +768,7 @@ export function FinancialControl() {
                       <td className="p-3">
                         <Link
                           className="underline"
-                          href={`/transactions?category=${d.categoryId}&month=${month}`}
+                          href={`/transactions?${new URLSearchParams({ category: String(d.categoryId), month })}`}
                         >
                           {d.name === "Uncategorized"
                             ? tr("uncategorized")
