@@ -2,8 +2,8 @@ import type { Allocation } from "./allocation";
 import type { Suggestion } from "./suggestions";
 import type { DetectableEvent, StageHint } from "./stage-detect";
 
-export type TodayState = ReturnType<typeof import("./today-state").todayState>;
-export type StepKind =
+type TodayState = ReturnType<typeof import("./today-state").todayState>;
+type StepKind =
   | "connect"
   | "sync"
   | "cash"

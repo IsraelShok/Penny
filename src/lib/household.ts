@@ -49,7 +49,7 @@ export interface HouseholdMember {
   role: MemberRole;
   birthYear: number | null;
 }
-export interface LifeEvent {
+interface LifeEvent {
   id: string;
   type: LifeEventType;
   date: string;

@@ -44,7 +44,7 @@ export type Suggestion =
   | { key: string; type: "emergency"; months: number; target: number }
   | { key: string; type: "idle"; amount: number; buffer: number };
 
-export type PolicyGuess =
+type PolicyGuess =
   "health" | "life" | "disability" | "long_term_care" | "home" | "car" | "travel" | "other";
 
 const INSURER =
@@ -157,7 +157,7 @@ export function taxYearFacts(
 }
 
 /** Rough yearly ₪ at stake, so the feed leads with what matters most. Setup items (add a policy, a rule) trail. */
-export function impact(s: Suggestion): number {
+function impact(s: Suggestion): number {
   switch (s.type) {
     case "emergency":
       return 20_000 * (1 - s.months / 3);

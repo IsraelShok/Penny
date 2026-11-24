@@ -39,7 +39,7 @@ function oklchToRgb({ l: L, c, h }: Oklch): [number, number, number] {
 }
 
 /** #RRGGBB for an OKLCH color; chroma is lowered until it fits sRGB so the hue holds. */
-export function oklchToHex(color: Oklch): string {
+function oklchToHex(color: Oklch): string {
   let c = color.c,
     rgb = oklchToRgb(color);
   while (c > 0 && rgb.some((v) => v < -1e-4 || v > 1 + 1e-4))

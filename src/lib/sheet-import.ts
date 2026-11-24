@@ -28,6 +28,7 @@ export const MAX_SHEET_ROWS = 500;
 export const MAX_SHEET_AMOUNT = 10_000_000;
 /** The account that means "I typed this in": manual rows, editable forever. */
 export const SHEET_CASH_ACCOUNT = "cash";
+/** @unfinished added in 6a643de (2026-11-21) and not wired in yet; kept for the owner to decide */
 export const SHEET_AMOUNT_FIELDS: readonly SheetField[] = ["date", "description", "amount"];
 
 /** Header names the template uses and the paste detector looks for. Most specific first. */
@@ -206,7 +207,7 @@ export function parseSheetKind(raw: string | undefined): "expense" | "income" | 
 }
 
 /** Splits "טיול, משפחה" into clean tags. */
-export function parseSheetTags(raw: string | undefined): string[] {
+function parseSheetTags(raw: string | undefined): string[] {
   return [
     ...new Set(
       (raw ?? "")
@@ -260,7 +261,7 @@ export interface SheetRowValues {
   memo: string | null;
 }
 
-export interface SheetError {
+interface SheetError {
   field: SheetField;
   code:
     | "dateRequired"

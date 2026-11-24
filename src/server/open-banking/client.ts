@@ -11,7 +11,7 @@ import type { ScrapedAccount, ScrapedTransaction, ScrapeResult } from "@/server/
  * bearer token. We speak that shape directly, so any compliant endpoint works —
  * the fields below are the ones the standard guarantees.
  */
-export interface OpenBankingCredentials {
+interface OpenBankingCredentials {
   baseUrl?: string;
   token?: string;
   consentId?: string;

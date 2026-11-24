@@ -20,6 +20,7 @@ export const PET_SKIN_LOOKS = [
   { id: "1701", series: "pattern" },
 ] as const;
 
+/** @unfinished added in 6a643de (2026-11-21) and not wired in yet; kept for the owner to decide */
 export type PetSkinLook = (typeof PET_SKIN_LOOKS)[number]["series"];
 
 /** Every skin in a series with its main colour; skinFor picks the variant closest to the chosen colour. */

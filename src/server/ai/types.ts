@@ -1,7 +1,7 @@
 import "server-only";
 
 /** Integer 1-7. 1 = guessing; 7 = certain. */
-export type AIConfidence = number;
+type AIConfidence = number;
 
 export interface CategoryMapping {
   index: number;

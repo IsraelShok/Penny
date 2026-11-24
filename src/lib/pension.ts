@@ -1,7 +1,7 @@
 /** Pure helpers for investment-house balances (no I/O), so they can be tested. */
 
 /** Funds wired to the israeli-pension-scrapers library. Ids match the library and INVESTMENT_HOUSES. */
-export const PENSION_FUNDS = ["meitav", "harel", "migdal", "clal", "menora"] as const;
+const PENSION_FUNDS = ["meitav", "harel", "migdal", "clal", "menora"] as const;
 export type PensionFund = (typeof PENSION_FUNDS)[number];
 export const isPensionFund = (id: string): id is PensionFund =>
   (PENSION_FUNDS as readonly string[]).includes(id);

@@ -19,11 +19,7 @@ export function readAccountOwners(workspaceId: number, memberIds: string[]): Acc
 }
 
 /** The accounts whose default owner is this member, for filtering rows by member. */
-export function accountsOwnedBy(
-  workspaceId: number,
-  memberIds: string[],
-  memberId: string,
-): string[] {
+function accountsOwnedBy(workspaceId: number, memberIds: string[], memberId: string): string[] {
   return Object.entries(readAccountOwners(workspaceId, memberIds))
     .filter(([, owner]) => owner === memberId)
     .map(([account]) => account);

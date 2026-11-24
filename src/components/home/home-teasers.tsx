@@ -74,7 +74,10 @@ export function WelcomePrompt({ variant = "card" }: { variant?: "card" | "pip" }
   );
 }
 
-/** Up to two small profile-driven teasers. */
+/**
+ * Up to two small profile-driven teasers.
+ * @unfinished unused since 6a643de (2026-11-21) removed its last caller; kept for the owner to decide
+ */
 export function HomeTeasers() {
   const t = useTranslations("journey.teaser");
   const { household } = useHousehold();

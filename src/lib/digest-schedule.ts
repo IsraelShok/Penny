@@ -1,6 +1,6 @@
 /** Days the Telegram summary goes out (Sunday, Tuesday, Thursday), and the hour from which it may. */
-export const DIGEST_DAYS = [0, 2, 4];
-export const DIGEST_HOUR = 9;
+const DIGEST_DAYS = [0, 2, 4];
+const DIGEST_HOUR = 9;
 
 /** Israel's date, weekday and hour for an instant. */
 export function israelClock(now: Date): { date: string; weekday: number; hour: number } {

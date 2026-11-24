@@ -4,9 +4,9 @@
  * until the emergency fund holds EMERGENCY_MONTHS of expenses, then long-term investing.
  * A general rule of thumb, not personal advice.
  */
-export const RULE = { need: 0.5, want: 0.3, saving: 0.2 } as const;
-export const BUFFER_MONTHS = 1;
-export const EMERGENCY_MONTHS = 6;
+const RULE = { need: 0.5, want: 0.3, saving: 0.2 } as const;
+const BUFFER_MONTHS = 1;
+const EMERGENCY_MONTHS = 6;
 
 export interface AllocationInput {
   /** Average monthly net income and expenses. */

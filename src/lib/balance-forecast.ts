@@ -61,7 +61,7 @@ export function chargesBetween(
   return out;
 }
 
-export type ForecastEvent = { date: string; amount: number; kind: "income" | "card" | "recurring" };
+type ForecastEvent = { date: string; amount: number; kind: "income" | "card" | "recurring" };
 
 export interface BalanceForecast {
   events?: ForecastEvent[];
@@ -150,7 +150,7 @@ export interface ForecastAccountInput {
   dailyRate?: number;
 }
 
-export type AccountEventKind = "income" | "card" | "recurring" | "planned";
+type AccountEventKind = "income" | "card" | "recurring" | "planned";
 
 export interface AccountEventInput {
   date: string;

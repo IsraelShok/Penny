@@ -1,7 +1,7 @@
 // Split ledger and settle-up with one household member (pure, unit-tested).
 import { SHARED, effectiveOwner, type AccountOwners } from "./tags";
 
-export interface Support {
+interface Support {
   monthly: number;
   direction: "pay" | "receive";
   start: string;

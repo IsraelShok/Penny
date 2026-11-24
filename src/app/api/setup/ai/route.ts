@@ -1,6 +1,6 @@
 import { handle } from "@/server/lib/api-error";
 import { NextResponse } from "next/server";
-import { getSetting, setSetting } from "@/server/db/queries/settings";
+import { getGlobalSetting, setGlobalSetting } from "@/server/db/queries/settings";
 import { encrypt } from "@/server/lib/encryption";
 import { normalizeOllamaUrl, OLLAMA_URL_ERROR } from "@/lib/url-guard";
 import { CLI_AGENTS } from "@/server/ai/cli-agent";
@@ -26,17 +26,17 @@ export const POST = handle("setup/ai", async (request: Request) => {
     return NextResponse.json({ error: OLLAMA_URL_ERROR }, { status: 400 });
   }
 
-  setSetting("ai_provider", body.provider);
+  setGlobalSetting("ai_provider", body.provider);
   if (body.provider === "claude" && body.apiKey) {
     const { encrypted, iv, authTag } = encrypt(body.apiKey);
-    setSetting("ai_api_key_encrypted", encrypted.toString("hex"));
-    setSetting("ai_api_key_iv", iv.toString("hex"));
-    setSetting("ai_api_key_auth_tag", authTag.toString("hex"));
+    setGlobalSetting("ai_api_key_encrypted", encrypted.toString("hex"));
+    setGlobalSetting("ai_api_key_iv", iv.toString("hex"));
+    setGlobalSetting("ai_api_key_auth_tag", authTag.toString("hex"));
   }
 
   if (body.provider === "ollama") {
-    if (body.ollamaUrl) setSetting("ai_ollama_url", normalizeOllamaUrl(body.ollamaUrl)!);
-    if (body.ollamaModel) setSetting("ai_ollama_model", body.ollamaModel);
+    if (body.ollamaUrl) setGlobalSetting("ai_ollama_url", normalizeOllamaUrl(body.ollamaUrl)!);
+    if (body.ollamaModel) setGlobalSetting("ai_ollama_model", body.ollamaModel);
   }
 
   return NextResponse.json({ success: true });
@@ -44,5 +44,5 @@ export const POST = handle("setup/ai", async (request: Request) => {
 
 /** Whether a Claude API key is stored (never the key itself). */
 export const GET = handle("setup/ai", async () => {
-  return NextResponse.json({ hasClaudeKey: !!getSetting("ai_api_key_encrypted") });
+  return NextResponse.json({ hasClaudeKey: !!getGlobalSetting("ai_api_key_encrypted") });
 });

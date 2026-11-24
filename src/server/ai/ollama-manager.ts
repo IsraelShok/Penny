@@ -74,11 +74,6 @@ export async function listOllamaModels(rawUrl: string): Promise<string[]> {
   }
 }
 
-export async function isModelInstalled(url: string, model: string): Promise<boolean> {
-  const installed = await listOllamaModels(url);
-  return installed.includes(model);
-}
-
 export async function* pullOllamaModel(
   rawUrl: string,
   model: string,

@@ -2,7 +2,7 @@
  * OFX 2.1 export: one statement per account, bank accounts as checking and cards as credit card statements, so
  * other money apps (GnuCash, Quicken, Banktivity, Firefly III and the like) can import Penny's transactions. Pure.
  */
-export interface OfxTxn {
+interface OfxTxn {
   id: number;
   date: string;
   amount: number;

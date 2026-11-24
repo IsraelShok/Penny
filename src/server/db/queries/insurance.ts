@@ -193,7 +193,7 @@ export function upsertInsurancePolicy(
   return Number(res.lastInsertRowid);
 }
 
-export function policyFolder(workspaceId: number, policyId: number): string {
+function policyFolder(workspaceId: number, policyId: number): string {
   return path.join(dataDir(), "policies", String(workspaceId), String(policyId));
 }
 

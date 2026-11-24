@@ -18,6 +18,20 @@
     "tw-animate-css",
     "shadcn",
     "electron-builder",
-    "@electron/rebuild"
-  ]
+    "@electron/rebuild",
+    "sharp",
+    "puppeteer"
+  ],
+  "ignoreFiles": [
+    "src/components/dashboard/hero-card.tsx",
+    "src/components/help/what-is.tsx",
+    "src/components/home/more-section.tsx",
+    "src/components/layout/simple-top-bar.tsx"
+  ],
+  "ignoreIssues": {
+    "src/components/ui/**": ["exports", "types"],
+    "src/server/sync/orchestrator.ts": ["exports", "types"],
+    "src/server/sync/otp-bridge.ts": ["exports"]
+  },
+  "tags": ["-unfinished"]
 }

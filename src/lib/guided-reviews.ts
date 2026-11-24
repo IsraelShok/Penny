@@ -1,6 +1,6 @@
 /** Pure math behind the guided reviews: what repeats, what stopped, and how old the paperwork is. */
 
-export type Cadence = "weekly" | "monthly" | "yearly";
+type Cadence = "weekly" | "monthly" | "yearly";
 
 export interface RecurringLike {
   merchant: string;

@@ -67,7 +67,7 @@ export function listGoals(workspaceId: number): Goal[] {
 }
 
 /** Spending between two dates in the Travel category and its subcategories (refunds reduce it). */
-export function tripActual(workspaceId: number, start: string, end: string): number {
+function tripActual(workspaceId: number, start: string, end: string): number {
   const row = roundSums(
     getDb()
       .prepare(

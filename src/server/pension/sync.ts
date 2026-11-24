@@ -23,7 +23,7 @@ export type PensionState = {
 
 // shortcut: in-memory status, like the OTP bridge; fine for this single-process local app.
 const status = new Map<number, PensionState>();
-export const pensionStatus = (id: number): PensionState => status.get(id) ?? { state: "idle" };
+const pensionStatus = (id: number): PensionState => status.get(id) ?? { state: "idle" };
 
 /** OTP bridge keys are sync-run ids; pension syncs use the negative connection id so they never collide. */
 export const otpKey = (connectionId: number) => -connectionId;

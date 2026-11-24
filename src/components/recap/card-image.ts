@@ -3,7 +3,7 @@ import type { StoryCard } from "./recap-story";
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** Greedy word wrap by character count; good enough for one short sentence. */
-export function wrap(text: string, max: number) {
+function wrap(text: string, max: number) {
   const lines: string[] = [];
   for (const para of text.split("\n")) {
     let line = "";
@@ -19,7 +19,7 @@ export function wrap(text: string, max: number) {
 }
 
 /** The card as a standalone SVG, in the wallet card's colors. */
-export function cardSvg(card: StoryCard, rtl: boolean, size = 1080) {
+function cardSvg(card: StoryCard, rtl: boolean, size = 1080) {
   const pad = 96;
   const x = rtl ? size - pad : pad;
   const attrs = `x="${x}" direction="${rtl ? "rtl" : "ltr"}" text-anchor="start" font-family="Heebo, Arial, sans-serif"`;

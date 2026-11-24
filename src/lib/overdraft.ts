@@ -1,7 +1,7 @@
 // Overdraft cost screen and a gentle exit plan.
 
 // Same pattern as OVERDRAFT in suggestions.ts (not exported there).
-export const OVERDRAFT_INTEREST = /ריבית חובה|ריבית על יתרת חובה|ריבית בגין|ריבית משיכת יתר/i;
+const OVERDRAFT_INTEREST = /ריבית חובה|ריבית על יתרת חובה|ריבית בגין|ריבית משיכת יתר/i;
 
 export interface OverdraftTxn {
   date: string;

@@ -8,7 +8,7 @@ export interface FlowNode {
   color: string;
   kind: "income" | "deficit" | "expenses" | "saved" | "category" | "other";
 }
-export interface FlowLink {
+interface FlowLink {
   source: number;
   target: number;
   value: number;

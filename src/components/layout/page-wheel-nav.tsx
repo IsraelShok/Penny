@@ -17,7 +17,7 @@ type Page = {
 };
 
 /** One continuous order: every main page, each tabbed area through its tabs, then the settings sections. */
-export function pagingOrder(simpleHome = false): Page[] {
+function pagingOrder(simpleHome = false): Page[] {
   const main = NAV.flatMap((n): Page[] => {
     const tabs = SECTIONS.find((s) => s[0].href === n.href);
     // In Simple mode home has two stops: Simple, then the advanced view (?view=detail), before the next page.
@@ -51,7 +51,7 @@ export function pagingOrder(simpleHome = false): Page[] {
 }
 
 /** Where a page sits in the order; a page outside it (e.g. /insights, /settings) counts as its area's first page. */
-export function pagingIndex(pages: Page[], pathname: string, tab: string, view?: string | null) {
+function pagingIndex(pages: Page[], pathname: string, tab: string, view?: string | null) {
   const i = pages.findIndex((p) => p.match(pathname, tab, view));
   if (i >= 0) return i;
   const area = [...NAV, ...FOOTER_NAV].find((n) => n.match(pathname));

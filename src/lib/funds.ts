@@ -21,7 +21,7 @@ const PENSION_TRACKS = [
 const pensionTrack = (name: string) => PENSION_TRACKS.findIndex((re) => re.test(name));
 
 /** Funds of the same kind: same classification and the same investment track. */
-export function peersOf(fund: Fund, all: Fund[]): Fund[] {
+function peersOf(fund: Fund, all: Fund[]): Fund[] {
   const track = (f: Fund) => (f.source === "pension" ? pensionTrack(f.name) : f.specialization);
   return all.filter(
     (f) =>

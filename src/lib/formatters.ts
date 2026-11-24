@@ -30,11 +30,6 @@ export function formatDate(isoDate: string): string {
   return `${day}/${month}/${year}`;
 }
 
-export function formatMonth(isoDate: string, locale?: Locale): string {
-  const d = new Date(isoDate);
-  return d.toLocaleDateString(bcp47(locale), { month: "short", year: "numeric" });
-}
-
 function toLocalDateString(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -54,6 +49,7 @@ export function getMonthRange(date: Date = new Date()): {
   };
 }
 
+/** @unfinished unused since c94a5da (2026-11-21) removed its last caller; kept for the owner to decide */
 export function formatMonthLabel(date: Date, locale?: Locale): string {
   return date.toLocaleDateString(bcp47(locale), {
     month: "long",
@@ -61,6 +57,7 @@ export function formatMonthLabel(date: Date, locale?: Locale): string {
   });
 }
 
+/** @unfinished unused since 4447003 (2026-11-14) removed its last caller; kept for the owner to decide */
 export function addMonths(date: Date, months: number): Date {
   const result = new Date(date);
   result.setMonth(result.getMonth() + months);

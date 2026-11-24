@@ -2,10 +2,9 @@
 
 import { budgetMonthByKey, budgetMonthRange, shiftBudgetMonthKey } from "./finance-period";
 
-export type AskIntent =
-  "spent" | "income" | "biggest" | "untilPayday" | "subscriptions" | "savings";
+type AskIntent = "spent" | "income" | "biggest" | "untilPayday" | "subscriptions" | "savings";
 
-export interface AskPeriod {
+interface AskPeriod {
   /** Inclusive ISO dates. */
   from: string;
   to: string;
@@ -64,7 +63,7 @@ const EN_MONTHS = [
 ];
 
 /** Lowercase, drop punctuation and Hebrew geresh/maqaf so "ב-3" reads as "ב 3". */
-export function normalize(text: string): string {
+function normalize(text: string): string {
   return text
     .toLowerCase()
     .replace(/[?!.,:;"'׳״()\-־–]/g, " ")
@@ -73,7 +72,7 @@ export function normalize(text: string): string {
 }
 
 /** A word plus forms without one or two Hebrew prefix letters ("לוולט" → "וולט") and without a plural ending. */
-export function variants(word: string): string[] {
+function variants(word: string): string[] {
   const forms = [word];
   if (/^[הלבשומכ]/.test(word) && word.length > 3) forms.push(word.slice(1));
   if (/^[הלבשומכ]{2}/.test(word) && word.length > 4) forms.push(word.slice(2));
@@ -88,7 +87,7 @@ export function variants(word: string): string[] {
  * The period a question means, in household months that start on `startDay` (1 for calendar
  * months), so "last month" is the same range the budget screen uses.
  */
-export function parsePeriod(q: string, today: Date, startDay = 1): AskPeriod {
+function parsePeriod(q: string, today: Date, startDay = 1): AskPeriod {
   const t = iso(today);
   const current = budgetMonthRange(startDay, t);
   const key = current.key;

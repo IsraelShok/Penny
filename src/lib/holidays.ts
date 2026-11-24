@@ -24,7 +24,7 @@ const ROSH_HASHANA: Record<number, string> = {
   2032: "09",
 };
 
-export const HOLIDAYS = [
+const HOLIDAYS = [
   { key: "holiday:pesach", name: "פסח", amount: 4500, months: PESACH },
   { key: "holiday:rosh-hashana", name: "ראש השנה וחגי תשרי", amount: 3000, months: ROSH_HASHANA },
   { key: "holiday:august", name: "אוגוסט: קייטנות וחופש", amount: 3500, months: null },

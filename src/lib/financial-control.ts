@@ -62,7 +62,7 @@ export type GoalRule = {
   automatic?: number;
   transactionSign?: number;
 };
-export type ChangeDriver = {
+type ChangeDriver = {
   categoryId: number;
   name: string;
   current: number;
