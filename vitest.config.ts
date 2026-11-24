@@ -4,6 +4,7 @@ import path from "path";
 export default defineConfig({
   test: {
     include: ["tests/**/*.test.ts"],
+    setupFiles: ["tests/setup-data-dir.ts"],
     // Migration tests run every SQL file against a real DB; shared CI runners (Windows) need well over the 5s default.
     testTimeout: 60_000,
     coverage: {
