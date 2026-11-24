@@ -130,12 +130,12 @@ bdi, code, pre { unicode-bidi: isolate; }
   --paper: #0d0b14; --surface: #17141f; --ink: #f3f2f8; --ink-2: #b4b0c8; --line: #2c2840;
   --accent: #a690f2; --accent-ink: #140f24; --accent-soft: #241f38; --ok: #79d9a2;
   color-scheme: dark; color: var(--ink); background: var(--paper);
-  margin-top: -82px; padding: 128px 0 72px; position: relative; overflow-x: clip;
+  margin-top: -82px; padding: 116px 0 64px; position: relative; overflow-x: clip;
 }
 .hero::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(50% 40% at 50% 62%, rgb(120 90 230 / 22%), transparent 70%), radial-gradient(30% 30% at 12% 8%, rgb(79 179 124 / 8%), transparent 70%); }
 .hero > .wrap { position: relative; z-index: 1; width: min(1320px, 100% - 32px); }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px 56px; align-items: end; }
-.hero h1 { font-size: clamp(2.4rem, 4.6vw, 4.1rem); line-height: 1.04; font-weight: 720; letter-spacing: -0.03em; margin: 0 0 18px; }
+.hero h1 { font-size: clamp(2.3rem, 4vw, 3.5rem); line-height: 1.04; font-weight: 720; letter-spacing: -0.03em; margin: 0 0 18px; }
 .hero h1 span { display: block; color: var(--ink-2); font-weight: 500; }
 :lang(he) .hero h1, :lang(he) h2 { letter-spacing: 0; }
 .lead { font-size: clamp(1.06rem, 1.6vw, 1.2rem); color: var(--ink-2); max-width: 36rem; margin: 0; }
@@ -155,7 +155,7 @@ bdi, code, pre { unicode-bidi: isolate; }
   --k-purple: #8f76e6; --k-green: #4fb37c; --k-blue: #4f9fd6; --k-orange: #e59a4a; --k-pink: #e77fa9;
   --k-gold: #e8b64a; --k-paper: #e7e3f4; --k-stone: #5c5776; --k-screen: #2a2440;
   display: grid; grid-template-columns: minmax(0, 1fr) 330px; grid-template-areas: "scene card" "chips chips" "hint hint";
-  gap: 0 24px; margin-top: 28px;
+  gap: 0 24px; margin-top: 8px;
 }
 .hub-stage { display: contents; }
 .hub-scene { grid-area: scene; aspect-ratio: 1380 / 920; position: relative; }
@@ -247,7 +247,7 @@ bdi, code, pre { unicode-bidi: isolate; }
 @media (max-width: 1100px) { .hub { grid-template-columns: 1fr; grid-template-areas: "scene" "chips" "card" "hint"; } .hub-cards { margin-top: 18px; max-width: 560px; justify-self: center; width: 100%; } }
 @media (max-width: 700px) {
   .hub .lbl, .hub .badge-t, .hub .badge-bg, .hub .t-lbl { display: none; }
-  .hub-chips { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scroll-snap-type: x proximity; margin-inline: -16px; padding: 4px 16px 10px; scrollbar-width: none; }
+  .hub-chips { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: 16px; margin-inline: -16px; padding: 4px 16px 10px; scrollbar-width: none; }
   .hub-chips .chip { scroll-snap-align: start; }
   .hub-scene { margin-inline: -16px; }
 }
