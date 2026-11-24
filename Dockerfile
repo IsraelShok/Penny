@@ -17,10 +17,13 @@ RUN npm test
 RUN npm run build && npm prune --omit=dev --no-audit --no-fund
 
 FROM base AS runtime
+# The container never runs npm: removing it (and npx, corepack) removes the CVEs of its bundled dependencies.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends chromium fonts-noto-core ca-certificates \
  && rm -rf /var/lib/apt/lists/* \
- && mkdir -p /data && chown node:node /data
+ && mkdir -p /data && chown node:node /data \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+           /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 ARG PENNY_COMMIT=unknown
 ENV NODE_ENV=production \
     PENNY_DATA_DIR=/data \

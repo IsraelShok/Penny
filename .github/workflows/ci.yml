@@ -111,8 +111,6 @@ jobs:
           severity: HIGH,CRITICAL
           # Debian carries HIGH findings with no fix for months; only what can be fixed fails the build.
           ignore-unfixed: true
-          # The npm CLI bundled in the Node base image is not part of the running app (CMD starts next directly).
-          skip-dirs: usr/local/lib/node_modules/npm
           trivyignores: .trivyignore
           exit-code: "1"
 
