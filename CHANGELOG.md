@@ -2,6 +2,13 @@
 
 All notable changes to Penny. Versions follow [Semantic Versioning](https://semver.org/); dates are Israel time.
 
+## [Unreleased]
+
+### Changed
+
+- **New update-signing key.** Desktop installs of 0.4.0 or older cannot verify updates signed with it, so they
+  need one manual download of this version. Later updates install automatically again.
+
 ## [0.4.0] - 2026-11-22
 
 ### Changed
