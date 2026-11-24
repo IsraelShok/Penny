@@ -51,6 +51,8 @@ it("PM-32/PM-17: a wrong current passphrase gets 401 and counts toward the back-
         body: JSON.stringify({ action: "disable", current }),
       }),
     );
+  // The first back-off is 1s; freeze the clock so a slow machine cannot outlast it between calls.
+  vi.useFakeTimers({ toFake: ["Date"] });
   expect((await call("wrong horse")).status).toBe(401);
   // Counted: the right passphrase right after is held back, and the lock stays on.
   expect((await call("correct horse")).status).toBe(429);
