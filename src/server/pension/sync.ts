@@ -186,10 +186,14 @@ export function replacePensionAssets(
   connectionId: number,
   accounts: ScrapedAccount[],
 ) {
+  const conn = db
+    .prepare(`SELECT fund_id FROM pension_connections WHERE id = ?`)
+    .get(connectionId) as { fund_id: PensionFund } | undefined;
+  const keyScope: PensionFund | number = conn?.fund_id ?? connectionId;
   const find = db.prepare(`SELECT id FROM assets WHERE workspace_id = ? AND note = ?`);
   // COALESCE keeps what the user typed when a scraper does not provide a field.
   const update = db.prepare(
-    `UPDATE assets SET manual_value = ?, name = ?, currency = ?,
+    `UPDATE assets SET manual_value = ?, name = ?, currency = ?, note = ?,
        quantity = COALESCE(?, quantity),
        cost_basis = COALESCE(?, cost_basis),
        fee_deposit = COALESCE(?, fee_deposit),
@@ -202,7 +206,8 @@ export function replacePensionAssets(
     `INSERT INTO assets (workspace_id, name, type, currency, manual_value, quantity, cost_basis, liquid, is_liability, note, fee_deposit, fee_balance, monthly_deposit, details)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
   );
-  const prefix = assetKey(connectionId, "");
+  const prefix = assetKey(keyScope, "");
+  const legacyPrefix = conn?.fund_id ? assetKey(connectionId, "") : null;
   const stale = db.prepare(
     `SELECT id, note, EXISTS (SELECT 1 FROM asset_snapshots s WHERE s.asset_id = assets.id) AS hasHistory
      FROM assets WHERE workspace_id = ? AND substr(note, 1, ?) = ?`,
@@ -213,19 +218,26 @@ export function replacePensionAssets(
   db.transaction(() => {
     const keep = new Set<string>();
     for (const a of accounts) {
-      const key = assetKey(connectionId, a.accountNumber);
+      const key = assetKey(keyScope, a.accountNumber);
       keep.add(key);
       // The library may list a product without a balance: keep it, leave its value as it was.
       if (a.balance == null) continue;
       const name = a.label ?? a.accountNumber;
       const currency = a.currency || "ILS";
       const details = a.details ? JSON.stringify(a.details) : null;
-      const existing = find.get(workspaceId, key) as { id: number } | undefined;
+      const existing =
+        (find.get(workspaceId, key) as { id: number } | undefined) ??
+        (conn?.fund_id
+          ? (find.get(workspaceId, assetKey(connectionId, a.accountNumber)) as
+              | { id: number }
+              | undefined)
+          : undefined);
       if (existing) {
         update.run(
           a.balance,
           name,
           currency,
+          key,
           a.quantity ?? null,
           a.costBasis ?? null,
           a.feeDeposit ?? null,
@@ -252,11 +264,20 @@ export function replacePensionAssets(
         );
       }
     }
-    const old = stale.all(workspaceId, prefix.length, prefix) as {
-      id: number;
-      note: string;
-      hasHistory: number;
-    }[];
+    const old = [
+      ...(stale.all(workspaceId, prefix.length, prefix) as {
+        id: number;
+        note: string;
+        hasHistory: number;
+      }[]),
+      ...(legacyPrefix
+        ? (stale.all(workspaceId, legacyPrefix.length, legacyPrefix) as {
+            id: number;
+            note: string;
+            hasHistory: number;
+          }[])
+        : []),
+    ];
     for (const o of old) {
       if (keep.has(o.note)) continue;
       if (o.hasHistory) zero.run(o.id);

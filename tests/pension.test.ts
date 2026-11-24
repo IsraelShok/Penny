@@ -29,6 +29,7 @@ describe("pension helpers", () => {
     expect(INTERACTIVE.excellence).toBe(false);
   });
   it("builds a stable asset key", () => {
+    expect(assetKey("excellence", "123")).toBe("pension:excellence:123");
     expect(assetKey(3, "123")).toBe("pension:3:123");
   });
 });
