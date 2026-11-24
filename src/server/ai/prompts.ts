@@ -68,7 +68,7 @@ const CONFIDENCE_BLOCK = `Confidence scale (integer 1-7):
 - 1-3: uncertain. Description is generic, merchant is unknown, or several categories could fit. Be honest — when in doubt give 1-3.`;
 
 // A transfer's description is usually a person's name ("העברה לדנה כהן"). The kind of transfer is enough to categorize.
-const TRANSFER = /העברה|העברת|ביט|\bbit\b|paybox|פייבוקס|pepper ?pay|\btransfer\b/i;
+const TRANSFER = /העברה|העברת|הוראת קבע|הו"ק|ביט|\bbit\b|paybox|פייבוקס|pepper ?pay|\btransfer\b/i;
 
 /** For a cloud model: a transfer keeps only its kind ("העברה"), never the name of the person on the other side. */
 export function hideTransferNames(description: string): string {
@@ -115,7 +115,8 @@ export function buildCategorizationPrompt(
     .map(
       (t, i) =>
         // Account, ID and card digits never help categorize and must not reach a cloud model.
-        `${i}: "${forModel(t.description, local)}" |${t.currency} ${Math.abs(t.amount).toFixed(2)}${t.memo ? ` | memo: "${redact(t.memo)}"` : ""}`,
+        // A transfer's memo is usually a note to or about the other person, so a cloud model never sees it.
+        `${i}: "${forModel(t.description, local)}" | ${t.currency} ${Math.abs(t.amount).toFixed(2)}${t.memo && (local || !TRANSFER.test(t.description)) ? ` | memo: "${redact(t.memo)}"` : ""}`,
     )
     .join("\n");
 

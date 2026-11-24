@@ -289,8 +289,7 @@ describe("fake bank, a week of syncs", () => {
     try {
       const [scheduled] = await runAllWorkspaces(undefined, undefined, "scheduled");
       const byProvider = Object.fromEntries(scheduled.providers.map((p) => [p.provider, p]));
-      expect(byProvider.leumi.errorMessage).toBe(SYNC_ERRORS.needsYou);
-      expect(byProvider.leumi.retryable).toBeFalsy();
+      expect(byProvider.leumi).toBeUndefined(); // left out, not marked failed
       expect(byProvider.max.retryable).toBe(true);
 
       // With someone at the screen the same connection does log in.

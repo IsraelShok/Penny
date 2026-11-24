@@ -43,7 +43,7 @@ export class OllamaProvider implements AIProvider {
     const baseUrl = normalizeOllamaUrl(this.baseUrl);
     if (!baseUrl) throw new Error(OLLAMA_URL_ERROR);
     // A local model can take a while on a batch.
-    const OLLAMA_TIMEOUT_MS = 120_000;
+    const OLLAMA_TIMEOUT_MS = 10 * 60_000;
     const response = await fetchExternal(
       `${baseUrl}/api/chat`,
       {

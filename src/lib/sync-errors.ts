@@ -15,9 +15,6 @@ export const SYNC_ERRORS = {
     "The bank is asking you to change your password. Log in via the bank's website first.",
   accountBlocked: "The account is blocked by the bank. Resolve this on the bank's website.",
   timeout: "The scrape timed out. The bank's site may be slow or down. Try again.",
-  // An automatic sync has nobody at the screen to type a code or finish a login in the browser.
-  needsYou:
-    "This account needs you to complete the login (a code or a step in the browser), so the automatic sync skipped it. Open Penny and press Sync.",
   twoFactor:
     "This account is asking for 2FA. For most banks, turn on 'This account requires 2FA' in the bank's settings so Penny shows the browser and you can solve it manually. For One Zero, make sure the phone number is set on the account.",
   unexpected:

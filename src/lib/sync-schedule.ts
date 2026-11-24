@@ -5,6 +5,7 @@
  */
 const TZ = "Asia/Jerusalem";
 const DAY_MS = 24 * 3600 * 1000;
+const HOUR_MS = 3600 * 1000;
 
 /** Waits before the 1st, 2nd and 3rd retry of connections that failed transiently. Then the next daily slot. */
 export const RETRY_DELAYS_MS = [15 * 60_000, 60 * 60_000, 4 * 60 * 60_000];
@@ -64,7 +65,10 @@ export type DueRun = "full" | "retry" | null;
 
 export function dueRun(time: string, state: ScheduleState, now = new Date()): DueRun {
   // One full run per slot, however many slots were missed while the computer was off.
-  if (state.lastAttemptMs == null || state.lastAttemptMs < lastSlotMs(time, now)) return "full";
+  // An hour of slack: on the night clocks go back, the computed slot moves an hour later than
+  // yesterday's real one and would otherwise look missed.
+  if (state.lastAttemptMs == null || state.lastAttemptMs < lastSlotMs(time, now) - HOUR_MS)
+    return "full";
   if (!state.retryPending || state.retries >= RETRY_DELAYS_MS.length) return null;
   return now.getTime() >= state.lastAttemptMs + RETRY_DELAYS_MS[state.retries] ? "retry" : null;
 }

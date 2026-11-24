@@ -65,14 +65,24 @@ describe("open banking client", () => {
     expect(result.accounts[0].transactions.map((t) => t.identifier)).toEqual(["a", "b"]);
   });
 
-  it("stops after 50 pages when the server keeps pointing at a next page", async () => {
+  it("fails instead of saving a partial history when the next links loop or never end", async () => {
     handler = (url) =>
       url.startsWith("/v1/accounts?")
         ? { body: accounts }
         : { body: { transactions: { booked: [txn("x")] }, _links: { next: url } } };
-    const result = await run();
-    expect(result.success).toBe(true);
-    expect(hits).toHaveLength(51); // the account list + 50 pages
+    const looping = await run();
+    expect(looping.success).toBe(false);
+    expect(hits).toHaveLength(2); // the account list + the page that points at itself
+
+    hits.length = 0;
+    let n = 0;
+    handler = (url) =>
+      url.startsWith("/v1/accounts?")
+        ? { body: accounts }
+        : { body: { transactions: { booked: [txn("x")] }, _links: { next: `${url}&p=${++n}` } } };
+    const endless = await run();
+    expect(endless.success).toBe(false);
+    expect(hits).toHaveLength(51); // the account list + 50 pages, then it stops
   });
 
   it("refuses plain http to another machine without sending anything", async () => {

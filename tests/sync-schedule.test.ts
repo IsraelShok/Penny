@@ -66,6 +66,13 @@ describe("when the automatic sync runs", () => {
     expect(dueRun("06:00", failed(3, t0), new Date(t0 + 12 * HOUR))).toBeNull();
   });
 
+  it("runs once on the night clocks go back", () => {
+    // 25 October 2026: 02:00 summer time becomes 01:00 winter time.
+    const ranYesterday = { ...idle, lastAttemptMs: Date.UTC(2026, 9, 24, 3, 0) }; // 06:00 IDT
+    expect(dueRun("06:00", ranYesterday, new Date(Date.UTC(2026, 9, 24, 23, 30)))).toBeNull(); // 01:30 IST
+    expect(dueRun("06:00", ranYesterday, new Date(Date.UTC(2026, 9, 25, 4, 0)))).toBe("full"); // 06:00 IST
+  });
+
   it("does not retry when nothing failed transiently", () => {
     const ok = { lastAttemptMs: at("06:00").getTime(), retryPending: false, retries: 0 };
     expect(dueRun("06:00", ok, at("12:00"))).toBeNull();
@@ -111,13 +118,21 @@ describe("scheduler", () => {
       db.getDb().prepare("DELETE FROM settings WHERE key = ?").run(key);
   });
 
+  it("after an upgrade, waits for the usual time instead of syncing right away", async () => {
+    await scheduler.runSchedulerTick();
+    expect(runs.calls).toEqual([]);
+    expect(settings.getGlobalSetting("auto_sync_last_attempt")).not.toBeNull();
+  });
+
   it("runs everything when due, then not again in the same slot", async () => {
+    settings.setGlobalSetting("auto_sync_last_attempt", String(Date.now() - 3 * 24 * HOUR));
     await scheduler.runSchedulerTick();
     await scheduler.runSchedulerTick();
     expect(runs.calls).toEqual([undefined]);
   });
 
   it("retries only the connections that failed transiently", async () => {
+    settings.setGlobalSetting("auto_sync_last_attempt", String(Date.now() - 3 * 24 * HOUR));
     runs.result = [
       {
         providers: [

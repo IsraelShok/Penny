@@ -1,9 +1,9 @@
 import "server-only";
 
 import { runAllWorkspaces, type WorkspaceSummary } from "@/server/sync/orchestrator";
-import { SyncBusyError } from "@/server/sync/lock";
+import { SyncBusyError, tryAcquireSync } from "@/server/sync/lock";
 import { getGlobalSetting, setGlobalSetting } from "@/server/db/queries/settings";
-import { failInterruptedSyncRuns } from "@/server/db/queries/sync-runs";
+import { failInterruptedSyncRuns, latestSyncStartMs } from "@/server/db/queries/sync-runs";
 import { redactError } from "@/server/lib/redact";
 import { isKeyLocked } from "@/server/lib/encryption";
 import { isDemoMode } from "@/server/demo/mode";
@@ -87,6 +87,10 @@ async function tick(): Promise<void> {
   // After a restart with the app lock on, bank passwords stay wrapped until someone unlocks once.
   // Nothing is recorded, so the run happens on the first tick after the unlock.
   if (isKeyLocked()) return;
+  // First tick after an upgrade from the timer-based scheduler: count the last sync as the last
+  // attempt, so the next run is at the usual time and not a surprise login a minute after start.
+  if (getGlobalSetting(LAST_ATTEMPT) == null)
+    setGlobalSetting(LAST_ATTEMPT, String(latestSyncStartMs() ?? Date.now()));
   const due = dueRun(time, readSchedule());
   if (!due) return;
 
@@ -99,8 +103,19 @@ async function tick(): Promise<void> {
     if (due === "full")
       summaries.push(...(await runAllWorkspaces(undefined, undefined, "scheduled")));
     // A retry logs in only to the connections that failed, not to the ones that already synced today.
-    else
-      for (const id of ids) summaries.push(...(await runAllWorkspaces(id, undefined, "scheduled")));
+    else {
+      // One lock for the whole pass, so a manual sync cannot slip in between and the pass counts once.
+      const release = tryAcquireSync("scheduled");
+      if (!release) throw new SyncBusyError();
+      try {
+        for (const id of ids)
+          summaries.push(
+            ...(await runAllWorkspaces(id, undefined, "scheduled", { lockHeld: true })),
+          );
+      } finally {
+        release();
+      }
+    }
     setGlobalSetting(LAST_ATTEMPT, String(startedAt));
     setGlobalSetting(RETRY_IDS, JSON.stringify(retryableFailures(summaries)));
     setGlobalSetting(RETRIES, due === "full" ? "0" : String(readSchedule().retries + 1));

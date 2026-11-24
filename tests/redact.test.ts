@@ -17,3 +17,30 @@ describe("redact", () => {
     expect(redactError(new Error("account 9876543 locked"))).toBe("Error: account [number] locked");
   });
 });
+
+describe("redact, cases a cloud prompt or log must not carry", () => {
+  it("masks IBANs, phones, digits glued to letters and bot tokens inside a URL", async () => {
+    const { redact } = await import("@/server/lib/redact");
+    expect(redact("IL620108000000099999999")).toBe("[iban]");
+    expect(redact("054-123-4567 / 0541234567 / 03-1234567")).toBe("[phone] / [phone] / [phone]");
+    expect(redact("ACC12345678 ID_123456789")).toBe("ACC[number] ID_[number]");
+    expect(redact("https://api.telegram.org/bot123456789:" + "A".repeat(35) + "/getMe")).toBe(
+      "https://api.telegram.org/[token]/getMe",
+    );
+    // Dates and amounts stay readable.
+    expect(redact("2026-11-24 ₪1,234.50")).toBe("2026-11-24 ₪1,234.50");
+  });
+
+  it("keeps a transfer's memo and standing-order payee away from a cloud model", async () => {
+    const { buildCategorizationPrompt } = await import("@/server/ai/prompts");
+    const prompt = buildCategorizationPrompt(
+      [
+        { description: "העברה לדנה כהן", amount: -100, currency: "ILS", memo: "לטובת דנה כהן" },
+        { description: "הוראת קבע לדנה כהן", amount: -50, currency: "ILS" },
+      ] as never,
+      [],
+    );
+    expect(prompt).not.toContain("דנה");
+    expect(prompt).toContain(" | ILS 100.00");
+  });
+});

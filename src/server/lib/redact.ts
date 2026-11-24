@@ -3,13 +3,15 @@
 const KEYS = "password|pass|otp|token|apiKey|api_key|id|userCode|card6Digits|cardSuffix|num";
 const RULES: [RegExp, string][] = [
   [/\bsk-[A-Za-z0-9_-]{16,}/g, "[key]"], // Anthropic / OpenAI style API keys
-  [/\b\d{6,}:[A-Za-z0-9_-]{30,}/g, "[token]"], // Telegram bot tokens
+  [/(?:\b|bot)\d{6,}:[A-Za-z0-9_-]{30,}/g, "[token]"], // Telegram bot tokens, also inside api.telegram.org/bot<token>
   [/\b(bearer|authorization)\b\s*[:=]?\s*(?:bearer\s+)?\S+/gi, "$1 [redacted]"], // "Authorization: Bearer x" too
   [new RegExp(`"(${KEYS})"\\s*:\\s*"[^"]*"`, "gi"), '"$1":"[redacted]"'],
   [new RegExp(`\\b(${KEYS})\\s*=\\s*[^\\s&]+`, "gi"), "$1=[redacted]"],
   [/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[email]"],
   [/\b\d{4}(?:[ -]\d{4}){2,3}\b/g, "[number]"], // card numbers written in groups
-  [/\b\d{5,}\b/g, "[number]"], // ID, account and card digits; dates and amounts stay
+  [/\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g, "[iban]"],
+  [/(?<!\d)0\d{1,2}-?\d{3}-?\d{4}(?!\d)/g, "[phone]"], // 054-123-4567, 054-1234567, 03-1234567
+  [/(?<!\d)\d{5,}(?!\d)/g, "[number]"], // ID, account and card digits, also glued to letters; dates and amounts stay
 ];
 
 export function redact(text: string): string {

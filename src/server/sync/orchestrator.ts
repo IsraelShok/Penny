@@ -70,6 +70,12 @@ export interface ProviderResult {
  */
 const PROVIDER_DEADLINE_MS = 10 * 60_000;
 
+declare global {
+  var __pennyScrapesInFlight: Set<number> | undefined;
+}
+/** Credential ids whose scrape has not settled yet, including ones abandoned at the deadline. */
+const inFlight = (globalThis.__pennyScrapesInFlight ??= new Set<number>());
+
 export interface WorkspaceSummary {
   workspaceId: number;
   workspaceName: string;
@@ -107,8 +113,6 @@ interface RunScrapeArgs {
   startDate: Date;
   syncRunId: number;
   manualTwoFactor: boolean;
-  /** Someone is at the screen to type a code or finish a login in the browser. False for scheduled runs. */
-  interactive: boolean;
   send: SyncEventSender;
 }
 
@@ -122,15 +126,8 @@ async function runScrapeForProvider(args: RunScrapeArgs): Promise<ScrapeResult> 
     startDate,
     syncRunId,
     manualTwoFactor,
-    interactive,
     send,
   } = args;
-
-  // Waiting minutes for a code nobody will type holds up every connection behind this one.
-  const needsCode = supportsProgrammaticTwoFactor(provider) && !credentials.otpLongTermToken;
-  if (!interactive && (needsCode || manualTwoFactor)) {
-    return { success: false, accounts: [], errorMessage: SYNC_ERRORS.needsYou };
-  }
 
   if (supportsProgrammaticTwoFactor(provider)) {
     const existingToken = credentials.otpLongTermToken;
@@ -216,9 +213,21 @@ async function syncOneCredential(
   credentials: Record<string, string>,
   startDate: Date,
   send: SyncEventSender,
-  interactive: boolean,
 ): Promise<ProviderResult> {
   const provider = meta.provider as BankProvider;
+  // A scrape abandoned at the deadline may still hold a login; a second one to the same bank can lock the account.
+  if (inFlight.has(meta.id)) {
+    return {
+      provider,
+      credentialId: meta.id,
+      label: meta.label,
+      ok: false,
+      added: 0,
+      updated: 0,
+      errorMessage: SYNC_ERRORS.timeout,
+      retryable: true,
+    };
+  }
   const syncRunId = createSyncRun(workspaceId, provider, meta.id, toLocalISODate(startDate));
   // Anything that throws after the run exists still closes it as failed, so it never stays "running" and
   // the next run can tell this connection was already failing.
@@ -227,27 +236,24 @@ async function syncOneCredential(
 
     let result: ScrapeResult;
     try {
-      result = await withDeadline(
-        runScrapeForProvider({
-          workspaceId,
-          workspaceName,
-          credentialId: meta.id,
-          provider,
-          credentials,
-          startDate,
-          syncRunId,
-          manualTwoFactor,
-          interactive,
-          send,
-        }),
-        PROVIDER_DEADLINE_MS,
-        () => ({
-          success: false,
-          accounts: [],
-          errorMessage: SYNC_ERRORS.timeout,
-          retryable: true,
-        }),
-      );
+      inFlight.add(meta.id);
+      const scrape = runScrapeForProvider({
+        workspaceId,
+        workspaceName,
+        credentialId: meta.id,
+        provider,
+        credentials,
+        startDate,
+        syncRunId,
+        manualTwoFactor,
+        send,
+      }).finally(() => inFlight.delete(meta.id));
+      result = await withDeadline(scrape, PROVIDER_DEADLINE_MS, () => ({
+        success: false,
+        accounts: [],
+        errorMessage: SYNC_ERRORS.timeout,
+        retryable: true,
+      }));
     } finally {
       cancelOtpRequest(syncRunId, "Scrape completed");
     }
@@ -387,6 +393,15 @@ export async function syncWorkspace(
       // An unreadable credential fails this connection only; the next ones still sync.
       logError("sync/credentials", err);
     }
+    // Nobody is at the screen during a scheduled run to type a code or finish a login in the browser.
+    // Left out entirely: no failed run, no alert, for a bank the person always syncs by hand.
+    if (
+      credentials &&
+      !interactive &&
+      ((supportsProgrammaticTwoFactor(provider) && !credentials.otpLongTermToken) ||
+        getRequiresManualTwoFactor(workspaceId, meta.id))
+    )
+      continue;
     if (!credentials) {
       send("provider-done", {
         workspaceId,
@@ -419,7 +434,6 @@ export async function syncWorkspace(
         credentials,
         startDate,
         send,
-        interactive,
       );
       results.push(result);
       send("provider-done", {

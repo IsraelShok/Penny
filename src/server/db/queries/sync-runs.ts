@@ -54,6 +54,15 @@ export function failInterruptedSyncRuns(): number {
     .run().changes;
 }
 
+/** When the newest sync of any kind started (stored as UTC "YYYY-MM-DD HH:MM:SS"), or null. */
+export function latestSyncStartMs(): number | null {
+  const row = getDb().prepare("SELECT MAX(started_at) AS at FROM sync_runs").get() as {
+    at: string | null;
+  };
+  const ms = row.at ? Date.parse(`${row.at.replace(" ", "T")}Z`) : NaN;
+  return Number.isFinite(ms) ? ms : null;
+}
+
 interface ProviderStats {
   provider: string;
   lastSyncAt: string | null;

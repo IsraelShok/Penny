@@ -87,7 +87,7 @@ it("past corrections reach the prompt redacted like transactions", async () => {
     { description: "העברה לדנה כהן", wrongCategory: "Other", correctCategory: "Gifts" },
   ];
   const cloud = buildCategorizationPrompt([], [{ name: "Bills" }] as never, false, corrections);
-  expect(cloud).toContain("הוראת קבע [number]");
+  expect(cloud).toContain("הוראת קבע [name hidden]");
   expect(cloud).not.toContain("123456789");
   expect(cloud).not.toContain("דנה");
 });

@@ -19,7 +19,8 @@ The lock normally refuses every request that has no unlocked browser session. So
 still read, the app keeps a random token in its data folder (`mcp-token`, readable only by your
 user) and the MCP server sends it with each call. The token opens the read-only routes listed
 under Tools, with `GET` only, and nothing else: no page, no settings, no backup or export, no bank
-logins, no write. It works whether or not the app is currently unlocked, because none of those
+logins, no change to your data (a few of these reads keep their usual bookkeeping: the daily
+net-worth snapshot and the budget period for the month asked about). It works whether or not the app is currently unlocked, because none of those
 routes needs the key to the saved logins. Anyone who can read the data folder could already read
 the database file itself, so the token gives them nothing new.
 

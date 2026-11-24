@@ -84,6 +84,9 @@ jobs:
           skip-dirs: out
           format: cyclonedx
           output: out/Penny-${{ github.ref_name }}.sbom.cdx.json
+      # Nothing between the signature and the upload may change an installer.
+      - name: Check the installers against the signed list
+        run: cd out && sha256sum -c SHA256SUMS.txt
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}

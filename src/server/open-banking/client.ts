@@ -273,7 +273,14 @@ export async function connectOpenBanking(
       const transactions: ScrapedTransaction[] = [];
       let url: string | null =
         `${base}/v1/accounts/${encodeURIComponent(accountId)}/transactions?dateFrom=${dateFrom}&dateTo=${today}&bookingStatus=both`;
-      for (let page = 0; url && page < MAX_PAGES; page++) {
+      const seen = new Set<string>();
+      while (url) {
+        // A loop or a history longer than this would be saved as if it were complete.
+        if (seen.has(url) || seen.size >= MAX_PAGES)
+          throw new Error(
+            "Open banking kept returning more pages than expected; nothing was saved.",
+          );
+        seen.add(url);
         const payload: BgTransactionsResponse = await getJson<BgTransactionsResponse>(creds, url);
         for (const { txn, pending } of txnsOf(payload))
           transactions.push(toScrapedTransaction(txn, pending, today));
