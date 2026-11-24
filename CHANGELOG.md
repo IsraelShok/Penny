@@ -4,27 +4,61 @@ All notable changes to Penny. Versions follow [Semantic Versioning](https://semv
 
 ## [0.5.0] - 2026-11-24
 
-### Added
+No database migrations.
 
-- Altshuler Shaham, Phoenix savings and pension, and Excellence Trade sync (thanks @IsraelShok).
-- MCP read-only access with the app lock on, plus seven more tools.
-- Telegram reminder when a bank connection stays down.
+### New
 
-### Changed
+- **Three more investment houses.** Altshuler Shaham, Phoenix savings and pension, and Excellence Trade sync on
+  their own, each product as its own asset, with username and password sign-in where the house uses it and live
+  progress while it runs (thanks @IsraelShok).
+- **MCP** keeps read-only access with the app lock on, and has seven more tools.
+- **Telegram** reminds you when a bank connection stays down.
+- **One Zero** shows the account balance; **open banking** reads long histories page by page.
+- **Folder import** runs per workspace.
 
+### Sync
+
+- Missed runs catch up after sleep or a restart, without a surprise sync after an upgrade or a double sync on a
+  daylight-saving change.
+- Short outages retry after 15 minutes, 1 hour and 4 hours; a bank that hangs gives up after 10 minutes, and a
+  sync interrupted by a crash no longer stays "running".
+- A connection that needs you (One Zero without a saved token, or a code you type) is skipped by the scheduler
+  instead of failing every day.
+- Never syncs in demo mode.
+
+### Backups and data
+
+- Restore swaps the database in one step and rolls back on any failure, works over a damaged database, and keeps
+  the key that opens your saved logins next to the pre-restore copy.
+- Backups use a stronger key derivation (v2 format; v1 files still restore). The command-line backup matches the
+  app's format and includes policies and receipts.
+- Migrations stop loudly on a missing, unknown or damaged migration file instead of starting half-upgraded.
+- Delete everything also removes logs, imports, receipts, the MCP token and phone-access settings.
+- Backup, restore, delete-everything and auto-backup changes ask for the app-lock passphrase.
+
+### Privacy and security
+
+- Cloud AI no longer sees IBANs, phone numbers, long numbers, standing-order names or transfer memos.
+- The encryption key file is closed to every other user of a Windows computer.
+- A desktop update is installed only from a plain `x.y.z` release tag.
+- HTML statement files are decoded safely.
 - **New update-signing key.** Desktop installs of 0.4.0 or older cannot verify updates signed with it, so they
   need one manual download of this version. Later updates install automatically again.
-- **Docker:** update by running the install command again; launch scripts moved to `scripts/docker/`.
-- **README** is short; details live on the website and in `docs/`.
 
-### Fixed
+### Fixes
 
-- Sync catches up missed runs, retries short outages, gives up on a stuck bank after 10 minutes and never stays "running".
-- Restore is atomic, works over a damaged database and keeps the encryption key; backups use stronger key derivation.
-- Cloud AI no longer sees IBANs, phone numbers, long numbers or standing-order names.
-- Open banking pages through long histories, explains expired consent, and shows errors in Hebrew.
-- Duplicate detection can no longer merge two rows because of a "|" in a description.
-- CodeQL findings: release-tag check in the desktop updater, safe HTML statement decoding.
+- Sums are rounded to agorot in the database, and deleting a budget is scoped to its workspace.
+- "Today" is Israel's calendar day everywhere.
+- Duplicate detection can no longer merge two rows because of a `|` in a description.
+- Open banking explains an expired consent and retries when the bank is busy; its errors show in Hebrew.
+- Every route, background job and outside call reports errors the same way, without leaking details.
+- Local AI (Ollama) gets 10 minutes instead of 2 on slow computers.
+
+### Install
+
+- **Docker:** to update, run the install command again. The launch scripts moved to `scripts/docker/`; the
+  one-line installers keep working for old and new releases.
+- The README is short; the details live on the website and in `docs/`.
 
 ## [0.4.0] - 2026-11-22
 
