@@ -25,5 +25,9 @@ export function computeDedupHash(fields: DedupFields): string {
     fields.installmentTotal != null ? String(fields.installmentTotal) : "",
   ];
 
-  return crypto.createHash("sha256").update(parts.join("|")).digest("hex");
+  // "\" and "|" inside a field are escaped so a "|" in a description cannot pass for the boundary
+  // between two fields. A field without either character is unchanged, so every hash already stored
+  // stays valid; only rows whose text holds one of them hash differently from before.
+  const escaped = parts.map((p) => p.replace(/[\\|]/g, "\\$&"));
+  return crypto.createHash("sha256").update(escaped.join("|")).digest("hex");
 }
