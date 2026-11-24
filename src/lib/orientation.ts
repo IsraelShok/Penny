@@ -1,5 +1,6 @@
 /** Concepts with a "what is this?" explanation, in help-page order. */
 export const CONCEPTS = ["free", "pace", "forecast", "budget", "resilience"] as const;
+/** @unfinished used by help/what-is.tsx, kept for the owner to decide */
 export type Concept = (typeof CONCEPTS)[number];
 
 /** Pages with a one-line purpose (i18n key under "purpose"); a sub-page uses its section's line. */

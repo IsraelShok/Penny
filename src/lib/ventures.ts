@@ -1,6 +1,6 @@
 /** Private venture deals: SPVs, syndicates, fund deals. */
 export const VENTURE_STATUSES = ["outstanding", "exited", "written_off"] as const;
-export type VentureStatus = (typeof VENTURE_STATUSES)[number];
+type VentureStatus = (typeof VENTURE_STATUSES)[number];
 
 export interface Venture {
   id: string;

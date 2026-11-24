@@ -2,7 +2,7 @@ import "server-only";
 
 import { fetchExternal } from "@/server/lib/fetch-external";
 import Anthropic from "@anthropic-ai/sdk";
-import { getSetting } from "../db/queries/settings";
+import { getGlobalSetting } from "../db/queries/settings";
 import { decrypt, isKeyLocked } from "../lib/encryption";
 import { normalizeOllamaUrl } from "@/lib/url-guard";
 import { isCliAgent, runCliAgent } from "./cli-agent";
@@ -14,7 +14,7 @@ If the data cannot answer the question, say so plainly. Never give investment ad
 export type VisionMediaType = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
 
 /** Whether the configured provider reads images. shortcut: Claude only; a vision Ollama model would need a model check. */
-export const aiSupportsImages = () => getSetting("ai_provider") === "claude";
+export const aiSupportsImages = () => getGlobalSetting("ai_provider") === "claude";
 
 /** One answer from the user's chosen provider (Ollama, Claude or a CLI agent). Null when none is set up. */
 export async function completeAI(
@@ -24,10 +24,10 @@ export async function completeAI(
   /** Only for a vision-capable provider (see aiSupportsImages); others ignore it. */
   image?: { base64: string; mediaType: VisionMediaType },
 ): Promise<string | null> {
-  const provider = getSetting("ai_provider");
+  const provider = getGlobalSetting("ai_provider");
 
   if (provider === "ollama") {
-    const base = normalizeOllamaUrl(getSetting("ai_ollama_url") ?? "http://localhost:11434");
+    const base = normalizeOllamaUrl(getGlobalSetting("ai_ollama_url") ?? "http://localhost:11434");
     if (!base) return null;
     const res = await fetchExternal(
       `${base}/api/chat`,
@@ -35,7 +35,7 @@ export async function completeAI(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: getSetting("ai_ollama_model") ?? "llama3.1",
+          model: getGlobalSetting("ai_ollama_model") ?? "llama3.1",
           stream: false,
           messages: [
             { role: "system", content: system },
@@ -51,9 +51,9 @@ export async function completeAI(
   }
 
   if (provider === "claude") {
-    const encrypted = getSetting("ai_api_key_encrypted");
-    const iv = getSetting("ai_api_key_iv");
-    const authTag = getSetting("ai_api_key_auth_tag");
+    const encrypted = getGlobalSetting("ai_api_key_encrypted");
+    const iv = getGlobalSetting("ai_api_key_iv");
+    const authTag = getGlobalSetting("ai_api_key_auth_tag");
     if (!encrypted || !iv || !authTag || isKeyLocked()) return null;
     const apiKey = decrypt({
       encrypted: Buffer.from(encrypted, "hex"),

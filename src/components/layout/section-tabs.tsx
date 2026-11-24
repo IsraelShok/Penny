@@ -14,6 +14,7 @@ export const SECTIONS = [
   ],
 ] as const;
 
+/** @unfinished unused since 6a643de (2026-11-21) removed its last caller; kept for the owner to decide */
 export const sectionOf = (pathname: string) =>
   SECTIONS.find((s) => s.some((x) => pathname.startsWith(x.href.split("?")[0])));
 

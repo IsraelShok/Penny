@@ -13,25 +13,6 @@ export interface MerchantMapping {
   source: "user" | "approved-ai";
 }
 
-export function lookupMerchantCategory(
-  workspaceId: number,
-  description: string,
-): MerchantMapping | null {
-  const key = normalizeMerchant(description);
-  if (!key) return null;
-  const row = getDb()
-    .prepare(
-      `SELECT merchant_key as merchantKey,
-              category_id as categoryId,
-              kind,
-              source
-       FROM merchant_categories
-       WHERE workspace_id = ? AND merchant_key = ?`,
-    )
-    .get(workspaceId, key) as MerchantMapping | undefined;
-  return row ?? null;
-}
-
 export function lookupMerchantCategoriesBulk(
   workspaceId: number,
   descriptions: string[],

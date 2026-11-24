@@ -383,7 +383,20 @@
     "timeout": "The bank didn't respond in time. Its site may be slow or down. Try again in a few minutes.",
     "twoFactor": "This account is asking for 2FA. For most banks, turn on 'This account requires 2FA' in the bank settings so the browser is shown and you can complete it. For One Zero, make sure the phone number is set.",
     "unexpected": "Sync did not finish. Turn on \"Show browser during sync\" in Settings and sync again to see what is stopping it.",
-    "unexpectedHeadless": "Sync did not finish. The bank may have changed its sign-in page. Try again later. If this continues, update the app."
+    "unexpectedHeadless": "Sync did not finish. The bank may have changed its sign-in page. Try again later. If this continues, update the app.",
+    "openBankingNoUrl": "The open banking API address is missing. Enter it in the account settings.",
+    "openBankingHttps": "The open banking API address must start with https://. Fix the address in the account settings.",
+    "openBankingUrlCredentials": "The open banking API address must not include a user name or password. Remove them from the address.",
+    "openBankingNoToken": "The open banking access token is missing. Paste it in the account settings.",
+    "openBankingUnreachable": "Could not reach the open banking server. Check your internet connection and the API address, then try again.",
+    "openBankingConsent": "The open banking consent has expired or was revoked. Renew the consent with your bank, then paste the new access token in the account settings.",
+    "openBankingNotFound": "The open banking address was not found. Check the API address in the account settings.",
+    "openBankingRateLimit": "The open banking server is limiting requests for now. Try again in a few minutes.",
+    "openBankingFailed": "The open banking server could not answer the request. Try again later.",
+    "openBankingNotJson": "The open banking server sent an answer that could not be read. Check that the address points to the API, not a website.",
+    "openBankingNoAccounts": "Open banking returned no accounts. At your bank, approve the consent for the accounts you want to share.",
+    "openBankingTooManyPages": "The open banking server kept sending more pages than expected, so nothing was saved. Try again later.",
+    "openBankingOtherServer": "The open banking server pointed to a different server, so the sync stopped to keep your access token safe. Contact your open banking provider."
   },
   "aiBanner": {
     "notConnected": "AI not connected",
@@ -3127,7 +3140,15 @@
       "historyFailed": "Failed: {error}",
       "arrived": "{count} new transactions imported from the folder",
       "notAbsolute": "Use a full folder path starting with a drive letter (like C:) or /.",
-      "failed": "Not saved. Please try again."
+      "failed": "Not saved. Please try again.",
+      "errors": {
+        "pdf": "PDF files are not imported from the folder. Export a CSV or Excel file from the bank, or use “Read a PDF or image” in the manual import.",
+        "xlsNotSupported": "This .xls file is in the old Excel format, which isn't supported yet. Open it in Excel, save it as xlsx or CSV, and put it in the folder again.",
+        "noHeader": "No header row found (like Date, Description, Amount). Check that this is the transactions file.",
+        "noRows": "No transactions found in the file. Check that this is the transactions file.",
+        "tooMany": "More than {max} rows in one file. Split it by period and put the parts in the folder.",
+        "unknownWorkspace": "This folder points to a workspace that doesn't exist, so its files were left as they are. Rename the folder to the name of an existing workspace."
+      }
     },
     "dropHere": "Drop a statement file here",
     "reading": "Reading the file…",

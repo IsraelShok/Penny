@@ -20,7 +20,7 @@ const read = () => {
 };
 // Only a toggle animates: a page that loads with the rail open shows it open at once.
 let toggled = false;
-export function setSideRail(open: boolean) {
+function setSideRail(open: boolean) {
   toggled = true;
   try {
     localStorage.setItem(KEY, open ? "open" : "closed");
@@ -29,7 +29,7 @@ export function setSideRail(open: boolean) {
   }
   listeners.forEach((l) => l());
 }
-export function useSideRail() {
+function useSideRail() {
   return useSyncExternalStore(
     (l) => {
       listeners.add(l);
@@ -41,7 +41,7 @@ export function useSideRail() {
 }
 
 /** The notification count the rail and the top bar's bell share. */
-export function useAlertCount() {
+function useAlertCount() {
   const { data } = useQuery({ queryKey: ["suggestions"], queryFn: getSuggestions });
   return data?.suggestions.length ?? 0;
 }

@@ -16,7 +16,7 @@ const OWNER = /^[A-Za-z0-9-]+$/;
 const NAME = /^[A-Za-z0-9._-]+$/;
 
 /** "v1.2.10" -> [1, 2, 10]; null for anything that is not a plain release version (pre-releases are skipped). */
-export function parseVersion(v: string): number[] | null {
+function parseVersion(v: string): number[] | null {
   const m = /^v?(\d+)\.(\d+)\.(\d+)$/.exec(v.trim());
   return m ? m.slice(1).map(Number) : null;
 }

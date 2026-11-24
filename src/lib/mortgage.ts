@@ -6,7 +6,7 @@ export type TrackKind = "prime" | "fixed" | "fixedLinked" | "var5" | "var5Linked
 export type Buyer = "first" | "upgrade" | "investor";
 
 /** Tracks whose rate can't change for the life of the loan. Variable-every-5 counts as variable under the BoI mix rule. */
-export const FIXED_KINDS: TrackKind[] = ["fixed", "fixedLinked"];
+const FIXED_KINDS: TrackKind[] = ["fixed", "fixedLinked"];
 const LINKED_KINDS: TrackKind[] = ["fixedLinked", "var5Linked"];
 /** Months between rate resets on a variable-every-5-years track. */
 const RESET_MONTHS = 60;

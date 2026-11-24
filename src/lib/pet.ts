@@ -3,8 +3,6 @@
 import { hexToOklch } from "@/lib/category-colors";
 import { PET_SKIN_LOOKS, SKIN_VARIANTS } from "@/lib/pet-skins";
 
-export { PET_SKIN_LOOKS };
-
 export type PetMood = "happy" | "ok" | "hungry" | "caring";
 export type PetStat = "food" | "energy" | "joy" | "health" | "tidy";
 
@@ -115,7 +113,7 @@ export function petSnooze(
 }
 
 export const PET_SIZES = { s: 120, m: 180, l: 250 } as const;
-export type PetSize = keyof typeof PET_SIZES;
+type PetSize = keyof typeof PET_SIZES;
 /** Every look BoopFace ships, one per series (full build, loaded only when one is picked). */
 export const PET_SKINS: readonly string[] = PET_SKIN_LOOKS.map((l) => l.id);
 /** One swatch per named colour (the order is the row in the picker); anything else goes through the colour input. */

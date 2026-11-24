@@ -5,7 +5,7 @@ import { encrypt, decrypt } from "../../lib/encryption";
 import { BANK_PROVIDERS } from "@/lib/types";
 
 /** Display name only. Must not store secrets (passwords, tokens, keys). */
-export const BANK_CREDENTIAL_LABEL_MAX_LENGTH = 128;
+const BANK_CREDENTIAL_LABEL_MAX_LENGTH = 128;
 
 interface SaveOptions {
   requiresManualTwoFactor?: boolean;

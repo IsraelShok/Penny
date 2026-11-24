@@ -34,6 +34,7 @@ export function useSidebarAccountsPref(): SidebarAccountsPref {
   return { hidden, moves };
 }
 
+/** @unfinished added in 6a643de (2026-11-21) and not wired in yet; kept for the owner to decide */
 export const useHiddenAccountGroups = () => useSidebarAccountsPref().hidden;
 
 /** Account tree: each group with its total, opened to show every account's balance. */

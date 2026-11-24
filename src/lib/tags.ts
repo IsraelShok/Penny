@@ -1,7 +1,7 @@
 // Pure logic for tags/events, mine-yours-ours owners and the cash wallet (no I/O, unit-tested).
 
 export const SHARED = "shared";
-export const CASH_PROVIDER = "cash";
+const CASH_PROVIDER = "cash";
 export const WALLET_DAYS = 60;
 
 /** Trimmed, single-spaced tag, or null when empty/too long. */
@@ -136,7 +136,7 @@ export interface WalletRow {
   provider: string;
 }
 
-export function isAtmWithdrawal(r: WalletRow): boolean {
+function isAtmWithdrawal(r: WalletRow): boolean {
   return (
     r.provider !== CASH_PROVIDER &&
     r.amount < 0 &&

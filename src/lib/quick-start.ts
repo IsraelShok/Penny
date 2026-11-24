@@ -12,7 +12,7 @@ export interface QuickStartState {
   marked: string[];
 }
 
-export const QUICK_START = [
+const QUICK_START = [
   {
     group: "start",
     tasks: [

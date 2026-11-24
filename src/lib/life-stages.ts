@@ -8,14 +8,14 @@ export interface L {
   he: string;
   en: string;
 }
-export type LinkSource = "gov" | "kolzchut";
-export interface LifeLink {
+type LinkSource = "gov" | "kolzchut";
+interface LifeLink {
   title: L;
   url: string;
   source: LinkSource;
   lastChecked: string;
 }
-export interface LifeItem {
+interface LifeItem {
   id: string;
   text: L;
 }

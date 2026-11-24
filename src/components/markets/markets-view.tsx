@@ -248,7 +248,10 @@ function Tile({
   );
 }
 
-/** Three key markets in one line for Home. */
+/**
+ * Three key markets in one line for Home.
+ * @unfinished unused since af9ceff (2026-11-13) removed its last caller; kept for the owner to decide
+ */
 export function MarketStrip() {
   const t = useTranslations("markets");
   const locale = useLocale();

@@ -7,8 +7,7 @@ import { addDays, monthDay } from "./balance-forecast";
 
 export const PLANNED_STATUSES = ["planned", "matched", "cancelled"] as const;
 export type PlannedStatus = (typeof PLANNED_STATUSES)[number];
-export const PLANNED_ACCOUNT_KINDS = ["bank", "card", "manual"] as const;
-export type PlannedAccountKind = (typeof PLANNED_ACCOUNT_KINDS)[number];
+export type PlannedAccountKind = "bank" | "card" | "manual";
 
 export interface PlannedItem {
   id: number;
@@ -78,7 +77,7 @@ export interface PlannedItemView extends PlannedItem {
   overdue: boolean;
 }
 
-export interface PlannedAccount {
+interface PlannedAccount {
   account: string;
   provider: string;
   kind: "bank" | "card";
@@ -185,8 +184,8 @@ export function plannedPayments(
 }
 
 /** How far the planned date may be from the real purchase for them to match. */
-export const MATCH_BEFORE_DAYS = 7;
-export const MATCH_AFTER_DAYS = 30;
+const MATCH_BEFORE_DAYS = 7;
+const MATCH_AFTER_DAYS = 30;
 
 /** Real rows that could be this planned expense: same account, close amount, near the planned date. */
 export function plannedCandidates(
@@ -232,7 +231,7 @@ export function plannedCandidates(
 }
 
 /** Days from `from` to `to` on YYYY-MM-DD strings, positive when `to` is later. */
-export function daysBetween(from: string, to: string): number {
+function daysBetween(from: string, to: string): number {
   const a = Date.parse(`${from.slice(0, 10)}T00:00:00Z`);
   const b = Date.parse(`${to.slice(0, 10)}T00:00:00Z`);
   return Math.round((b - a) / 86_400_000);

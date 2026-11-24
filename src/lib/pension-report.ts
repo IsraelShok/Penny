@@ -7,13 +7,13 @@
  */
 import { POLICY_KINDS, type InsurancePolicy } from "./types";
 
-export const PENSION_PRODUCT_TYPES = ["pension", "keren_hishtalmut", "kupat_gemel"] as const;
-export type PensionProductType = (typeof PENSION_PRODUCT_TYPES)[number];
+const PENSION_PRODUCT_TYPES = ["pension", "keren_hishtalmut", "kupat_gemel"] as const;
+type PensionProductType = (typeof PENSION_PRODUCT_TYPES)[number];
 
 /** Yearly returns as the report prints them (1 year, 3, 5, ...), oldest figure first. */
-export type PensionReturns = (number | null)[];
+type PensionReturns = (number | null)[];
 
-export interface PensionTrack {
+interface PensionTrack {
   name: string;
   /** Percent of the product's balance. */
   share: number | null;
@@ -46,7 +46,7 @@ export interface PensionProduct {
   coverageCost: { disability: number | null; survivors: number | null } | null;
 }
 
-export interface PensionReportInsurance {
+interface PensionReportInsurance {
   name: string;
   kind: InsurancePolicy["kind"];
   provider: string;

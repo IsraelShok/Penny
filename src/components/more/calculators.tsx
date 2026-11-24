@@ -62,8 +62,7 @@ type Calc = {
   links?: [string, string][];
 };
 
-export const GROUPS = ["savings", "loans", "income", "planning"] as const;
-type Group = (typeof GROUPS)[number];
+type Group = "savings" | "loans" | "income" | "planning";
 
 /** Official comparison sites, shown under the fees calculator. */
 const FUND_LINKS = Object.entries(CMA_SITES).map(([k, href]): [string, string] => [

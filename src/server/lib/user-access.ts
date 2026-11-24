@@ -7,7 +7,7 @@ export const USER_COOKIE = "penny-user";
 export type AppUser = { id: number; name: string; username: string; isAdmin: boolean };
 const digest = (value: string) => createHash("sha256").update(value).digest("hex");
 export const accessEnabled = () => !!getDb().prepare("SELECT 1 FROM app_users LIMIT 1").get();
-export function cookieToken(request: Request) {
+function cookieToken(request: Request) {
   return (
     request.headers
       .get("cookie")

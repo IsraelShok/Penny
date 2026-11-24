@@ -30,6 +30,7 @@ export function getAllBudgets(workspaceId: number): BudgetRow[] {
   }));
 }
 
+/** @unfinished unused since 6a643de (2026-11-21) removed its last caller; kept for the owner to decide */
 export function getBudgetForCategory(workspaceId: number, categoryId: number): BudgetRow | null {
   const row = getDb()
     .prepare(
@@ -46,6 +47,7 @@ export function getBudgetForCategory(workspaceId: number, categoryId: number): B
   };
 }
 
+/** @unfinished unused since 4447003 (2026-11-14) removed its last caller; kept for the owner to decide */
 export function setBudget(
   workspaceId: number,
   categoryId: number,
@@ -64,6 +66,7 @@ export function setBudget(
     .run(workspaceId, categoryId, amount, isAuto ? 1 : 0);
 }
 
+/** @unfinished unused since 6a643de (2026-11-21) removed its last caller; kept for the owner to decide */
 export function deleteBudget(workspaceId: number, categoryId: number): void {
   getDb()
     .prepare("DELETE FROM budgets WHERE workspace_id = ? AND category_id = ?")

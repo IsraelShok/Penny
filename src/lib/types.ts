@@ -23,7 +23,7 @@ export interface Profile {
   createdAt: string;
 }
 
-export interface Transaction {
+interface Transaction {
   id: number;
   accountNumber: string;
   date: string;
@@ -318,12 +318,6 @@ export interface Integration {
   hasTwoFactorToken: boolean;
 }
 
-export interface SetupStatus {
-  isConfigured: boolean;
-  hasBankCredentials: boolean;
-  hasAIProvider: boolean;
-}
-
 export interface AppSettings {
   monthsToSync: number;
   aiProvider: "claude" | "ollama" | "codex" | "gemini" | "opencode" | "kilo" | "none";
@@ -362,7 +356,7 @@ export type BankProvider =
   | "oneZero"
   | "openBanking";
 
-export interface CredentialField {
+interface CredentialField {
   key: string;
   label: string;
   type: string;
@@ -1156,7 +1150,7 @@ export interface AssetInput {
 }
 
 /** "index" = purchase price revalued by the CBS dwelling price index. */
-export interface PropertyEstimate {
+interface PropertyEstimate {
   method: "index";
   value: number;
   change: number;

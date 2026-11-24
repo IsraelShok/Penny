@@ -5,7 +5,7 @@ import { readXlsx } from "@/lib/xlsx";
 
 /** Bank / credit-card statement import: header detection, column mapping and row parsing. */
 export const IMPORT_FIELDS = ["date", "description", "amount", "debit", "credit"] as const;
-export type ImportField = (typeof IMPORT_FIELDS)[number];
+type ImportField = (typeof IMPORT_FIELDS)[number];
 export type ImportMap = Record<ImportField, number | null>;
 export interface ImportRow {
   date: string;
@@ -245,7 +245,7 @@ export function buildImportRows(
   return { rows, skipped };
 }
 
-export const importKey = (r: ImportRow) => `${r.date}|${r.amount}|${r.description}`;
+const importKey = (r: ImportRow) => `${r.date}|${r.amount}|${r.description}`;
 
 /**
  * Marks rows already stored for this account, whether a bank sync or an earlier file stored them.

@@ -16,7 +16,7 @@ import { redact } from "@/server/lib/redact";
 import type { BankProvider } from "@/lib/types";
 import { getWorkspaceSetting } from "../db/queries/settings";
 
-export const PROVIDER_MAP: Record<string, CompanyTypes> = {
+const PROVIDER_MAP: Record<string, CompanyTypes> = {
   isracard: CompanyTypes.isracard,
   cal: CompanyTypes.visaCal,
   max: CompanyTypes.max,

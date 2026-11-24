@@ -3,7 +3,7 @@ export type TransactionSortField =
 
 export type SortOrder = "asc" | "desc";
 
-export const TRANSACTION_SORT_FIELDS: TransactionSortField[] = [
+const TRANSACTION_SORT_FIELDS: TransactionSortField[] = [
   "date",
   "description",
   "category_name",
@@ -11,7 +11,7 @@ export const TRANSACTION_SORT_FIELDS: TransactionSortField[] = [
   "charged_amount",
 ];
 
-export function defaultSortOrder(field: TransactionSortField): SortOrder {
+function defaultSortOrder(field: TransactionSortField): SortOrder {
   if (field === "description" || field === "category_name" || field === "account") {
     return "asc";
   }

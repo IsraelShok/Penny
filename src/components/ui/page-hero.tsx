@@ -28,7 +28,7 @@ import { wantsExplanations } from "@/lib/plan";
 import { pagePurposeKey } from "@/lib/orientation";
 
 /** Purple summary card that opens a page: one big number, one short sentence. Same look as the budget overview. */
-export function PageHero({
+function PageHero({
   title,
   icon,
   meta,

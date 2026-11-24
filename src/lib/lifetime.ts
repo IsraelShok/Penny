@@ -39,7 +39,7 @@ export interface LifetimeAssetInput {
   monthlyPayment?: number | null;
 }
 
-export interface LifetimeDebt {
+interface LifetimeDebt {
   balance: number;
   /** Yearly interest as a fraction. */
   rate: number;
@@ -116,7 +116,7 @@ export function lifetimeBalances(assets: LifetimeAssetInput[]): LifetimeBalances
   };
 }
 
-export interface LifetimeEventInput {
+interface LifetimeEventInput {
   year: number;
   /** One-off amount, negative = cost. */
   amount: number;

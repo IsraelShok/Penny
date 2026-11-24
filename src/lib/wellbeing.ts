@@ -28,7 +28,7 @@ export interface WellbeingEntry {
   score: number;
 }
 
-export const WELLBEING_DUE_DAYS = 90;
+const WELLBEING_DUE_DAYS = 90;
 
 export function parseWellbeingHistory(raw: unknown): WellbeingEntry[] {
   if (!Array.isArray(raw)) return [];

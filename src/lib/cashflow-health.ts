@@ -20,7 +20,7 @@ export interface CashflowFacts {
   deficitMonths: number;
 }
 
-export const BUFFER_MIN = 1000;
+const BUFFER_MIN = 1000;
 
 export function cashflowSigns(f: CashflowFacts): CashflowSign[] {
   const signs: CashflowSign[] = [];

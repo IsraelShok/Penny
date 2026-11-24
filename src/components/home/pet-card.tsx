@@ -607,7 +607,10 @@ export function PetCustomizer() {
   );
 }
 
-/** Colour and look of one Pip, controlled (the profile editor uses it for each person's own Pip). */
+/**
+ * Colour and look of one Pip, controlled (the profile editor uses it for each person's own Pip).
+ * @unfinished unused since a0a45cf (2026-11-21) removed its last caller; kept for the owner to decide
+ */
 export function PipPicker({
   value,
   onChange,

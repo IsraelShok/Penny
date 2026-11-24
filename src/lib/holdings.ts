@@ -1,7 +1,7 @@
 import type { Asset, AssetType } from "./types";
 
 /** Types whose value moves with a market. Shown under "ערך משתנה", never as cash. */
-export const VOLATILE_TYPES: AssetType[] = ["stock", "fund", "bond", "crypto", "metal"];
+const VOLATILE_TYPES: AssetType[] = ["stock", "fund", "bond", "crypto", "metal"];
 
 export const isVolatile = (a: Asset) =>
   !a.isLiability && a.source !== "bank" && (a.symbol != null || VOLATILE_TYPES.includes(a.type));

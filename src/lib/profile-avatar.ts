@@ -11,6 +11,7 @@ export const AVATAR_COLORS = [
   "#6b7280",
 ] as const;
 
+/** @unfinished unused since 4447003 (2026-11-14) removed its last caller; kept for the owner to decide */
 export const AVATAR_EMOJIS = [
   "🙂",
   "😎",
@@ -64,7 +65,10 @@ export interface ProfilePip {
   name: string;
 }
 
-/** A stable starting Pip for a profile that has none yet. */
+/**
+ * A stable starting Pip for a profile that has none yet.
+ * @unfinished unused since a0a45cf (2026-11-21) removed its last caller; kept for the owner to decide
+ */
 export const defaultPip = (id: number): ProfilePip => ({
   color: PET_COLORS[Math.abs(id - 1) % PET_COLORS.length],
   skin: "",

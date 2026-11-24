@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -412,12 +412,4 @@ function SummaryStat({ label, value, accent }: { label: string; value: number; a
 
 function Divider() {
   return <span className="h-8 w-px bg-border" />;
-}
-
-export function useAutoClose(open: boolean, done: boolean, delayMs: number, onClose: () => void) {
-  useEffect(() => {
-    if (!open || !done) return;
-    const t = setTimeout(onClose, delayMs);
-    return () => clearTimeout(t);
-  }, [open, done, delayMs, onClose]);
 }

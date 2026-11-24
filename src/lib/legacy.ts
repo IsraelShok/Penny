@@ -15,7 +15,7 @@ export interface LegacyNotes {
   steps: string | null;
 }
 
-export const LEGACY_FIELDS = ["contacts", "documents", "wishes", "steps"] as const;
+const LEGACY_FIELDS = ["contacts", "documents", "wishes", "steps"] as const;
 export const LEGACY_TEXT_MAX = 4000;
 export const EMPTY_NOTES: LegacyNotes = { contacts: "", documents: "", wishes: "", steps: null };
 
@@ -47,7 +47,7 @@ export interface LegacyRow {
   when?: string;
 }
 
-export type LegacySectionId =
+type LegacySectionId =
   "banks" | "cards" | "investments" | "pension" | "insurance" | "debts" | "recurring" | "goals";
 export interface LegacySection {
   id: LegacySectionId;

@@ -28,9 +28,8 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm run format:check
-      # Dead files, exports and dependencies. Reported, not enforced, until the backlog is cleared.
+      # Dead files, exports and dependencies; fails the build.
       - run: npm run knip
-        continue-on-error: true
       # Same suites plus the coverage floor; CI fails if logic or server coverage drops.
       - run: npm run test:coverage
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -112,8 +111,6 @@ jobs:
           severity: HIGH,CRITICAL
           # Debian carries HIGH findings with no fix for months; only what can be fixed fails the build.
           ignore-unfixed: true
-          # The npm CLI bundled in the Node base image is not part of the running app (CMD starts next directly).
-          skip-dirs: usr/local/lib/node_modules/npm
           trivyignores: .trivyignore
           exit-code: "1"
 

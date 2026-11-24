@@ -27,14 +27,14 @@ export function cashReserve(ws: number) {
   const n = Number(getWorkspaceSetting(ws, "cash_reserve") ?? 0);
   return Number.isFinite(n) ? Math.max(0, n) : 0;
 }
-export function goalLinks(ws: number): GoalLink[] {
+function goalLinks(ws: number): GoalLink[] {
   return getDb()
     .prepare(
       "SELECT l.transaction_id AS transactionId,l.goal_id AS goalId,l.contribution,t.description,t.date FROM goal_links l JOIN transactions t ON t.id=l.transaction_id WHERE t.workspace_id=? ORDER BY t.date DESC",
     )
     .all(ws) as GoalLink[];
 }
-export function goalRules(ws: number): GoalRule[] {
+function goalRules(ws: number): GoalRule[] {
   return getDb()
     .prepare(
       "SELECT id,goal_id AS goalId,account,description,direction,from_date AS fromDate,enabled,automatic,transaction_sign AS transactionSign FROM goal_rules WHERE workspace_id=? ORDER BY id DESC",

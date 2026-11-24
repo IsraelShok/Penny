@@ -46,7 +46,7 @@ function countOutsideQuotes(line: string, delimiter: string): number {
  * Picks the delimiter that splits the most lines the same way. Statement files often start with
  * a title line ("דוח תנועות, ינואר") that would win a first-line-only check.
  */
-export function detectDelimiter(text: string): string {
+function detectDelimiter(text: string): string {
   const lines = text
     .split(/\r?\n/)
     .filter((line) => line.trim() !== "")

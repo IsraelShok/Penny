@@ -22,6 +22,22 @@ export const SYNC_ERRORS = {
   // Docker and other headless hosts have no screen, so showing the browser is not an option there.
   unexpectedHeadless:
     "The scraper failed unexpectedly. The bank may have changed its login page. Try again later; if it keeps failing, update Penny.",
+  openBankingNoUrl: "Open banking API base URL is missing.",
+  openBankingHttps: "Open banking API base URL must start with https://.",
+  openBankingUrlCredentials: "Open banking API base URL must not hold a user name or password.",
+  openBankingNoToken: "Open banking API access token is missing.",
+  openBankingUnreachable: "Open banking endpoint is unreachable.",
+  openBankingConsent:
+    "The open banking consent has expired or was revoked. Renew the consent with your bank, then paste the new access token here.",
+  openBankingNotFound: "Open banking endpoint not found. Check the base URL.",
+  openBankingRateLimit: "Open banking rate limit reached. Try again in a few minutes.",
+  openBankingFailed: "Open banking request failed.",
+  openBankingNotJson: "Open banking returned a response that is not JSON.",
+  openBankingNoAccounts:
+    "Open banking returned no accounts. Approve the consent for the accounts you want to share.",
+  openBankingTooManyPages:
+    "Open banking kept returning more pages than expected; nothing was saved.",
+  openBankingOtherServer: "Open banking returned a next-page link to a different server.",
 } as const;
 
 export type SyncErrorKey = keyof typeof SYNC_ERRORS;

@@ -8,7 +8,7 @@ import { IL } from "./il-defaults";
  * "Money on the table": every check that found shekels, as one yearly figure with the step that gets them.
  * Estimates, not advice. Items the user marked done leave the list and count as saved.
  */
-export type TableKind =
+type TableKind =
   | "fees"
   | "interest"
   | "fx"

@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { MAX_IMPORT_ROWS } from "@/lib/file-import";
+
+const FOLDER_ERRORS = ["pdf", "xlsNotSupported", "noHeader", "noRows", "unknownWorkspace"] as const;
 
 /** Auto-import from a folder: toggle, folder, account name, interval, scan now and recent history. */
 export function FolderImportCard() {
@@ -47,6 +50,13 @@ export function FolderImportCard() {
 
   if (!data) return null;
   const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : t("never"));
+  // Known codes from the folder scan are translated; anything else is raw text, shown as is.
+  const errorText = (code: string) =>
+    code === "tooMany"
+      ? t("errors.tooMany", { max: MAX_IMPORT_ROWS })
+      : (FOLDER_ERRORS as readonly string[]).includes(code)
+        ? t(`errors.${code as (typeof FOLDER_ERRORS)[number]}`)
+        : code;
 
   return (
     <SettingCard title={t("title")} description={t("description")}>
@@ -147,7 +157,7 @@ export function FolderImportCard() {
                 </span>
                 <span className="shrink-0 text-muted-foreground">
                   {h.error
-                    ? t("historyFailed", { error: h.error })
+                    ? t("historyFailed", { error: errorText(h.error) })
                     : t("historyOk", { added: h.added, duplicates: h.duplicates })}
                 </span>
               </li>

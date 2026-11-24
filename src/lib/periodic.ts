@@ -20,7 +20,7 @@ export interface PeriodicPayload {
 
 const idx = (ym: string) => Number(ym.slice(0, 4)) * 12 + Number(ym.slice(5, 7)) - 1;
 const ym = (i: number) => `${Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, "0")}`;
-export const shiftMonth = (month: string, n: number) => ym(idx(month) + n);
+const shiftMonth = (month: string, n: number) => ym(idx(month) + n);
 
 /** Months left to save, counting the due month itself; at least 1 (a past due date means "this month"). */
 export const monthsUntil = (today: string, due: string) =>

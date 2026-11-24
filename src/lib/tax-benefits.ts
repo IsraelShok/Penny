@@ -31,7 +31,7 @@ export interface CreditAnswers {
   qualifyingTown: boolean;
 }
 
-export type CreditCheck =
+type CreditCheck =
   | "form101"
   | "fatherKids"
   | "donations"

@@ -6,7 +6,7 @@ import type {
   InsuranceUnlinkedCharge,
 } from "./types";
 
-export type OverlapKind = "health" | "shaban" | "life" | "same";
+type OverlapKind = "health" | "shaban" | "life" | "same";
 
 export interface Overlap {
   kind: OverlapKind;
@@ -63,7 +63,10 @@ export interface InsuranceCharge {
 
 const INSURANCE_CATEGORY = /ביטוח|insurance/i;
 
-/** A category (or its parent) that is about insurance. */
+/**
+ * A category (or its parent) that is about insurance.
+ * @unfinished added in 6a643de (2026-11-21) and not wired in yet; kept for the owner to decide
+ */
 export function isInsuranceCategory(name: string | null | undefined): boolean {
   return !!name && INSURANCE_CATEGORY.test(name);
 }

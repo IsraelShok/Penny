@@ -50,11 +50,6 @@ export function setWorkspaceSetting(workspaceId: number, key: string, value: str
     .run(workspaceId, key, value);
 }
 
-// Back-compat aliases so existing call sites that store the Claude API key
-// (settings.ts in src/server/ai/providers/claude.ts) keep working unchanged.
-export const getSetting = getGlobalSetting;
-export const setSetting = setGlobalSetting;
-
 const AUTO_SYNC_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /** Days before an expected bill to remind; 2 until the user picks, 0 = off. */

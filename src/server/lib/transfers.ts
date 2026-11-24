@@ -20,7 +20,7 @@ const BANK_PROVIDERS_SET: ReadonlySet<BankProvider> = new Set<BankProvider>([
   "openBanking",
 ]);
 
-export const CREDIT_CARD_PAYMENT_PATTERNS: readonly RegExp[] = [
+const CREDIT_CARD_PAYMENT_PATTERNS: readonly RegExp[] = [
   /ויזה/i,
   /ישראכרט/i,
   /ישרא[\s־-]?כארד/i,
@@ -49,7 +49,7 @@ export const CREDIT_CARD_PAYMENT_PATTERNS: readonly RegExp[] = [
   /\bAMERICAN\s+EXPRESS\b/i,
 ];
 
-export const LOAN_DEPOSIT = /הלוואה|הלוואת|\bloan\b/i;
+const LOAN_DEPOSIT = /הלוואה|הלוואת|\bloan\b/i;
 
 export function isBankProvider(provider: string): provider is BankProvider {
   return BANK_PROVIDERS_SET.has(provider as BankProvider);

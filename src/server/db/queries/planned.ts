@@ -65,10 +65,7 @@ function itemOf(row: Row): PlannedItem {
   };
 }
 
-export function listPlanned(
-  workspaceId: number,
-  statuses: PlannedStatus[] = ["planned"],
-): PlannedItem[] {
+function listPlanned(workspaceId: number, statuses: PlannedStatus[] = ["planned"]): PlannedItem[] {
   const marks = statuses.map(() => "?").join(",");
   return (
     getDb()
@@ -100,7 +97,7 @@ function accountKindOf(
 }
 
 /** Charges of the last ~400 days: enough for card timing, and for every planned item's window. */
-export function loadCharges(workspaceId: number, today: string): PlannedCharge[] {
+function loadCharges(workspaceId: number, today: string): PlannedCharge[] {
   return (
     getDb()
       .prepare(
@@ -379,7 +376,10 @@ export function matchPlanned(
   return { matched, ambiguous };
 }
 
-/** Planned spend between two dates, for the forecast and the budget. */
+/**
+ * Planned spend between two dates, for the forecast and the budget.
+ * @unfinished added in 6a643de (2026-11-21) and not wired in yet; kept for the owner to decide
+ */
 export function plannedSpendBetween(
   workspaceId: number,
   today: string,

@@ -1,5 +1,5 @@
-export type ResilienceFactor = "emergency" | "savings" | "debt" | "stability" | "buffer";
-export type ResilienceBand = "building" | "steady" | "strong";
+type ResilienceFactor = "emergency" | "savings" | "debt" | "stability" | "buffer";
+type ResilienceBand = "building" | "steady" | "strong";
 
 export interface ResilienceInput {
   cash: number;
@@ -24,7 +24,7 @@ export interface Resilience {
 }
 
 /** Weights: emergency fund 30, savings rate 25, cash-flow stability 20, debt 15, buffer ahead 10. Factors that don't apply are dropped and the score rescaled to 100. */
-export const WEIGHTS: Record<ResilienceFactor, number> = {
+const WEIGHTS: Record<ResilienceFactor, number> = {
   emergency: 30,
   savings: 25,
   stability: 20,

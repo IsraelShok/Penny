@@ -53,17 +53,15 @@ export interface RightsAnswers {
   disability: boolean;
 }
 
-export const RIGHTS = [
-  "workGrant",
-  "reserveTax",
-  "reserveGrant",
-  "childAllowance",
-  "childSavings",
-  "arnona",
-  "rent",
-  "unemployment",
-] as const;
-export type Right = (typeof RIGHTS)[number];
+export type Right =
+  | "workGrant"
+  | "reserveTax"
+  | "reserveGrant"
+  | "childAllowance"
+  | "childSavings"
+  | "arnona"
+  | "rent"
+  | "unemployment";
 
 /**
  * Likely entitlements worth checking. Thresholds are rough on purpose; the official site decides.

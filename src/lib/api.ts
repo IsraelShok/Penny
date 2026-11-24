@@ -4,7 +4,6 @@ import type { BillForecast } from "@/server/insights/forecast";
 import type { Anomaly } from "@/server/insights/anomalies";
 import type { Rule } from "@/server/rules/engine";
 import type {
-  SetupStatus,
   AppSettings,
   TransactionWithCategory,
   DashboardSummary,
@@ -243,6 +242,7 @@ export function createWorkspace(
   });
 }
 
+/** @unfinished unused since 4447003 (2026-11-14) removed its last caller; kept for the owner to decide */
 export function renameWorkspace(
   id: number,
   name: string,
@@ -255,14 +255,11 @@ export function renameWorkspace(
   });
 }
 
+/** @unfinished unused since 4447003 (2026-11-14) removed its last caller; kept for the owner to decide */
 export function deleteWorkspace(id: number) {
   return fetchJSON<{ success: boolean }>(`/api/workspaces/${id}`, {
     method: "DELETE",
   });
-}
-
-export function getSetupStatus() {
-  return fetchJSON<SetupStatus>("/api/setup/status");
 }
 
 /** Where first-run onboarding stands (resume point), or "complete". */
@@ -457,7 +454,7 @@ export function setTransactionExcluded(id: number, excluded: boolean, alwaysForM
   });
 }
 
-export interface PaybackTxn {
+interface PaybackTxn {
   id: number;
   date: string;
   description: string;
@@ -465,7 +462,7 @@ export interface PaybackTxn {
   amount: number;
 }
 
-export interface PaybackLinkView {
+interface PaybackLinkView {
   credit: PaybackTxn;
   expense: PaybackTxn;
 }
@@ -604,7 +601,10 @@ export function getMarkets() {
   return fetchJSON<MarketsPayload>(`/api/markets`);
 }
 
-/** Symbols the household added to Markets. */
+/**
+ * Symbols the household added to Markets.
+ * @unfinished added in 6a643de (2026-11-21) and not wired in yet; kept for the owner to decide
+ */
 export function getMarketWatchlist() {
   return fetchJSON<{ symbols: string[] }>(`/api/markets/watchlist`);
 }
@@ -1046,7 +1046,7 @@ export function deleteCategory(categoryId: number) {
   });
 }
 
-export interface CategorizeAssignment {
+interface CategorizeAssignment {
   transactionId: number;
   description: string;
   categoryName: string;
@@ -1054,7 +1054,7 @@ export interface CategorizeAssignment {
   kind: CategoryKindFilter;
 }
 
-export interface CategorizeProposal {
+interface CategorizeProposal {
   name: string;
   kind: CategoryKindFilter;
   transactionIds: number[];
@@ -1096,7 +1096,7 @@ export function applyCategorize(payload: {
   });
 }
 
-export type SyncEventType =
+type SyncEventType =
   | "plan"
   | "provider-start"
   | "provider-done"
@@ -1184,7 +1184,7 @@ export function startSync(
   return { cancel: () => controller.abort() };
 }
 
-export interface PullProgress {
+interface PullProgress {
   status: string;
   digest?: string;
   total?: number;
@@ -1632,7 +1632,10 @@ export function undoSheetImport(importId: number) {
   });
 }
 
-/** Category suggestions from merchant memory (never written by the server). */
+/**
+ * Category suggestions from merchant memory (never written by the server).
+ * @unfinished added in 6a643de (2026-11-21) and not wired in yet; kept for the owner to decide
+ */
 export function suggestSheetCategories(
   rows: { description: string; kind: "expense" | "income" }[],
 ) {
@@ -1933,7 +1936,6 @@ export function deleteManualTransaction(id: number) {
   );
 }
 
-export type { ExpenseShare } from "./expense-shares";
 const jsonBody = (method: string, body: unknown): RequestInit => ({
   method,
   headers: { "Content-Type": "application/json" },

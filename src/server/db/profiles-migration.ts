@@ -24,10 +24,7 @@ export type ProfilesReport = {
 };
 
 /** Rows per table (with any rows) that belong to a workspace, excluding seeded/derived tables. */
-export function workspaceDataCounts(
-  db: Database.Database,
-  workspaceId: number,
-): Record<string, number> {
+function workspaceDataCounts(db: Database.Database, workspaceId: number): Record<string, number> {
   const tables = (
     db
       .prepare(

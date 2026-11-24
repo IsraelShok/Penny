@@ -1,8 +1,7 @@
 import { FLOW_TYPES, type FlowType } from "./flows";
 
 /** What the pairing engine linked, and therefore what the user can undo. */
-export const MATCH_KINDS = ["transfer", "refund", "loan_drawdown", "loan_repayment"] as const;
-export type MatchKind = (typeof MATCH_KINDS)[number];
+export type MatchKind = "transfer" | "refund" | "loan_drawdown" | "loan_repayment";
 
 /** One automatic match, as the review card shows it. */
 export interface FlowMatchView {

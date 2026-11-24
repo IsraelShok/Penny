@@ -12,7 +12,7 @@ export interface SpendRow {
   merchant: string;
   amount: number;
 }
-export type DriverKind = "price" | "more" | "less" | "new" | "gone" | "oneOff";
+type DriverKind = "price" | "more" | "less" | "new" | "gone" | "oneOff";
 export interface Driver {
   merchant: string;
   kind: DriverKind;
