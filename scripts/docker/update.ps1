@@ -1,7 +1,7 @@
 # Update Penny safely: back up the data, build the new version (its tests run during the build),
 # switch to it, and roll back to the previous image if it does not come up healthy.
 $ErrorActionPreference = "Stop"
-Set-Location $PSScriptRoot
+Set-Location (Join-Path $PSScriptRoot "..\..")
 
 function Wait-Healthy {
     for ($i = 0; $i -lt 40; $i++) {
@@ -11,6 +11,7 @@ function Wait-Healthy {
     return $false
 }
 
+if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { Write-Host "Docker is not installed. Get it from https://www.docker.com/products/docker-desktop/ and try again."; exit 1 }
 docker version *> $null
 if ($LASTEXITCODE -ne 0) { Write-Host "Docker is not running. Start Docker Desktop and try again."; exit 1 }
 
@@ -80,7 +81,7 @@ if ($LASTEXITCODE -ne 0) {
 # 5. Switch, and roll back if the new version is not healthy. --remove-orphans retires a container from before the rename.
 docker compose up -d --remove-orphans
 if (Wait-Healthy) {
-    Write-Host "Updated to $env:PENNY_COMMIT."
+    Write-Host "Updated to $env:PENNY_COMMIT. Penny is running at http://127.0.0.1:41234"
     Remove-OldVolume
     exit 0
 }

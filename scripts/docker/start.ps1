@@ -1,8 +1,10 @@
 # Start Penny in Docker and open it in the browser.
+# Safe to run again: it rebuilds only what changed and keeps your data in the penny-data volume.
 $ErrorActionPreference = "Stop"
-Set-Location $PSScriptRoot
+Set-Location (Join-Path $PSScriptRoot "..\..")
 $url = "http://127.0.0.1:41234"
 
+if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { Write-Host "Docker is not installed. Get it from https://www.docker.com/products/docker-desktop/ and try again."; exit 1 }
 docker version *> $null
 if ($LASTEXITCODE -ne 0) { Write-Host "Docker is not running. Start Docker Desktop and try again."; exit 1 }
 

@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Stop"
-Set-Location $PSScriptRoot
+Set-Location (Split-Path $PSScriptRoot -Parent)
 $url = "http://127.0.0.1:41234"
 $env:NEXT_TELEMETRY_DISABLED = "1"
 

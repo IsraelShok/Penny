@@ -30,13 +30,15 @@ Pick one. Your data stays on your computer in every option.
 4. Bank sync uses Google Chrome or Microsoft Edge, so install one of them if you have neither.
 
 ### Docker: Windows, Mac or Linux
-Needs [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker Engine on Linux) and git.
+Needs [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker Engine on Linux). One command downloads the newest release into `~/Penny`, builds it and starts it:
 ```bash
-git clone https://github.com/Sergey-Bar/Penny.git
-cd Penny
-git checkout <version tag>
+# Mac / Linux
+curl -fsSL https://raw.githubusercontent.com/Sergey-Bar/Penny/main/install-docker.sh | bash
 ```
-Then start it: **Windows** double-click `Penny-docker.bat`; **Mac / Linux** run `./Penny-docker.sh`.
-Penny opens at http://127.0.0.1:41234. To update later: `Penny-update.bat` or `./Penny-update.sh`. Each update backs up your data first and rolls back if the new version fails.
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/Sergey-Bar/Penny/main/install-docker.ps1 | iex
+```
+Penny opens at http://127.0.0.1:41234. To update later, run the same command again: it backs up your data first and rolls back if the new version fails.
 
 Statement files from banks and investment houses go into the import folder (Settings → Data shows it; in Docker it is `imports/`).

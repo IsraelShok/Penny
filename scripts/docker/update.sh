@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Update Penny safely (macOS and Linux; Windows uses Penny-update.bat): move to the newest release, back up
+# Update Penny safely (macOS and Linux; Windows uses update.bat): move to the newest release, back up
 # the data, build the new version (its tests run during the build), switch, and roll back if it is not healthy.
 set -u
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/../.." || exit 1
 
 wait_healthy() {
   for _ in $(seq 1 40); do
@@ -12,6 +12,7 @@ wait_healthy() {
   return 1
 }
 
+command -v docker >/dev/null 2>&1 || { echo "Docker is not installed. Get it from https://www.docker.com/products/docker-desktop/ and try again."; exit 1; }
 docker version >/dev/null 2>&1 || { echo "Docker is not running. Start Docker Desktop and try again."; exit 1; }
 
 # 1. Get the newest release (a vX.Y.Z tag), never unreleased work. A dirty checkout stops instead of being overwritten.
@@ -73,7 +74,7 @@ fi
 
 # 5. Switch, and roll back if the new version is not healthy.
 docker compose up -d --remove-orphans
-if wait_healthy; then echo "Updated to $PENNY_COMMIT."; remove_old_volume; exit 0; fi
+if wait_healthy; then echo "Updated to $PENNY_COMMIT. Penny is running at http://127.0.0.1:41234"; remove_old_volume; exit 0; fi
 echo "The new version did not become healthy. Rolling back."
 docker compose logs --tail 30 penny
 if [ "$had_previous" = 1 ]; then
