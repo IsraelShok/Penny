@@ -35,8 +35,8 @@ export function writeOwnerOnly(file: string, content: string): void {
     execFileSync(
       path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "icacls.exe"),
       // Drop what the folder passed down, grant the owner, and remove the broad groups by SID (their
-      // names are localised): Everyone, Authenticated Users, Users. SYSTEM and Administrators may stay;
-      // they can read any file on the machine regardless.
+      // names are localised): Everyone, Authenticated Users, Users. With inheritance removed,
+      // the owner's entry is the only one left: SYSTEM and Administrators get none (an admin can still take ownership).
       [
         file,
         "/inheritance:r",

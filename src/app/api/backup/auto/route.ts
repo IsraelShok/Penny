@@ -7,6 +7,7 @@ import {
 } from "@/server/lib/auto-backup";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import { lockReauth } from "@/server/lib/lock-reauth";
 
 export const dynamic = "force-dynamic";
 /** A validation key ("notAbsolute") or a malformed body answers 400; disk and database trouble (it carries a code) goes to handle(). */
@@ -20,10 +21,16 @@ export const GET = handle("backup/auto", async () => {
   return NextResponse.json(getAutoBackupConfig());
 });
 
-/** { enabled?, frequency?, dir?, passphrase? } */
+/** { enabled?, frequency?, dir?, passphrase?, secret? } */
 export const PATCH = handle("backup/auto", async (request: Request) => {
   try {
-    return NextResponse.json(updateAutoBackupConfig(await readJson(request)));
+    const body = await readJson(request);
+    // A backup holds the raw key, so choosing its passphrase or folder asks for the lock passphrase, like a download.
+    if (body?.passphrase !== undefined || body?.dir !== undefined) {
+      const refused = await lockReauth(body.secret);
+      if (refused) return refused;
+    }
+    return NextResponse.json(updateAutoBackupConfig(body));
   } catch (e) {
     return fail(e);
   }

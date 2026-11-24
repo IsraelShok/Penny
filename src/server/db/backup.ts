@@ -33,11 +33,31 @@ export function backupBeforeMigration(db: Database.Database, reason: string): st
 
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const target = path.join(dir, `penny-${stamp}-${reason}.db`);
-  db.prepare("VACUUM INTO ?").run(target);
+  snapshotTo(db, target);
 
   pruneBackups(dir);
   console.log(`[db] backed up before ${reason}: ${target}`);
   return target;
+}
+
+/**
+ * Writes a consistent copy of the database to target. VACUUM INTO refuses a damaged file ("database disk
+ * image is malformed"), and that is exactly the file a restore must be able to replace, so it falls back
+ * to folding the WAL in and copying the file as it is.
+ */
+export function snapshotTo(db: Database.Database, target: string): void {
+  try {
+    db.prepare("VACUUM INTO ?").run(target);
+  } catch (e) {
+    console.warn("[db] VACUUM INTO failed, copying the file as it is:", e);
+    fs.rmSync(target, { force: true });
+    try {
+      db.pragma("wal_checkpoint(TRUNCATE)");
+    } catch {
+      // A damaged file may refuse the checkpoint too; the copy below is still the best we have.
+    }
+    fs.copyFileSync(db.name, target);
+  }
 }
 
 function pruneBackups(dir: string): void {
@@ -48,5 +68,7 @@ function pruneBackups(dir: string): void {
     .sort((a, b) => b.mtime - a.mtime);
   for (const { f } of files.slice(KEEP_BACKUPS)) {
     fs.rmSync(path.join(dir, f), { force: true });
+    // The key that was live when a pre-restore copy was taken (see applyBackup).
+    fs.rmSync(path.join(dir, `${f}.key`), { force: true });
   }
 }

@@ -309,8 +309,18 @@ export async function enableLock(secret: string, idle: number): Promise<string> 
   const key = getKey();
   writeLock(await build(secret, key, idle));
   shred(keyPath());
-  if (legacyKeyPath() !== keyPath()) shred(legacyKeyPath());
+  shredLegacyKey(key);
   return regenerateRecovery();
+}
+
+/**
+ * Shreds the key at the old ./data location only when it is this install's key. That path hangs off the
+ * working directory, so with PENNY_DATA_DIR elsewhere it can be another install's (a developer's own) key.
+ */
+export function shredLegacyKey(key: Buffer | null | undefined): void {
+  const legacy = legacyKeyPath();
+  if (!key || legacy === keyPath() || !fs.existsSync(legacy)) return;
+  if (fs.readFileSync(legacy, "utf8").trim().toLowerCase() === key.toString("hex")) shred(legacy);
 }
 
 /** The passphrase, or else the recovery code, opens the key. */
