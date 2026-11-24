@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { assetKey, INTERACTIVE, isPensionFund, LOGIN_FIELDS, savingsType } from "@/lib/pension";
-import { parseExcellenceRows, parseExcellenceSummary, readSpreadsheetRows } from "@/server/pension/parsers";
+import {
+  extractAltshulerAccounts,
+  extractPhoenixAccounts,
+  parseExcellenceRows,
+  parseExcellenceSummary,
+  parseHebrewAmount,
+  parsePhoenixProductDetail,
+  readSpreadsheetRows,
+} from "@/server/pension/parsers";
 
 describe("pension helpers", () => {
   it("maps portal labels to asset types", () => {
@@ -62,6 +70,70 @@ describe("excellence parser", () => {
       accountNumber: "available-cash",
       balance: 500,
       assetType: "cash",
+    });
+  });
+});
+
+describe("altshuler parser", () => {
+  it("parses Hebrew currency amounts", () => {
+    expect(parseHebrewAmount("₪ 245,600.00")).toEqual({ amount: 245600, currency: "ILS" });
+    expect(parseHebrewAmount("$1,250.50")).toEqual({ amount: 1250.5, currency: "USD" });
+    expect(parseHebrewAmount("-₪ 500")).toEqual({ amount: -500, currency: "ILS" });
+  });
+
+  it("extracts Altshuler accounts from cards and HTML fallback", () => {
+    const fromCards = extractAltshulerAccounts(
+      [{ accNum: "12345", trackName: "גמל להשקעה S&P 500", amount: "₪ 50,000.00" }],
+      "",
+      "",
+      "311111111",
+    );
+    expect(fromCards).toHaveLength(1);
+    expect(fromCards[0].accountNumber).toBe("12345");
+    expect(fromCards[0].balance).toBe(50000);
+    expect(savingsType(fromCards[0].label ?? "")).toBe("provident");
+
+    const fromHtml = extractAltshulerAccounts(
+      [],
+      "",
+      '<div class="account-summary"><span class="account-number">12345678</span><div class="total-balance">₪ 245,600.00</div></div>',
+      "311111111",
+    );
+    expect(fromHtml).toHaveLength(1);
+    expect(fromHtml[0].accountNumber).toBe("12345678");
+    expect(fromHtml[0].balance).toBe(245600);
+  });
+});
+
+describe("phoenix parser", () => {
+  it("parses Hebrew currency amounts", () => {
+    expect(parseHebrewAmount("₪ 12,345")).toEqual({ amount: 12345, currency: "ILS" });
+  });
+
+  it("extracts Phoenix accounts from HTML and detailed savings cards", () => {
+    const portalAccounts = extractPhoenixAccounts(
+      `<app-saving-item><div><h3><span>קרן השתלמות</span></h3><span dir="ltr">001-234-567890 (12345678)</span><span>₪12,345</span></div></app-saving-item>`,
+      "012345678",
+    );
+    expect(portalAccounts).toHaveLength(1);
+    expect(portalAccounts[0].accountNumber).toBe("001-234-567890 (12345678)");
+    expect(portalAccounts[0].balance).toBe(12345);
+    expect(savingsType(portalAccounts[0].label ?? "")).toBe("study_fund");
+
+    const detailed = parsePhoenixProductDetail({
+      name: "קרן השתלמות",
+      accountNumber: "001-234-567890 (12345678)",
+      text: "מספר חשבון 001-234-567890 (12345678) סכום חיסכון ₪12,345 הפקדה אחרונה ₪1,000.201.01.2025 מועד נזילות 01.01.2030 ד.נ הפקדה 0% ד.נ חיסכון 0.5% מעמד שכירפירוט",
+    });
+    expect(detailed).not.toBeNull();
+    expect(detailed?.balance).toBe(12345);
+    expect(detailed?.monthlyDeposit).toBe(1000.2);
+    expect(detailed?.feeDeposit).toBe(0);
+    expect(detailed?.feeBalance).toBe(0.5);
+    expect(detailed?.details).toMatchObject({
+      liquidityDate: "01.01.2030",
+      status: "שכיר",
+      lastDeposit: { amount: 1000.2, date: "01.01.2025" },
     });
   });
 });

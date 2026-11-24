@@ -128,7 +128,7 @@ async function run(workspaceId: number, row: Row) {
     },
   };
   const outcome =
-    row.fund_id === "excellence"
+    row.fund_id === "excellence" || row.fund_id === "altshuler" || row.fund_id === "phoenix"
       ? await (await import("./custom-scrapers")).scrapeCustomPension(scrapeArgs)
       : await (await import("israeli-pension-scrapers")).scrapePension(scrapeArgs);
   if (!outcome.success)

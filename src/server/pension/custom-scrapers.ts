@@ -13,6 +13,12 @@ import type {
 } from "israeli-pension-scrapers";
 import { dataDir } from "@/server/lib/data-dir";
 import {
+  extractAltshulerAccounts,
+  extractPhoenixAccounts,
+  parsePhoenixProductDetail,
+  type AltshulerBox,
+  type PhoenixProductDetail,
+  type PhoenixSavingItem,
   parseExcellenceRows,
   parseExcellenceSummary,
   readSpreadsheetRows,
@@ -49,6 +55,18 @@ async function saveDebugSnapshot(page: Page, fundId: string): Promise<string | n
   } catch {
     return null;
   }
+}
+
+async function safeContent(page: Page): Promise<string> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await page.content();
+    } catch (err) {
+      if (!isContextDestroyedError(err) || attempt === 2) throw err;
+      await delay(1000);
+    }
+  }
+  return "";
 }
 
 async function launchStealthBrowser(headless: boolean): Promise<Browser> {
@@ -192,7 +210,7 @@ async function clickButtonByText(
               if (anchorEl) {
                 const scope =
                   anchorEl.closest(
-                    '[role="dialog"], dialog, form, .modal, [class*="modal"]',
+                    'app-pinfo-portal-mfa, [role="dialog"], dialog, form, .modal, [class*="modal"]',
                   ) || anchorEl.parentElement?.parentElement?.parentElement;
                 inScope = Boolean(scope && scope.contains(el));
               }
@@ -298,6 +316,313 @@ async function handleOtpStep(
       await page.keyboard.press("Enter").catch(() => {});
     }
   }
+}
+
+async function scrapeAltshuler(
+  page: Page,
+  args: ScrapePensionArgs,
+): Promise<PensionScrapeOutcome> {
+  const id = args.credentials.id ?? "";
+  const phone = args.credentials.phone ?? "";
+
+  args.onProgress?.("מתחבר לפורטל אלטשולר שחם...");
+  await page.goto("https://online.as-invest.co.il/", {
+    waitUntil: "domcontentloaded",
+    timeout: 45000,
+  });
+  await delay(2000);
+
+  const idInput = await findFirstVisible(
+    page,
+    [
+      'input[placeholder*="ת.ז"]',
+      'input[aria-label*="ת.ז"]',
+      'input[name="idNumber"]',
+      'input[type="tel"]',
+    ],
+    8000,
+  );
+
+  if (idInput) {
+    if (id) await fillInput(page, idInput, id);
+
+    if (phone) {
+      const phoneInput = await findFirstVisible(
+        page,
+        ['input[placeholder*="טלפון"]', 'input[aria-label*="טלפון"]'],
+        8000,
+      );
+      if (phoneInput) await fillInput(page, phoneInput, phone);
+    }
+
+    const clicked = await clickButtonByText(page, [
+      "שלחו לי סיסמה",
+      "שלח קוד",
+      "כניסה",
+    ]);
+    if (!clicked) {
+      const submit = await findFirstVisible(
+        page,
+        ['button[type="submit"]'],
+        3000,
+      );
+      if (submit) await submit.click();
+    }
+
+    args.onProgress?.("ממתין למסך קוד SMS...");
+    await handleOtpStep(
+      page,
+      args,
+      [
+        'input[placeholder*="קוד"]',
+        'input[placeholder*="סיסמ"]',
+        'input[name*="code"]',
+        'input[name*="otp"]',
+        'input[type="password"]',
+        'input[autocomplete="one-time-code"]',
+      ],
+      ["המשך", "אישור", "כניסה"],
+      ["דלג"],
+    );
+  }
+
+  args.onProgress?.("טוען יתרות מאלטשולר שחם...");
+  await page
+    .waitForFunction(() => !window.location.pathname.includes("/login"), {
+      timeout: 30000,
+    })
+    .catch(() => {});
+  await page
+    .waitForNetworkIdle({ idleTime: 800, timeout: 15000 })
+    .catch(() => {});
+  await delay(3000);
+
+  const extracted = await page.evaluate(() => {
+    const boxes: AltshulerBox[] = [];
+    const cardEls = document.querySelectorAll(".cases-box, app-case-box");
+    for (const card of cardEls) {
+      const accEl = card.querySelector(".account-number");
+      const trackEl = card.querySelector(".tracks");
+      const amountEl = card.querySelector(".amount");
+      if (amountEl?.textContent?.trim()) {
+        boxes.push({
+          accNum: accEl?.textContent?.replace(/[^0-9]/g, "") || "",
+          trackName:
+            trackEl?.textContent?.replace(/^שם המסלול:\s*/, "").trim() || "",
+          amount: amountEl.textContent.trim(),
+        });
+      }
+    }
+    const topTotalEl = document.querySelector(
+      ".total-amount-container .total-amount, .total-amount",
+    );
+    return {
+      boxes,
+      topTotal: topTotalEl?.textContent?.trim() || "",
+    };
+  });
+
+  const htmlContent = await safeContent(page);
+  const accounts = extractAltshulerAccounts(
+    extracted.boxes,
+    extracted.topTotal,
+    htmlContent,
+    id,
+  );
+
+  if (accounts.length === 0) {
+    const debugDir = await saveDebugSnapshot(page, "altshuler");
+    console.error(`[pension:altshuler] no balance found at ${page.url()}${debugDir ? ` (debug saved to ${debugDir})` : ""}`);
+    return {
+      success: false,
+      accounts: [],
+      errorType: "SCRAPE_ERROR",
+      errorMessage:
+        "לא נמצאה יתרה בדף החשבון של אלטשולר שחם. ייתכן שההתחברות נכשלה או שמבנה הדף השתנה.",
+    };
+  }
+
+  return { success: true, accounts };
+}
+
+async function scrapePhoenix(
+  page: Page,
+  args: ScrapePensionArgs,
+): Promise<PensionScrapeOutcome> {
+  const id = args.credentials.id ?? "";
+  const phone = args.credentials.phone ?? "";
+
+  args.onProgress?.("מתחבר לאזור האישי בהפניקס...");
+  await page.goto("https://my.fnx.co.il/", {
+    waitUntil: "domcontentloaded",
+    timeout: 45000,
+  });
+  await delay(2000);
+
+  const idInput = await findFirstVisible(
+    page,
+    ['input[placeholder*="ת.ז"]', 'input[id*="id"]'],
+    8000,
+  );
+
+  if (idInput) {
+    if (id) await fillInput(page, idInput, id);
+
+    if (phone) {
+      const phoneInput = await findFirstVisible(
+        page,
+        ['input[placeholder*="טלפון"]', 'input[id*="phone"]'],
+        3000,
+      );
+      if (phoneInput) await fillInput(page, phoneInput, phone);
+    }
+
+    const clicked = await clickButtonByText(page, [
+      "שלחו לי קוד כניסה",
+      "שלח קוד",
+      "כניסה",
+    ]);
+    if (!clicked) {
+      const submit = await findFirstVisible(
+        page,
+        ['button[type="submit"]'],
+        3000,
+      );
+      if (submit) await submit.click();
+    }
+
+    args.onProgress?.("ממתין למסך קוד SMS...");
+    await handleOtpStep(
+      page,
+      args,
+      [
+        'input[name*="otp"]',
+        'input[id*="code"]',
+        'input[name*="sms"]',
+        'input[placeholder*="קוד"]',
+        'input[autocomplete="one-time-code"]',
+      ],
+      ["המשך", "אישור", "כניסה"],
+    );
+  }
+
+  args.onProgress?.("מחלץ יתרות חיסכון ופוליסות מהפניקס...");
+  await page
+    .waitForFunction(
+      () =>
+        !window.location.hostname.includes("auth.") &&
+        (Boolean(document.querySelector("app-saving-item")) ||
+          document.body?.innerText?.includes('סה"כ השקעות וחסכונות')),
+      { timeout: 45000 },
+    )
+    .catch(() => {});
+  await page
+    .waitForNetworkIdle({ idleTime: 800, timeout: 10000 })
+    .catch(() => {});
+  await delay(2000);
+
+  args.onProgress?.("עובר ללשונית השקעות וחסכונות בהפניקס...");
+  const savingsLink = await findFirstVisible(page, ['a[href="/savings"]'], 5000);
+  if (savingsLink) {
+    await savingsLink.click().catch(() => {});
+  } else {
+    await page
+      .goto("https://my.fnx.co.il/savings", {
+        waitUntil: "domcontentloaded",
+        timeout: 30000,
+      })
+      .catch(() => {});
+  }
+
+  await page
+    .waitForFunction(
+      () =>
+        document.body?.innerText?.includes("פירוט מוצרים") ||
+        document.body?.innerText?.includes("סכום חיסכון"),
+      { timeout: 15000 },
+    )
+    .catch(() => {});
+  await page
+    .waitForNetworkIdle({ idleTime: 800, timeout: 10000 })
+    .catch(() => {});
+  await delay(1500);
+
+  const productDetails = await page
+    .evaluate(() => {
+      const results: PhoenixProductDetail[] = [];
+      const seenAcc = new Set<string>();
+      const allEls = Array.from(document.querySelectorAll("div, section, article"));
+      for (const el of allEls) {
+        const text = (el.textContent || "").trim();
+        if (!text.includes("מספר חשבון") || !text.includes("סכום חיסכון")) continue;
+        if (el.querySelectorAll("div").length > 35) continue;
+        const accMatch = text.match(/מספר חשבון\s*([0-9\-()\s]+)/);
+        const accountNumber = accMatch?.[1]?.trim() || "";
+        if (!accountNumber || seenAcc.has(accountNumber)) continue;
+        seenAcc.add(accountNumber);
+
+        let name = "";
+        let cur: Element | null = el;
+        for (let depth = 0; depth < 3 && cur && !name; depth++) {
+          let prev: Element | null = cur.previousElementSibling;
+          while (prev && !name) {
+            const t = prev.textContent?.trim() || "";
+            if (t && t.length < 60 && !t.includes("פירוט מוצרים")) name = t;
+            prev = prev.previousElementSibling;
+          }
+          cur = cur.parentElement;
+        }
+        if (!name) {
+          const parentHeading = el.closest("section, div")?.querySelector("h2, h3, h4");
+          const ht = parentHeading?.textContent?.trim() || "";
+          if (ht && ht.length < 60 && !ht.includes("פירוט מוצרים")) name = ht;
+        }
+        results.push({ name, accountNumber, text });
+      }
+      return results;
+    })
+    .catch(() => [] as PhoenixProductDetail[]);
+
+  const richAccounts: RichPensionAccount[] = productDetails
+    .map((item) => parsePhoenixProductDetail(item, id))
+    .filter((a): a is RichPensionAccount => a !== null);
+
+  if (richAccounts.length > 0) {
+    return { success: true, accounts: richAccounts };
+  }
+
+  const savingItems = await page
+    .evaluate(() => {
+      const items: PhoenixSavingItem[] = [];
+      for (const el of document.querySelectorAll("app-saving-item")) {
+        const name = el.querySelector("h3 span, h3")?.textContent?.trim() || "";
+        const accountNumber = el.querySelector('[dir="ltr"]')?.textContent?.trim() || "";
+        const text = el.textContent || "";
+        const m = text.match(/([₪$€]\s*[\d,]+(?:\.\d+)?)/);
+        if (m) {
+          items.push({ name, accountNumber, amount: m[1] });
+        }
+      }
+      return items;
+    })
+    .catch(() => [] as PhoenixSavingItem[]);
+
+  const htmlContent = await safeContent(page);
+  const accounts = extractPhoenixAccounts(htmlContent, id, savingItems);
+
+  if (accounts.length === 0) {
+    const debugDir = await saveDebugSnapshot(page, "phoenix");
+    console.error(`[pension:phoenix] no balance found at ${page.url()}${debugDir ? ` (debug saved to ${debugDir})` : ""}`);
+    return {
+      success: false,
+      accounts: [],
+      errorType: "SCRAPE_ERROR",
+      errorMessage:
+        "לא נמצאה יתרה בדף החשבון של הפניקס. ייתכן שההתחברות נכשלה או שמבנה הדף השתנה.",
+    };
+  }
+
+  return { success: true, accounts };
 }
 
 async function scrapeExcellence(
@@ -500,7 +825,7 @@ async function scrapeExcellence(
   }
 }
 
-/** Runs our custom Puppeteer scraper for Excellence Trade. */
+/** Runs our custom Puppeteer scrapers (Altshuler Shaham, Phoenix, Excellence Trade). */
 export async function scrapeCustomPension(
   args: ScrapePensionArgs,
 ): Promise<PensionScrapeOutcome> {
@@ -516,7 +841,13 @@ export async function scrapeCustomPension(
       "Accept-Language": "he-IL,he;q=0.9,en;q=0.8",
     });
 
-    const outcome = await scrapeExcellence(page, args);
+    const scrape =
+      args.fundId === "altshuler"
+        ? scrapeAltshuler
+        : args.fundId === "phoenix"
+          ? scrapePhoenix
+          : scrapeExcellence;
+    const outcome = await scrape(page, args);
     if (outcome.success) {
       await persistSession(browser, args);
     }
