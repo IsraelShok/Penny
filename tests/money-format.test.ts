@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import { compactShekels, fmt, roundCents, roundSums, shekels, signedShekels } from "@/lib/money";
 
 // Every ₪ string is wrapped in a left-to-right isolate so the sign stays in front inside Hebrew text.
-const LRI = "⁦";
-const PDI = "⁩";
+// Built from code points: bidi controls written into source are a Trojan Source risk, and Prettier unescapes "\u…".
+const LRI = String.fromCodePoint(0x2066);
+const PDI = String.fromCodePoint(0x2069);
+const LRM = String.fromCodePoint(0x200e);
+const RLM = String.fromCodePoint(0x200f);
 const iso = (s: string) => `${LRI}${s}${PDI}`;
 
 describe("fmt", () => {
@@ -21,7 +24,7 @@ describe("fmt", () => {
   });
 
   it("formats Hebrew with the he-IL locale (a left-to-right mark before a minus), English with en-US", () => {
-    expect(fmt(-1234.5, "he", 1)).toBe("‎-1,234.5");
+    expect(fmt(-1234.5, "he", 1)).toBe(`${LRM}-1,234.5`);
     expect(fmt(-1234.5, "en", 1)).toBe("-1,234.5");
     // Anything that is not "he" is English.
     expect(fmt(-1234.5, "fr", 1)).toBe("-1,234.5");
@@ -70,7 +73,7 @@ describe("compactShekels", () => {
   it("drops the bidi marks Hebrew formatting adds, so the isolate alone controls direction", () => {
     const he = compactShekels(950_500, "he");
     expect(he).toBe(iso("₪950.5K"));
-    expect(he).not.toMatch(/[‎‏]/);
+    expect(he.includes(LRM) || he.includes(RLM)).toBe(false);
     expect(compactShekels(-2_700_000, "he")).toBe(iso("−₪2.7M"));
   });
 
@@ -132,7 +135,7 @@ describe("roundSums", () => {
     roundSums(rows, "total");
     expect(rows[0]).toEqual({ total: null });
     expect(rows[2]).toEqual({ total: 1.24 });
-    const text = { total: "1.239" as unknown as number };
+    const text: { total: unknown } = { total: "1.239" };
     roundSums(text, "total");
     expect(text.total).toBe("1.239");
   });
