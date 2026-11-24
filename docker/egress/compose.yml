@@ -1,7 +1,8 @@
 # Optional egress allowlist. The app container gets no internet route of its own; it reaches only
 # the hosts in docker/egress/allowlist.txt, through a small proxy container. Off by default.
-#   docker compose -f docker-compose.yml -f docker-compose.egress.yml up -d --build
+#   docker compose -f docker-compose.yml -f docker/egress/compose.yml up -d --build
 # See docs/security.md ("Docker egress allowlist") for adding a domain.
+# Paths below are relative to the folder of the first -f file (the repository root), as compose resolves them.
 services:
   penny:
     # The app sits on an internal-only network: no route out, and no published port

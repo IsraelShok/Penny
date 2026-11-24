@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Start Penny in Docker and open it in the browser (macOS and Linux; Windows uses Penny-docker.bat).
+# Start Penny in Docker and open it in the browser (macOS and Linux; Windows uses start.bat).
+# Safe to run again: it rebuilds only what changed and keeps your data in the penny-data volume.
 set -u
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/../.." || exit 1
 url="http://127.0.0.1:41234"
 
+command -v docker >/dev/null 2>&1 || { echo "Docker is not installed. Get it from https://www.docker.com/products/docker-desktop/ and try again."; exit 1; }
 docker version >/dev/null 2>&1 || { echo "Docker is not running. Start Docker Desktop and try again."; exit 1; }
 
 # Lets the update check compare the running version with the newest one.
