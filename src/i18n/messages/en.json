@@ -5623,7 +5623,7 @@
   "update": {
     "title": "Penny {version} is available",
     "how_desktop": "Download the new installer and run it. Your data stays.",
-    "how_docker": "Run Penny-update.bat (Windows) or ./Penny-update.sh (Mac). It backs up your data first.",
+    "how_docker": "Run the Docker install command again, or scripts/docker/update.sh (Windows: scripts\\docker\\update.bat). It backs up your data first.",
     "how_source": "Run git pull and restart Penny.",
     "download": "Download",
     "whatsNew": "What's new",
