@@ -45,6 +45,8 @@ async function downloadUpdate({ repo, current, dir, log = () => {} }) {
   if (!res.ok) return null;
   const rel = await res.json();
   const version = String(rel.tag_name || "").replace(/^v/, "");
+  // The tag becomes part of the installer's path and the command that runs it: plain x.y.z only.
+  if (!/^\d+\.\d+\.\d+$/.test(version)) return null;
   if (rel.draft || rel.prerelease || !isNewer(version, current)) return null;
   const name = `Penny-Setup-${version}.exe`;
   const asset = (rel.assets || []).find((a) => a.name === name);

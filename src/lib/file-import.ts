@@ -276,18 +276,18 @@ export function markDuplicates(rows: ImportRow[], stored: { date: string; amount
  * Rows of every <table> in an HTML page. Some Israeli banks download "Excel" files that are
  * really HTML tables saved with an .xls name.
  */
+const ENTITIES: Record<string, string> = { nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"' };
+
 // shortcut: regex parsing, no nested tables or rowspan; fine for bank exports, switch to DOMParser if one breaks.
 export function parseHtmlTable(html: string): string[][] {
   const text = (s: string) =>
     s
       .replace(/<br\s*\/?>/gi, " ")
-      .replace(/<[^>]+>/g, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
+      .replace(/<[^>]*>?/g, "")
+      // One pass, so "&amp;lt;" stays "&lt;" instead of turning into "<".
+      .replace(/&(nbsp|amp|lt|gt|quot|#\d+);/g, (_, e: string) =>
+        e[0] === "#" ? String.fromCodePoint(Number(e.slice(1))) : ENTITIES[e],
+      )
       .replace(/\s+/g, " ")
       .trim();
   const rows: string[][] = [];

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createRequire } from "node:module";
 
 const { isNewer, checksumFor } = createRequire(import.meta.url)("../desktop/update.cjs") as {
@@ -19,5 +19,21 @@ describe("desktop self-update", () => {
     const listing = `${"b".repeat(64)}  Penny-1.0.0-arm64.dmg\r\n${h} *Penny-Setup-1.0.0.exe\n`;
     expect(checksumFor(listing, "Penny-Setup-1.0.0.exe")).toBe(h);
     expect(checksumFor(listing, "Penny-Setup-9.9.9.exe")).toBeNull();
+  });
+  it("ignores a release whose tag is not a plain version, so it never reaches a file path", async () => {
+    const { downloadUpdate } = createRequire(import.meta.url)("../desktop/update.cjs") as {
+      downloadUpdate: (o: { repo: string; current: string; dir: string }) => Promise<unknown>;
+    };
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      calls.push(url);
+      return new Response(JSON.stringify({ tag_name: "v9.9.9/../../evil", assets: [] }));
+    });
+    try {
+      expect(await downloadUpdate({ repo: "x/y", current: "1.0.0", dir: "unused" })).toBeNull();
+      expect(calls).toHaveLength(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

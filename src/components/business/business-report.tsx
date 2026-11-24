@@ -65,7 +65,7 @@ export function BusinessReportView() {
           />
         </label>
         <a
-          href={`/api/business?from=${from}&to=${to}&format=csv`}
+          href={`/api/business?${new URLSearchParams({ from, to, format: "csv" })}`}
           download
           className="ms-auto inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
         >
