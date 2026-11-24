@@ -180,7 +180,7 @@ if (hub) {
   const mat = (x, y, z = 0) => at(...M(x, y), z); // a point given in English-layout plane coordinates
   const mbox = (x, y, z, w, d, h, c) => (rtl ? box(y, x, z, d, w, h, c) : box(x, y, z, w, d, h, c));
 
-  const islandSvg = (it, i) => {
+  const islandSvg = (it) => {
     const label = planeText(-H + 14, H - 16, 0, "lbl", it.short);
     return (
       `<g class="isl${it.soon ? " soon" : ""}" data-id="${it.id}" transform="translate(${it.sx} ${it.sy})">` +
