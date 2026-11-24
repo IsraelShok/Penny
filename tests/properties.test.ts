@@ -3,6 +3,7 @@ import fc from "fast-check";
 import { roundCents } from "@/lib/money";
 import { parseCsv, toCsv } from "@/lib/csv";
 import { computeDedupHash } from "@/server/lib/dedup";
+import { createHash } from "node:crypto";
 import { israelDay } from "@/server/lib/date-utils";
 
 // Property tests for the pure core: each one states what the function promises for every input,
@@ -95,14 +96,29 @@ describe("computeDedupHash", () => {
     );
   });
 
-  // FINDING: fields are joined with "|" and not escaped, so a "|" inside one field can be read as
-  // the boundary to the next and two different rows hash the same. Bank account numbers and ISO
-  // dates never contain "|", but a description can. Remove `.fails` once the join is unambiguous.
-  it.fails("gives different rows different hashes when a field contains the separator", () => {
+  it("gives different rows different hashes when a field contains the separator", () => {
     const row = { accountNumber: "1", date: "2026-11-01", originalAmount: 5 };
     expect(computeDedupHash({ ...row, originalCurrency: "ILS|x", description: "y" })).not.toBe(
       computeDedupHash({ ...row, originalCurrency: "ILS", description: "x|y" }),
     );
+  });
+
+  // Hashes already stored must still match: a change here would store every synced row a second time.
+  it("keeps the hash of a row without a separator exactly as before", () => {
+    const row = {
+      accountNumber: "12-345-678",
+      date: "2026-11-01T22:00:00.000Z",
+      originalAmount: -84.9,
+      originalCurrency: "ILS",
+      description: "שופרסל דיל",
+      identifier: 991,
+      installmentNumber: 2,
+      installmentTotal: 3,
+    };
+    const legacy = createHash("sha256")
+      .update("12-345-678|2026-11-01T22:00:00.000Z|-84.9|ILS|שופרסל דיל|991|2|3")
+      .digest("hex");
+    expect(computeDedupHash(row)).toBe(legacy);
   });
 });
 
