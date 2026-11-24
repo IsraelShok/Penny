@@ -1,6 +1,7 @@
 import "server-only";
 import { israelToday, utcDay } from "@/server/lib/date-utils";
 
+import { SYNC_ERRORS } from "@/lib/sync-errors";
 import { redact } from "@/server/lib/redact";
 import type { ScrapedAccount, ScrapedTransaction, ScrapeResult } from "@/server/scrapers/types";
 
@@ -76,42 +77,39 @@ class OpenBankingError extends Error {
 
 function baseUrlOf(credentials: OpenBankingCredentials): string {
   const raw = credentials.baseUrl?.trim();
-  if (!raw) throw new Error("Open banking API base URL is missing.");
+  if (!raw) throw new Error(SYNC_ERRORS.openBankingNoUrl);
   let url: URL;
   try {
     url = new URL(raw);
   } catch {
-    throw new Error("Open banking API base URL must start with https://.");
+    throw new Error(SYNC_ERRORS.openBankingHttps);
   }
   // The bearer token goes to this address: plain http only to this machine (a local test server).
   const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
   if (url.protocol !== "https:" && !(url.protocol === "http:" && loopback)) {
-    throw new Error("Open banking API base URL must start with https://.");
+    throw new Error(SYNC_ERRORS.openBankingHttps);
   }
-  if (url.username || url.password)
-    throw new Error("Open banking API base URL must not hold a user name or password.");
+  if (url.username || url.password) throw new Error(SYNC_ERRORS.openBankingUrlCredentials);
   return raw.replace(/\/+$/, "");
 }
 
 function tokenOf(credentials: OpenBankingCredentials): string {
   const token = credentials.token?.trim();
-  if (!token) throw new Error("Open banking API access token is missing.");
+  if (!token) throw new Error(SYNC_ERRORS.openBankingNoToken);
   return token;
 }
 
+/** "<SYNC_ERRORS text> (<HTTP status: detail>)", so the UI can translate the text and keep the detail. */
 function messageFor(status: number, body: string): string {
   const detail = redact(body.slice(0, 300)).trim();
+  const http = `HTTP ${status}`;
   // A consent lasts 90 days at most and the person can revoke it at the bank; either way only they can renew it.
   if (status === 401 || status === 403 || /CONSENT_(EXPIRED|INVALID)/.test(body)) {
-    return `The open banking consent has expired or was revoked (HTTP ${status}). Renew the consent with your bank, then paste the new access token here.`;
+    return `${SYNC_ERRORS.openBankingConsent} (${http})`;
   }
-  if (status === 404) {
-    return `Open banking endpoint not found (HTTP 404) — check the base URL.${detail ? ` ${detail}` : ""}`;
-  }
-  if (status === 429) {
-    return "Open banking rate limit reached (HTTP 429). Try again in a few minutes.";
-  }
-  return `Open banking request failed (HTTP ${status}).${detail ? ` ${detail}` : ""}`;
+  if (status === 429) return `${SYNC_ERRORS.openBankingRateLimit} (${http})`;
+  const text = status === 404 ? SYNC_ERRORS.openBankingNotFound : SYNC_ERRORS.openBankingFailed;
+  return `${text} (${detail ? `${http}: ${detail}` : http})`;
 }
 
 async function getJson<T>(credentials: OpenBankingCredentials, url: string): Promise<T> {
@@ -132,7 +130,7 @@ async function getJson<T>(credentials: OpenBankingCredentials, url: string): Pro
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    throw new Error(`Open banking endpoint is unreachable: ${redact(msg)}`);
+    throw new Error(`${SYNC_ERRORS.openBankingUnreachable} (${redact(msg)})`);
   }
 
   const text = await response.text();
@@ -146,7 +144,7 @@ async function getJson<T>(credentials: OpenBankingCredentials, url: string): Pro
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new Error("Open banking returned a response that is not JSON.");
+    throw new Error(SYNC_ERRORS.openBankingNotJson);
   }
 }
 
@@ -172,8 +170,7 @@ export function nextPageUrl(payload: BgTransactionsResponse, current: string): s
   if (!href) return null;
   const url = new URL(href, current);
   // The bearer token follows this link, so it may only lead back to the same server.
-  if (url.origin !== new URL(current).origin)
-    throw new Error("Open banking returned a next-page link to a different server.");
+  if (url.origin !== new URL(current).origin) throw new Error(SYNC_ERRORS.openBankingOtherServer);
   return url.href;
 }
 
@@ -258,8 +255,7 @@ export async function connectOpenBanking(
       return {
         success: false,
         accounts: [],
-        errorMessage:
-          "Open banking returned no accounts. Approve the consent for the accounts you want to share.",
+        errorMessage: SYNC_ERRORS.openBankingNoAccounts,
       };
     }
 
@@ -277,9 +273,7 @@ export async function connectOpenBanking(
       while (url) {
         // A loop or a history longer than this would be saved as if it were complete.
         if (seen.has(url) || seen.size >= MAX_PAGES)
-          throw new Error(
-            "Open banking kept returning more pages than expected; nothing was saved.",
-          );
+          throw new Error(SYNC_ERRORS.openBankingTooManyPages);
         seen.add(url);
         const payload: BgTransactionsResponse = await getJson<BgTransactionsResponse>(creds, url);
         for (const { txn, pending } of txnsOf(payload))
