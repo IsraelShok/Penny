@@ -9,15 +9,51 @@ import { Input } from "@/components/ui/input";
 import { InfoTip } from "@/components/ui/info-tip";
 import { InstitutionGrid, InstitutionTile } from "@/components/settings/institution-grid";
 import { INVESTMENT_HOUSES } from "@/lib/investment-houses";
-import { INTERACTIVE, isPensionFund, LOGIN_FIELDS } from "@/lib/pension";
+import {
+  INTERACTIVE,
+  isPensionFund,
+  LOGIN_FIELDS,
+  type LoginField,
+  type PensionFund,
+} from "@/lib/pension";
+import { parseSyncError } from "@/lib/sync-errors";
 import { deletePension, listPension, pensionAction, type PensionConnection } from "@/lib/api";
 import { formatLastSync } from "@/lib/formatters";
 import { useFormatterLabels } from "@/lib/i18n-data";
 import { PensionReportImport } from "./pension-report-import";
 
-/** Investment houses: Meitav, Harel and Migdal connect and sync balances into assets; the rest are listed as coming soon. */
+const FIELD_INPUTS = {
+  id: { label: "pensionId", props: { inputMode: "numeric", autoComplete: "off" } },
+  phone: { label: "pensionPhone", props: { inputMode: "tel", autoComplete: "tel" } },
+  username: { label: "pensionUsername", props: { autoComplete: "username" } },
+  password: {
+    label: "pensionPassword",
+    props: { type: "password", autoComplete: "current-password" },
+  },
+} as const satisfies Record<LoginField, { label: string; props: object }>;
+
+/** Progress steps the custom scrapers report; the library's own progress text is not shown. */
+const STEPS: Partial<
+  Record<
+    string,
+    "pensionStepLogin" | "pensionStepOtp" | "pensionStepBalances" | "pensionStepExport"
+  >
+> = {
+  login: "pensionStepLogin",
+  otp: "pensionStepOtp",
+  balances: "pensionStepBalances",
+  export: "pensionStepExport",
+};
+
+/** Investment houses: the wired funds connect and sync balances into assets; the rest are listed as coming soon. */
 export function InvestmentHouses() {
   const t = useTranslations("settings.bank");
+  const tError = useTranslations("syncErrors");
+  // Known sync errors are stored in English; show them in the user's language.
+  const errorText = (message: string) => {
+    const { key, detail } = parseSyncError(message);
+    return key ? [tError(key), detail].filter(Boolean).join(" ") : message;
+  };
   const locale = useLocale();
   const labels = useFormatterLabels();
   const qc = useQueryClient();
@@ -30,7 +66,9 @@ export function InvestmentHouses() {
         ? 2000
         : false,
   });
-  const [form, setForm] = useState<{ fundId: string; id: string; phone: string } | null>(null);
+  const [form, setForm] = useState<({ fundId: PensionFund } & Record<LoginField, string>) | null>(
+    null,
+  );
   const [codes, setCodes] = useState<Record<number, string>>({});
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["pension"] });
@@ -48,11 +86,13 @@ export function InvestmentHouses() {
   const otpConnection = (list.data?.connections ?? []).find((c) => c.state === "otp");
   const editingHouse = form ? INVESTMENT_HOUSES.find((h) => h.id === form.fundId) : null;
 
+  const runningLine = (step: (typeof STEPS)[string]) =>
+    step ? `${t("pensionRunning")} (${t(step)})` : t("pensionRunning");
   const statusLine = (c: PensionConnection) =>
     c.state === "running"
-      ? t("pensionRunning")
+      ? runningLine(STEPS[c.message ?? ""])
       : c.state === "error" || (c.state === "idle" && c.lastError)
-        ? t("pensionError", { message: c.message ?? c.lastError ?? "" })
+        ? t("pensionError", { message: errorText(c.message ?? c.lastError ?? "") })
         : c.lastSyncAt
           ? t("lastSync", { time: formatLastSync(`${c.lastSyncAt.replace(" ", "T")}Z`, labels) })
           : t("statusNeverSynced");
@@ -112,7 +152,10 @@ export function InvestmentHouses() {
                     size="sm"
                     variant="outline"
                     aria-label={`${t("connect")} · ${name}`}
-                    onClick={() => setForm({ fundId: h.id, id: "", phone: "" })}
+                    onClick={() => {
+                      if (isPensionFund(h.id))
+                        setForm({ fundId: h.id, id: "", phone: "", username: "", password: "" });
+                    }}
                   >
                     {t("connect")}
                   </Button>
@@ -128,36 +171,27 @@ export function InvestmentHouses() {
           className="flex flex-wrap items-end gap-2 rounded-2xl bg-card px-4 py-3"
           onSubmit={(e) => {
             e.preventDefault();
-            act.mutate({ fundId: form.fundId, id: form.id, phone: form.phone });
+            act.mutate({
+              fundId: form.fundId,
+              ...Object.fromEntries(LOGIN_FIELDS[form.fundId].map((f) => [f, form[f]])),
+            });
           }}
         >
           <p className="basis-full text-sm font-medium">
             {t("connect")} · {locale === "he" ? editingHouse.name.he : editingHouse.name.en}
           </p>
-          <label className="grid gap-1 text-xs">
-            {t("pensionId")}
-            <Input
-              inputMode="numeric"
-              autoComplete="off"
-              value={form.id}
-              onChange={(e) => setForm({ ...form, id: e.target.value })}
-              required
-              className="w-40"
-            />
-          </label>
-          {LOGIN_FIELDS[form.fundId as keyof typeof LOGIN_FIELDS].includes("phone") && (
-            <label className="grid gap-1 text-xs">
-              {t("pensionPhone")}
+          {LOGIN_FIELDS[form.fundId].map((f) => (
+            <label key={f} className="grid gap-1 text-xs">
+              {t(FIELD_INPUTS[f].label)}
               <Input
-                inputMode="tel"
-                autoComplete="tel"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                {...FIELD_INPUTS[f].props}
+                value={form[f]}
+                onChange={(e) => setForm({ ...form, [f]: e.target.value })}
                 required
                 className="w-40"
               />
             </label>
-          )}
+          ))}
           <Button type="submit" size="sm" disabled={act.isPending}>
             {t("connect")}
           </Button>
@@ -165,9 +199,11 @@ export function InvestmentHouses() {
             {t("pensionCancel")}
           </Button>
           <p className="basis-full text-caption text-muted-foreground">
-            {INTERACTIVE[form.fundId as keyof typeof INTERACTIVE]
-              ? t("pensionInteractive")
-              : t("pensionOtpHint")}
+            {LOGIN_FIELDS[form.fundId].includes("password")
+              ? t("pensionPasswordHint")
+              : INTERACTIVE[form.fundId]
+                ? t("pensionInteractive")
+                : t("pensionOtpHint")}
           </p>
         </form>
       )}

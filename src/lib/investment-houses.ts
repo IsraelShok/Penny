@@ -1,7 +1,7 @@
 /**
  * Israeli investment houses (provident, study funds, brokerage). Listed in Settings › Banks.
- * shortcut: no scraper reads them yet (israeli-bank-scrapers covers banks and cards only), so they
- * are "coming soon" and their statements come in through file import; add a scraper per house to enable.
+ * The ones in PENSION_FUNDS (lib/pension.ts) connect and sync into assets; the rest are "coming soon"
+ * and their statements come in through file import.
  */
 export interface InvestmentHouse {
   id: string;
@@ -37,9 +37,15 @@ export const INVESTMENT_HOUSES: InvestmentHouse[] = [
   },
   {
     id: "phoenix",
-    name: { he: "הפניקס בית השקעות (לשעבר אקסלנס)", en: "Phoenix Investments (ex-Excellence)" },
+    name: { he: "הפניקס חיסכון ופנסיה", en: "Phoenix savings and pension" },
     domain: "fnx.co.il",
     color: "#b35c00",
+  },
+  {
+    id: "excellence",
+    name: { he: "אקסלנס טרייד", en: "Excellence Trade" },
+    domain: "xnes.co.il",
+    color: "#ff4e31",
   },
   {
     id: "harel",

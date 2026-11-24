@@ -19,8 +19,7 @@
     "shadcn",
     "electron-builder",
     "@electron/rebuild",
-    "sharp",
-    "puppeteer"
+    "sharp"
   ],
   "ignoreFiles": [
     "src/components/dashboard/hero-card.tsx",
