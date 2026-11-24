@@ -38,6 +38,13 @@ export const SYNC_ERRORS = {
   openBankingTooManyPages:
     "Open banking kept returning more pages than expected; nothing was saved.",
   openBankingOtherServer: "Open banking returned a next-page link to a different server.",
+  pensionLoginFailed: "The provider did not finish the sign-in or the SMS code step.",
+  pensionNoData: "The provider's page showed no products; assets were left as they were.",
+  pensionIncomplete: "Some products on the provider's page could not be read; nothing was saved.",
+  pensionExportFailed:
+    "The provider's portfolio export did not download or could not be read; nothing was saved.",
+  pensionUnexpected:
+    "The investment house sync stopped unexpectedly; assets were left as they were.",
 } as const;
 
 export type SyncErrorKey = keyof typeof SYNC_ERRORS;

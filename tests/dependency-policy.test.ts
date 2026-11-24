@@ -9,6 +9,10 @@ const CREDENTIAL_PACKAGES = [
   "israeli-bank-scrapers",
   "israeli-pension-scrapers",
   "@sergienko4/israeli-bank-scrapers",
+  // The custom investment-house scrapers type the user's password into these.
+  "puppeteer",
+  "puppeteer-extra",
+  "puppeteer-extra-plugin-stealth",
   "better-sqlite3",
   "@anthropic-ai/sdk",
 ];
