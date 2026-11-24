@@ -4,6 +4,7 @@ import path from "path";
 export default defineConfig({
   test: {
     include: ["tests/**/*.test.ts"],
+    setupFiles: ["tests/setup-data-dir.ts"],
     // Migration tests run every SQL file against a real DB; shared CI runners (Windows) need well over the 5s default.
     testTimeout: 60_000,
     coverage: {
@@ -25,21 +26,27 @@ export default defineConfig({
         lines: 75,
         // The core that must not lose money or data gets its own floor per file, set to the
         // measured value rounded down (a ratchet). The target is 90 lines / 85 branches.
-        "src/lib/money.ts": { statements: 76, branches: 44, functions: 40, lines: 75 },
+        "src/lib/money.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },
         "src/server/lib/dedup.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },
-        "src/lib/sync-schedule.ts": { statements: 100, branches: 94, functions: 100, lines: 100 },
-        "src/server/sync/**": { statements: 56, branches: 47, functions: 63, lines: 56 },
-        "src/server/db/migrate.ts": { statements: 88, branches: 76, functions: 100, lines: 89 },
+        "src/lib/sync-schedule.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },
+        "src/server/sync/**": { statements: 97, branches: 92, functions: 100, lines: 97 },
+        "src/server/db/migrate.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },
         // Measured 100 on some runs and 95/87 on most: one branch depends on test timing.
         "src/server/db/backup.ts": { statements: 95, branches: 87, functions: 100, lines: 100 },
         "src/server/lib/portable-backup.ts": {
-          statements: 90,
-          branches: 78,
-          functions: 83,
-          lines: 92,
+          statements: 98,
+          branches: 91,
+          functions: 100,
+          lines: 99,
         },
-        // Linux numbers (CI): the Windows-only ACL branch is not reached there.
-        "src/server/lib/encryption.ts": { statements: 79, branches: 62, functions: 92, lines: 81 },
+        // tests/encryption-core.test.ts runs the POSIX and the Windows (icacls) branch on every platform.
+        // Keep the lower of the Linux and Windows numbers: CI runs both.
+        "src/server/lib/encryption.ts": {
+          statements: 100,
+          branches: 89,
+          functions: 100,
+          lines: 100,
+        },
         "src/proxy.ts": { statements: 96, branches: 93, functions: 100, lines: 97 },
       },
     },
