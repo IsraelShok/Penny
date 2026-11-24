@@ -10,7 +10,8 @@ if (hub) {
   const chips = [...hub.querySelectorAll("[data-island]")];
   const scene = hub.querySelector(".hub-scene");
 
-  const C = Math.cos(Math.PI / 6), S = 0.5;
+  const C = Math.cos(Math.PI / 6),
+    S = 0.5;
   const G = 165; // grid cell
   const ISO = `matrix(${C} ${S} ${-C} ${S} 0 0)`;
   const r1 = (n) => Math.round(n * 10) / 10;
@@ -23,29 +24,60 @@ if (hub) {
   // Shaded solids. Light comes from the upper left: top lightest, the +y face (lower left) mid, the +x face darkest.
   const box = (x, y, z, w, d, h, c) =>
     `<g class="m" style="--c:var(${c})">` +
-    poly("fl", [[x, y + d, z], [x + w, y + d, z], [x + w, y + d, z + h], [x, y + d, z + h]]) +
-    poly("fr", [[x + w, y, z], [x + w, y + d, z], [x + w, y + d, z + h], [x + w, y, z + h]]) +
-    poly("ft", [[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]) +
+    poly("fl", [
+      [x, y + d, z],
+      [x + w, y + d, z],
+      [x + w, y + d, z + h],
+      [x, y + d, z + h],
+    ]) +
+    poly("fr", [
+      [x + w, y, z],
+      [x + w, y + d, z],
+      [x + w, y + d, z + h],
+      [x + w, y, z + h],
+    ]) +
+    poly("ft", [
+      [x, y, z + h],
+      [x + w, y, z + h],
+      [x + w, y + d, z + h],
+      [x, y + d, z + h],
+    ]) +
     "</g>";
   const cyl = (x, y, z, r, h, c) => {
-    const [cx, cy] = P(x, y, z), rx = r1(r * C * Math.SQRT2), ry = r1(r * S * Math.SQRT2), ty = r1(cy - h);
+    const [cx, cy] = P(x, y, z),
+      rx = r1(r * C * Math.SQRT2),
+      ry = r1(r * S * Math.SQRT2),
+      ty = r1(cy - h);
     return (
       `<g class="m" style="--c:var(${c})"><path class="fl" d="M${cx - rx} ${cy}A${rx} ${ry} 0 0 0 ${cx + rx} ${cy}V${ty}A${rx} ${ry} 0 0 0 ${cx - rx} ${ty}Z"/>` +
       `<ellipse class="ft" cx="${cx}" cy="${ty}" rx="${rx}" ry="${ry}"/></g>`
     );
   };
-  const coins = (x, y, n, c) => Array.from({ length: n }, (_, i) => cyl(x, y, i * 6, 13, 5, c)).join("");
+  const coins = (x, y, n, c) =>
+    Array.from({ length: n }, (_, i) => cyl(x, y, i * 6, 13, 5, c)).join("");
   // A face inset on the +y side of a box, for screens, doors and pages.
   const inset = (x, y, z, w, h, cls, m = 4) =>
-    poly(cls, [[x + m, y, z + m], [x + w - m, y, z + m], [x + w - m, y, z + h - m], [x + m, y, z + h - m]]);
-  const byDepth = (parts) => parts.sort((a, b) => a[0] - b[0]).map((p) => p[1]).join("");
+    poly(cls, [
+      [x + m, y, z + m],
+      [x + w - m, y, z + m],
+      [x + w - m, y, z + h - m],
+      [x + m, y, z + h - m],
+    ]);
+  const byDepth = (parts) =>
+    parts
+      .sort((a, b) => a[0] - b[0])
+      .map((p) => p[1])
+      .join("");
 
   // Rounded slab: stacked plane rects make the sides, a split gradient shades left and right faces.
   const slab = (h, depth, cls, r = 16) => {
     let s = "";
     for (let d = depth; d > 0; d -= 2)
       s += `<rect class="${cls}-side" x="${-h}" y="${-h}" width="${2 * h}" height="${2 * h}" rx="${r}" transform="translate(0 ${d}) ${ISO}"/>`;
-    return s + `<rect class="${cls}-top" x="${-h}" y="${-h}" width="${2 * h}" height="${2 * h}" rx="${r}" transform="${ISO}"/>`;
+    return (
+      s +
+      `<rect class="${cls}-top" x="${-h}" y="${-h}" width="${2 * h}" height="${2 * h}" rx="${r}" transform="${ISO}"/>`
+    );
   };
   // Hebrew mirrors the whole scene: M swaps plane x and y, FRAME maps a local drawing the mirrored way.
   const M = (x, y) => (rtl ? [y, x] : [x, y]);
@@ -78,7 +110,11 @@ if (hub) {
       box(-30, 12, 6, 52, 12, 4, "--k-blue"),
     chip: () =>
       box(-28, -28, 0, 56, 56, 10, "--k-purple") +
-      [-20, -6, 8].map((v) => box(28, v + 2, 1, 8, 6, 3, "--k-stone") + box(v + 2, 28, 1, 6, 8, 3, "--k-stone")).join("") +
+      [-20, -6, 8]
+        .map(
+          (v) => box(28, v + 2, 1, 8, 6, 3, "--k-stone") + box(v + 2, 28, 1, 6, 8, 3, "--k-stone"),
+        )
+        .join("") +
       box(-16, -16, 10, 32, 32, 6, "--k-paper") +
       box(-6, -6, 16, 12, 12, 10, "--k-green"),
     chat: () =>
@@ -95,18 +131,36 @@ if (hub) {
       ]),
     calendar: () => {
       const tiles = [];
-      const hts = [6, 12, 4, 18, 8, 26], col = ["--k-purple", "--k-green", "--k-blue", "--k-orange", "--k-purple", "--k-pink"];
+      const hts = [6, 12, 4, 18, 8, 26],
+        col = ["--k-purple", "--k-green", "--k-blue", "--k-orange", "--k-purple", "--k-pink"];
       for (let i = 0; i < 6; i++) {
-        const x = -28 + (i % 3) * 20, y = -22 + Math.floor(i / 3) * 24;
+        const x = -28 + (i % 3) * 20,
+          y = -22 + Math.floor(i / 3) * 24;
         tiles.push([x + y, box(x, y, 8, 16, 18, hts[i], col[i])]);
       }
       return box(-34, -28, 0, 68, 56, 8, "--k-paper") + byDepth(tiles);
     },
     table: () =>
-      [[-28, -20], [22, -20], [-28, 14], [22, 14]].map(([x, y]) => box(x, y, 0, 5, 5, 18, "--k-stone")).join("") +
+      [
+        [-28, -20],
+        [22, -20],
+        [-28, 14],
+        [22, 14],
+      ]
+        .map(([x, y]) => box(x, y, 0, 5, 5, 18, "--k-stone"))
+        .join("") +
       box(-32, -24, 18, 64, 44, 4, "--k-orange") +
-      byDepth([[-14, coins(-12, -6, 3, "--k-gold")], [10, coins(6, 4, 5, "--k-gold")], [22, coins(16, 10, 2, "--k-gold")]]),
-    coins: () => byDepth([[-6, coins(-20, 14, 4, "--k-gold")], [0, coins(14, -14, 7, "--k-gold")], [38, coins(18, 20, 3, "--k-gold")]]),
+      byDepth([
+        [-14, coins(-12, -6, 3, "--k-gold")],
+        [10, coins(6, 4, 5, "--k-gold")],
+        [22, coins(16, 10, 2, "--k-gold")],
+      ]),
+    coins: () =>
+      byDepth([
+        [-6, coins(-20, 14, 4, "--k-gold")],
+        [0, coins(14, -14, 7, "--k-gold")],
+        [38, coins(18, 20, 3, "--k-gold")],
+      ]),
     bars: () =>
       box(-36, -10, 0, 16, 16, 18, "--k-purple") +
       box(-12, -10, 0, 16, 16, 32, "--k-purple") +
@@ -129,22 +183,42 @@ if (hub) {
     calc: () => {
       let keys = [];
       for (let i = 0; i < 9; i++) {
-        const x = -22 + (i % 3) * 16, y = -6 + Math.floor(i / 3) * 14;
+        const x = -22 + (i % 3) * 16,
+          y = -6 + Math.floor(i / 3) * 14;
         keys.push([x + y, box(x, y, 10, 11, 9, 3, i === 8 ? "--k-orange" : "--k-paper")]);
       }
-      return box(-30, -34, 0, 60, 74, 10, "--k-blue") + box(-22, -28, 10, 44, 16, 3, "--k-screen") + byDepth(keys);
+      return (
+        box(-30, -34, 0, 60, 74, 10, "--k-blue") +
+        box(-22, -28, 10, 44, 16, 3, "--k-screen") +
+        byDepth(keys)
+      );
     },
     house: () => {
       const [x0, x1, y0, y1, zw, zr] = [-30, 30, -24, 24, 28, 50];
       return (
         box(x0, y0, 0, 60, 48, zw, "--k-paper") +
         inset(x0 + 22, y1, 0, 16, 22, "door", 0) +
-        `<g class="m" style="--c:var(--k-paper)">${poly("fr", [[x1, y0, zw], [x1, y1, zw], [x1, 0, zr]])}</g>` +
-        `<g class="m" style="--c:var(--k-pink)">${poly("ft", [[x0 - 4, y0 - 4, zw - 2], [x1 + 4, y0 - 4, zw - 2], [x1 + 4, 0, zr], [x0 - 4, 0, zr]])}${poly("fl", [[x0 - 4, y1 + 4, zw - 2], [x1 + 4, y1 + 4, zw - 2], [x1 + 4, 0, zr], [x0 - 4, 0, zr]])}</g>`
+        `<g class="m" style="--c:var(--k-paper)">${poly("fr", [
+          [x1, y0, zw],
+          [x1, y1, zw],
+          [x1, 0, zr],
+        ])}</g>` +
+        `<g class="m" style="--c:var(--k-pink)">${poly("ft", [
+          [x0 - 4, y0 - 4, zw - 2],
+          [x1 + 4, y0 - 4, zw - 2],
+          [x1 + 4, 0, zr],
+          [x0 - 4, 0, zr],
+        ])}${poly("fl", [
+          [x0 - 4, y1 + 4, zw - 2],
+          [x1 + 4, y1 + 4, zw - 2],
+          [x1 + 4, 0, zr],
+          [x0 - 4, 0, zr],
+        ])}</g>`
       );
     },
     lock: () => {
-      const a = P(-11, 11, 36), b = P(11, -11, 36);
+      const a = P(-11, 11, 36),
+        b = P(11, -11, 36);
       return (
         `<path class="shackle" d="M${a[0]} ${a[1]}v-16a${r1((b[0] - a[0]) / 2)} ${r1((b[0] - a[0]) / 2)} 0 0 1 ${r1(b[0] - a[0])} 0v16"/>` +
         box(-24, -16, 0, 48, 32, 36, "--k-green") +
@@ -163,18 +237,44 @@ if (hub) {
       box(22, 18, 11, 20, 16, 11, "--k-blue") +
       box(-36, 20, 0, 14, 4, 28, "--k-purple") +
       inset(-36, 24, 0, 14, 28, "screen", 2),
-    doc: () => box(-26, -3, 0, 52, 6, 66, "--k-paper") + [14, 24, 34, 44].map((z) => poly("line", [[-18, 3, z], [18, 3, z], [18, 3, z + 2], [-18, 3, z + 2]])).join(""),
+    doc: () =>
+      box(-26, -3, 0, 52, 6, 66, "--k-paper") +
+      [14, 24, 34, 44]
+        .map((z) =>
+          poly("line", [
+            [-18, 3, z],
+            [18, 3, z],
+            [18, 3, z + 2],
+            [-18, 3, z + 2],
+          ]),
+        )
+        .join(""),
     phone: () => box(-17, -3, 0, 34, 7, 64, "--k-stone") + inset(-17, 4, 0, 34, 64, "screen", 3),
   };
 
-  const H = 62, DEPTH = 14; // island half-size and thickness
-  const money = new Intl.NumberFormat(he ? "he-IL" : "en-IL", { style: "currency", currency: "ILS", maximumFractionDigits: 0 });
+  const H = 62,
+    DEPTH = 14; // island half-size and thickness
+  const money = new Intl.NumberFormat(he ? "he-IL" : "en-IL", {
+    style: "currency",
+    currency: "ILS",
+    maximumFractionDigits: 0,
+  });
 
   const islands = chips.map((chip) => {
     let [gx, gy] = chip.dataset.cell.split(",").map(Number);
     if (rtl) [gx, gy] = [gy, gx]; // mirror across the vertical axis
     const [sx, sy] = P(gx * G, gy * G);
-    return { id: chip.dataset.island, gx, gy, sx, sy, soon: chip.classList.contains("soon"), icon: chip.dataset.icon, short: chip.dataset.short, chip };
+    return {
+      id: chip.dataset.island,
+      gx,
+      gy,
+      sx,
+      sy,
+      soon: chip.classList.contains("soon"),
+      icon: chip.dataset.icon,
+      short: chip.dataset.short,
+      chip,
+    };
   });
 
   const mat = (x, y, z = 0) => at(...M(x, y), z); // a point given in English-layout plane coordinates
@@ -187,7 +287,9 @@ if (hub) {
       `<ellipse class="shadow" cx="0" cy="${DEPTH + 26}" rx="120" ry="54"/>` +
       `<g class="lift">${slab(H, it.soon ? 0 : DEPTH, it.soon ? "soon" : "isl")}` +
       `<g transform="${at(-4, -12)}">${(ICONS[it.icon] || (() => ""))()}</g>${label}` +
-      (it.soon ? `<g transform="${mat(H - 6, -H + 6)}"><rect class="badge-bg" x="${he ? -23 : -26}" y="-30" width="${he ? 46 : 52}" height="22" rx="11"/><text class="badge-t" y="-15" text-anchor="middle">${he ? "בקרוב" : "SOON"}</text></g>` : "") +
+      (it.soon
+        ? `<g transform="${mat(H - 6, -H + 6)}"><rect class="badge-bg" x="${he ? -23 : -26}" y="-30" width="${he ? 46 : 52}" height="22" rx="11"/><text class="badge-t" y="-15" text-anchor="middle">${he ? "בקרוב" : "SOON"}</text></g>`
+        : "") +
       `</g></g>`
     );
   };
@@ -253,9 +355,13 @@ if (hub) {
     `<rect x="-690" y="-480" width="1380" height="920" fill="url(#hub-grid)" mask="url(#hub-mask)"/>` +
     `<ellipse class="glow" cx="0" cy="40" rx="460" ry="250" fill="url(#hub-glow)"/>` +
     `<g class="links">${links}</g>` +
-    order(back).map((it) => islandSvg(it, islands.indexOf(it))).join("") +
+    order(back)
+      .map((it) => islandSvg(it))
+      .join("") +
     hubSvg +
-    order(front).map((it) => islandSvg(it, islands.indexOf(it))).join("") +
+    order(front)
+      .map((it) => islandSvg(it))
+      .join("") +
     `</svg>`;
 
   // Selection: chips are the keyboard path (roving focus, arrow keys); islands answer to the pointer.
@@ -284,9 +390,14 @@ if (hub) {
       select(to.dataset.island, true);
     });
     c.addEventListener("pointerenter", () => groups.get(c.dataset.island)?.classList.add("hover"));
-    c.addEventListener("pointerleave", () => groups.get(c.dataset.island)?.classList.remove("hover"));
+    c.addEventListener("pointerleave", () =>
+      groups.get(c.dataset.island)?.classList.remove("hover"),
+    );
   });
   for (const [id, g] of groups) g.addEventListener("click", () => select(id));
-  select(chips.find((c) => c.getAttribute("aria-pressed") === "true")?.dataset.island ?? chips[0].dataset.island);
+  select(
+    chips.find((c) => c.getAttribute("aria-pressed") === "true")?.dataset.island ??
+      chips[0].dataset.island,
+  );
   hub.classList.add("ready");
 }
