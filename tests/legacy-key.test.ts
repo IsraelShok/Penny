@@ -27,12 +27,12 @@ describe("the legacy ./data key", () => {
     const enc = await import("@/server/lib/encryption");
     const { POST } = await import("@/app/api/data/wipe/route");
     enc.encrypt("x");
-    fs.writeFileSync(legacy, OTHER);
+    fs.writeFileSync(legacy, OTHER, { mode: 0o600 }); // the app refuses a key file others can read
     expect((await POST(post())).status).toBe(200);
     expect(fs.readFileSync(legacy, "utf8")).toBe(OTHER);
 
     enc.encrypt("x");
-    fs.writeFileSync(legacy, enc.getKey().toString("hex"));
+    fs.writeFileSync(legacy, enc.getKey().toString("hex"), { mode: 0o600 }); // the app refuses a key file others can read
     expect((await POST(post())).status).toBe(200);
     expect(fs.existsSync(legacy)).toBe(false);
   });
@@ -42,12 +42,12 @@ describe("the legacy ./data key", () => {
     const lock = await import("@/server/lib/app-lock");
     enc.setKeyInMemory(undefined);
     enc.getKey();
-    fs.writeFileSync(legacy, OTHER);
+    fs.writeFileSync(legacy, OTHER, { mode: 0o600 }); // the app refuses a key file others can read
     await lock.enableLock("correct horse", 15);
     expect(fs.readFileSync(legacy, "utf8")).toBe(OTHER);
 
     await lock.disableLock("correct horse");
-    fs.writeFileSync(legacy, enc.getKey().toString("hex"));
+    fs.writeFileSync(legacy, enc.getKey().toString("hex"), { mode: 0o600 }); // the app refuses a key file others can read
     await lock.enableLock("correct horse", 15);
     expect(fs.existsSync(legacy)).toBe(false);
   });
