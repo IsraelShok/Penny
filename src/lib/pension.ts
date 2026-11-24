@@ -1,22 +1,25 @@
 /** Pure helpers for investment-house balances (no I/O), so they can be tested. */
 
-/** Funds wired to the israeli-pension-scrapers library. Ids match the library and INVESTMENT_HOUSES. */
-const PENSION_FUNDS = ["meitav", "harel", "migdal", "clal", "menora"] as const;
+/** Funds wired to scrapers (israeli-pension-scrapers + custom Excellence Trade). Ids match INVESTMENT_HOUSES. */
+const PENSION_FUNDS = ["meitav", "excellence", "harel", "migdal", "clal", "menora"] as const;
 export type PensionFund = (typeof PENSION_FUNDS)[number];
 export const isPensionFund = (id: string): id is PensionFund =>
   (PENSION_FUNDS as readonly string[]).includes(id);
 
-/** Meitav opens a visible browser window for the user to sign in (CAPTCHA); the others log in headless with an SMS code. */
+/** Meitav and Menora open a visible browser window for the user to sign in (CAPTCHA); the others run headless. */
 export const INTERACTIVE: Record<PensionFund, boolean> = {
   meitav: true,
+  excellence: false,
   harel: false,
   migdal: false,
   clal: false,
   menora: true,
 };
+export type LoginField = "id" | "phone" | "username" | "password";
 /** Which login fields each fund asks for. */
-export const LOGIN_FIELDS: Record<PensionFund, ("id" | "phone")[]> = {
+export const LOGIN_FIELDS: Record<PensionFund, LoginField[]> = {
   meitav: ["id", "phone"],
+  excellence: ["username", "password"],
   harel: ["id", "phone"],
   migdal: ["id"],
   clal: ["id", "phone"],

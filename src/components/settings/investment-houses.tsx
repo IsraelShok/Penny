@@ -15,7 +15,7 @@ import { formatLastSync } from "@/lib/formatters";
 import { useFormatterLabels } from "@/lib/i18n-data";
 import { PensionReportImport } from "./pension-report-import";
 
-/** Investment houses: Meitav, Harel and Migdal connect and sync balances into assets; the rest are listed as coming soon. */
+/** Investment houses: wired funds connect and sync balances into assets; the rest are listed as coming soon. */
 export function InvestmentHouses() {
   const t = useTranslations("settings.bank");
   const locale = useLocale();
@@ -30,7 +30,7 @@ export function InvestmentHouses() {
         ? 2000
         : false,
   });
-  const [form, setForm] = useState<{ fundId: string; id: string; phone: string } | null>(null);
+  const [form, setForm] = useState<{ fundId: string; id: string; phone: string; username: string; password: string } | null>(null);
   const [codes, setCodes] = useState<Record<number, string>>({});
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["pension"] });
@@ -50,7 +50,9 @@ export function InvestmentHouses() {
 
   const statusLine = (c: PensionConnection) =>
     c.state === "running"
-      ? t("pensionRunning")
+      ? c.message
+        ? `${t("pensionRunning")} (${c.message})`
+        : t("pensionRunning")
       : c.state === "error" || (c.state === "idle" && c.lastError)
         ? t("pensionError", { message: c.message ?? c.lastError ?? "" })
         : c.lastSyncAt
@@ -67,110 +69,85 @@ export function InvestmentHouses() {
       </div>
 
       <InstitutionGrid>
-        {[...INVESTMENT_HOUSES]
-          .sort((x, y) =>
-            locale === "he"
-              ? x.name.he.localeCompare(y.name.he, "he")
-              : x.name.en.localeCompare(y.name.en, "en"),
-          )
-          .map((h) => {
-            const name = locale === "he" ? h.name.he : h.name.en;
-            const wired = isPensionFund(h.id);
-            const c = byFund.get(h.id);
-            return (
-              <InstitutionTile
-                key={h.id}
-                label={name}
-                color={h.color}
-                domain={h.domain}
-                subline={c ? <span role="status">{statusLine(c)}</span> : undefined}
-              >
-                {!wired ? (
-                  <span className="self-start rounded-full bg-muted px-2.5 py-1 text-caption text-muted-foreground">
-                    {t("comingSoon")}
-                  </span>
-                ) : c ? (
-                  <div className="flex flex-wrap gap-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={c.state === "running" || c.state === "otp"}
-                      onClick={() => act.mutate({ sync: c.id })}
-                    >
-                      {t("syncShort")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => void deletePension(c.id).then(refresh)}
-                    >
-                      {t("pensionDisconnect")}
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    aria-label={`${t("connect")} · ${name}`}
-                    onClick={() => setForm({ fundId: h.id, id: "", phone: "" })}
-                  >
-                    {t("connect")}
-                  </Button>
-                )}
-              </InstitutionTile>
-            );
-          })}
+        {[...INVESTMENT_HOUSES].sort((x, y) => (locale === "he" ? x.name.he.localeCompare(y.name.he, "he") : x.name.en.localeCompare(y.name.en, "en"))).map((h) => {
+          const name = locale === "he" ? h.name.he : h.name.en;
+          const wired = isPensionFund(h.id);
+          const c = byFund.get(h.id);
+          return (
+            <InstitutionTile
+              key={h.id}
+              label={name}
+              color={h.color}
+              domain={h.domain}
+              subline={c ? <span role="status">{statusLine(c)}</span> : undefined}
+            >
+              {!wired ? (
+                <span className="self-start rounded-full bg-muted px-2.5 py-1 text-caption text-muted-foreground">{t("comingSoon")}</span>
+              ) : c ? (
+                <div className="flex flex-wrap gap-1">
+                  <Button size="sm" variant="outline" disabled={c.state === "running" || c.state === "otp"} onClick={() => act.mutate({ sync: c.id })}>{t("syncShort")}</Button>
+                  <Button size="sm" variant="ghost" onClick={() => void deletePension(c.id).then(refresh)}>{t("pensionDisconnect")}</Button>
+                </div>
+              ) : (
+                <Button size="sm" variant="outline" aria-label={`${t("connect")} · ${name}`} onClick={() => setForm({ fundId: h.id, id: "", phone: "", username: "", password: "" })}>{t("connect")}</Button>
+              )}
+            </InstitutionTile>
+          );
+        })}
       </InstitutionGrid>
 
       {/* The login form lives under the grid so the tiles stay one shape. */}
-      {form && editingHouse && (
-        <form
-          className="flex flex-wrap items-end gap-2 rounded-2xl bg-card px-4 py-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            act.mutate({ fundId: form.fundId, id: form.id, phone: form.phone });
-          }}
-        >
-          <p className="basis-full text-sm font-medium">
-            {t("connect")} · {locale === "he" ? editingHouse.name.he : editingHouse.name.en}
-          </p>
-          <label className="grid gap-1 text-xs">
-            {t("pensionId")}
-            <Input
-              inputMode="numeric"
-              autoComplete="off"
-              value={form.id}
-              onChange={(e) => setForm({ ...form, id: e.target.value })}
-              required
-              className="w-40"
-            />
-          </label>
-          {LOGIN_FIELDS[form.fundId as keyof typeof LOGIN_FIELDS].includes("phone") && (
-            <label className="grid gap-1 text-xs">
-              {t("pensionPhone")}
-              <Input
-                inputMode="tel"
-                autoComplete="tel"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                required
-                className="w-40"
-              />
-            </label>
-          )}
-          <Button type="submit" size="sm" disabled={act.isPending}>
-            {t("connect")}
-          </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => setForm(null)}>
-            {t("pensionCancel")}
-          </Button>
-          <p className="basis-full text-caption text-muted-foreground">
-            {INTERACTIVE[form.fundId as keyof typeof INTERACTIVE]
-              ? t("pensionInteractive")
-              : t("pensionOtpHint")}
-          </p>
-        </form>
-      )}
+      {form && editingHouse && (() => {
+        const fields = LOGIN_FIELDS[form.fundId as keyof typeof LOGIN_FIELDS];
+        return (
+          <form
+            className="flex flex-wrap items-end gap-2 rounded-2xl bg-card px-4 py-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              act.mutate({
+                fundId: form.fundId,
+                ...(fields.includes("id") ? { id: form.id } : {}),
+                ...(fields.includes("phone") ? { phone: form.phone } : {}),
+                ...(fields.includes("username") ? { username: form.username } : {}),
+                ...(fields.includes("password") ? { password: form.password } : {}),
+              });
+            }}
+          >
+            <p className="basis-full text-sm font-medium">
+              {t("connect")} · {locale === "he" ? editingHouse.name.he : editingHouse.name.en}
+            </p>
+            {fields.includes("id") && (
+              <label className="grid gap-1 text-xs">{t("pensionId")}
+                <Input inputMode="numeric" autoComplete="off" value={form.id} onChange={(e) => setForm({ ...form, id: e.target.value })} required className="w-40" />
+              </label>
+            )}
+            {fields.includes("phone") && (
+              <label className="grid gap-1 text-xs">{t("pensionPhone")}
+                <Input inputMode="tel" autoComplete="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required className="w-40" />
+              </label>
+            )}
+            {fields.includes("username") && (
+              <label className="grid gap-1 text-xs">{t("pensionUsername")}
+                <Input autoComplete="username" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required className="w-40" />
+              </label>
+            )}
+            {fields.includes("password") && (
+              <label className="grid gap-1 text-xs">{t("pensionPassword")}
+                <Input type="password" autoComplete="current-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required className="w-40" />
+              </label>
+            )}
+            <Button type="submit" size="sm" disabled={act.isPending}>{t("connect")}</Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setForm(null)}>{t("pensionCancel")}</Button>
+            <p className="basis-full text-caption text-muted-foreground">
+              {fields.includes("password")
+                ? t("pensionPasswordHint")
+                : INTERACTIVE[form.fundId as keyof typeof INTERACTIVE]
+                  ? t("pensionInteractive")
+                  : t("pensionOtpHint")}
+            </p>
+          </form>
+        );
+      })()}
 
       {otpConnection && (
         <form

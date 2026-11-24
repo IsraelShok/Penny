@@ -31,7 +31,7 @@ export const otpKey = (connectionId: number) => -connectionId;
 export function savePensionConnection(
   workspaceId: number,
   fundId: PensionFund,
-  credentials: { id: string; phone?: string },
+  credentials: { id?: string; phone?: string; username?: string; password?: string },
 ) {
   const e = encrypt(JSON.stringify(credentials));
   return getDb()
@@ -81,16 +81,16 @@ export function startPensionSync(workspaceId: number, id: number): boolean {
 }
 
 function fail(id: number, message: string) {
+  console.error(`[pension] connection ${id} failed: ${message}`);
   status.set(id, { state: "error", message });
   getDb().prepare(`UPDATE pension_connections SET last_error = ? WHERE id = ?`).run(message, id);
 }
 
 async function run(workspaceId: number, row: Row) {
-  const { scrapePension } = await import("israeli-pension-scrapers");
   const db = getDb();
   const credentials = JSON.parse(
     decrypt({ encrypted: row.credentials_encrypted, iv: row.iv, authTag: row.auth_tag }),
-  ) as { id: string; phone?: string };
+  ) as { id?: string; phone?: string; username?: string; password?: string };
   // Cookies stay encrypted in our DB instead of the library's default plain JSON file.
   const session = {
     async load() {
@@ -111,36 +111,108 @@ async function run(workspaceId: number, row: Row) {
       ).run(e.encrypted, e.iv, e.authTag, row.id);
     },
   };
-  const outcome = await scrapePension({
+  const scrapeArgs = {
     fundId: row.fund_id,
     credentials,
     connectionId: String(row.id),
     session,
-    onProgress: (message) => status.set(row.id, { state: "running", message }),
+    onProgress: (message: string) => {
+      console.info(`[pension:${row.fund_id}] ${message}`);
+      status.set(row.id, { state: "running", message });
+    },
     onOtpNeeded: () => {
       status.set(row.id, { state: "otp" });
       return registerOtpRequest(otpKey(row.id), workspaceId, row.fund_id)
         .wait()
         .finally(() => status.set(row.id, { state: "running" }));
     },
-  });
+  };
+  const outcome =
+    row.fund_id === "excellence"
+      ? await (await import("./custom-scrapers")).scrapeCustomPension(scrapeArgs)
+      : await (await import("israeli-pension-scrapers")).scrapePension(scrapeArgs);
   if (!outcome.success)
     return fail(row.id, outcome.errorMessage ?? outcome.errorType ?? "Sync failed");
 
   // Each product becomes (or updates) an asset, matched by the key in its note.
   const find = db.prepare(`SELECT id FROM assets WHERE workspace_id = ? AND note = ?`);
-  const update = db.prepare(`UPDATE assets SET manual_value = ?, name = ? WHERE id = ?`);
+  const update = db.prepare(
+    `UPDATE assets SET manual_value = ?, name = ?,
+       symbol = COALESCE(?, symbol),
+       quantity = COALESCE(?, quantity),
+       cost_basis = COALESCE(?, cost_basis),
+       liquid = COALESCE(?, liquid),
+       fee_deposit = COALESCE(?, fee_deposit),
+       fee_balance = COALESCE(?, fee_balance),
+       monthly_deposit = COALESCE(?, monthly_deposit),
+       details = COALESCE(?, details)
+     WHERE id = ?`,
+  );
   const insert = db.prepare(
-    `INSERT INTO assets (workspace_id, name, type, currency, manual_value, liquid, is_liability, note) VALUES (?, ?, ?, 'ILS', ?, 0, 0, ?)`,
+    `INSERT INTO assets (workspace_id, name, type, currency, manual_value, symbol, quantity, cost_basis, liquid, is_liability, note, fee_deposit, fee_balance, monthly_deposit, details)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
   );
   db.transaction(() => {
-    for (const a of outcome.accounts) {
+    const hasIndividualStocks = outcome.accounts.some((raw) => {
+      const a = raw as typeof raw & { assetType?: string };
+      return a.assetType === "stock" && a.accountNumber !== "portfolio";
+    });
+    if (hasIndividualStocks) {
+      db.prepare(`DELETE FROM assets WHERE workspace_id = ? AND note = ?`).run(
+        workspaceId,
+        assetKey(row.id, "portfolio"),
+      );
+    }
+    for (const raw of outcome.accounts) {
+      const a = raw as typeof raw & {
+        feeDeposit?: number | null;
+        feeBalance?: number | null;
+        monthlyDeposit?: number | null;
+        assetType?: "pension" | "study_fund" | "provident" | "stock" | "cash";
+        symbol?: string | null;
+        quantity?: number | null;
+        costBasis?: number | null;
+        liquid?: boolean;
+        details?: Record<string, unknown>;
+      };
       if (a.balance == null) continue;
       const key = assetKey(row.id, a.accountNumber);
       const name = a.label ?? a.accountNumber;
+      const detailsJson = a.details ? JSON.stringify(a.details) : null;
+      const liquidInt = a.liquid == null ? null : a.liquid ? 1 : 0;
       const existing = find.get(workspaceId, key) as { id: number } | undefined;
-      if (existing) update.run(a.balance, name, existing.id);
-      else insert.run(workspaceId, name, savingsType(name), a.balance, key);
+      if (existing) {
+        update.run(
+          a.balance,
+          name,
+          a.symbol ?? null,
+          a.quantity ?? null,
+          a.costBasis ?? null,
+          liquidInt,
+          a.feeDeposit ?? null,
+          a.feeBalance ?? null,
+          a.monthlyDeposit ?? null,
+          detailsJson,
+          existing.id,
+        );
+      } else {
+        insert.run(
+          workspaceId,
+          name,
+          a.assetType ?? savingsType(name),
+          a.currency || "ILS",
+          a.balance,
+          a.symbol ?? null,
+          a.quantity ?? null,
+          a.costBasis ?? null,
+          liquidInt ?? 0,
+          key,
+          a.feeDeposit ?? null,
+          a.feeBalance ?? null,
+          a.monthlyDeposit ?? null,
+          detailsJson,
+        );
+      }
     }
     db.prepare(
       `UPDATE pension_connections SET last_sync_at = datetime('now'), last_error = NULL WHERE id = ?`,

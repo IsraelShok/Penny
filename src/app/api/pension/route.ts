@@ -52,14 +52,21 @@ export const POST = handle("pension", async (request: Request) => {
 
   const fundId = String(body.fundId ?? "");
   if (!isPensionFund(fundId)) return bad("unsupported fund");
+  const fields = LOGIN_FIELDS[fundId];
   const id = String(body.id ?? "").replace(/\D/g, "");
   const phone = String(body.phone ?? "").replace(/\D/g, "");
-  if (!/^\d{5,9}$/.test(id)) return bad("ID number must be 5-9 digits");
-  if (LOGIN_FIELDS[fundId].includes("phone") && !/^0\d{8,9}$/.test(phone))
+  const username = String(body.username ?? "").trim();
+  const password = String(body.password ?? "");
+  if (fields.includes("id") && !/^\d{5,9}$/.test(id)) return bad("ID number must be 5-9 digits");
+  if (fields.includes("phone") && !/^0\d{8,9}$/.test(phone))
     return bad("phone must be an Israeli number like 0501234567");
+  if (fields.includes("username") && !username) return bad("username is required");
+  if (fields.includes("password") && !password) return bad("password is required");
   const { id: connectionId } = savePensionConnection(ws, fundId, {
-    id: id.padStart(9, "0"),
+    ...(id ? { id: id.padStart(9, "0") } : {}),
     ...(phone ? { phone } : {}),
+    ...(username ? { username } : {}),
+    ...(password ? { password } : {}),
   });
   startPensionSync(ws, connectionId);
   return NextResponse.json({ id: connectionId });
