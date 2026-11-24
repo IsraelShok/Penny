@@ -6,7 +6,7 @@ export type PensionFund = (typeof PENSION_FUNDS)[number];
 export const isPensionFund = (id: string): id is PensionFund =>
   (PENSION_FUNDS as readonly string[]).includes(id);
 
-/** Meitav opens a visible browser window for the user to sign in (CAPTCHA); the others log in headless with an SMS code. */
+/** Meitav and Menora open a visible browser window for the user to sign in (CAPTCHA); the others run headless. */
 export const INTERACTIVE: Record<PensionFund, boolean> = {
   meitav: true,
   harel: false,
@@ -14,8 +14,9 @@ export const INTERACTIVE: Record<PensionFund, boolean> = {
   clal: false,
   menora: true,
 };
+export type LoginField = "id" | "phone" | "username" | "password";
 /** Which login fields each fund asks for. */
-export const LOGIN_FIELDS: Record<PensionFund, ("id" | "phone")[]> = {
+export const LOGIN_FIELDS: Record<PensionFund, LoginField[]> = {
   meitav: ["id", "phone"],
   harel: ["id", "phone"],
   migdal: ["id"],
