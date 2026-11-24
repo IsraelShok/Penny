@@ -284,6 +284,7 @@ export function parseHtmlTable(html: string): string[][] {
     s
       .replace(/<br\s*\/?>/gi, " ")
       .replace(/<[^>]*>?/g, "")
+      .replace(/[<>]/g, "") // leftovers of nested tags like "<<b>x>"; a real "<" arrives as &lt;
       // One pass, so "&amp;lt;" stays "&lt;" instead of turning into "<".
       .replace(/&(nbsp|amp|lt|gt|quot|#\d+);/g, (_, e: string) =>
         e[0] === "#" ? String.fromCodePoint(Number(e.slice(1))) : ENTITIES[e],
