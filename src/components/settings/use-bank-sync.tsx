@@ -48,6 +48,12 @@ export function useBankSync() {
             ...prev,
             [credentialId]: { syncing: true, stage: t("solve2fa") },
           }));
+        } else if (event.type === "provider-done") {
+          const ok = event.data.ok as boolean | undefined;
+          const errorMessage = event.data.errorMessage as string | undefined;
+          if (ok === false && errorMessage) {
+            toast.error(errorMessage, { duration: Infinity, closeButton: true });
+          }
         } else if (event.type === "stage") {
           const s = event.data.stage as string;
           setState((prev) => ({
