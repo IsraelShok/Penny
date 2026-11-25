@@ -1,8 +1,9 @@
 "use client";
 
-import { RotateCw, ScrollText } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { ScrollText, Trash2 } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { SectionShell, SettingCard } from "@/components/settings/section-shell";
 import { Button } from "@/components/ui/button";
 import { DataState } from "@/components/ui/data-state";
@@ -44,6 +45,7 @@ export default function SyncLogsPage() {
   const t = useTranslations("settings.syncLogs");
   const tBanks = useTranslations("settings.bank");
   const locale = useLocale() as Locale;
+  const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: ["sync-logs"],
@@ -52,6 +54,21 @@ export default function SyncLogsPage() {
       q.state.data?.logs.some((l) => l.status === "running" || l.status === "otp")
         ? 2500
         : false,
+  });
+
+  const clearMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/sync/logs", { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to clear logs");
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["sync-logs"], { logs: [] });
+      void queryClient.invalidateQueries({ queryKey: ["sync-logs"] });
+      toast.success(t("cleared"));
+    },
+    onError: () => {
+      toast.error(t("clearFailed"));
+    },
   });
 
   const providerLabel = (entry: SyncLogEntry) => {
@@ -100,11 +117,11 @@ export default function SyncLogsPage() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => void query.refetch()}
-            disabled={query.isFetching}
+            onClick={() => clearMutation.mutate()}
+            disabled={logs.length === 0 || clearMutation.isPending}
           >
-            <RotateCw className={`me-1.5 size-3.5 ${query.isFetching ? "animate-spin" : ""}`} />
-            {t("refresh")}
+            <Trash2 className="me-1.5 size-3.5" />
+            {t("clearAll")}
           </Button>
         </div>
 

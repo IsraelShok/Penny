@@ -170,6 +170,15 @@ export function listAllSyncLogs(workspaceId: number, limit = 60): SyncLogEntry[]
   return combined.sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, limit);
 }
 
+/** Clears all recorded sync/activity logs for this workspace. */
+export function clearAllSyncLogs(workspaceId: number): void {
+  const db = getDb();
+  db.transaction(() => {
+    db.prepare(`DELETE FROM sync_runs WHERE workspace_id = ?`).run(workspaceId);
+    db.prepare(`DELETE FROM pension_sync_logs WHERE workspace_id = ?`).run(workspaceId);
+  })();
+}
+
 async function run(workspaceId: number, row: Row, logId: number) {
   const db = getDb();
   const credentials = JSON.parse(
