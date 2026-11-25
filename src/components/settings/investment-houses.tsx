@@ -93,7 +93,12 @@ export function InvestmentHouses({
         : false,
   });
   const [form, setForm] = useState<
-    ({ connectionId?: number; fundId: PensionFund; label: string } & Record<LoginField, string>) | null
+    ({
+      connectionId?: number;
+      fundId: PensionFund;
+      label: string;
+      isChild?: boolean;
+    } & Record<LoginField, string>) | null
   >(null);
   const [codes, setCodes] = useState<Record<number, string>>({});
   const [confirmDisconnectId, setConfirmDisconnectId] = useState<number | null>(null);
@@ -369,10 +374,19 @@ export function InvestmentHouses({
               className="grid gap-3"
               onSubmit={(e) => {
                 e.preventDefault();
+                const trimmed = form.label.trim();
+                const finalLabel =
+                  form.isChild && !trimmed.includes("ילד") && !trimmed.toLowerCase().includes("kid")
+                    ? trimmed
+                      ? `${trimmed} (${locale === "he" ? "ילד" : "Child"})`
+                      : locale === "he"
+                        ? "חשבון ילד"
+                        : "Child account"
+                    : trimmed;
                 act.mutate({
                   ...(form.connectionId != null ? { connectionId: form.connectionId } : {}),
                   fundId: form.fundId,
-                  label: form.label,
+                  label: finalLabel,
                   ...Object.fromEntries(LOGIN_FIELDS[form.fundId].map((f) => [f, form[f]])),
                 });
               }}
@@ -385,6 +399,15 @@ export function InvestmentHouses({
                   value={form.label}
                   onChange={(e) => setForm({ ...form, label: e.target.value })}
                 />
+              </label>
+              <label className="flex items-center gap-2 text-xs font-medium">
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.isChild)}
+                  onChange={(e) => setForm({ ...form, isChild: e.target.checked })}
+                  className="size-4 rounded border-border accent-primary"
+                />
+                {locale === "he" ? "חשבון של ילד" : "Child's account"}
               </label>
               {LOGIN_FIELDS[form.fundId].map((f) => (
                 <label key={f} className="grid gap-1 text-xs font-medium">
