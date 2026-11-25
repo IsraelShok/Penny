@@ -1382,6 +1382,7 @@ export function deletePeriodic(id: number) {
 export type PensionConnection = {
   id: number;
   fundId: string;
+  label?: string;
   lastSyncAt: string | null;
   lastError: string | null;
   state: "idle" | "running" | "otp" | "done" | "error";
@@ -1390,6 +1391,16 @@ export type PensionConnection = {
 export function listPension() {
   return fetchJSON<{ connections: PensionConnection[] }>(`/api/pension`);
 }
+export function getPensionCredentials(id: number) {
+  return fetchJSON<{
+    connection: {
+      id: number;
+      fundId: string;
+      label: string;
+      credentials: Record<string, string>;
+    };
+  }>(`/api/pension?credentialsId=${id}`);
+}
 export function pensionAction(body: Record<string, unknown>) {
   return fetchJSON<{ id?: number; started?: boolean; success?: boolean }>(`/api/pension`, {
     method: "POST",
@@ -1397,8 +1408,11 @@ export function pensionAction(body: Record<string, unknown>) {
     body: JSON.stringify(body),
   });
 }
-export function deletePension(id: number) {
-  return fetchJSON<{ success: boolean }>(`/api/pension?id=${id}`, { method: "DELETE" });
+export function deletePension(id: number, deleteAssets = false) {
+  return fetchJSON<{ success: boolean }>(
+    `/api/pension?id=${id}${deleteAssets ? "&deleteAssets=1" : ""}`,
+    { method: "DELETE" },
+  );
 }
 export type PensionReportRecord = {
   id: number;

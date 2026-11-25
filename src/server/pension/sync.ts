@@ -7,7 +7,7 @@ import { redact, redactError, redactKnownSecrets } from "@/server/lib/redact";
 import { registerOtpRequest } from "@/server/sync/otp-bridge";
 import { withDeadline } from "@/lib/sync-schedule";
 import { SYNC_ERRORS } from "@/lib/sync-errors";
-import { assetKey, savingsType, type PensionCredentials, type PensionFund } from "@/lib/pension";
+import { savingsType, type PensionCredentials, type PensionFund } from "@/lib/pension";
 import type { ScrapeArgs } from "./custom-scrapers";
 import type { ScrapedAccount, ScrapeOutcome } from "./parsers";
 
@@ -62,37 +62,103 @@ export function savePensionConnection(
   workspaceId: number,
   fundId: PensionFund,
   credentials: PensionCredentials,
-) {
+  options: { id?: number; label?: string } = {},
+): { id: number } {
   const e = encrypt(JSON.stringify(credentials));
-  return getDb()
+  const label = (options.label ?? "").trim();
+  const db = getDb();
+  if (options.id != null) {
+    const res = db
+      .prepare(
+        `UPDATE pension_connections
+         SET label = ?, credentials_encrypted = ?, iv = ?, auth_tag = ?, last_error = NULL,
+             session_encrypted = NULL, session_iv = NULL, session_auth_tag = NULL
+         WHERE id = ? AND workspace_id = ?`,
+      )
+      .run(label, e.encrypted, e.iv, e.authTag, options.id, workspaceId);
+    if (res.changes > 0) return { id: options.id };
+  }
+  return db
     .prepare(
-      `INSERT INTO pension_connections (workspace_id, fund_id, credentials_encrypted, iv, auth_tag) VALUES (?, ?, ?, ?, ?)
-       ON CONFLICT(workspace_id, fund_id) DO UPDATE SET credentials_encrypted = excluded.credentials_encrypted, iv = excluded.iv, auth_tag = excluded.auth_tag,
-         session_encrypted = NULL, session_iv = NULL, session_auth_tag = NULL
+      `INSERT INTO pension_connections (workspace_id, fund_id, label, credentials_encrypted, iv, auth_tag)
+       VALUES (?, ?, ?, ?, ?, ?)
        RETURNING id`,
     )
-    .get(workspaceId, fundId, e.encrypted, e.iv, e.authTag) as { id: number };
+    .get(workspaceId, fundId, label, e.encrypted, e.iv, e.authTag) as { id: number };
 }
 
 export function listPensionConnections(workspaceId: number) {
   return (
     getDb()
       .prepare(
-        `SELECT id, fund_id as fundId, last_sync_at as lastSyncAt, last_error as lastError FROM pension_connections WHERE workspace_id = ?`,
+        `SELECT id, fund_id as fundId, label, last_sync_at as lastSyncAt, last_error as lastError
+         FROM pension_connections WHERE workspace_id = ? ORDER BY id`,
       )
       .all(workspaceId) as {
       id: number;
       fundId: PensionFund;
+      label: string;
       lastSyncAt: string | null;
       lastError: string | null;
     }[]
   ).map((c) => ({ ...c, ...pensionStatus(c.id) }));
 }
 
-export function deletePensionConnection(workspaceId: number, id: number) {
-  getDb()
-    .prepare(`DELETE FROM pension_connections WHERE id = ? AND workspace_id = ?`)
-    .run(id, workspaceId);
+export function getPensionCredentials(
+  workspaceId: number,
+  id: number,
+): { id: number; fundId: PensionFund; label: string; credentials: PensionCredentials } | null {
+  const row = getDb()
+    .prepare(
+      `SELECT id, fund_id, label, credentials_encrypted, iv, auth_tag
+       FROM pension_connections WHERE id = ? AND workspace_id = ?`,
+    )
+    .get(id, workspaceId) as
+    | (Pick<Row, "id" | "fund_id" | "credentials_encrypted" | "iv" | "auth_tag"> & {
+        label: string;
+      })
+    | undefined;
+  if (!row) return null;
+  const credentials = JSON.parse(
+    decrypt({ encrypted: row.credentials_encrypted, iv: row.iv, authTag: row.auth_tag }),
+  ) as PensionCredentials;
+  return { id: row.id, fundId: row.fund_id, label: row.label, credentials };
+}
+
+export function deletePensionConnection(
+  workspaceId: number,
+  id: number,
+  options: { deleteAssets?: boolean } = {},
+) {
+  const db = getDb();
+  const existing = db
+    .prepare(`SELECT fund_id FROM pension_connections WHERE id = ? AND workspace_id = ?`)
+    .get(id, workspaceId) as { fund_id: PensionFund } | undefined;
+  db.prepare(`DELETE FROM pension_connections WHERE id = ? AND workspace_id = ?`).run(
+    id,
+    workspaceId,
+  );
+  if (options.deleteAssets && existing) {
+    const remaining = (
+      db
+        .prepare(
+          `SELECT COUNT(*) AS n FROM pension_connections WHERE workspace_id = ? AND fund_id = ?`,
+        )
+        .get(workspaceId, existing.fund_id) as { n: number }
+    ).n;
+    db.prepare(`DELETE FROM assets WHERE workspace_id = ? AND (note LIKE ? OR note LIKE ?)`).run(
+      workspaceId,
+      `pension:${existing.fund_id}:${id}:%`,
+      `pension:${id}:%`,
+    );
+    if (remaining === 0) {
+      db.prepare(`DELETE FROM assets WHERE workspace_id = ? AND note LIKE ? AND note NOT GLOB ?`).run(
+        workspaceId,
+        `pension:${existing.fund_id}:%`,
+        `pension:${existing.fund_id}:[0-9]*:*`,
+      );
+    }
+  }
   status.delete(id);
 }
 
@@ -186,6 +252,20 @@ export function replacePensionAssets(
   connectionId: number,
   accounts: ScrapedAccount[],
 ) {
+  const conn = db
+    .prepare(`SELECT fund_id FROM pension_connections WHERE id = ?`)
+    .get(connectionId) as { fund_id: PensionFund } | undefined;
+  const siblingCount = conn
+    ? (
+        db
+          .prepare(
+            `SELECT COUNT(*) AS n FROM pension_connections WHERE workspace_id = ? AND fund_id = ?`,
+          )
+          .get(workspaceId, conn.fund_id) as { n: number }
+      ).n
+    : 1;
+  const keyScope: string | number =
+    conn && siblingCount > 1 ? `${conn.fund_id}:${connectionId}` : connectionId;
   const find = db.prepare(`SELECT id FROM assets WHERE workspace_id = ? AND note = ?`);
   // COALESCE keeps what the user typed when a scraper does not provide a field.
   const update = db.prepare(
@@ -202,7 +282,7 @@ export function replacePensionAssets(
     `INSERT INTO assets (workspace_id, name, type, currency, manual_value, quantity, cost_basis, liquid, is_liability, note, fee_deposit, fee_balance, monthly_deposit, details)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
   );
-  const prefix = assetKey(connectionId, "");
+  const prefix = `pension:${keyScope}:`;
   const stale = db.prepare(
     `SELECT id, note, EXISTS (SELECT 1 FROM asset_snapshots s WHERE s.asset_id = assets.id) AS hasHistory
      FROM assets WHERE workspace_id = ? AND substr(note, 1, ?) = ?`,
@@ -213,7 +293,7 @@ export function replacePensionAssets(
   db.transaction(() => {
     const keep = new Set<string>();
     for (const a of accounts) {
-      const key = assetKey(connectionId, a.accountNumber);
+      const key = `pension:${keyScope}:${a.accountNumber}`;
       keep.add(key);
       // The library may list a product without a balance: keep it, leave its value as it was.
       if (a.balance == null) continue;
