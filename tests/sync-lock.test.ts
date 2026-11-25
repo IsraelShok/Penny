@@ -1,8 +1,14 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { isSyncRunning, SyncBusyError, tryAcquireSync } from "@/server/sync/lock";
+import {
+  isSyncRunning,
+  SyncBusyError,
+  tryAcquireCredentialSync,
+  tryAcquireSync,
+} from "@/server/sync/lock";
 
 afterEach(() => {
   globalThis.__pennySyncLock = undefined;
+  globalThis.__pennyCredentialLocks = undefined;
 });
 
 describe("sync lock", () => {
@@ -35,5 +41,23 @@ describe("sync lock", () => {
 
   it("carries a recognisable name for callers that cannot import the class", () => {
     expect(new SyncBusyError().name).toBe("SyncBusyError");
+  });
+
+  it("allows different credentials to sync in parallel while blocking duplicates and full syncs", () => {
+    const r1 = tryAcquireCredentialSync(1);
+    const r2 = tryAcquireCredentialSync(2);
+    expect(r1).not.toBeNull();
+    expect(r2).not.toBeNull();
+    expect(tryAcquireCredentialSync(1)).toBeNull();
+    expect(tryAcquireSync("manual")).toBeNull();
+    expect(isSyncRunning()).toBe(true);
+    r1?.();
+    expect(isSyncRunning()).toBe(true);
+    r2?.();
+    expect(isSyncRunning()).toBe(false);
+    const full = tryAcquireSync("manual");
+    expect(full).not.toBeNull();
+    expect(tryAcquireCredentialSync(3)).toBeNull();
+    full?.();
   });
 });
