@@ -63,7 +63,7 @@ export function PipLife() {
     let typing = false;
     let stop: ReturnType<typeof setTimeout> | undefined;
     const onKey = (e: KeyboardEvent) => {
-      if (!isField(e.target) || e.ctrlKey || e.metaKey || e.key.length !== 1) return;
+      if (!isField(e.target) || e.ctrlKey || e.metaKey || e.key?.length !== 1) return;
       if (!typing) {
         typing = true;
         pip({ kind: "typing", on: true });
