@@ -45,7 +45,15 @@ export function PipLife() {
         if (active !== syncing) {
           syncing = active;
           pip({ kind: "waiting", on: active });
-          if (!active) pip({ kind: "play", action: "success" });
+          if (!active) {
+            pip({ kind: "play", action: "success" });
+            void qc.invalidateQueries({ queryKey: ["integrations"] });
+            void qc.invalidateQueries({ queryKey: ["assets"] });
+            void qc.invalidateQueries({ queryKey: ["asset-history"] });
+            void qc.invalidateQueries({ queryKey: ["home"] });
+            void qc.invalidateQueries({ queryKey: ["transactions"] });
+            void qc.invalidateQueries({ queryKey: ["summary"] });
+          }
         }
         return;
       }
