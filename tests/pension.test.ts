@@ -6,6 +6,7 @@ import {
   parseAltshulerCards,
   parseExcellenceCash,
   parseExcellenceRows,
+  parseHarelCards,
   parseMoney,
   parsePhoenixCards,
 } from "@/server/pension/parsers";
@@ -223,5 +224,29 @@ describe("Excellence Trade export", () => {
   it("reads the cash balance from the top bar", () => {
     expect(parseExcellenceCash("שווי תיק ₪ 100,000.50 יתרה לפעילות ₪ 1,500.25")).toBe(1500.25);
     expect(parseExcellenceCash("שווי תיק ₪ 100")).toBeNull();
+  });
+  it("parses Harel pension and study-fund tiles", () => {
+    const out = parseHarelCards([
+      { name: "קרנות פנסיה", amount: "₪ 100,000" },
+      { name: "השתלמות", amount: "₪ 20,000" },
+    ]);
+    expect(out.success).toBe(true);
+    expect(out.accounts).toHaveLength(2);
+    expect(out.accounts[0]).toMatchObject({ label: "הראל - קרנות פנסיה", balance: 100000 });
+    expect(out.accounts[1]).toMatchObject({ label: "הראל - השתלמות", balance: 20000 });
+  });
+  it("derives costBasis from gain in ILS and ignores percentage cost change columns", () => {
+    const out = parseExcellenceRows(
+      [
+        ["שם נייר", "מספר נייר", "כמות בתיק", "שווי אחזקה (₪)", "שינוי מעלות %", "שינוי מעלות (₪)"],
+        ["Invesco S&P 500", "1183441", "6864", "332011.68", "43.9", "101289.99"],
+      ],
+      null,
+    );
+    expect(out.success).toBe(true);
+    expect(out.accounts[0]).toMatchObject({
+      balance: 332011.68,
+      costBasis: 230721.69,
+    });
   });
 });
