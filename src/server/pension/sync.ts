@@ -42,14 +42,14 @@ type Scrape = (args: ScrapeArgs) => Promise<ScrapeOutcome>;
 const library: Scrape = async (args) =>
   (await import("israeli-pension-scrapers")).scrapePension(args);
 const custom =
-  (fund: "altshuler" | "phoenix" | "excellence"): Scrape =>
+  (fund: "altshuler" | "phoenix" | "excellence" | "harel"): Scrape =>
   async (args) =>
     (await import("./custom-scrapers")).scrapeCustom(fund, args);
 
 /** Which scraper reads each fund. */
 const SCRAPERS: Record<PensionFund, Scrape> = {
   meitav: library,
-  harel: library,
+  harel: custom("harel"),
   migdal: library,
   clal: library,
   menora: library,
