@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { DataState } from "@/components/ui/data-state";
 import { INVESTMENT_HOUSES } from "@/lib/investment-houses";
 import { translateProviderName } from "@/lib/i18n-data";
+import type { ActivitySnapshot } from "@/lib/types";
 import type { Locale } from "@/i18n/routing";
 
 interface SyncLogEntry {
@@ -47,11 +48,16 @@ export default function SyncLogsPage() {
   const locale = useLocale() as Locale;
   const queryClient = useQueryClient();
 
+  const activity = queryClient.getQueryData<ActivitySnapshot>(["activity"]);
+  const syncActive = activity?.sync.active === true;
+
   const query = useQuery({
     queryKey: ["sync-logs"],
     queryFn: fetchSyncLogs,
+    staleTime: 0,
+    refetchOnMount: "always",
     refetchInterval: (q) =>
-      q.state.data?.logs.some((l) => l.status === "running" || l.status === "otp")
+      syncActive || q.state.data?.logs.some((l) => l.status === "running" || l.status === "otp")
         ? 2500
         : false,
   });

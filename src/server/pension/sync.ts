@@ -2,6 +2,7 @@ import "server-only";
 
 import type Database from "better-sqlite3";
 import { getDb } from "@/server/db";
+import { getWorkspaceSetting, setWorkspaceSetting } from "@/server/db/queries/settings";
 import { encrypt, decrypt } from "@/server/lib/encryption";
 import { redact, redactError, redactKnownSecrets } from "@/server/lib/redact";
 import { registerOtpRequest } from "@/server/sync/otp-bridge";
@@ -141,18 +142,21 @@ export interface SyncLogEntry {
 /** Recent bank and investment-house sync runs for this workspace, newest first. */
 export function listAllSyncLogs(workspaceId: number, limit = 60): SyncLogEntry[] {
   const db = getDb();
+  const clearedAt = getWorkspaceSetting(workspaceId, "logs_cleared_at");
   const bankRows = db
     .prepare(
       `SELECT provider, status, error_message as message, transactions_added as count, started_at as startedAt, completed_at as completedAt
-       FROM sync_runs WHERE workspace_id = ? ORDER BY id DESC LIMIT ?`,
+       FROM sync_runs WHERE workspace_id = ? AND (? IS NULL OR started_at > ?) ORDER BY id DESC LIMIT ?`,
     )
-    .all(workspaceId, limit) as Omit<SyncLogEntry, "id" | "kind">[];
+    .all(workspaceId, clearedAt, clearedAt, limit) as Omit<SyncLogEntry, "id" | "kind">[];
   const pensionRows = db
     .prepare(
       `SELECT id, fund_id as provider, status, message, accounts_count as count, started_at as startedAt, completed_at as completedAt
-       FROM pension_sync_logs WHERE workspace_id = ? ORDER BY id DESC LIMIT ?`,
+       FROM pension_sync_logs WHERE workspace_id = ? AND (? IS NULL OR started_at > ?) ORDER BY id DESC LIMIT ?`,
     )
-    .all(workspaceId, limit) as (Omit<SyncLogEntry, "id" | "kind"> & { id: number })[];
+    .all(workspaceId, clearedAt, clearedAt, limit) as (Omit<SyncLogEntry, "id" | "kind"> & {
+    id: number;
+  })[];
 
   const combined: SyncLogEntry[] = [
     ...bankRows.map((r, idx) => ({ ...r, id: `bank-${idx}-${r.startedAt}`, kind: "bank" as const })),
@@ -170,13 +174,19 @@ export function listAllSyncLogs(workspaceId: number, limit = 60): SyncLogEntry[]
   return combined.sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, limit);
 }
 
-/** Clears all recorded sync/activity logs for this workspace. */
+/** Clears all recorded sync/activity logs for this workspace without breaking transaction foreign keys. */
 export function clearAllSyncLogs(workspaceId: number): void {
   const db = getDb();
+  const nowSql = new Date().toISOString().replace("T", " ").slice(0, 19);
   db.transaction(() => {
-    db.prepare(`DELETE FROM sync_runs WHERE workspace_id = ?`).run(workspaceId);
     db.prepare(`DELETE FROM pension_sync_logs WHERE workspace_id = ?`).run(workspaceId);
+    db.prepare(
+      `DELETE FROM sync_runs
+       WHERE workspace_id = ?
+         AND id NOT IN (SELECT DISTINCT sync_run_id FROM transactions WHERE workspace_id = ?)`,
+    ).run(workspaceId, workspaceId);
   })();
+  setWorkspaceSetting(workspaceId, "logs_cleared_at", nowSql);
 }
 
 async function run(workspaceId: number, row: Row, logId: number) {
