@@ -53,6 +53,7 @@ export function PipLife() {
             void qc.invalidateQueries({ queryKey: ["home"] });
             void qc.invalidateQueries({ queryKey: ["transactions"] });
             void qc.invalidateQueries({ queryKey: ["summary"] });
+            void qc.invalidateQueries({ queryKey: ["sync-logs"] });
           }
         }
         return;

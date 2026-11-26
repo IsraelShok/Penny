@@ -63,6 +63,7 @@ export function useBankSync() {
           void queryClient.invalidateQueries({ queryKey: ["asset-history"] });
           void queryClient.invalidateQueries({ queryKey: ["home"] });
           void queryClient.invalidateQueries({ queryKey: ["activity"] });
+          void queryClient.invalidateQueries({ queryKey: ["sync-logs"] });
         } else if (event.type === "stage") {
           const s = event.data.stage as string;
           setState((prev) =>
@@ -94,6 +95,7 @@ export function useBankSync() {
           void queryClient.invalidateQueries({ queryKey: ["asset-history"] });
           void queryClient.invalidateQueries({ queryKey: ["home"] });
           void queryClient.invalidateQueries({ queryKey: ["activity"] });
+          void queryClient.invalidateQueries({ queryKey: ["sync-logs"] });
         } else if (event.type === "error") {
           setState((prev) => ({
             ...prev,
